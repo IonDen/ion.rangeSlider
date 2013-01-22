@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 1.0.42
+// version 1.0.47
 // © 2013 Denis Ineshin | IonDen.com
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/
@@ -26,7 +26,7 @@
         var id = "ion-range-slider-" + parseInt(Math.random() * 100000000000);
 
         var baseHTML =  '<span class="irs" id="' + id + '">'; // irs = ion range slider css prefix
-            baseHTML += '<span class="irs-line"><span class="irs-line-left"></span><span class="irs-line-right"></span></span>';
+            baseHTML += '<span class="irs-line"><span class="irs-line-left"></span><span class="irs-line-mid"></span><span class="irs-line-right"></span></span>';
             baseHTML += '<span class="irs-min">0</span><span class="irs-max">1</span>';
             baseHTML += '<span class="irs-from">0</span><span class="irs-to">0</span><span class="irs-single">0</span>';
             baseHTML += '</span>';
@@ -105,7 +105,9 @@
                 }
 
                 $(document.body).on("mouseup", function(){
+                    if(!self.allowDrag) return;
                     self.allowDrag = false;
+                    $("#irs-active-slider").removeAttr("id");
                     self.activeSlider = null;
                     if(settings.type == "double") self.setDiapazon();
                     self.getNumbers();
@@ -131,6 +133,7 @@
                 this.getSize();
 
                 this.activeSlider = currentSlider;
+                this.activeSlider.attr("id", "irs-active-slider");
 
                 var _x1 = this.activeSlider.offset().left,
                     _x2 = e.pageX - _x1;
@@ -348,7 +351,7 @@
             },
             prettify: function(num){
                 var n = num.toString();
-                return n.replace(/(\d{1,3}(?=(?:\d\d\d)+(?!\d)))/,"$1 ");
+                return n.replace(/(\d{1,3}(?=(?:\d\d\d)+(?!\d)))/g,"$1 ");
             }
         };
 
