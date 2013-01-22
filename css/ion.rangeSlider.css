@@ -1,0 +1,130 @@
+/* Ion.RangeSlider
+// version 1.0.23
+// by Denis Ineshin | ionden.com
+// ===================================================================================================================*/
+
+/* =====================================================================================================================
+// RangeSlider */
+
+.irs {
+    position: relative; display: block;
+}
+    .irs-line {
+        position: relative; display: block;
+        overflow: hidden;
+    }
+        .irs-line-left {
+            position: absolute; display: block;
+            top: 0; left: 0;
+        }
+        .irs-line-right {
+            position: absolute; display: block;
+            top: 0; right: 0;
+        }
+
+    .irs-diapazon {
+        position: absolute; display: block;
+        left: 0; width: 100%;
+    }
+    .irs-slider {
+        position: absolute; display: block;
+        cursor: default;
+        z-index: 1;
+    }
+        .irs-slider.single {
+            left: 10px;
+        }
+        .irs-slider.from {
+            left: 100px;
+        }
+        .irs-slider.to {
+            left: 300px;
+        }
+        .irs-slider.last {
+            z-index: 2;
+        }
+
+    .irs-min {
+        position: absolute; display: block;
+        left: 0;
+        cursor: default;
+    }
+    .irs-max {
+        position: absolute; display: block;
+        right: 0;
+        cursor: default;
+    }
+
+    .irs-from, .irs-to, .irs-single {
+        position: absolute; display: block;
+        top: 0; left: 0;
+        cursor: default;
+        white-space: nowrap;
+    }
+
+
+
+/* =====================================================================================================================
+// Skin details */
+
+.irs-line,
+.irs-line-left,
+.irs-line-right,
+.irs-diapazon,
+.irs-slider {
+    background: url(../img/sprite-skin-simple.png) repeat-x;
+}
+
+.irs {
+    height: 40px;
+}
+    .irs-line {
+        height: 6px; top: 25px;
+        background-position: 0 0;
+    }
+        .irs-line-left {
+            width: 10px; height: 6px;
+            background-position: 0 -30px;
+        }
+        .irs-line-right {
+            width: 10px; height: 6px;
+            background-position: 100% -30px;
+        }
+
+    .irs-diapazon {
+        height: 6px; top: 25px;
+        background-position: 0 -60px;
+    }
+
+    .irs-slider {
+        width: 8px; height: 15px;
+        top: 21px;
+        background-position: 0 -90px;
+    }
+    #irs-active-slider, .irs-slider:hover {
+        background-position: 0 -120px;
+    }
+
+    .irs-min, .irs-max {
+        color: #c0c0c0;
+        font-size: 10px;
+        text-shadow: none;
+        top: 0; padding: 1px 3px;
+        background: rgba(0,0,0,0.1);
+        border-radius: 3px;
+    }
+    .lt-ie9 .irs-min, .lt-ie9 .irs-max {
+        background: #3654b0;
+    }
+
+    .irs-from, .irs-to, .irs-single {
+        color: #000;
+        font-size: 10px;
+        text-shadow: none;
+        padding: 1px 5px;
+        background: rgba(255,255,255,0.8);
+        border-radius: 3px;
+    }
+    .lt-ie9 .irs-from, .lt-ie9 .irs-to, .lt-ie9 .irs-single {
+        background: #d8dff3;
+    }
