@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 1.0.47
+// version 1.1.59
 // © 2013 Denis Ineshin | IonDen.com
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/
@@ -74,6 +74,14 @@
                         self.allowDrag = true;
                         if(oldie) $("*").prop("unselectable",true);
                     });
+                    if(isTouch()) {
+                        this.singleSlider.on("touchstart", function(e){
+                            e.preventDefault();
+                            e.stopPropagation();
+                            self.calcDimentions(e.originalEvent, $(this), null);
+                            self.allowDrag = true;
+                        });
+                    }
 
                 } else if(settings.type == "double") {
 
@@ -102,6 +110,25 @@
                         if(oldie) $("*").prop("unselectable",true);
                     });
 
+                    if(isTouch()) {
+                        this.fromSlider.on("touchstart", function(e){
+                            e.preventDefault();
+                            e.stopPropagation();
+                            $(this).addClass("last");
+                            self.toSlider.removeClass("last");
+                            self.calcDimentions(e.originalEvent, $(this), "from");
+                            self.allowDrag = true;
+                        });
+                        this.toSlider.on("touchstart", function(e){
+                            e.preventDefault();
+                            e.stopPropagation();
+                            $(this).addClass("last");
+                            self.fromSlider.removeClass("last");
+                            self.calcDimentions(e.originalEvent, $(this), "to");
+                            self.allowDrag = true;
+                        });
+                    }
+
                 }
 
                 $(document.body).on("mouseup", function(){
@@ -119,6 +146,23 @@
                         self.dragSlider();
                     }
                 });
+
+                if(isTouch()) {
+                    $(window).on("touchend", function(){
+                        if(!self.allowDrag) return;
+                        self.allowDrag = false;
+                        $("#irs-active-slider").removeAttr("id");
+                        self.activeSlider = null;
+                        if(settings.type == "double") self.setDiapazon();
+                        self.getNumbers();
+                    });
+                    $(window).on("touchmove", function(e){
+                        if(self.allowDrag) {
+                            self.mouseX = e.originalEvent.pageX;
+                            self.dragSlider();
+                        }
+                    });
+                }
 
                 this.getSize();
                 this.setNumbers();
@@ -355,8 +399,6 @@
             }
         };
 
-        func.init();
-
         var oldie = function(){
             var n = navigator.userAgent,
                 r = /msie\s\d+/i,
@@ -375,6 +417,16 @@
                 oldie = false;
                 return false;
             }
+        };
+        var isTouch = function() {
+            try {
+                document.createEvent("TouchEvent");
+                return true;
+            } catch (e) {
+                return false;
+            }
         }
+
+        func.init();
     };
 })(jQuery);

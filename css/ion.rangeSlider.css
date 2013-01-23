@@ -1,5 +1,5 @@
 /* Ion.RangeSlider
-// version 1.0.30
+// css version 1.0.34
 // by Denis Ineshin | ionden.com
 // ===================================================================================================================*/
 
@@ -39,12 +39,30 @@
         .irs-slider.single {
             left: 10px;
         }
+            .irs-slider.single:before {
+                position: absolute; display: block; content: "";
+                top: -50%; left: -150%;
+                width: 400%; height: 200%;
+                background: rgba(0,0,0,0.0);
+            }
         .irs-slider.from {
             left: 100px;
         }
+            .irs-slider.from:before {
+                position: absolute; display: block; content: "";
+                top: -50%; left: -300%;
+                width: 400%; height: 200%;
+                background: rgba(0,0,0,0.0);
+            }
         .irs-slider.to {
             left: 300px;
         }
+            .irs-slider.to:before {
+                position: absolute; display: block; content: "";
+                top: -50%; left: 0;
+                width: 400%; height: 200%;
+                background: rgba(0,0,0,0.0);
+            }
         .irs-slider.last {
             z-index: 2;
         }
