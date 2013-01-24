@@ -2,7 +2,7 @@
 
 > English description
 
-Easy and light range. slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Project page</a>
+Easy and light range. slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Project page and demos</a>
 
 ***
 
@@ -115,7 +115,7 @@ $("#someID").ionRangeSlider({
 
 > Описание на русском
 
-Удобный легкий слайдер диапазонов. <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Страница проекта</a>
+Удобный легкий слайдер диапазонов. <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Страница проекта и демо</a>
 
 ***
 
