@@ -110,7 +110,7 @@ $("#someID").ionRangeSlider({
     </tbody>
 </table>
 
-
+***
 
 
 > Описание на русском
