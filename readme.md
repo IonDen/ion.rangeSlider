@@ -4,6 +4,8 @@
 
 Easy and light range. slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Project page and demos</a>
 
+Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.1.zip">ion.rangeSlider-1.1.zip</a>
+
 ***
 
 ## Description
@@ -116,6 +118,8 @@ $("#someID").ionRangeSlider({
 > Описание на русском
 
 Удобный легкий слайдер диапазонов. <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Страница проекта и демо</a>
+
+Скачать: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.1.zip">ion.rangeSlider-1.1.zip</a>
 
 ***
 
