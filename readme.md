@@ -98,12 +98,19 @@ $("#someID").ionRangeSlider({
             <td>Optional property, set slider step value</td>
         </tr>
         <tr>
+            <td>postfix</td>
+            <td>-</td>
+            <td>Optional property, set postfix text to all values. For example: " pounds" will convert "100" in to "100 pounds"</td>
+        </tr>
+        <tr>
             <td>onChange</td>
             <td>-</td>
             <td>Function-callback, is called on every change, returns object with all slider values</td>
         </tr>
     </tbody>
 </table>
+
+
 
 
 > Описание на русском
@@ -204,6 +211,11 @@ $("#someID").ionRangeSlider({
             <td>step</td>
             <td>1</td>
             <td>Не обязательный параметр, задает шаг слайдера</td>
+        </tr>
+        <tr>
+            <td>postfix</td>
+            <td>-</td>
+            <td>Не обязательный параметр, добавляет текст после всех значений. Например postfix - " грамм" модифицирует значение "100" в "100 грамм"</td>
         </tr>
         <tr>
             <td>onChange</td>
