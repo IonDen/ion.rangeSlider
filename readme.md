@@ -9,8 +9,8 @@ Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1
 ***
 
 ## Description
-Ion.Range Slider — beautiful, comfortable and easily customizable range slider with skins support. Also support events, has flexible settings, can be completely altered with CSS.
-Ion.Range Slider supports touch-devices (iPhone, iPad, etc.).
+Ion.Range Slider — beautiful, comfortable and easily customizable range slider with skins support. Also support events, has flexible settings, can be completely altered with CSS.<br />
+Ion.Range Slider supports touch-devices (iPhone, iPad, etc.).<br />
 Ion.Range Slider freely distributed under <a href="http://ionden.com/a/licence.html" target="_blank">MIT licence</a>.
 
 ## Dependencies
@@ -112,8 +112,11 @@ $("#someID").ionRangeSlider({
     </tbody>
 </table>
 
+<br />
+<br />
 ***
-
+<br />
+<br />
 
 > Описание на русском
 
@@ -124,8 +127,8 @@ $("#someID").ionRangeSlider({
 ***
 
 ## Описание
-ion.rangeSlider — красивый, удобный и легко настраиваемый слайдер диапазонов, поддерживающий скины. Слайдер поддерживает события, имеет гибкие настройки, может быть полностью видоизменен через CSS.
-Слайдер поддерживает устройства с touch-экраном (iPhone, iPad, etc.).
+ion.rangeSlider — красивый, удобный и легко настраиваемый слайдер диапазонов, поддерживающий скины. Слайдер поддерживает события, имеет гибкие настройки, может быть полностью видоизменен через CSS.<br />
+Слайдер поддерживает устройства с touch-экраном (iPhone, iPad, etc.).<br />
 Слайдер свободно распространяется на условиях <a href="http://ionden.com/a/licence.html" target="_blank">лицензии MIT</a>.
 
 ## Зависимости
