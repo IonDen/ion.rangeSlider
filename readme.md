@@ -34,7 +34,7 @@ Don't forget about skin image:
 
 Create base input element:
 ```html
-<input type="range" id="someID" name="rangeName" value="10;100" />
+<input type="text" id="someID" name="rangeName" value="10;100" />
 ```
 
 Initialize slider:
@@ -153,7 +153,7 @@ ion.rangeSlider — красивый, удобный и легко настра�
 
 Создаем базовое поле инпут:
 ```html
-<input type="range" id="someID" name="rangeName" value="10;100" />
+<input type="text" id="someID" name="rangeName" value="10;100" />
 ```
 
 Инициализируем слайдер:
