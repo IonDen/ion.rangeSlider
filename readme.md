@@ -64,7 +64,7 @@ data-from="30"                      // overwrite default FROM setting
 data-to="70"                        // overwrite default TO setting
 data-type="double"                  // slider type
 data-step="10"                      // slider step
-data-postfix=" грамм"               // postfix text
+data-postfix=" pounds"              // postfix text
 ```
 
 
