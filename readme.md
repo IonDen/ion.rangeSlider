@@ -1,10 +1,10 @@
-# Ion.Range Slider 1.1
+# Ion.Range Slider 1.2
 
 > English description
 
 Easy and light range. slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Project page and demos</a>
 
-Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.1.zip">ion.rangeSlider-1.1.zip</a>
+Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.2.zip">ion.rangeSlider-1.2.zip</a>
 
 ***
 
@@ -57,6 +57,16 @@ $("#someID").ionRangeSlider({
     },
 });
 ```
+
+You can also initialize slider with data-* attributes of input tag:
+```html
+data-from="30"                      // overwrite default FROM setting
+data-to="70"                        // overwrite default TO setting
+data-type="double"                  // slider type
+data-step="10"                      // slider step
+data-postfix=" грамм"               // postfix text
+```
+
 
 ## Settings
 
@@ -112,6 +122,9 @@ $("#someID").ionRangeSlider({
     </tbody>
 </table>
 
+## Update history
+* 15.02.2013 - new feature to set slider settings through data-* attributes of input tag
+
 <br />
 <br />
 ***
@@ -122,7 +135,7 @@ $("#someID").ionRangeSlider({
 
 Удобный легкий слайдер диапазонов. <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Страница проекта и демо</a>
 
-Скачать: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.1.zip">ion.rangeSlider-1.1.zip</a>
+Скачать: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.2.zip">ion.rangeSlider-1.2.zip</a>
 
 ***
 
@@ -175,6 +188,15 @@ $("#someID").ionRangeSlider({
         console.log(obj);
     },
 });
+```
+
+Слайдер с параметрами можно также инициализировать используя атрибуты data-* у тэга input:
+```html
+data-from="30"                      // предустановленное значение ОТ
+data-to="70"                        // предустановленное значение ДО
+data-type="double"                  // тип слайдера
+data-step="10"                      // шаг слайдера
+data-postfix=" грамм"               // постфикс значение
 ```
 
 
@@ -231,3 +253,6 @@ $("#someID").ionRangeSlider({
         </tr>
     </tbody>
 </table>
+
+## История обновлений
+* 15.02.2013 - добавлена возможность настраивать слайдер через атрибуты data-*

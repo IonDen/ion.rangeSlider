@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 1.1.59
+// version 1.2.63
 // © 2013 Denis Ineshin | IonDen.com
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/
@@ -15,11 +15,11 @@
         var settings = $.extend({
             min: parseInt(slider.attr("value").split(";")[0]) || 10,
             max: parseInt(slider.attr("value").split(";")[1]) || 100,
-            from: parseInt(slider.attr("value").split(";")[0]) || 10,
-            to: parseInt(slider.attr("value").split(";")[1]) || 100,
-            type: "single",
-            step: 1,
-            postfix: "",
+            from: parseInt(slider.data("from")) || parseInt(slider.attr("value").split(";")[0]) || 10,
+            to: parseInt(slider.data("to")) || parseInt(slider.attr("value").split(";")[1]) || 100,
+            type: slider.data("type") || "single",
+            step: parseInt(slider.data("step")) || 1,
+            postfix: slider.data("postfix") ||  "",
             onChange: null
         }, options);
 
