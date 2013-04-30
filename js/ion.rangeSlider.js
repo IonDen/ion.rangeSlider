@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 1.2.63
+// version 1.3.67
 // © 2013 Denis Ineshin | IonDen.com
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/
@@ -46,6 +46,7 @@
                 this.fullWidth = 0;
                 this.sliderWidth = 0;
                 this.numbers = {};
+                this.sliderIsActive = false;
 
                 slider[0].style.display = "none";
                 slider.after(baseHTML);
@@ -98,6 +99,7 @@
                         self.toSlider.removeClass("last");
                         self.calcDimentions(e, $(this), "from");
                         self.allowDrag = true;
+                        self.sliderIsActive = true;
                         if(oldie) $("*").prop("unselectable",true);
                     });
                     this.toSlider.on("mousedown", function(e){
@@ -107,6 +109,7 @@
                         self.fromSlider.removeClass("last");
                         self.calcDimentions(e, $(this), "to");
                         self.allowDrag = true;
+                        self.sliderIsActive = true;
                         if(oldie) $("*").prop("unselectable",true);
                     });
 
@@ -118,6 +121,7 @@
                             self.toSlider.removeClass("last");
                             self.calcDimentions(e.originalEvent, $(this), "from");
                             self.allowDrag = true;
+                            self.sliderIsActive = true;
                         });
                         this.toSlider.on("touchstart", function(e){
                             e.preventDefault();
@@ -126,6 +130,7 @@
                             self.fromSlider.removeClass("last");
                             self.calcDimentions(e.originalEvent, $(this), "to");
                             self.allowDrag = true;
+                            self.sliderIsActive = true;
                         });
                     }
 
@@ -133,6 +138,7 @@
 
                 $(document.body).on("mouseup", function(){
                     if(!self.allowDrag) return;
+                    self.sliderIsActive = false;
                     self.allowDrag = false;
                     $("#irs-active-slider").removeAttr("id");
                     self.activeSlider = null;
@@ -150,6 +156,7 @@
                 if(isTouch()) {
                     $(window).on("touchend", function(){
                         if(!self.allowDrag) return;
+                        self.sliderIsActive = false;
                         self.allowDrag = false;
                         $("#irs-active-slider").removeAttr("id");
                         self.activeSlider = null;
@@ -320,7 +327,7 @@
                     }
 
 
-                    slider.attr("value", this.numbers.fromNumber);
+                    slider.attr("value", parseInt(this.numbers.fromNumber));
 
                 } else if(settings.type == "double") {
 
@@ -375,13 +382,18 @@
                         this.fieldMax[0].style.display = "block";
                     }
 
-                    slider.attr("value", this.numbers.fromNumber + ";" + this.numbers.toNumber);
+                    slider.attr("value", parseInt(this.numbers.fromNumber) + ";" + parseInt(this.numbers.toNumber));
 
                 }
 
                 // trigger callback function
                 if(typeof settings.onChange == "function") {
                     settings.onChange.call(this, this.numbers);
+                }
+
+                // trigger finish function
+                if(typeof settings.onFinish == "function" && this.sliderIsActive === false) {
+                    settings.onFinish.call(this, this.numbers);
                 }
             },
             setDiapazon: function(){

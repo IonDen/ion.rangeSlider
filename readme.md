@@ -1,10 +1,10 @@
-# Ion.Range Slider 1.2
+# Ion.Range Slider 1.3
 
 > English description
 
 Easy and light range. slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Project page and demos</a>
 
-Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.2.zip">ion.rangeSlider-1.2.zip</a>
+Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.3.zip">ion.rangeSlider-1.3.zip</a>
 
 ***
 
@@ -55,6 +55,9 @@ $("#someID").ionRangeSlider({
     onChange: function(obj){        // function-callback, is called on every change
         console.log(obj);
     },
+    onFinish: function(obj){        // function-callback, is called once, after slider finished it's work
+        console.log(obj);
+    }
 });
 ```
 
@@ -64,7 +67,7 @@ data-from="30"                      // overwrite default FROM setting
 data-to="70"                        // overwrite default TO setting
 data-type="double"                  // slider type
 data-step="10"                      // slider step
-data-postfix=" pounds"              // postfix text
+data-postfix=" грамм"               // postfix text
 ```
 
 
@@ -119,10 +122,16 @@ data-postfix=" pounds"              // postfix text
             <td>-</td>
             <td>Function-callback, is called on every change, returns object with all slider values</td>
         </tr>
+        <tr>
+            <td>onFinish</td>
+            <td>-</td>
+            <td>Function-callback, is called once, then slider work is done. Returns object with all slider values</td>
+        </tr>
     </tbody>
 </table>
 
 ## Update history
+* 30.04.2013 - new method onFinish
 * 15.02.2013 - new feature to set slider settings through data-* attributes of input tag
 
 <br />
@@ -135,7 +144,7 @@ data-postfix=" pounds"              // postfix text
 
 Удобный легкий слайдер диапазонов. <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Страница проекта и демо</a>
 
-Скачать: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.2.zip">ion.rangeSlider-1.2.zip</a>
+Скачать: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.3.zip">ion.rangeSlider-1.3.zip</a>
 
 ***
 
@@ -187,6 +196,9 @@ $("#someID").ionRangeSlider({
     onChange: function(obj){        // callback функция, вызывается при изменении состояния
         console.log(obj);
     },
+    onFinish: function(obj){        // callback функция, вызывается один раз по окончании использования слайдера
+        console.log(obj);
+    }
 });
 ```
 
@@ -251,8 +263,14 @@ data-postfix=" грамм"               // постфикс значение
             <td>-</td>
             <td>Callback функция, вызывается при смене состояния слайдера, возвращает объект, содержащий параметры слайдера</td>
         </tr>
+        <tr>
+            <td>onFinish</td>
+            <td>-</td>
+            <td>Callback функция, вызывается один раз при смене состояния слайдера, когда работа слайдера завершена. Возвращает объект, содержащий параметры слайдера</td>
+        </tr>
     </tbody>
 </table>
 
 ## История обновлений
+* 30.04.2013 - добавлен новый метод onFinish
 * 15.02.2013 - добавлена возможность настраивать слайдер через атрибуты data-*
