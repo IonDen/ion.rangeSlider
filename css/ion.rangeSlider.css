@@ -1,5 +1,5 @@
 /* Ion.RangeSlider
-// css version 1.0.34
+// css version 1.5.37
 // by Denis Ineshin | ionden.com
 // ===================================================================================================================*/
 
@@ -27,7 +27,7 @@
             right: 0; width: 10%;
         }
 
-    .irs-diapazon {
+    .irs-diapason {
         position: absolute; display: block;
         left: 0; width: 100%;
     }

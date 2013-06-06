@@ -1,5 +1,5 @@
 /* Ion.RangeSlider, Nice Skin
-// css version 1.0.4
+// css version 1.5.6
 // by Denis Ineshin | ionden.com
 // ===================================================================================================================*/
 
@@ -9,7 +9,7 @@
 .irs-line-mid,
 .irs-line-left,
 .irs-line-right,
-.irs-diapazon,
+.irs-diapason,
 .irs-slider {
     background: url(../img/sprite-skin-nice.png) repeat-x;
 }
@@ -33,7 +33,7 @@
         background-position: 100% -30px;
     }
 
-.irs-diapazon {
+.irs-diapason {
     height: 8px; top: 25px;
     background-position: 0 -60px;
 }

@@ -1,15 +1,15 @@
-# Ion.Range Slider 1.3
+# Ion.Range Slider 1.5
 
 > English description
 
 Easy and light range. slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Project page and demos</a>
 
-Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.3.zip">ion.rangeSlider-1.3.zip</a>
+Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.5.zip">ion.rangeSlider-1.5.zip</a>
 
 ***
 
 ## Description
-Ion.Range Slider — beautiful, comfortable and easily customizable range slider with skins support. Also support events, has flexible settings, can be completely altered with CSS.<br />
+Ion.Range Slider — beautiful, comfortable and easily customizable range slider with skins support. Also support events and public methods, has flexible settings, can be completely altered with CSS.<br />
 Ion.Range Slider supports touch-devices (iPhone, iPad, etc.).<br />
 Ion.Range Slider freely distributed under <a href="http://ionden.com/a/licence-en.html" target="_blank">MIT licence</a>.
 
@@ -68,6 +68,24 @@ data-to="70"                        // overwrite default TO setting
 data-type="double"                  // slider type
 data-step="10"                      // slider step
 data-postfix=" грамм"               // postfix text
+```
+
+## Public methods
+
+Slider update, method <code>update</code>:
+```javascript
+$("#someID").ionRangeSlider("update", {
+    min: 20,                        // change min value
+    max: 90,                        // change max value
+    from: 40,                       // change default FROM setting
+    to: 70,                         // change default TO setting
+    step: 5                         // change slider step
+});
+```
+
+Slider remove, method <code>remove</code>:
+```javascript
+$("#someID").ionRangeSlider("remove");
 ```
 
 
@@ -131,6 +149,8 @@ data-postfix=" грамм"               // postfix text
 </table>
 
 ## Update history
+* 06.06.2013 - new public methods and some code optimisations
+* 06.06.2013 - some small css updates
 * 30.04.2013 - new method onFinish
 * 15.02.2013 - new feature to set slider settings through data-* attributes of input tag
 
@@ -144,7 +164,7 @@ data-postfix=" грамм"               // postfix text
 
 Удобный легкий слайдер диапазонов. <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Страница проекта и демо</a>
 
-Скачать: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.3.zip">ion.rangeSlider-1.3.zip</a>
+Скачать: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.5.zip">ion.rangeSlider-1.5.zip</a>
 
 ***
 
@@ -211,6 +231,24 @@ data-step="10"                      // шаг слайдера
 data-postfix=" грамм"               // постфикс значение
 ```
 
+## Публичные методы
+
+Обновление слайдера, метод <code>update</code>:
+```javascript
+$("#someID").ionRangeSlider("update", {
+    min: 20,                        // меняем минимальное значение
+    max: 90,                        // меняем максимальное значение
+    from: 40,                       // меняем предустановленное значение ОТ
+    to: 70,                         // меняем предустановленное значение ДО
+    step: 5                         // меняем шаг слайдера
+});
+```
+
+Удаление слайдера, метод <code>remove</code>:
+```javascript
+$("#someID").ionRangeSlider("remove");
+```
+
 
 ## Настройка
 
@@ -272,5 +310,7 @@ data-postfix=" грамм"               // постфикс значение
 </table>
 
 ## История обновлений
+* 06.06.2013 - добавлены публичные методы и произведена оптимизация кода
+* 06.06.2013 - мелкие обновления CSS файлов
 * 30.04.2013 - добавлен новый метод onFinish
 * 15.02.2013 - добавлена возможность настраивать слайдер через атрибуты data-*
