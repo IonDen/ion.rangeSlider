@@ -1,0 +1,21 @@
+﻿{
+    "name": "ion-rangeSlider",
+    "version": "1.5.95",
+    "title": "Ion Range Slider",
+    "author": {
+        "name": "IonDen",
+        "url": "https://github.com/IonDen"
+    },
+    "licenses": [
+        {
+            "type": "MIT",
+            "url": "http://ionden.com/a/licence-en.html"
+        }
+    ],
+    "homepage": "https://github.com/IonDen/ion.rangeSlider",
+    "docs": "https://github.com/IonDen/ion.rangeSlider/blob/master/readme.md",
+    "download": "http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.5.zip",
+    "dependencies": {
+        "jquery": ">=1.9"
+    }
+}
