@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 1.5.93
+// version 1.5.95
 // © 2013 Denis Ineshin | IonDen.com
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/
@@ -82,8 +82,8 @@
                 var fromData = {
                     min: parseInt(slider.attr("value").split(";")[0]) || settings.min,
                     max: parseInt(slider.attr("value").split(";")[1]) || settings.max,
-                    from: parseInt(slider.data("from")) || parseInt(slider.attr("value").split(";")[0]) || settings.from,
-                    to: parseInt(slider.data("to")) || parseInt(slider.attr("value").split(";")[1]) || settings.to,
+                    from: parseInt(slider.data("from")) || settings.from,
+                    to: parseInt(slider.data("to")) || settings.to,
                     type: slider.data("type") || settings.type,
                     step: parseInt(slider.data("step")) || settings.step,
                     postfix: slider.data("postfix") ||  settings.postfix
@@ -576,7 +576,7 @@
         } else if (typeof method === 'object' || !method) {
             return methods.init.apply(this, arguments);
         } else {
-            $.error('Метод с именем ' + method + ' не существует для jQuery.ionRangeSlider');
+            $.error('Method ' + method + ' does not exist for jQuery.ionRangeSlider');
         }
     };
 })(jQuery);
