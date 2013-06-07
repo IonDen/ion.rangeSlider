@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 1.5.95
+// version 1.5.99
 // © 2013 Denis Ineshin | IonDen.com
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/

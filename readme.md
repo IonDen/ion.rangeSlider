@@ -2,7 +2,7 @@
 
 > English description
 
-Easy and light range. slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Project page and demos</a>
+Easy and light range. slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
 
 Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.5.zip">ion.rangeSlider-1.5.zip</a>
 
@@ -67,7 +67,7 @@ data-from="30"                      // overwrite default FROM setting
 data-to="70"                        // overwrite default TO setting
 data-type="double"                  // slider type
 data-step="10"                      // slider step
-data-postfix=" грамм"               // postfix text
+data-postfix=" pounds"              // postfix text
 ```
 
 ## Public methods
