@@ -2,7 +2,7 @@
 
 > English description
 
-Easy and light range. slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
+Easy and light range slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
 
 Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.5.zip">ion.rangeSlider-1.5.zip</a>
 
@@ -11,7 +11,7 @@ Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1
 ## Description
 Ion.Range Slider — beautiful, comfortable and easily customizable range slider with skins support. Also support events and public methods, has flexible settings, can be completely altered with CSS.<br />
 Ion.Range Slider supports touch-devices (iPhone, iPad, etc.).<br />
-Ion.Range Slider freely distributed under <a href="http://ionden.com/a/licence-en.html" target="_blank">MIT licence</a>.
+Ion.Range Slider freely distributed under <a href="http://ionden.com/a/plugins/licence-en.html" target="_blank">MIT licence</a>.
 
 ## Dependencies
 * <a href="http://jquery.com/" target="_blank">jQuery 1.9+</a>
@@ -171,7 +171,7 @@ $("#someID").ionRangeSlider("remove");
 ## Описание
 ion.rangeSlider — красивый, удобный и легко настраиваемый слайдер диапазонов, поддерживающий скины. Слайдер поддерживает события, имеет гибкие настройки, может быть полностью видоизменен через CSS.<br />
 Слайдер поддерживает устройства с touch-экраном (iPhone, iPad, etc.).<br />
-Слайдер свободно распространяется на условиях <a href="http://ionden.com/a/licence.html" target="_blank">лицензии MIT</a>.
+Слайдер свободно распространяется на условиях <a href="http://ionden.com/a/plugins/licence.html" target="_blank">лицензии MIT</a>.
 
 ## Зависимости
 * <a href="http://jquery.com/" target="_blank">jQuery 1.9+</a>
