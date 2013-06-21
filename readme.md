@@ -1,15 +1,15 @@
-# Ion.Range Slider 1.5
+# Ion.Range Slider 1.6
 
-> English description
+> English description | <a href="readme.ru.md">Описание на русском</a>
 
 Easy and light range slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
 
-Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.5.zip">ion.rangeSlider-1.5.zip</a>
+Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.6.zip">ion.rangeSlider-1.6.zip</a>
 
 ***
 
 ## Description
-Ion.Range Slider — beautiful, comfortable and easily customizable range slider with skins support. Also support events and public methods, has flexible settings, can be completely altered with CSS.<br />
+Ion.Range Slider — Nice, comfortable and easily customizable range slider with skins support. Also support events and public methods, has flexible settings, can be completely altered with CSS.<br />
 Ion.Range Slider supports touch-devices (iPhone, iPad, etc.).<br />
 Ion.Range Slider freely distributed under <a href="http://ionden.com/a/plugins/licence-en.html" target="_blank">MIT licence</a>.
 
@@ -52,6 +52,7 @@ $("#someID").ionRangeSlider({
     type: "single",                 // slider type
     step: 10,                       // slider step
     postfix: " pounds",             // postfix text
+    hasGrid: true,                  // enable grid
     onChange: function(obj){        // function-callback, is called on every change
         console.log(obj);
     },
@@ -68,6 +69,7 @@ data-to="70"                        // overwrite default TO setting
 data-type="double"                  // slider type
 data-step="10"                      // slider step
 data-postfix=" pounds"              // postfix text
+data-hasgrid="true"                 // enable grid
 ```
 
 ## Public methods
@@ -136,6 +138,11 @@ $("#someID").ionRangeSlider("remove");
             <td>Optional property, set postfix text to all values. For example: " pounds" will convert "100" in to "100 pounds"</td>
         </tr>
         <tr>
+            <td>hasGrid</td>
+            <td>false</td>
+            <td>Optional property, enables grid at the bottom of the slider (it adds 20px height and this can be customised through CSS)</td>
+        </tr>
+        <tr>
             <td>onChange</td>
             <td>-</td>
             <td>Function-callback, is called on every change, returns object with all slider values</td>
@@ -149,168 +156,9 @@ $("#someID").ionRangeSlider("remove");
 </table>
 
 ## Update history
-* 06.06.2013 - new public methods and some code optimisations
-* 06.06.2013 - some small css updates
-* 30.04.2013 - new method onFinish
-* 15.02.2013 - new feature to set slider settings through data-* attributes of input tag
-
-<br />
-<br />
-***
-<br />
-<br />
-
-> Описание на русском
-
-Удобный легкий слайдер диапазонов. <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Страница проекта и демо</a>
-
-Скачать: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.5.zip">ion.rangeSlider-1.5.zip</a>
-
-***
-
-## Описание
-ion.rangeSlider — красивый, удобный и легко настраиваемый слайдер диапазонов, поддерживающий скины. Слайдер поддерживает события, имеет гибкие настройки, может быть полностью видоизменен через CSS.<br />
-Слайдер поддерживает устройства с touch-экраном (iPhone, iPad, etc.).<br />
-Слайдер свободно распространяется на условиях <a href="http://ionden.com/a/plugins/licence.html" target="_blank">лицензии MIT</a>.
-
-## Зависимости
-* <a href="http://jquery.com/" target="_blank">jQuery 1.9+</a>
-
-
-## Подключение
-
-Подключаем библиотеки:
-* jQuery
-* ion.rangeSlider.min.js
-
-И CSS:
-* normalize.min.css - желательно, если он у вас еще не подключен
-* ion.rangeSlider.css
-* ion.rangeSlider.skinName.css
-
-Не забываем про скин:
-* sprite-skin-simple.png - простецкий скин
-* sprite-skin-nice.png - приличный скин
-* Либо воспользуйтесь вложенным в архив PSD файлом, и нарисуйте собственный скин (не забудьте модифицировать размеры элементов в CSS файле)
-
-Создаем базовое поле инпут:
-```html
-<input type="text" id="someID" name="rangeName" value="10;100" />
-```
-
-Инициализируем слайдер:
-```javascript
-$("#someID").ionRangeSlider();
-```
-
-Или инициализируем слайдер с параметрами:
-```javascript
-$("#someID").ionRangeSlider({
-    min: 10,                        // минимальное значение
-    max: 100,                       // максимальное значение
-    from: 30,                       // предустановленное значение ОТ
-    to: 80,                         // предустановленное значение ДО
-    type: "single",                 // тип слайдера
-    step: 10,                       // шаг слайдера
-    postfix: " грамм",              // постфикс значение
-    onChange: function(obj){        // callback функция, вызывается при изменении состояния
-        console.log(obj);
-    },
-    onFinish: function(obj){        // callback функция, вызывается один раз по окончании использования слайдера
-        console.log(obj);
-    }
-});
-```
-
-Слайдер с параметрами можно также инициализировать используя атрибуты data-* у тэга input:
-```html
-data-from="30"                      // предустановленное значение ОТ
-data-to="70"                        // предустановленное значение ДО
-data-type="double"                  // тип слайдера
-data-step="10"                      // шаг слайдера
-data-postfix=" грамм"               // постфикс значение
-```
-
-## Публичные методы
-
-Обновление слайдера, метод <code>update</code>:
-```javascript
-$("#someID").ionRangeSlider("update", {
-    min: 20,                        // меняем минимальное значение
-    max: 90,                        // меняем максимальное значение
-    from: 40,                       // меняем предустановленное значение ОТ
-    to: 70,                         // меняем предустановленное значение ДО
-    step: 5                         // меняем шаг слайдера
-});
-```
-
-Удаление слайдера, метод <code>remove</code>:
-```javascript
-$("#someID").ionRangeSlider("remove");
-```
-
-
-## Настройка
-
-<table>
-    <thead>
-        <tr>
-            <th>Атрибут</th>
-            <th>По умолчанию</th>
-            <th>Описание</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>type</td>
-            <td>"single"</td>
-            <td>Не обязательный параметр, позволяет выбрать тип слайдера, может принимать значение <code>single</code> - для одиночного слайдера или <code>double</code> - для двойного слайдера</td>
-        </tr>
-        <tr>
-            <td>min</td>
-            <td>10</td>
-            <td>Не обязательный параметр, автоматически устанавливается из атрибута <code>value</code> базового поля input. Например если value="10;100", то примет значение 10</td>
-        </tr>
-        <tr>
-            <td>max</td>
-            <td>100</td>
-            <td>Не обязательный параметр, автоматически устанавливается из атрибута <code>value</code> базового поля input. Например если value="10;100", то примет значение 100</td>
-        </tr>
-        <tr>
-            <td>from</td>
-            <td>= min</td>
-            <td>Не обязательный параметр, по умолчанию равен значению min. Позволяет задать стартовую позицию слайдера "ОТ"</td>
-        </tr>
-        <tr>
-            <td>to</td>
-            <td>= max</td>
-            <td>Не обязательный параметр, по умолчанию равен значению max. Позволяет задать стартовую позицию слайдера "ДО"</td>
-        </tr>
-        <tr>
-            <td>step</td>
-            <td>1</td>
-            <td>Не обязательный параметр, задает шаг слайдера</td>
-        </tr>
-        <tr>
-            <td>postfix</td>
-            <td>-</td>
-            <td>Не обязательный параметр, добавляет текст после всех значений. Например postfix - " грамм" модифицирует значение "100" в "100 грамм"</td>
-        </tr>
-        <tr>
-            <td>onChange</td>
-            <td>-</td>
-            <td>Callback функция, вызывается при смене состояния слайдера, возвращает объект, содержащий параметры слайдера</td>
-        </tr>
-        <tr>
-            <td>onFinish</td>
-            <td>-</td>
-            <td>Callback функция, вызывается один раз при смене состояния слайдера, когда работа слайдера завершена. Возвращает объект, содержащий параметры слайдера</td>
-        </tr>
-    </tbody>
-</table>
-
-## История обновлений
-* 06.06.2013 - добавлены публичные методы и произведена оптимизация кода
-* 06.06.2013 - мелкие обновления CSS файлов
-* 30.04.2013 - добавлен новый метод onFinish
-* 15.02.2013 - добавлена возможность настраивать слайдер через атрибуты data-*
+* June 21, 2013 - added the ability to display the grid
+* June 21, 2013 - minor bug fix
+* June 06, 2013 - new public methods and some code optimisations
+* June 06, 2013 - some small css updates
+* April 30, 2013 - new method onFinish
+* February 15, 2013 - new feature to set slider settings through data-* attributes of input tag

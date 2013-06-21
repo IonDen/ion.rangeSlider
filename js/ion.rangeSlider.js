@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 1.5.99
+// version 1.6.107
 // © 2013 Denis Ineshin | IonDen.com
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/
@@ -15,7 +15,7 @@
         var n = num.toString();
         return n.replace(/(\d{1,3}(?=(?:\d\d\d)+(?!\d)))/g,"$1 ");
     };
-    var isOldIe = function(){
+    var oldie = (function(){
         var n = navigator.userAgent,
             r = /msie\s\d+/i,
             v;
@@ -30,15 +30,15 @@
         } else {
             return false;
         }
-    };
-    var isItTouch = function() {
+    }());
+    var isTouch = (function() {
         try {
             document.createEvent("TouchEvent");
             return true;
         } catch (e) {
             return false;
         }
-    };
+    }());
 
     var methods = {
         init: function(options){
@@ -50,6 +50,7 @@
                 type: "single",
                 step: 1,
                 postfix: "",
+                hasGrid: false,
                 onChange: null,
                 onFinish: null
             }, options);
@@ -59,13 +60,11 @@
                 baseHTML += '<span class="irs-min">0</span><span class="irs-max">1</span>';
                 baseHTML += '<span class="irs-from">0</span><span class="irs-to">0</span><span class="irs-single">0</span>';
                 baseHTML += '</span>';
+                baseHTML += '<span class="irs-grid"></span>';
             var singleHTML = '<span class="irs-slider single"></span>';
             var doubleHTML =  '<span class="irs-diapason"></span>';
                 doubleHTML += '<span class="irs-slider from"></span>';
                 doubleHTML += '<span class="irs-slider to"></span>';
-
-            var oldie = isOldIe();
-            var isTouch = isItTouch();
 
 
             return this.each(function(){
@@ -86,7 +85,8 @@
                     to: parseInt(slider.data("to")) || settings.to,
                     type: slider.data("type") || settings.type,
                     step: parseInt(slider.data("step")) || settings.step,
-                    postfix: slider.data("postfix") ||  settings.postfix
+                    postfix: slider.data("postfix") ||  settings.postfix,
+                    hasGrid: slider.data("hasgrid") ||  settings.hasGrid
                 };
                 settings = $.extend(settings, fromData);
 
@@ -107,7 +107,8 @@
                     $fromSlider,
                     $toSlider,
                     $activeSlider,
-                    $diapason;
+                    $diapason,
+                    $grid;
 
                 var allowDrag = false,
                     sliderIsActive = false,
@@ -123,7 +124,6 @@
                     left = 0,
                     right = 0,
                     minusX = 0;
-
 
 
 
@@ -161,6 +161,7 @@
                     $fieldFrom = $rangeSlider.find(".irs-from");
                     $fieldTo = $rangeSlider.find(".irs-to");
                     $fieldSingle = $rangeSlider.find(".irs-single");
+                    $grid = $container.find(".irs-grid");
 
                     fieldMinWidth = $fieldMin.outerWidth();
                     fieldMaxWidth = $fieldMax.outerWidth();
@@ -208,7 +209,10 @@
                             calcDimensions(e, $(this), "from");
                             allowDrag = true;
                             sliderIsActive = true;
-                            if(oldie) $("*").prop("unselectable",true);
+
+                            if(oldie) {
+                                $("*").prop("unselectable",true);
+                            }
                         });
                         $toSlider.on("mousedown", function(e){
                             e.preventDefault();
@@ -219,7 +223,10 @@
                             calcDimensions(e, $(this), "to");
                             allowDrag = true;
                             sliderIsActive = true;
-                            if(oldie) $("*").prop("unselectable",true);
+
+                            if(oldie) {
+                                $("*").prop("unselectable",true);
+                            }
                         });
 
                         if(isTouch) {
@@ -244,6 +251,10 @@
                                 sliderIsActive = true;
                             });
                         }
+
+                        if(settings.to === settings.max) {
+                            $fromSlider.addClass("last");
+                        }
                     }
 
                     $body.on("mouseup", function(){
@@ -256,7 +267,9 @@
                             setDiapason();
                         }
                         getNumbers();
-                        if(oldie) $("*").prop("unselectable",false);
+                        if(oldie) {
+                            $("*").prop("unselectable",false);
+                        }
                     });
                     $body.on("mousemove", function(e){
                         if(allowDrag) {
@@ -287,7 +300,9 @@
 
                     getSize();
                     setNumbers();
-
+                    if(settings.hasGrid) {
+                        setGrid();
+                    }
                 };
 
                 var getSize = function(){
@@ -553,6 +568,50 @@
                     if(typeof settings.onFinish == "function" && sliderIsActive === false) {
                         settings.onFinish.call(this, numbers);
                     }
+                };
+
+                var setGrid = function(){
+                    $container.addClass("irs-with-grid");
+
+                    var i = 0,
+                        text = '',
+                        step = 0,
+                        tStep = 0,
+                        gridHTML = '',
+                        smNum = 20,
+                        bigNum = 4;
+
+                    for(i = 0; i <= smNum; i++){
+                        step = Math.floor(normalWidth / smNum * i);
+                        if(step >= normalWidth) {
+                            step = normalWidth - 1;
+                        }
+                        gridHTML += '<span class="irs-grid-pol small" style="left: ' + step + 'px;"></span>';
+                    }
+                    for(i = 0; i <= bigNum; i++){
+                        step = Math.floor(normalWidth / bigNum * i);
+                        if(step >= normalWidth) {
+                            step = normalWidth - 1;
+                        }
+                        gridHTML += '<span class="irs-grid-pol" style="left: ' + step + 'px;"></span>';
+
+                        text = Math.round(settings.min + ((settings.max -settings.min) / bigNum * i));
+                        text = Math.round(text / settings.step) * settings.step;
+                        text = prettify(text);
+
+                        if(i === 0) {
+                            tStep = step;
+                            gridHTML += '<span class="irs-grid-text" style="left: ' + tStep + 'px; text-align: left;">' + text + '</span>';
+                        } else if(i === bigNum) {
+                            tStep = step - 100;
+                            gridHTML += '<span class="irs-grid-text" style="left: ' + tStep + 'px; text-align: right;">' + text + '</span>';
+                        } else {
+                            tStep = step - 50;
+                            gridHTML += '<span class="irs-grid-text" style="left: ' + tStep + 'px;">' + text + '</span>';
+                        }
+                    }
+
+                    $grid.html(gridHTML);
                 };
 
                 placeHTML();
