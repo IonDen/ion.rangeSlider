@@ -1,9 +1,12 @@
 ﻿{
     "name": "ion-rangeSlider",
-    "version": "1.6.107",
+    "version": "1.6.115",
     "title": "Ion Range Slider",
     "description": "Comfortable and easily customizable range slider with skins support",
     "keywords": [
+        "jquery",
+        "form",
+        "input",
         "range",
         "slider",
         "interface",
@@ -17,7 +20,7 @@
     "licenses": [
         {
             "type": "MIT",
-            "url": "http://ionden.com/a/licence-en.html"
+            "url": "http://ionden.com/a/plugins/licence-en.html"
         }
     ],
     "homepage": "https://github.com/IonDen/ion.rangeSlider",

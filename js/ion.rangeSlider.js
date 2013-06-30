@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 1.6.107
+// version 1.6.115
 // © 2013 Denis Ineshin | IonDen.com
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/
@@ -51,6 +51,7 @@
                 step: 1,
                 postfix: "",
                 hasGrid: false,
+                hideText: false,
                 onChange: null,
                 onFinish: null
             }, options);
@@ -86,7 +87,8 @@
                     type: slider.data("type") || settings.type,
                     step: parseInt(slider.data("step")) || settings.step,
                     postfix: slider.data("postfix") ||  settings.postfix,
-                    hasGrid: slider.data("hasgrid") ||  settings.hasGrid
+                    hasGrid: slider.data("hasgrid") ||  settings.hasGrid,
+                    hideText: slider.data("hidetext") ||  settings.hideText
                 };
                 settings = $.extend(settings, fromData);
 
@@ -112,6 +114,7 @@
 
                 var allowDrag = false,
                     sliderIsActive = false,
+                    firstStart = true,
                     numbers = {};
 
                 var mouseX = 0,
@@ -156,12 +159,21 @@
 
                     $fieldMin = $rangeSlider.find(".irs-min");
                     $fieldMax = $rangeSlider.find(".irs-max");
-                    $fieldMin.html(prettify(settings.min) + settings.postfix);
-                    $fieldMax.html(prettify(settings.max) + settings.postfix);
                     $fieldFrom = $rangeSlider.find(".irs-from");
                     $fieldTo = $rangeSlider.find(".irs-to");
                     $fieldSingle = $rangeSlider.find(".irs-single");
                     $grid = $container.find(".irs-grid");
+
+                    if(settings.hideText) {
+                        $fieldMin[0].style.display = "none";
+                        $fieldMax[0].style.display = "none";
+                        $fieldFrom[0].style.display = "none";
+                        $fieldTo[0].style.display = "none";
+                        $fieldSingle[0].style.display = "none";
+                    } else {
+                        $fieldMin.html(prettify(settings.min) + settings.postfix);
+                        $fieldMax.html(prettify(settings.max) + settings.postfix);
+                    }
 
                     fieldMinWidth = $fieldMin.outerWidth();
                     fieldMaxWidth = $fieldMax.outerWidth();
@@ -178,7 +190,9 @@
                             calcDimensions(e, $(this), null);
 
                             allowDrag = true;
-                            if(oldie) $("*").prop("unselectable",true);
+                            if(oldie) {
+                                $("*").prop("unselectable",true);
+                            }
                         });
                         if(isTouch) {
                             $singleSlider.on("touchstart", function(e){
@@ -318,6 +332,7 @@
                 var calcDimensions = function(e, currentSlider, whichSlider){
                     getSize();
 
+                    firstStart = false;
                     $activeSlider = currentSlider;
                     $activeSlider.attr("id", "irs-active-slider");
 
@@ -459,100 +474,103 @@
 
                     if(settings.type === "single") {
 
-                        $fieldFrom[0].style.display = "none";
-                        $fieldTo[0].style.display = "none";
+                        if(!settings.hideText) {
+                            $fieldFrom[0].style.display = "none";
+                            $fieldTo[0].style.display = "none";
 
-                        _single = prettify(numbers.fromNumber) + settings.postfix;
-                        $fieldSingle.html(_single);
+                            _single = prettify(numbers.fromNumber) + settings.postfix;
+                            $fieldSingle.html(_single);
 
-                        _singleW = $fieldSingle.outerWidth();
-                        _singleX = numbers.fromX - (_singleW / 2) + _slW;
-                        if(_singleX < 0) {
-                            _singleX = 0;
+                            _singleW = $fieldSingle.outerWidth();
+                            _singleX = numbers.fromX - (_singleW / 2) + _slW;
+                            if(_singleX < 0) {
+                                _singleX = 0;
+                            }
+                            if(_singleX > normalWidth - _singleW) {
+                                _singleX = normalWidth - _singleW;
+                            }
+                            $fieldSingle[0].style.left = _singleX + "px";
+
+                            if(_singleX < fieldMinWidth) {
+                                $fieldMin[0].style.display = "none";
+                            } else {
+                                $fieldMin[0].style.display = "block";
+                            }
+
+                            if(_singleX + _singleW > normalWidth - fieldMaxWidth) {
+                                $fieldMax[0].style.display = "none";
+                            } else {
+                                $fieldMax[0].style.display = "block";
+                            }
                         }
-                        if(_singleX > normalWidth - _singleW) {
-                            _singleX = normalWidth - _singleW;
-                        }
-                        $fieldSingle[0].style.left = _singleX + "px";
-
-                        if(_singleX < fieldMinWidth) {
-                            $fieldMin[0].style.display = "none";
-                        } else {
-                            $fieldMin[0].style.display = "block";
-                        }
-
-                        if(_singleX + _singleW > normalWidth - fieldMaxWidth) {
-                            $fieldMax[0].style.display = "none";
-                        } else {
-                            $fieldMax[0].style.display = "block";
-                        }
-
 
                         slider.attr("value", parseInt(numbers.fromNumber));
 
                     } else if(settings.type === "double") {
 
-                        _from = prettify(numbers.fromNumber) + settings.postfix;
-                        _to = prettify(numbers.toNumber) + settings.postfix;
-                        if(numbers.fromNumber != numbers.toNumber) {
-                            _single = prettify(numbers.fromNumber) + " — " + prettify(numbers.toNumber) + settings.postfix;
-                        } else {
-                            _single = prettify(numbers.fromNumber) + settings.postfix;
-                        }
-                        $fieldFrom.html(_from);
-                        $fieldTo.html(_to);
-                        $fieldSingle.html(_single);
+                        if(!settings.hideText) {
+                            _from = prettify(numbers.fromNumber) + settings.postfix;
+                            _to = prettify(numbers.toNumber) + settings.postfix;
+                            if(numbers.fromNumber != numbers.toNumber) {
+                                _single = prettify(numbers.fromNumber) + " — " + prettify(numbers.toNumber) + settings.postfix;
+                            } else {
+                                _single = prettify(numbers.fromNumber) + settings.postfix;
+                            }
+                            $fieldFrom.html(_from);
+                            $fieldTo.html(_to);
+                            $fieldSingle.html(_single);
 
-                        _fromW = $fieldFrom.outerWidth();
-                        _fromX = numbers.fromX - (_fromW / 2) + _slW;
-                        if(_fromX < 0) {
-                            _fromX = 0;
-                        }
-                        if(_fromX > normalWidth - _fromW) {
-                            _fromX = normalWidth - _fromW;
-                        }
-                        $fieldFrom[0].style.left = _fromX + "px";
+                            _fromW = $fieldFrom.outerWidth();
+                            _fromX = numbers.fromX - (_fromW / 2) + _slW;
+                            if(_fromX < 0) {
+                                _fromX = 0;
+                            }
+                            if(_fromX > normalWidth - _fromW) {
+                                _fromX = normalWidth - _fromW;
+                            }
+                            $fieldFrom[0].style.left = _fromX + "px";
 
-                        _toW = $fieldTo.outerWidth();
-                        _toX = numbers.toX - (_toW / 2) + _slW;
-                        if(_toX < 0) {
-                            _toX = 0;
-                        }
-                        if(_toX > normalWidth - _toW) {
-                            _toX = normalWidth - _toW;
-                        }
-                        $fieldTo[0].style.left = _toX + "px";
+                            _toW = $fieldTo.outerWidth();
+                            _toX = numbers.toX - (_toW / 2) + _slW;
+                            if(_toX < 0) {
+                                _toX = 0;
+                            }
+                            if(_toX > normalWidth - _toW) {
+                                _toX = normalWidth - _toW;
+                            }
+                            $fieldTo[0].style.left = _toX + "px";
 
-                        _singleW = $fieldSingle.outerWidth();
-                        _singleX = numbers.fromX + ((numbers.toX - numbers.fromX) / 2) - (_singleW / 2) + _slW;
-                        if(_singleX < 0) {
-                            _singleX = 0;
-                        }
-                        if(_singleX > normalWidth - _singleW) {
-                            _singleX = normalWidth - _singleW;
-                        }
-                        $fieldSingle[0].style.left = _singleX + "px";
+                            _singleW = $fieldSingle.outerWidth();
+                            _singleX = numbers.fromX + ((numbers.toX - numbers.fromX) / 2) - (_singleW / 2) + _slW;
+                            if(_singleX < 0) {
+                                _singleX = 0;
+                            }
+                            if(_singleX > normalWidth - _singleW) {
+                                _singleX = normalWidth - _singleW;
+                            }
+                            $fieldSingle[0].style.left = _singleX + "px";
 
-                        if(_fromX + _fromW < _toX) {
-                            $fieldSingle[0].style.display = "none";
-                            $fieldFrom[0].style.display = "block";
-                            $fieldTo[0].style.display = "block";
-                        } else {
-                            $fieldSingle[0].style.display = "block";
-                            $fieldFrom[0].style.display = "none";
-                            $fieldTo[0].style.display = "none";
-                        }
+                            if(_fromX + _fromW < _toX) {
+                                $fieldSingle[0].style.display = "none";
+                                $fieldFrom[0].style.display = "block";
+                                $fieldTo[0].style.display = "block";
+                            } else {
+                                $fieldSingle[0].style.display = "block";
+                                $fieldFrom[0].style.display = "none";
+                                $fieldTo[0].style.display = "none";
+                            }
 
-                        if(_singleX < fieldMinWidth || _fromX < fieldMinWidth) {
-                            $fieldMin[0].style.display = "none";
-                        } else {
-                            $fieldMin[0].style.display = "block";
-                        }
+                            if(_singleX < fieldMinWidth || _fromX < fieldMinWidth) {
+                                $fieldMin[0].style.display = "none";
+                            } else {
+                                $fieldMin[0].style.display = "block";
+                            }
 
-                        if(_singleX + _singleW > normalWidth - fieldMaxWidth || _toX + _toW > normalWidth - fieldMaxWidth) {
-                            $fieldMax[0].style.display = "none";
-                        } else {
-                            $fieldMax[0].style.display = "block";
+                            if(_singleX + _singleW > normalWidth - fieldMaxWidth || _toX + _toW > normalWidth - fieldMaxWidth) {
+                                $fieldMax[0].style.display = "none";
+                            } else {
+                                $fieldMax[0].style.display = "block";
+                            }
                         }
 
                         slider.attr("value", parseInt(numbers.fromNumber) + ";" + parseInt(numbers.toNumber));
@@ -560,12 +578,12 @@
                     }
 
                     // trigger callback function
-                    if(typeof settings.onChange == "function") {
+                    if(typeof settings.onChange === "function") {
                         settings.onChange.call(this, numbers);
                     }
 
                     // trigger finish function
-                    if(typeof settings.onFinish == "function" && sliderIsActive === false) {
+                    if(typeof settings.onFinish === "function" && !sliderIsActive && !firstStart) {
                         settings.onFinish.call(this, numbers);
                     }
                 };

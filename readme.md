@@ -53,6 +53,7 @@ $("#someID").ionRangeSlider({
     step: 10,                       // slider step
     postfix: " pounds",             // postfix text
     hasGrid: true,                  // enable grid
+    hideText: true,                 // hide all text data
     onChange: function(obj){        // function-callback, is called on every change
         console.log(obj);
     },
@@ -70,6 +71,7 @@ data-type="double"                  // slider type
 data-step="10"                      // slider step
 data-postfix=" pounds"              // postfix text
 data-hasgrid="true"                 // enable grid
+data-hidetext="true"                // hide all text data
 ```
 
 ## Public methods
@@ -143,6 +145,11 @@ $("#someID").ionRangeSlider("remove");
             <td>Optional property, enables grid at the bottom of the slider (it adds 20px height and this can be customised through CSS)</td>
         </tr>
         <tr>
+            <td>hideText</td>
+            <td>false</td>
+            <td>Optional property, disables all visual text data.</td>
+        </tr>
+        <tr>
             <td>onChange</td>
             <td>-</td>
             <td>Function-callback, is called on every change, returns object with all slider values</td>
@@ -156,6 +163,7 @@ $("#someID").ionRangeSlider("remove");
 </table>
 
 ## Update history
+* June 30, 2013 - minor bug fixes and new option "hideText"
 * June 21, 2013 - added the ability to display the grid
 * June 21, 2013 - minor bug fix
 * June 06, 2013 - new public methods and some code optimisations
