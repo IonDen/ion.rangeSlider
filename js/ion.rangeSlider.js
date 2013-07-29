@@ -1,12 +1,12 @@
 ﻿// Ion.RangeSlider
-// version 1.6.115
+// version 1.6.3 Build: 117
 // © 2013 Denis Ineshin | IonDen.com
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/
 // GitHub page:     https://github.com/IonDen/ion.rangeSlider
 //
 // Released under MIT licence:
-// http://ionden.com/a/licence.html
+// http://ionden.com/a/plugins/licence-en.html
 // =====================================================================================================================
 
 (function($){
@@ -190,6 +190,8 @@
                             calcDimensions(e, $(this), null);
 
                             allowDrag = true;
+                            sliderIsActive = true;
+
                             if(oldie) {
                                 $("*").prop("unselectable",true);
                             }
@@ -202,6 +204,7 @@
                                 calcDimensions(e.originalEvent, $(this), null);
 
                                 allowDrag = true;
+                                sliderIsActive = true;
                             });
                         }
 

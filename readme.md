@@ -1,17 +1,17 @@
-# Ion.Range Slider 1.6
+# Ion.Range Slider 1.6.3
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
 Easy and light range slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
 
-Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.6.zip">ion.rangeSlider-1.6.zip</a>
+Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.6.3.zip">ion.rangeSlider-1.6.3.zip</a>
 
 ***
 
 ## Description
-Ion.Range Slider — Nice, comfortable and easily customizable range slider with skins support. Also support events and public methods, has flexible settings, can be completely altered with CSS.<br />
-Ion.Range Slider supports touch-devices (iPhone, iPad, etc.).<br />
-Ion.Range Slider freely distributed under <a href="http://ionden.com/a/plugins/licence-en.html" target="_blank">MIT licence</a>.
+Ion.RangeSlider — Nice, comfortable and easily customizable range slider with skins support. Also support events and public methods, has flexible settings, can be completely altered with CSS.<br />
+Ion.RangeSlider supports touch-devices (iPhone, iPad, etc.).<br />
+Ion.RangeSlider freely distributed under <a href="http://ionden.com/a/plugins/licence-en.html" target="_blank">MIT licence</a>.
 
 ## Dependencies
 * <a href="http://jquery.com/" target="_blank">jQuery 1.9+</a>
@@ -163,6 +163,7 @@ $("#someID").ionRangeSlider("remove");
 </table>
 
 ## Update history
+* July 29, 2013 - Issue #2 fixed. Versioning changed
 * June 30, 2013 - minor bug fixes and new option "hideText"
 * June 21, 2013 - added the ability to display the grid
 * June 21, 2013 - minor bug fix
