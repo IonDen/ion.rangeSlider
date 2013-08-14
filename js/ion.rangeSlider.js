@@ -49,6 +49,7 @@
                 to: 100,
                 type: "single",
                 step: 1,
+				prefix: "",
                 postfix: "",
                 hasGrid: false,
                 hideText: false,
@@ -86,6 +87,7 @@
                     to: parseInt(slider.data("to")) || settings.to,
                     type: slider.data("type") || settings.type,
                     step: parseInt(slider.data("step")) || settings.step,
+                    postfix: slider.data("prefix") ||  settings.prefix,
                     postfix: slider.data("postfix") ||  settings.postfix,
                     hasGrid: slider.data("hasgrid") ||  settings.hasGrid,
                     hideText: slider.data("hidetext") ||  settings.hideText
@@ -171,8 +173,8 @@
                         $fieldTo[0].style.display = "none";
                         $fieldSingle[0].style.display = "none";
                     } else {
-                        $fieldMin.html(prettify(settings.min) + settings.postfix);
-                        $fieldMax.html(prettify(settings.max) + settings.postfix);
+                        $fieldMin.html(settings.prefix + prettify(settings.min) + settings.postfix);
+                        $fieldMax.html(settings.prefix + prettify(settings.max) + settings.postfix);
                     }
 
                     fieldMinWidth = $fieldMin.outerWidth();
@@ -481,7 +483,7 @@
                             $fieldFrom[0].style.display = "none";
                             $fieldTo[0].style.display = "none";
 
-                            _single = prettify(numbers.fromNumber) + settings.postfix;
+                            _single = settings.prefix + prettify(numbers.fromNumber) + settings.postfix;
                             $fieldSingle.html(_single);
 
                             _singleW = $fieldSingle.outerWidth();
@@ -512,12 +514,12 @@
                     } else if(settings.type === "double") {
 
                         if(!settings.hideText) {
-                            _from = prettify(numbers.fromNumber) + settings.postfix;
-                            _to = prettify(numbers.toNumber) + settings.postfix;
+                            _from = settings.prefix + prettify(numbers.fromNumber) + settings.postfix;
+                            _to = settings.prefix + prettify(numbers.toNumber) + settings.postfix;
                             if(numbers.fromNumber != numbers.toNumber) {
-                                _single = prettify(numbers.fromNumber) + " — " + prettify(numbers.toNumber) + settings.postfix;
+                                _single = settings.prefix + prettify(numbers.fromNumber) + " — " + settings.prefix + prettify(numbers.toNumber) + settings.postfix;
                             } else {
-                                _single = prettify(numbers.fromNumber) + settings.postfix;
+                                _single = settings.prefix + prettify(numbers.fromNumber) + settings.postfix;
                             }
                             $fieldFrom.html(_from);
                             $fieldTo.html(_to);
