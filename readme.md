@@ -135,6 +135,11 @@ $("#someID").ionRangeSlider("remove");
             <td>Optional property, set slider step value</td>
         </tr>
         <tr>
+            <td>prefix</td>
+            <td>-</td>
+            <td>Optional property, set prefix text to all values. For example: "$" will convert "100" in to "$100"</td>
+        </tr>
+        <tr>
             <td>postfix</td>
             <td>-</td>
             <td>Optional property, set postfix text to all values. For example: " pounds" will convert "100" in to "100 pounds"</td>
