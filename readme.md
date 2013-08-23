@@ -1,190 +1,205 @@
-# Ion.Range Slider 1.6.3
+# Ion.Range Slider 1.7.0
 
-English | [русском](readme.ru.md)
+> English description | <a href="readme.ru.md">Описание на русском</a>
 
------
+Easy and light range slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
 
-Easy and lightweight range input slider.
+Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.7.0.zip">ion.rangeSlider-1.7.0.zip</a>
 
-- [Project page and demos](http://ionden.com/a/plugins/ion.rangeSlider/en.html)
-- [Download](http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.6.3.zip)
-
-
------
-
+***
 
 ## Description
-
-Ion.RangeSlider is a simple, lightweight and easily customizable range slider with skins support. Supports events, public methods, has flexible settings, and can be completely styled and altered with CSS.
-
-Ion.RangeSlider supports touch-devices (iPhone, iPad, etc.).
-
-Ion.RangeSlider is freely distributed under the [MIT licence](http://ionden.com/a/plugins/licence-en.html).
-
+Ion.RangeSlider — Nice, comfortable and easily customizable range slider with skins support. Also support events and public methods, has flexible settings, can be completely altered with CSS.<br />
+Ion.RangeSlider supports touch-devices (iPhone, iPad, etc.).<br />
+Ion.RangeSlider freely distributed under <a href="http://ionden.com/a/plugins/licence-en.html" target="_blank">MIT licence</a>.
 
 ## Dependencies
-
-- [jQuery 1.9+](http://jquery.com/)
-
+* <a href="http://jquery.com/" target="_blank">jQuery 1.9+</a>
 
 ## Usage
 
 Add the following libraries to the page:
-
-- jQuery
-- ion.rangeSlider.min.js
+* jQuery
+* ion.rangeSlider.min.js
 
 Add the following stylesheets to the page:
-
-- normalize.min.css _(If not already present)_
-- ion.rangeSlider.css
+* normalize.min.css (If not already present)
+* ion.rangeSlider.css
 
 Plus, a skin for the slider. Two skins are included:
+* ion.rangeSlider.skinNice.css
+* ion.rangeSlider.skinSimple.css
 
-- ion.rangeSlider.skinNice.css
-- ion.rangeSlider.skinSimple.css
-
-Don't forget to include the skin image sprite:
-
-- sprite-skin-simple.png _(Simple skin)_
-- sprite-skin-nice.png _(Nice skin)_
-
-_Or use the included PSD file and design a custom skin._
+Don't forget about skin image sprite:
+* sprite-skin-simple.png - Simple skin
+* sprite-skin-nice.png - Nice skin
+Or use the included PSD file and design a custom skin.
 
 
-### Initialisation
+## Initialisation
 
-The slider overrides a native text `input` element. The input must have the default value of `"{min};{max}"`, where `{min}` and `{max}` are two numbers.
-
+The slider overrides a native text <code>input</code> element. The input may have the default value of "<code>{min}</code>;<code>{max}</code>", where <code>{min}</code> and <code>{max}</code> are two numbers.
 ```html
 <input type="text" id="someID" name="rangeName" value="10;100" />
 ```
 
-To initialise the slider, call `ionRangeSlider` on the element:
-
-Initialize slider:
+To initialise the slider, call ionRangeSlider on the element:
 ```javascript
 $("#someID").ionRangeSlider();
 ```
 
 
-### Settings
+## Settings
 
-A settings object can optionally be passed into the `ionRangeSlider()` method to customise the slider.
+<table class="options">
+    <thead>
+        <tr>
+            <th>Property</th>
+            <th>Default</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>type</td>
+            <td>"single"</td>
+            <td>Optional property, will select slider type from two options: <code>single</code> - for single range slider, or <code>double</code> - for double range slider</td>
+        </tr>
+        <tr>
+            <td>min</td>
+            <td>10</td>
+            <td>Optional property, automatically set from the <code>value</code> attribute of base input. For example: if value="10;100", it will be 10</td>
+        </tr>
+        <tr>
+            <td>max</td>
+            <td>100</td>
+            <td>Optional property, automatically set from the <code>value</code> attribute of base input. For example: if value="10;100", it will be 100</td>
+        </tr>
+        <tr>
+            <td>from</td>
+            <td>min</td>
+            <td>Optional property, on default has the same value as min. overwrite default FROM setting</td>
+        </tr>
+        <tr>
+            <td>to</td>
+            <td>max</td>
+            <td>Optional property, on default has the same value as max. overwrite default TO setting</td>
+        </tr>
+        <tr>
+            <td>step</td>
+            <td>1</td>
+            <td>Optional property, set slider step value</td>
+        </tr>
+        <tr>
+            <td>postfix</td>
+            <td>-</td>
+            <td>Optional property, set postfix text to all values. For example: " pounds" will convert "100" in to "100 pounds"</td>
+        </tr>
+        <tr>
+            <td>hasGrid</td>
+            <td>false</td>
+            <td>Optional property, enables grid at the bottom of the slider (it adds 20px height and this can be customised through CSS)</td>
+        </tr>
+        <tr>
+            <td>hideText</td>
+            <td>false</td>
+            <td>Optional property, disables all visual text data.</td>
+        </tr>
+        <tr>
+            <td>prettify</td>
+            <td>true</td>
+            <td>Optional property, allow to separate large numbers with spaces, eg. 10 000 than 10000</td>
+        </tr>
+    </tbody>
+</table>
 
-_All settings are optional._
 
-| Property    | Default     | Description |
-|-------------|-------------|-------------|
-| `type`      | `"single"`  | One of `single` for a single-range slider or `double` for a double-range slider |
-| `min`       | _input min_ | Override of the value in the `value` attribute of the base input (`<input value="10;100">` is a min of `10`) |
-| `max`       | _input max_ | Override of the value in the `value` attribute of the base input (`<input value="10;100">` is a max of `100`) |
-| `from`      | _min_       | The starting minimum value, defaulting to the `min` value |
-| `to`        | _max_       | The starting maximum value, defaulting to the `max` value |
-| `step`      | `1`         | The step increments selectable with the slider |
-| `prefix`    | `""`        | A string to prepend before all values (eg: a prefix of `"$"` with a value of `10` produces `"$10"`) |
-| `postfix`   | `""`        | A string to append to all values (eg: a postfix of `" kg"` with a value of `10` produces `"10 kg"`) |
-| `hasGrid`   | `false`     | Whether to display the grid marks below the slider |
-| `hideText`  | `false`     | Whether to hide all helper text (current value labels and min/max labels) |
+## Callbacks
 
-#### Callbacks
-
-The following settings can be provided as callbacks which will be triggered during operation.
-
-| Property    | Description  |
-|-------------|--------------|
-| `onChange`  | Triggered live as the slider value is changed |
-| `onFinish`  | Triggered after release if the slider value was changed |
-
-An object with the following properties is provided to all callbacks upon triggering:
-
-| Property     | Type  | Description |
-|--------------|-------|-------------|
-| `fromNumber` | int   | The low value selected |
-| `toNumber`   | int   | The high value selected |
-| `fromX`      | int   | The minimum possible value |
-| `toX`        | int   | The maximum possible value |
-| `toPers`     | float | The percentage selected _(Note: Unpredictable for `double` range inputs)_ |
+<table class="options">
+    <thead>
+        <tr>
+            <th>Property</th>
+            <th>Default</th>
+            <th>Description</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+        <tr>
+            <td>onChange</td>
+            <td>-</td>
+            <td>Triggered live as the slider value is changed. Returns object with all slider values</td>
+        </tr>
+        <tr>
+            <td>onFinish</td>
+            <td>-</td>
+            <td>Triggered once, after slider work is done. Returns object with all slider values</td>
+        </tr>
+    </tbody>
+</table>
 
 
 An example of a customised slider:
-
 ```javascript
 $("#someID").ionRangeSlider({
-    min: 10,
-    max: 100,
-    from: 30,
-    to: 80,
-    type: "single",
-    step: 10,
-    postfix: " pounds",
-    hasGrid: true,
-    hideText: true,
-    onChange: function(obj){
-        console.log(obj.fromNumber, obj.toNumber);
+    min: 10,                        // min value
+    max: 100,                       // max value
+    from: 30,                       // overwrite default FROM setting
+    to: 80,                         // overwrite default TO setting
+    type: "single",                 // slider type
+    step: 10,                       // slider step
+    postfix: " pounds",             // postfix text
+    hasGrid: true,                  // enable grid
+    hideText: true,                 // hide all text data
+    prettify: true,                 // separate large numbers with space, eg. 10 000
+    onChange: function(obj){        // function-callback, is called on every change
+        console.log(obj);
     },
-    onFinish: function(obj){
-        console.log(obj.fromNumber, obj.toNumber);
+    onFinish: function(obj){        // function-callback, is called once, after slider finished it's work
+        console.log(obj);
     }
 });
 ```
 
-You can also initialize the slider with `data-*` attributes of the input tag:
+You can also initialise slider with <code>data-*</code> attributes of input tag:
+```html
+data-from="30"                      // overwrite default FROM setting
+data-to="70"                        // overwrite default TO setting
+data-type="double"                  // slider type
+data-step="10"                      // slider step
+data-postfix=" pounds"              // postfix text
+data-hasgrid="true"                 // enable grid
+data-hidetext="true"                // hide all text data
+data-prettify="false"               // don't use spaces in large numbers, eg. 10000 than 10 000
+```
 
-- `data-from`: `from` setting
-- `data-to`: `to` setting
-- `data-type`: `type` setting
-- `data-step`: `step` setting
-- `data-prefix`: `prefix` setting
-- `data-postfix`: `postfix` setting
-- `data-hasgrid`: `hasgrid` setting
-- `data-hidetext`: `hidetext` setting
+## Public methods
 
-For example, the input `<input data-from="30" data-to="70" data-type="double">` would be the same as the following settings:
-
+Slider update, method <code>update</code>:
 ```javascript
-{
-	type: "double",
-	from: 30,
-	to:   70
-}
+$("#someID").ionRangeSlider("update", {
+    min: 20,                        // change min value
+    max: 90,                        // change max value
+    from: 40,                       // change default FROM setting
+    to: 70,                         // change default TO setting
+    step: 5                         // change slider step
+});
+```
+
+Slider remove, method <code>remove</code>:
+```javascript
+$("#someID").ionRangeSlider("remove");
 ```
 
 
-## Public Methods
-
-- ### `update`
-
-	Updates the settings for an existing range slider.
-	
-	```javascript
-	$("#someID").ionRangeSlider("update", {
-		/* (Update values) */
-		min:  20,
-		max:  90,
-		from: 40,
-		to:   70,
-		step: 5
-	});
-	```
-
-- ### `remove`
-
-	Destroys a range slider, restoring the original input.
-	
-	```javascript
-	$("#someID").ionRangeSlider("remove");
-	```
-
-
-
-## Update History
-
-- **July 29, 2013:** [Issue #2](https://github.com/ionDen/ion.rangeSlider/issues/2) fixed. Versioning changed
-- **June 30, 2013:** Minor bug fixes and new option "hideText"
-- **June 21, 2013:** Added the ability to display the grid
-- **June 21, 2013:** Minor bug fix
-- **June 06, 2013:** New public methods and some code optimisations
-- **June 06, 2013:** Some small css updates
-- **April 30, 2013:** New method onFinish
-- **February 15, 2013:** New feature to set slider settings through data-* attributes of input tag
+## Update history
+* August 23, 2013 - Issues #7-10 fixed and some enhancements
+* July 29, 2013 - Issue #2 fixed. Versioning changed
+* June 30, 2013 - minor bug fixes and new option "hideText"
+* June 21, 2013 - added the ability to display the grid
+* June 21, 2013 - minor bug fix
+* June 06, 2013 - new public methods and some code optimisations
+* June 06, 2013 - some small css updates
+* April 30, 2013 - new method onFinish
+* February 15, 2013 - new feature to set slider settings through data-* attributes of input tag

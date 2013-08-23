@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 1.6.3 Build: 117
+// version 1.7.0 Build: 123
 // © 2013 Denis Ineshin | IonDen.com
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/
@@ -11,10 +11,6 @@
 
 (function($){
     var pluginCount = 0;
-    var prettify = function(num){
-        var n = num.toString();
-        return n.replace(/(\d{1,3}(?=(?:\d\d\d)+(?!\d)))/g,"$1 ");
-    };
     var oldie = (function(){
         var n = navigator.userAgent,
             r = /msie\s\d+/i,
@@ -45,14 +41,15 @@
             var settings = $.extend({
                 min: 10,
                 max: 100,
-                from: 10,
-                to: 100,
+                from: null,
+                to: null,
                 type: "single",
                 step: 1,
-				prefix: "",
+                prefix: "",
                 postfix: "",
                 hasGrid: false,
                 hideText: false,
+                prettify: true,
                 onChange: null,
                 onFinish: null
             }, options);
@@ -83,16 +80,44 @@
                 var fromData = {
                     min: parseInt(slider.attr("value").split(";")[0]) || settings.min,
                     max: parseInt(slider.attr("value").split(";")[1]) || settings.max,
-                    from: parseInt(slider.data("from")) || settings.from,
-                    to: parseInt(slider.data("to")) || settings.to,
+                    from: parseInt(slider.data("from")) || settings.from || settings.min,
+                    to: parseInt(slider.data("to")) || settings.to || settings.max,
                     type: slider.data("type") || settings.type,
                     step: parseInt(slider.data("step")) || settings.step,
-                    postfix: slider.data("prefix") ||  settings.prefix,
-                    postfix: slider.data("postfix") ||  settings.postfix,
-                    hasGrid: slider.data("hasgrid") ||  settings.hasGrid,
-                    hideText: slider.data("hidetext") ||  settings.hideText
+                    prefix: slider.data("prefix") || settings.prefix,
+                    postfix: slider.data("postfix") || settings.postfix,
+                    hasGrid: slider.data("hasgrid") || settings.hasGrid,
+                    hideText: slider.data("hidetext") || settings.hideText,
+                    prettify: slider.data("prettify") || settings.prettify
                 };
                 settings = $.extend(settings, fromData);
+
+                // fix diapason
+                if(settings.from < settings.min) {
+                    settings.from = settings.min;
+                }
+                if(settings.to > settings.max) {
+                    settings.to = settings.max;
+                }
+                if(settings.type === "double") {
+                    if(settings.from > settings.to) {
+                        settings.from = settings.to;
+                    }
+                    if(settings.to < settings.from) {
+                        settings.to = settings.from;
+                    }
+                }
+
+
+                var prettify = function(num){
+                    var n = num.toString();
+                    if(settings.prettify) {
+                        return n.replace(/(\d{1,3}(?=(?:\d\d\d)+(?!\d)))/g,"$1 ");
+                    } else {
+                        return n;
+                    }
+                };
+
 
                 var containerHTML = '<span class="irs" id="irs-' + this.pluginCount + '"></span>';
                 slider[0].style.display = "none";
