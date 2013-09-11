@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 1.7.0 Build: 123
+// version 1.7.2 Build: 134
 // © 2013 Denis Ineshin | IonDen.com
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/
@@ -77,20 +77,49 @@
                 pluginCount++;
                 this.pluginCount = pluginCount;
 
-                var fromData = {
-                    min: parseInt(slider.attr("value").split(";")[0]) || settings.min,
-                    max: parseInt(slider.attr("value").split(";")[1]) || settings.max,
-                    from: parseInt(slider.data("from")) || settings.from || settings.min,
-                    to: parseInt(slider.data("to")) || settings.to || settings.max,
-                    type: slider.data("type") || settings.type,
-                    step: parseInt(slider.data("step")) || settings.step,
-                    prefix: slider.data("prefix") || settings.prefix,
-                    postfix: slider.data("postfix") || settings.postfix,
-                    hasGrid: slider.data("hasgrid") || settings.hasGrid,
-                    hideText: slider.data("hidetext") || settings.hideText,
-                    prettify: slider.data("prettify") || settings.prettify
-                };
-                settings = $.extend(settings, fromData);
+
+                // check default values
+                if (typeof settings.from !== "number") {
+                    settings.from = settings.min;
+                }
+                if (typeof settings.to !== "number") {
+                    settings.to = settings.max;
+                }
+                if (slider.attr("value")) {
+                    settings.min = parseInt(slider.attr("value").split(";")[0], 10);
+                    settings.max = parseInt(slider.attr("value").split(";")[1], 10);
+                }
+
+
+                // extend from data-*
+                if (typeof slider.data("from") === "number") {
+                    settings.from = parseInt(slider.data("from"), 10);
+                }
+                if (typeof slider.data("to") === "number") {
+                    settings.to = parseInt(slider.data("to"), 10);
+                }
+                if (slider.data("step")) {
+                    settings.step = parseFloat(slider.data("step"));
+                }
+                if (slider.data("type")) {
+                    settings.type = slider.data("type");
+                }
+                if (slider.data("prefix")) {
+                    settings.prefix = slider.data("prefix");
+                }
+                if (slider.data("postfix")) {
+                    settings.postfix = slider.data("postfix");
+                }
+                if (slider.data("hasgrid")) {
+                    settings.hasGrid = slider.data("hasgrid");
+                }
+                if (slider.data("hidetext")) {
+                    settings.hideText = slider.data("hidetext");
+                }
+                if (slider.data("prettify")) {
+                    settings.prettify = slider.data("prettify");
+                }
+
 
                 // fix diapason
                 if(settings.from < settings.min) {
@@ -112,10 +141,9 @@
                 var prettify = function(num){
                     var n = num.toString();
                     if(settings.prettify) {
-                        return n.replace(/(\d{1,3}(?=(?:\d\d\d)+(?!\d)))/g,"$1 ");
-                    } else {
-                        return n;
+                        n = n.replace(/(\d{1,3}(?=(?:\d\d\d)+(?!\d)))/g,"$1 ");
                     }
+                    return n;
                 };
 
 
@@ -153,7 +181,14 @@
                     width = 0,
                     left = 0,
                     right = 0,
-                    minusX = 0;
+                    minusX = 0,
+                    stepFloat = 0;
+
+
+                if(parseInt(settings.step, 10) !== parseFloat(settings.step)) {
+                    stepFloat = settings.step.toString().split(".")[1];
+                    stepFloat = Math.pow(10, stepFloat.length);
+                }
 
 
 
@@ -228,7 +263,7 @@
                                 e.preventDefault();
                                 e.stopPropagation();
 
-                                calcDimensions(e.originalEvent, $(this), null);
+                                calcDimensions(e.originalEvent.touches[0], $(this), null);
 
                                 allowDrag = true;
                                 sliderIsActive = true;
@@ -280,7 +315,7 @@
 
                                 $(this).addClass("last");
                                 $toSlider.removeClass("last");
-                                calcDimensions(e.originalEvent, $(this), "from");
+                                calcDimensions(e.originalEvent.touches[0], $(this), "from");
                                 allowDrag = true;
                                 sliderIsActive = true;
                             });
@@ -290,7 +325,7 @@
 
                                 $(this).addClass("last");
                                 $fromSlider.removeClass("last");
-                                calcDimensions(e.originalEvent, $(this), "to");
+                                calcDimensions(e.originalEvent.touches[0], $(this), "to");
                                 allowDrag = true;
                                 sliderIsActive = true;
                             });
@@ -336,7 +371,7 @@
                         });
                         $window.on("touchmove", function(e){
                             if(allowDrag) {
-                                mouseX = e.originalEvent.pageX;
+                                mouseX = e.originalEvent.touches[0].pageX;
                                 dragSlider();
                             }
                         });
@@ -378,9 +413,9 @@
 
                         if(whichSlider === "from") {
                             left = 0;
-                            right = parseInt($toSlider.css("left"));
+                            right = parseInt($toSlider.css("left"), 10);
                         } else {
-                            left = parseInt($fromSlider.css("left"));
+                            left = parseInt($fromSlider.css("left"), 10);
                             right = $rangeSlider.width() - sliderWidth;
                         }
 
@@ -389,8 +424,8 @@
 
                 var setDiapason = function(){
                     var _w = $fromSlider.width(),
-                        _x = parseInt($fromSlider[0].style.left) || $fromSlider.position().left,
-                        _width = parseInt($toSlider[0].style.left) || $toSlider.position().left,
+                        _x = parseInt($fromSlider[0].style.left, 10) || $fromSlider.position().left,
+                        _width = parseInt($toSlider[0].style.left, 10) || $toSlider.position().left,
                         x = _x + (_w / 2),
                         w = _width - _x;
                     $diapason[0].style.left = x + "px";
@@ -439,22 +474,31 @@
 
                     if(settings.type === "single") {
 
-                        nums.fromX = parseInt($singleSlider[0].style.left) || $singleSlider.position().left;
+                        nums.fromX = parseInt($singleSlider[0].style.left, 10) || $singleSlider.position().left;
                         nums.fromPers = nums.fromX / fullWidth * 100;
-                        _from = (diapason / 100 * nums.fromPers) + parseInt(settings.min);
+                        _from = (diapason / 100 * nums.fromPers) + parseInt(settings.min, 10);
                         nums.fromNumber = Math.round(_from / settings.step) * settings.step;
+
+                        if(stepFloat) {
+                            nums.fromNumber = parseInt(nums.fromNumber * stepFloat, 10) / stepFloat;
+                        }
 
                     } else if(settings.type === "double") {
 
-                        nums.fromX = parseInt($fromSlider[0].style.left) || $fromSlider.position().left;
+                        nums.fromX = parseInt($fromSlider[0].style.left, 10) || $fromSlider.position().left;
                         nums.fromPers = nums.fromX / fullWidth * 100;
-                        _from = (diapason / 100 * nums.fromPers) + parseInt(settings.min);
+                        _from = (diapason / 100 * nums.fromPers) + parseInt(settings.min, 10);
                         nums.fromNumber = Math.round(_from / settings.step) * settings.step;
 
-                        nums.toX = parseInt($toSlider[0].style.left) || $toSlider.position().left;
+                        nums.toX = parseInt($toSlider[0].style.left, 10) || $toSlider.position().left;
                         nums.toPers = nums.toX / fullWidth * 100;
-                        _to = (diapason / 100 * nums.toPers) + parseInt(settings.min);
+                        _to = (diapason / 100 * nums.toPers) + parseInt(settings.min, 10);
                         nums.toNumber = Math.round(_to / settings.step) * settings.step;
+
+                        if(stepFloat) {
+                            nums.fromNumber = parseInt(nums.fromNumber * stepFloat, 10) / stepFloat;
+                            nums.toNumber = parseInt(nums.toNumber * stepFloat, 10) / stepFloat;
+                        }
 
                     }
 
@@ -534,7 +578,7 @@
                             }
                         }
 
-                        slider.attr("value", parseInt(numbers.fromNumber));
+                        slider.attr("value", parseInt(numbers.fromNumber, 10));
 
                     } else if(settings.type === "double") {
 
@@ -603,7 +647,7 @@
                             }
                         }
 
-                        slider.attr("value", parseInt(numbers.fromNumber) + ";" + parseInt(numbers.toNumber));
+                        slider.attr("value", parseInt(numbers.fromNumber, 10) + ";" + parseInt(numbers.toNumber, 10));
 
                     }
 
@@ -621,7 +665,7 @@
                 var setGrid = function(){
                     $container.addClass("irs-with-grid");
 
-                    var i = 0,
+                    var i,
                         text = '',
                         step = 0,
                         tStep = 0,
@@ -631,6 +675,7 @@
 
                     for(i = 0; i <= smNum; i++){
                         step = Math.floor(normalWidth / smNum * i);
+
                         if(step >= normalWidth) {
                             step = normalWidth - 1;
                         }
@@ -638,14 +683,21 @@
                     }
                     for(i = 0; i <= bigNum; i++){
                         step = Math.floor(normalWidth / bigNum * i);
+
                         if(step >= normalWidth) {
                             step = normalWidth - 1;
                         }
                         gridHTML += '<span class="irs-grid-pol" style="left: ' + step + 'px;"></span>';
 
-                        text = Math.round(settings.min + ((settings.max -settings.min) / bigNum * i));
-                        text = Math.round(text / settings.step) * settings.step;
-                        text = prettify(text);
+                        if(stepFloat) {
+                            text = (settings.min + ((settings.max -settings.min) / bigNum * i));
+                            text = (text / settings.step) * settings.step;
+                            text = parseInt(text * stepFloat, 10) / stepFloat;
+                        } else {
+                            text = Math.round(settings.min + ((settings.max -settings.min) / bigNum * i));
+                            text = Math.round(text / settings.step) * settings.step;
+                            text = prettify(text);
+                        }
 
                         if(i === 0) {
                             tStep = step;

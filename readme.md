@@ -1,15 +1,16 @@
-# Ion.Range Slider 1.7.0
+# Ion.Range Slider 1.7.2
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
 Easy and light range slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
 
-Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.7.0.zip">ion.rangeSlider-1.7.0.zip</a>
+Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.7.2.zip">ion.rangeSlider-1.7.2.zip</a>
 
 ***
 
 ## Description
 Ion.RangeSlider — Nice, comfortable and easily customizable range slider with skins support. Also support events and public methods, has flexible settings, can be completely altered with CSS.<br />
+Slider supports negative and fractional values<br />
 Ion.RangeSlider supports touch-devices (iPhone, iPad, etc.).<br />
 Ion.RangeSlider freely distributed under <a href="http://ionden.com/a/plugins/licence-en.html" target="_blank">MIT licence</a>.
 
@@ -194,6 +195,7 @@ $("#someID").ionRangeSlider("remove");
 
 
 ## Update history
+* September 11, 2013 - Fixed bug on Android-devices. Added support for negative and fractional values. Issues #15, 16
 * August 23, 2013 - Issues #7-10 fixed and some enhancements
 * July 29, 2013 - Issue #2 fixed. Versioning changed
 * June 30, 2013 - minor bug fixes and new option "hideText"
