@@ -79,15 +79,15 @@
 
 
                 // check default values
+                if (slider.attr("value")) {
+                    settings.min = parseInt(slider.attr("value").split(";")[0], 10);
+                    settings.max = parseInt(slider.attr("value").split(";")[1], 10);
+                }
                 if (typeof settings.from !== "number") {
                     settings.from = settings.min;
                 }
                 if (typeof settings.to !== "number") {
                     settings.to = settings.max;
-                }
-                if (slider.attr("value")) {
-                    settings.min = parseInt(slider.attr("value").split(";")[0], 10);
-                    settings.max = parseInt(slider.attr("value").split(";")[1], 10);
                 }
 
 
