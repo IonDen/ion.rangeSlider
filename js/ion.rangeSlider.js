@@ -49,6 +49,7 @@
                 postfix: "",
                 hasGrid: false,
                 hideText: false,
+                hideMinMaxText: false,
                 prettify: true,
                 onChange: null,
                 onFinish: null
@@ -115,6 +116,9 @@
                 }
                 if (slider.data("hidetext")) {
                     settings.hideText = slider.data("hidetext");
+                }
+                if (slider.data("hideminmaxtext")) {
+                    settings.hideMinMaxText = slider.data("hideminmaxtext");
                 }
                 if (slider.data("prettify")) {
                     settings.prettify = slider.data("prettify");
@@ -233,8 +237,13 @@
                         $fieldTo[0].style.display = "none";
                         $fieldSingle[0].style.display = "none";
                     } else {
-                        $fieldMin.html(settings.prefix + prettify(settings.min) + settings.postfix);
-                        $fieldMax.html(settings.prefix + prettify(settings.max) + settings.postfix);
+                        if(settings.hideMinMaxText) {
+                            $fieldMin[0].style.display = "none";
+                            $fieldMax[0].style.display = "none";
+                        } else {
+                            $fieldMin.html(settings.prefix + prettify(settings.min) + settings.postfix);
+                            $fieldMax.html(settings.prefix + prettify(settings.max) + settings.postfix);
+                        }
                     }
 
                     fieldMinWidth = $fieldMin.outerWidth();
@@ -565,16 +574,21 @@
                             }
                             $fieldSingle[0].style.left = _singleX + "px";
 
-                            if(_singleX < fieldMinWidth) {
+                            if(!settings.hideMinMaxText) {
+                                if (_singleX < fieldMinWidth) {
+                                    $fieldMin[0].style.display = "none";
+                                } else {
+                                    $fieldMin[0].style.display = "block";
+                                }
+    
+                                if (_singleX + _singleW > normalWidth - fieldMaxWidth) {
+                                    $fieldMax[0].style.display = "none";
+                                } else {
+                                    $fieldMax[0].style.display = "block";
+                                }
+                            } else {
                                 $fieldMin[0].style.display = "none";
-                            } else {
-                                $fieldMin[0].style.display = "block";
-                            }
-
-                            if(_singleX + _singleW > normalWidth - fieldMaxWidth) {
                                 $fieldMax[0].style.display = "none";
-                            } else {
-                                $fieldMax[0].style.display = "block";
                             }
                         }
 
@@ -634,16 +648,21 @@
                                 $fieldTo[0].style.display = "none";
                             }
 
-                            if(_singleX < fieldMinWidth || _fromX < fieldMinWidth) {
+                            if(!settings.hideMinMaxText){
+                                if (_singleX < fieldMinWidth || _fromX < fieldMinWidth) {
+                                    $fieldMin[0].style.display = "none";
+                                } else {
+                                    $fieldMin[0].style.display = "block";
+                                }
+    
+                                if (_singleX + _singleW > normalWidth - fieldMaxWidth || _toX + _toW > normalWidth - fieldMaxWidth) {
+                                    $fieldMax[0].style.display = "none";
+                                } else {
+                                    $fieldMax[0].style.display = "block";
+                                }
+                            } else {
                                 $fieldMin[0].style.display = "none";
-                            } else {
-                                $fieldMin[0].style.display = "block";
-                            }
-
-                            if(_singleX + _singleW > normalWidth - fieldMaxWidth || _toX + _toW > normalWidth - fieldMaxWidth) {
                                 $fieldMax[0].style.display = "none";
-                            } else {
-                                $fieldMax[0].style.display = "block";
                             }
                         }
 
