@@ -1,10 +1,10 @@
-# Ion.Range Slider 1.7.2
+# Ion.Range Slider 1.8.0
 
 > <a href="readme.md">English description</a> | Описание на русском
 
 Удобный легкий слайдер диапазонов. <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Страница проекта и демо</a>
 
-Скачать: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.7.2.zip">ion.rangeSlider-1.7.2.zip</a>
+Скачать: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.8.0.zip">ion.rangeSlider-1.8.0.zip</a>
 
 ***
 
@@ -102,9 +102,14 @@ $("#someID").ionRangeSlider();
             <td>Не обязательный параметр, включает сетку ниже слайдера (высота увеличивается на 20px и это можно настроить через CSS)</td>
         </tr>
         <tr>
-            <td>hideText</td>
+            <td>hideMinMax</td>
             <td>false</td>
-            <td>Не обязательный параметр, отключает все визуальные текстовые данные.</td>
+            <td>Не обязательный параметр, отключает поля Min и Max</td>
+        </tr>
+        <tr>
+            <td>hideFromTo</td>
+            <td>false</td>
+            <td>Не обязательный параметр, отключает поля From и To</td>
         </tr>
         <tr>
             <td>prettify</td>
@@ -126,6 +131,11 @@ $("#someID").ionRangeSlider();
         </tr>
     </thead>
     <tbody>
+        <tr>
+            <td>onLoad</td>
+            <td>-</td>
+            <td>Функция обратного вызова, вызывается один раз при инициализации слайдера или после обновления через метод Update</td>
+        </tr>
         <tr>
             <td>onChange</td>
             <td>-</td>
@@ -151,7 +161,8 @@ $("#someID").ionRangeSlider({
     step: 10,                       // шаг слайдера
     postfix: " грамм",              // постфикс значение
     hasGrid: true,                  // показать сетку
-    hideText: true,                 // спрятать все текстовые данные
+    hideMinMax: true,               // спрятать поля Min и Max
+    hideFromTo: true,               // спрятать поля From и To
     prettify: true,                 // разделять цифры пробелами 10 000
     onChange: function(obj){        // callback функция, вызывается при изменении состояния
         console.log(obj);
@@ -170,7 +181,8 @@ data-type="double"                  // тип слайдера
 data-step="10"                      // шаг слайдера
 data-postfix=" грамм"               // постфикс значение
 data-hasgrid="true"                 // показать сетку
-data-hidetext="true"                // спрятать все текстовые данные
+data-hideminmax="true"              // спрятать поля Min и Max
+data-hidefromto="true"              // спрятать поля From и To
 data-prettify="false"               // не разделять цифры пробелами 10000 вместо 10 000
 ```
 
@@ -193,6 +205,7 @@ $("#someID").ionRangeSlider("remove");
 ```
 
 ## История обновлений
+* 08.10.2013 - Исправлены задачи #20, #21, #23, #24, #26. Удален параметр hideText. Новый метод и настройки. Несколько мелких оптимизаций и улучшено оформление кода.
 * 11.09.2013 - Исправлен баг в браузерах на Android-устройствах. Добавлена поддержка отрицательных и дробных чисел. Issues #15, 16
 * 23.08.2013 - Исправлено несколько багов и добавлены новые возможности. Так же исправлены Issues #7-10
 * 30.06.2013 - исправление мелких багов, новый параметр hideText

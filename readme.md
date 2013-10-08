@@ -1,10 +1,10 @@
-# Ion.Range Slider 1.7.2
+# Ion.Range Slider 1.8.0
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
 Easy and light range slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
 
-Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.7.2.zip">ion.rangeSlider-1.7.2.zip</a>
+Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.8.0.zip">ion.rangeSlider-1.8.0.zip</a>
 
 ***
 
@@ -102,9 +102,14 @@ $("#someID").ionRangeSlider();
             <td>Optional property, enables grid at the bottom of the slider (it adds 20px height and this can be customised through CSS)</td>
         </tr>
         <tr>
-            <td>hideText</td>
+            <td>hideMinMax</td>
             <td>false</td>
-            <td>Optional property, disables all visual text data.</td>
+            <td>Optional property, disables Min and Max fields.</td>
+        </tr>
+        <tr>
+            <td>hideFromTo</td>
+            <td>false</td>
+            <td>Optional property, disables From an To fields.</td>
         </tr>
         <tr>
             <td>prettify</td>
@@ -127,6 +132,10 @@ $("#someID").ionRangeSlider();
     </thead>
     <tbody>
         <tr>
+            <td>onLoad</td>
+            <td>-</td>
+            <td>Triggered once, after slider loaded and each time after slider updated via method Update.</td>
+        </tr>
         <tr>
             <td>onChange</td>
             <td>-</td>
@@ -152,7 +161,8 @@ $("#someID").ionRangeSlider({
     step: 10,                       // slider step
     postfix: " pounds",             // postfix text
     hasGrid: true,                  // enable grid
-    hideText: true,                 // hide all text data
+    hideMinMax: true,               // hide Min and Max fields
+    hideFromTo: true,               // hide From and To fields
     prettify: true,                 // separate large numbers with space, eg. 10 000
     onChange: function(obj){        // function-callback, is called on every change
         console.log(obj);
@@ -171,7 +181,8 @@ data-type="double"                  // slider type
 data-step="10"                      // slider step
 data-postfix=" pounds"              // postfix text
 data-hasgrid="true"                 // enable grid
-data-hidetext="true"                // hide all text data
+data-hideminmax="true"              // hide Min and Max fields
+data-hidefromto="true"              // hide From and To fields
 data-prettify="false"               // don't use spaces in large numbers, eg. 10000 than 10 000
 ```
 
@@ -195,6 +206,7 @@ $("#someID").ionRangeSlider("remove");
 
 
 ## Update history
+* October 08, 2013 - Fixed issues #20, #21, #23, #24, #26. Removed hideText option. New method and options. Improved code style. Minor optimisations.
 * September 11, 2013 - Fixed bug on Android-devices. Added support for negative and fractional values. Issues #15, 16
 * August 23, 2013 - Issues #7-10 fixed and some enhancements
 * July 29, 2013 - Issue #2 fixed. Versioning changed
