@@ -1,10 +1,10 @@
-# Ion.Range Slider 1.8.0
+# Ion.Range Slider 1.8.1
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
 Easy and light range slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
 
-Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.8.0.zip">ion.rangeSlider-1.8.0.zip</a>
+Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.8.1.zip">ion.rangeSlider-1.8.1.zip</a>
 
 ***
 
@@ -206,6 +206,7 @@ $("#someID").ionRangeSlider("remove");
 
 
 ## Update history
+* October 10, 2013 - New Flat UI Skin. Some skin optimisations. Fixed issue #25.
 * October 08, 2013 - Fixed issues #20, #21, #23, #24, #26. Removed hideText option. New method and options. Improved code style. Minor optimisations.
 * September 11, 2013 - Fixed bug on Android-devices. Added support for negative and fractional values. Issues #15, 16
 * August 23, 2013 - Issues #7-10 fixed and some enhancements

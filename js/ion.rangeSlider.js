@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 1.8.0 Build: 142
+// version 1.8.1 Build: 144
 // © 2013 Denis Ineshin | IonDen.com
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/
@@ -445,8 +445,8 @@
 
                 var setDiapason = function () {
                     var _w = $fromSlider.width(),
-                        _x = parseInt($fromSlider[0].style.left, 10) || $fromSlider.position().left,
-                        _width = parseInt($toSlider[0].style.left, 10) || $toSlider.position().left,
+                        _x = $.data($fromSlider[0], "x") || parseInt($fromSlider[0].style.left, 10) || $fromSlider.position().left,
+                        _width = $.data($toSlider[0], "x") || parseInt($toSlider[0].style.left, 10) || $toSlider.position().left,
                         x = _x + (_w / 2),
                         w = _width - _x;
                     $diapason[0].style.left = x + "px";
@@ -454,32 +454,36 @@
                 };
 
                 var dragSlider = function () {
-                    var x = Math.round(mouseX - minusX);
+                    var x_pure = mouseX - minusX,
+                        x;
 
                     if (settings.type === "single") {
 
-                        if (x < 0) {
-                            x = 0;
+                        if (x_pure < 0) {
+                            x_pure = 0;
                         }
-                        if (x > width) {
-                            x = width;
+                        if (x_pure > width) {
+                            x_pure = width;
                         }
                         getNumbers();
 
                     } else if (settings.type === "double") {
 
-                        if (x < left) {
-                            x = left;
+                        if (x_pure < left) {
+                            x_pure = left;
                         }
-                        if (x > right) {
-                            x = right;
+                        if (x_pure > right) {
+                            x_pure = right;
                         }
                         getNumbers();
                         setDiapason();
 
                     }
 
+                    x = Math.round(x_pure);
+
                     $activeSlider[0].style.left = x + "px";
+                    $.data($activeSlider[0], "x", x_pure);
                 };
 
                 var getNumbers = function () {
@@ -495,7 +499,7 @@
 
                     if (settings.type === "single") {
 
-                        nums.fromX = parseInt($singleSlider[0].style.left, 10) || $singleSlider.position().left;
+                        nums.fromX = $.data($singleSlider[0], "x") || parseInt($singleSlider[0].style.left, 10) || $singleSlider.position().left;
                         nums.fromPers = nums.fromX / fullWidth * 100;
                         _from = (diapason / 100 * nums.fromPers) + parseInt(settings.min, 10);
                         nums.fromNumber = Math.round(_from / settings.step) * settings.step;
@@ -506,12 +510,12 @@
 
                     } else if (settings.type === "double") {
 
-                        nums.fromX = parseInt($fromSlider[0].style.left, 10) || $fromSlider.position().left;
+                        nums.fromX = $.data($fromSlider[0], "x") || parseInt($fromSlider[0].style.left, 10) || $fromSlider.position().left;
                         nums.fromPers = nums.fromX / fullWidth * 100;
                         _from = (diapason / 100 * nums.fromPers) + parseInt(settings.min, 10);
                         nums.fromNumber = Math.round(_from / settings.step) * settings.step;
 
-                        nums.toX = parseInt($toSlider[0].style.left, 10) || $toSlider.position().left;
+                        nums.toX = $.data($toSlider[0], "x") || parseInt($toSlider[0].style.left, 10) || $toSlider.position().left;
                         nums.toPers = nums.toX / fullWidth * 100;
                         _to = (diapason / 100 * nums.toPers) + parseInt(settings.min, 10);
                         nums.toNumber = Math.round(_to / settings.step) * settings.step;
@@ -535,24 +539,34 @@
                         fromPers: 0,
                         toPers: 0,
                         fromX: 0,
-                        toX: 0
+                        fromX_pure: 0,
+                        toX: 0,
+                        toX_pure: 0
                     };
                     var diapason = settings.max - settings.min;
 
                     if (settings.type === "single") {
 
                         nums.fromPers = (nums.fromNumber - settings.min) / diapason * 100;
-                        nums.fromX = Math.round(fullWidth / 100 * nums.fromPers);
+                        nums.fromX_pure = fullWidth / 100 * nums.fromPers;
+                        nums.fromX = Math.round(nums.fromX_pure);
                         $singleSlider[0].style.left = nums.fromX + "px";
+                        $.data($singleSlider[0], "x", nums.fromX_pure);
 
                     } else if (settings.type === "double") {
 
                         nums.fromPers = (nums.fromNumber - settings.min) / diapason * 100;
-                        nums.fromX = Math.round(fullWidth / 100 * nums.fromPers);
+                        nums.fromX_pure = fullWidth / 100 * nums.fromPers;
+                        nums.fromX = Math.round(nums.fromX_pure);
                         $fromSlider[0].style.left = nums.fromX + "px";
+                        $.data($fromSlider[0], "x", nums.fromX_pure);
+
                         nums.toPers = (nums.toNumber - settings.min) / diapason * 100;
-                        nums.toX = Math.round(fullWidth / 100 * nums.toPers);
+                        nums.toX_pure = fullWidth / 100 * nums.toPers;
+                        nums.toX = Math.round(nums.toX_pure);
                         $toSlider[0].style.left = nums.toX + "px";
+                        $.data($toSlider[0], "x", nums.toX_pure);
+
                         setDiapason();
 
                     }

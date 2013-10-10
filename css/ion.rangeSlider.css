@@ -1,5 +1,5 @@
 /* Ion.RangeSlider
-// css version 1.5.42
+// css version 1.8.1
 // by Denis Ineshin | ionden.com
 // ===================================================================================================================*/
 
@@ -41,8 +41,8 @@
         }
             .irs-slider.single:before {
                 position: absolute; display: block; content: "";
-                top: -50%; left: -150%;
-                width: 400%; height: 200%;
+                top: -50%; left: -100%;
+                width: 300%; height: 200%;
                 background: rgba(0,0,0,0.0);
             }
         .irs-slider.from {
@@ -50,8 +50,8 @@
         }
             .irs-slider.from:before {
                 position: absolute; display: block; content: "";
-                top: -50%; left: -300%;
-                width: 400%; height: 200%;
+                top: -50%; left: -200%;
+                width: 300%; height: 200%;
                 background: rgba(0,0,0,0.0);
             }
         .irs-slider.to {
@@ -60,7 +60,7 @@
             .irs-slider.to:before {
                 position: absolute; display: block; content: "";
                 top: -50%; left: 0;
-                width: 400%; height: 200%;
+                width: 300%; height: 200%;
                 background: rgba(0,0,0,0.0);
             }
         .irs-slider.last {

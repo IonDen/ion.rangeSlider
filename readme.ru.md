@@ -1,10 +1,10 @@
-# Ion.Range Slider 1.8.0
+# Ion.Range Slider 1.8.1
 
 > <a href="readme.md">English description</a> | Описание на русском
 
 Удобный легкий слайдер диапазонов. <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Страница проекта и демо</a>
 
-Скачать: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.8.0.zip">ion.rangeSlider-1.8.0.zip</a>
+Скачать: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.8.1.zip">ion.rangeSlider-1.8.1.zip</a>
 
 ***
 
@@ -205,6 +205,7 @@ $("#someID").ionRangeSlider("remove");
 ```
 
 ## История обновлений
+* 10.10.2013 - Новый скин Flat UI. Общие оптимизации скинов. Исправлен баг #25.
 * 08.10.2013 - Исправлены задачи #20, #21, #23, #24, #26. Удален параметр hideText. Новый метод и настройки. Несколько мелких оптимизаций и улучшено оформление кода.
 * 11.09.2013 - Исправлен баг в браузерах на Android-устройствах. Добавлена поддержка отрицательных и дробных чисел. Issues #15, 16
 * 23.08.2013 - Исправлено несколько багов и добавлены новые возможности. Так же исправлены Issues #7-10
