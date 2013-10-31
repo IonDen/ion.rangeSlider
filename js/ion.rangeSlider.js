@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 1.8.1 Build: 144
+// version 1.8.2 Build: 149
 // © 2013 Denis Ineshin | IonDen.com
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/
@@ -38,38 +38,46 @@
     var methods = {
         init: function (options) {
 
-            var settings = $.extend({
-                min: 10,
-                max: 100,
-                from: null,
-                to: null,
-                type: "single",
-                step: 1,
-                prefix: "",
-                postfix: "",
-                hasGrid: false,
-                hideMinMax: false,
-                hideFromTo: false,
-                prettify: true,
-                onChange: null,
-                onLoad: null,
-                onFinish: null
-            }, options);
+            // irs = ion range slider css prefix
+            var baseHTML =
+                '<span class="irs">' +
+                '<span class="irs-line"><span class="irs-line-left"></span><span class="irs-line-mid"></span><span class="irs-line-right"></span></span>' +
+                '<span class="irs-min">0</span><span class="irs-max">1</span>' +
+                '<span class="irs-from">0</span><span class="irs-to">0</span><span class="irs-single">0</span>' +
+                '</span>' +
+                '<span class="irs-grid"></span>';
 
-            var baseHTML =  '<span class="irs">'; // irs = ion range slider css prefix
-                baseHTML += '<span class="irs-line"><span class="irs-line-left"></span><span class="irs-line-mid"></span><span class="irs-line-right"></span></span>';
-                baseHTML += '<span class="irs-min">0</span><span class="irs-max">1</span>';
-                baseHTML += '<span class="irs-from">0</span><span class="irs-to">0</span><span class="irs-single">0</span>';
-                baseHTML += '</span>';
-                baseHTML += '<span class="irs-grid"></span>';
-            var singleHTML = '<span class="irs-slider single"></span>';
-            var doubleHTML =  '<span class="irs-diapason"></span>';
-                doubleHTML += '<span class="irs-slider from"></span>';
-                doubleHTML += '<span class="irs-slider to"></span>';
+            var singleHTML =
+                '<span class="irs-slider single"></span>';
+
+            var doubleHTML =
+                '<span class="irs-diapason"></span>' +
+                '<span class="irs-slider from"></span>' +
+                '<span class="irs-slider to"></span>';
 
 
 
             return this.each(function () {
+                var settings = $.extend({
+                    min: 10,
+                    max: 100,
+                    from: null,
+                    to: null,
+                    type: "single",
+                    step: 1,
+                    prefix: "",
+                    postfix: "",
+                    hasGrid: false,
+                    hideMinMax: false,
+                    hideFromTo: false,
+                    prettify: true,
+                    onChange: null,
+                    onLoad: null,
+                    onFinish: null
+                }, options);
+
+
+
                 var slider = $(this),
                     self = this;
 
@@ -80,6 +88,7 @@
 
                 pluginCount += 1;
                 this.pluginCount = pluginCount;
+
 
 
                 // check default values
@@ -97,10 +106,10 @@
 
                 // extend from data-*
                 if (typeof slider.data("from") === "number") {
-                    settings.from = parseInt(slider.data("from"), 10);
+                    settings.from = parseFloat(slider.data("from"));
                 }
                 if (typeof slider.data("to") === "number") {
-                    settings.to = parseInt(slider.data("to"), 10);
+                    settings.to = parseFloat(slider.data("to"));
                 }
                 if (slider.data("step")) {
                     settings.step = parseFloat(slider.data("step"));
@@ -207,6 +216,7 @@
                 };
                 this.removeSlider = function () {
                     $container.find("*").off();
+                    $window.off("mouseup.irs" + self.pluginCount);
                     $body.off("mouseup.irs" + self.pluginCount);
                     $body.off("mousemove.irs" + self.pluginCount);
                     $container.html("").remove();
@@ -221,6 +231,7 @@
                 // private methods
                 var removeHTML = function () {
                     $container.find("*").off();
+                    $window.off("mouseup.irs" + self.pluginCount);
                     $body.off("mouseup.irs" + self.pluginCount);
                     $body.off("mousemove.irs" + self.pluginCount);
                     $container.html("");
@@ -354,7 +365,7 @@
                         }
                     }
 
-                    $body.on("mouseup.irs" + self.pluginCount, function () {
+                    var mouseup = function () {
                         if (allowDrag) {
                             sliderIsActive = false;
                             allowDrag = false;
@@ -369,7 +380,15 @@
                                 $("*").prop("unselectable", false);
                             }
                         }
+                    };
+                    $body.on("mouseup.irs" + self.pluginCount, function () {
+                        mouseup();
                     });
+                    $window.on("mouseup.irs" + self.pluginCount, function () {
+                        mouseup();
+                    });
+
+
                     $body.on("mousemove.irs" + self.pluginCount, function (e) {
                         if (allowDrag) {
                             mouseX = e.pageX;
@@ -465,7 +484,6 @@
                         if (x_pure > width) {
                             x_pure = width;
                         }
-                        getNumbers();
 
                     } else if (settings.type === "double") {
 
@@ -475,15 +493,15 @@
                         if (x_pure > right) {
                             x_pure = right;
                         }
-                        getNumbers();
                         setDiapason();
 
                     }
 
-                    x = Math.round(x_pure);
-
-                    $activeSlider[0].style.left = x + "px";
                     $.data($activeSlider[0], "x", x_pure);
+                    getNumbers();
+
+                    x = Math.round(x_pure);
+                    $activeSlider[0].style.left = x + "px";
                 };
 
                 var getNumbers = function () {
@@ -529,7 +547,6 @@
 
                     numbers = nums;
                     setFields();
-
                 };
 
                 var setNumbers = function () {
