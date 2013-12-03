@@ -167,7 +167,7 @@
                 slider[0].style.display = "none";
                 slider.before(containerHTML);
 
-                var $container = $("#irs-" + this.pluginCount),
+                var $container = slider.prev(),
                     $body = $(document.body),
                     $window = $(window),
                     $rangeSlider,
