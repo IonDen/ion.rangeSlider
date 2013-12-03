@@ -137,6 +137,10 @@
                     settings.prettify = slider.data("prettify");
                 }
 
+                if (slider.data("width")) {
+                    settings.width = slider.data("width");
+                }
+
 
                 // fix diapason
                 if (settings.from < settings.min) {
