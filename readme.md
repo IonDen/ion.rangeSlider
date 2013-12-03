@@ -116,6 +116,11 @@ $("#someID").ionRangeSlider();
             <td>true</td>
             <td>Optional property, allow to separate large numbers with spaces, eg. 10 000 than 10000</td>
         </tr>
+        <tr>
+            <td>цшвер</td>
+            <td>0</td>
+            <td>Optional property, allow to set slider width in a case if input is in hidden block</td>
+        </tr>
     </tbody>
 </table>
 
@@ -164,6 +169,7 @@ $("#someID").ionRangeSlider({
     hideMinMax: true,               // hide Min and Max fields
     hideFromTo: true,               // hide From and To fields
     prettify: true,                 // separate large numbers with space, eg. 10 000
+    width: 260                      // set width to 260px
     onChange: function(obj){        // function-callback, is called on every change
         console.log(obj);
     },

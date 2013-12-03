@@ -116,6 +116,11 @@ $("#someID").ionRangeSlider();
             <td>true</td>
             <td>Не обязательный параметр, позволяет разделять длинные цифры пробелами, например 10 000 вместо 10000</td>
         </tr>
+        <tr>
+            <td>width</td>
+            <td>0</td>
+            <td>Не обязательный параметр, позволяет задать ширину в случае если инпут находится в скрытом блоке.</td>
+        </tr>
     </tbody>
 </table>
 
@@ -164,6 +169,7 @@ $("#someID").ionRangeSlider({
     hideMinMax: true,               // спрятать поля Min и Max
     hideFromTo: true,               // спрятать поля From и To
     prettify: true,                 // разделять цифры пробелами 10 000
+    width: 260,                     // установить ширину в 260px
     onChange: function(obj){        // callback функция, вызывается при изменении состояния
         console.log(obj);
     },
