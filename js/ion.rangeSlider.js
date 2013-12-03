@@ -71,6 +71,7 @@
                     hideMinMax: false,
                     hideFromTo: false,
                     prettify: true,
+                    width: 0,
                     onChange: null,
                     onLoad: null,
                     onFinish: null
@@ -426,6 +427,9 @@
 
                 var getSize = function () {
                     normalWidth = $rangeSlider.width();
+                    if (normalWidth == 0 && settings.width > 0){
+                        normalWidth = settings.width;
+                    }
                     if ($singleSlider) {
                         sliderWidth = $singleSlider.width();
                     } else {
