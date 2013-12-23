@@ -337,6 +337,16 @@
                             }
                         });
 
+                        $diapason.on("mousedown",function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            calcDimensions(e, $(this), "diapason");
+
+                            allowDrag = true;
+                            sliderIsActive = true;
+
+                        });
+
                         if (isTouch) {
                             $fromSlider.on("touchstart", function (e) {
                                 e.preventDefault();
@@ -439,7 +449,9 @@
 
                     firstStart = false;
                     $activeSlider = currentSlider;
-                    $activeSlider.attr("id", "irs-active-slider");
+                    if(whichSlider !== 'diapason') {
+                        $activeSlider.attr("id", "irs-active-slider");
+                    }
 
                     var _x1 = $activeSlider.offset().left,
                         _x2 = e.pageX - _x1;
@@ -454,9 +466,12 @@
                         if (whichSlider === "from") {
                             left = 0;
                             right = parseInt($toSlider.css("left"), 10);
-                        } else {
+                        } else if(whichSlider === "to") {
                             left = parseInt($fromSlider.css("left"), 10);
                             right = $rangeSlider.width() - sliderWidth;
+                        } else {
+                            left = sliderWidth / 2;
+                            right = $rangeSlider.width() - (sliderWidth / 2) - $diapason[0].offsetWidth;
                         }
 
                     }
@@ -493,15 +508,38 @@
                         if (x_pure > right) {
                             x_pure = right;
                         }
+
                         setDiapason();
 
                     }
 
                     $.data($activeSlider[0], "x", x_pure);
-                    getNumbers();
 
                     x = Math.round(x_pure);
-                    $activeSlider[0].style.left = x + "px";
+
+                    if(typeof $diapason !== 'undefined'
+                        && $activeSlider[0] === $diapason[0]) {
+                        var diapasonWidth = Math.round($diapason[0].offsetWidth);
+                        var adj = Math.round(sliderWidth / 2);
+
+                        $activeSlider[0].style.left = x + "px";
+
+                        x = x - adj;
+                        x_pure = x_pure - adj;
+
+                        var xRight = (x + diapasonWidth);
+                        var xRight_pure = (x_pure + diapasonWidth);
+
+                        $fromSlider[0].style.left = x + "px";
+                        $toSlider[0].style.left = xRight + "px";
+
+                        $.data($fromSlider[0], "x", x_pure);
+                        $.data($toSlider[0],"x",xRight_pure);
+                    } else {
+                        $activeSlider[0].style.left = x + "px";
+                    }
+
+                    getNumbers();
                 };
 
                 var getNumbers = function () {
