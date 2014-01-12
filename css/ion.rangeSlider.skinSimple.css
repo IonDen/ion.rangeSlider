@@ -1,5 +1,5 @@
 /* Ion.RangeSlider, Simple Skin
-// css version 1.7.0
+// css version 1.8.5
 // by Denis Ineshin | ionden.com
 // ===================================================================================================================*/
 
@@ -79,4 +79,7 @@
 }
 .irs-grid-text {
     color: #e0e0e0;
+}
+
+.irs-disabled {
 }

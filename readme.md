@@ -1,10 +1,10 @@
-# Ion.Range Slider 1.8.2
+# Ion.Range Slider 1.8.5
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
 Easy and light range slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
 
-Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.8.2.zip">ion.rangeSlider-1.8.2.zip</a>
+Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.8.5.zip">ion.rangeSlider-1.8.5.zip</a>
 
 ***
 
@@ -116,6 +116,11 @@ $("#someID").ionRangeSlider();
             <td>true</td>
             <td>Optional property, allow to separate large numbers with spaces, eg. 10 000 than 10000</td>
         </tr>
+        <tr>
+            <td>disable</td>
+            <td>false</td>
+            <td>Disables the slider</td>
+        </tr>
     </tbody>
 </table>
 
@@ -164,6 +169,7 @@ $("#someID").ionRangeSlider({
     hideMinMax: true,               // hide Min and Max fields
     hideFromTo: true,               // hide From and To fields
     prettify: true,                 // separate large numbers with space, eg. 10 000
+    disable: false,                 // disable the slider
     onChange: function(obj){        // function-callback, is called on every change
         console.log(obj);
     },
@@ -206,6 +212,7 @@ $("#someID").ionRangeSlider("remove");
 
 
 ## Update history
+* January 12, 2014 - Fixed some bugs and some new features. Issues: # 12, 30, 33, 43, 47, 52, 58
 * October 31, 2013 - Fixed bugs: # 13, 31, 35, 37, 40, and some code optimisations
 * October 10, 2013 - New Flat UI Skin. Some skin optimisations. Fixed issue #25.
 * October 08, 2013 - Fixed issues #20, #21, #23, #24, #26. Removed hideText option. New method and options. Improved code style. Minor optimisations.

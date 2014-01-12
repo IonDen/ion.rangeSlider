@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 1.8.2 Build: 149
+// version 1.8.5 Build: 159
 // © 2013 Denis Ineshin | IonDen.com
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/
@@ -55,12 +55,15 @@
                 '<span class="irs-slider from"></span>' +
                 '<span class="irs-slider to"></span>';
 
+            var disableHTML =
+                '<span class="irs-disable-mask"></span>';
+
 
 
             return this.each(function () {
                 var settings = $.extend({
-                    min: 10,
-                    max: 100,
+                    min: null,
+                    max: null,
                     from: null,
                     to: null,
                     type: "single",
@@ -71,6 +74,7 @@
                     hideMinMax: false,
                     hideFromTo: false,
                     prettify: true,
+                    disable: false,
                     onChange: null,
                     onLoad: null,
                     onFinish: null
@@ -79,7 +83,8 @@
 
 
                 var slider = $(this),
-                    self = this;
+                    self = this,
+                    value_array = null;
 
                 if (slider.data("isActive")) {
                     return;
@@ -93,9 +98,78 @@
 
                 // check default values
                 if (slider.prop("value")) {
-                    settings.min = parseInt(slider.prop("value").split(";")[0], 10);
-                    settings.max = parseInt(slider.prop("value").split(";")[1], 10);
+                    value_array = slider.prop("value").split(";");
                 }
+
+                if (settings.type === "single") {
+
+                    if (value_array && value_array.length > 1) {
+
+                        if (typeof settings.min !== "number") {
+                            settings.min = parseFloat(value_array[0]);
+                        } else {
+                            if (typeof settings.from !== "number") {
+                                settings.from = parseFloat(value_array[0]);
+                            }
+                        }
+
+                        if (typeof settings.max !== "number") {
+                            settings.max = parseFloat(value_array[1]);
+                        }
+
+                    } else if (value_array && value_array.length === 1) {
+
+                        if (typeof settings.from !== "number") {
+                            settings.from = parseFloat(value_array[0]);
+                        }
+
+                    }
+
+                } else if (settings.type === "double") {
+
+                    if (value_array && value_array.length > 1) {
+
+                        if (typeof settings.min !== "number") {
+                            settings.min = parseFloat(value_array[0]);
+                        } else {
+                            if (typeof settings.from !== "number") {
+                                settings.from = parseFloat(value_array[0]);
+                            }
+                        }
+
+                        if (typeof settings.max !== "number") {
+                            settings.max = parseFloat(value_array[1]);
+                        } else {
+                            if (typeof settings.to !== "number") {
+                                settings.to = parseFloat(value_array[1]);
+                            }
+                        }
+
+                    } else if (value_array && value_array.length === 1) {
+
+                        if (typeof settings.min !== "number") {
+                            settings.min = parseFloat(value_array[0]);
+                        } else {
+                            if (typeof settings.from !== "number") {
+                                settings.from = parseFloat(value_array[0]);
+                            }
+                        }
+
+                    }
+
+                }
+
+
+                // Set Min and Max if no
+                if (typeof settings.min !== "number") {
+                    settings.min = 10;
+                }
+                if (typeof settings.max !== "number") {
+                    settings.max = 100;
+                }
+
+
+                // Set From and To if no
                 if (typeof settings.from !== "number") {
                     settings.from = settings.min;
                 }
@@ -105,6 +179,12 @@
 
 
                 // extend from data-*
+                if (typeof slider.data("min") === "number") {
+                    settings.min = parseFloat(slider.data("min"));
+                }
+                if (typeof slider.data("max") === "number") {
+                    settings.max = parseFloat(slider.data("max"));
+                }
                 if (typeof slider.data("from") === "number") {
                     settings.from = parseFloat(slider.data("from"));
                 }
@@ -396,6 +476,14 @@
                         }
                     });
 
+                    $container.on("mouseup", function (e) {
+                        if (allowDrag || settings.disable) {
+                            return;
+                        }
+
+                        moveByClick(e.pageX);
+                    });
+
                     if (isTouch) {
                         $window.on("touchend", function () {
                             if (allowDrag) {
@@ -421,6 +509,9 @@
                     setNumbers();
                     if (settings.hasGrid) {
                         setGrid();
+                    }
+                    if (settings.disable) {
+                        setMask();
                     }
                 };
 
@@ -472,9 +563,15 @@
                     $diapason[0].style.width = w + "px";
                 };
 
-                var dragSlider = function () {
+                var dragSlider = function (manual_x) {
                     var x_pure = mouseX - minusX,
                         x;
+
+                    if (manual_x) {
+                        x_pure = manual_x;
+                    } else {
+                        x_pure = mouseX - minusX;
+                    }
 
                     if (settings.type === "single") {
 
@@ -506,6 +603,8 @@
 
                 var getNumbers = function () {
                     var nums = {
+                        input: slider,
+                        slider: $container,
                         fromNumber: 0,
                         toNumber: 0,
                         fromPers: 0,
@@ -519,8 +618,14 @@
 
                         nums.fromX = $.data($singleSlider[0], "x") || parseInt($singleSlider[0].style.left, 10) || $singleSlider.position().left;
                         nums.fromPers = nums.fromX / fullWidth * 100;
-                        _from = (diapason / 100 * nums.fromPers) + parseInt(settings.min, 10);
+                        _from = (diapason / 100 * nums.fromPers) + settings.min;
                         nums.fromNumber = Math.round(_from / settings.step) * settings.step;
+                        if (nums.fromNumber < settings.min) {
+                            nums.fromNumber = settings.min;
+                        }
+                        if (nums.fromNumber > settings.max) {
+                            nums.fromNumber = settings.max;
+                        }
 
                         if (stepFloat) {
                             nums.fromNumber = parseInt(nums.fromNumber * stepFloat, 10) / stepFloat;
@@ -530,13 +635,19 @@
 
                         nums.fromX = $.data($fromSlider[0], "x") || parseInt($fromSlider[0].style.left, 10) || $fromSlider.position().left;
                         nums.fromPers = nums.fromX / fullWidth * 100;
-                        _from = (diapason / 100 * nums.fromPers) + parseInt(settings.min, 10);
+                        _from = (diapason / 100 * nums.fromPers) + settings.min;
                         nums.fromNumber = Math.round(_from / settings.step) * settings.step;
+                        if (nums.fromNumber < settings.min) {
+                            nums.fromNumber = settings.min;
+                        }
 
                         nums.toX = $.data($toSlider[0], "x") || parseInt($toSlider[0].style.left, 10) || $toSlider.position().left;
                         nums.toPers = nums.toX / fullWidth * 100;
-                        _to = (diapason / 100 * nums.toPers) + parseInt(settings.min, 10);
+                        _to = (diapason / 100 * nums.toPers) + settings.min;
                         nums.toNumber = Math.round(_to / settings.step) * settings.step;
+                        if (nums.toNumber > settings.max) {
+                            nums.toNumber = settings.max;
+                        }
 
                         if (stepFloat) {
                             nums.fromNumber = parseInt(nums.fromNumber * stepFloat, 10) / stepFloat;
@@ -551,6 +662,8 @@
 
                 var setNumbers = function () {
                     var nums = {
+                        input: slider,
+                        slider: $container,
                         fromNumber: settings.from,
                         toNumber: settings.to,
                         fromPers: 0,
@@ -590,6 +703,34 @@
 
                     numbers = nums;
                     setFields();
+                };
+
+                var moveByClick = function (page_x) {
+                    var x = page_x - $container.offset().left,
+                        d = numbers.toX - numbers.fromX,
+                        zero_point = numbers.fromX + (d / 2);
+
+                    left = 0;
+                    width = $rangeSlider.width() - sliderWidth;
+                    right = $rangeSlider.width() - sliderWidth;
+
+                    if (settings.type === "single") {
+                        $activeSlider = $singleSlider;
+                        $activeSlider.attr("id", "irs-active-slider");
+                        dragSlider(x);
+                    } else if (settings.type === "double") {
+                        if (x <= zero_point) {
+                            $activeSlider = $fromSlider;
+                        } else {
+                            $activeSlider = $toSlider;
+                        }
+                        $activeSlider.attr("id", "irs-active-slider");
+                        dragSlider(x);
+                        setDiapason();
+                    }
+
+                    $activeSlider.removeAttr("id");
+                    $activeSlider = null;
                 };
 
                 var setFields = function () {
@@ -634,7 +775,7 @@
                             }
                         }
 
-                        slider.attr("value", parseInt(numbers.fromNumber, 10));
+                        slider.attr("value", parseFloat(numbers.fromNumber));
 
                     } else if (settings.type === "double") {
 
@@ -717,7 +858,7 @@
                             }
                         }
 
-                        slider.attr("value", parseInt(numbers.fromNumber, 10) + ";" + parseInt(numbers.toNumber, 10));
+                        slider.attr("value", parseFloat(numbers.fromNumber) + ";" + parseFloat(numbers.toNumber));
 
                     }
 
@@ -787,6 +928,11 @@
                     }
 
                     $grid.html(gridHTML);
+                };
+
+                var setMask = function () {
+                    $container.addClass("irs-disabled");
+                    $container.append(disableHTML);
                 };
 
                 placeHTML();

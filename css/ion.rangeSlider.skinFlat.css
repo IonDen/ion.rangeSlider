@@ -1,5 +1,5 @@
 /* Ion.RangeSlider, Flat UI Skin
-// css version 1.8.1
+// css version 1.8.5
 // by Denis Ineshin | ionden.com
 // ===================================================================================================================*/
 
@@ -83,4 +83,7 @@
 }
 .irs-grid-text {
     color: #999;
+}
+
+.irs-disabled {
 }

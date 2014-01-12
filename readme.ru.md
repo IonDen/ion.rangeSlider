@@ -1,10 +1,10 @@
-# Ion.Range Slider 1.8.2
+# Ion.Range Slider 1.8.5
 
 > <a href="readme.md">English description</a> | Описание на русском
 
 Удобный легкий слайдер диапазонов. <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Страница проекта и демо</a>
 
-Скачать: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.8.2.zip">ion.rangeSlider-1.8.2.zip</a>
+Скачать: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.8.5.zip">ion.rangeSlider-1.8.5.zip</a>
 
 ***
 
@@ -116,6 +116,11 @@ $("#someID").ionRangeSlider();
             <td>true</td>
             <td>Не обязательный параметр, позволяет разделять длинные цифры пробелами, например 10 000 вместо 10000</td>
         </tr>
+        <tr>
+            <td>disable</td>
+            <td>false</td>
+            <td>Визуально отключает слайдер</td>
+        </tr>
     </tbody>
 </table>
 
@@ -164,6 +169,7 @@ $("#someID").ionRangeSlider({
     hideMinMax: true,               // спрятать поля Min и Max
     hideFromTo: true,               // спрятать поля From и To
     prettify: true,                 // разделять цифры пробелами 10 000
+    disable: false,                 // заблокировать слайдер
     onChange: function(obj){        // callback функция, вызывается при изменении состояния
         console.log(obj);
     },
@@ -205,6 +211,7 @@ $("#someID").ionRangeSlider("remove");
 ```
 
 ## История обновлений
+* 12.01.2014 - Исправлены баги, добавлены новые функции. Задачи: # 12, 30, 33, 43, 47, 52, 58
 * 31.10.2013 - Исправлены баги: # 13, 31, 35, 37, 40, несколько мелких оптимизаций кода
 * 10.10.2013 - Новый скин Flat UI. Общие оптимизации скинов. Исправлен баг #25.
 * 08.10.2013 - Исправлены задачи #20, #21, #23, #24, #26. Удален параметр hideText. Новый метод и настройки. Несколько мелких оптимизаций и улучшено оформление кода.
