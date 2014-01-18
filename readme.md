@@ -173,6 +173,12 @@ $("#someID").ionRangeSlider({
     onChange: function(obj){        // function-callback, is called on every change
         console.log(obj);
     },
+    onToChange: function(toValue){        // function-callback, is called on every change; but only returns a value if toValue changes.
+        console.log(toValue);
+    },
+    onFromChange: function(fromValue){        // function-callback, is called on every change; but only returns a value if fromValue changes.
+        console.log(fromValue);
+    },
     onFinish: function(obj){        // function-callback, is called once, after slider finished it's work
         console.log(obj);
     }
