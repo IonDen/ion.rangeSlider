@@ -58,7 +58,8 @@
             var disableHTML =
                 '<span class="irs-disable-mask"></span>';
 
-
+			var previous_from = 0;
+			var previous_to = 0;
 
             return this.each(function () {
                 var settings = $.extend({
@@ -76,6 +77,8 @@
                     prettify: true,
                     disable: false,
                     onChange: null,
+                    onToChange: null,
+				    onFromChange:null,	
                     onLoad: null,
                     onFinish: null
                 }, options);
@@ -866,7 +869,24 @@
                     if (typeof settings.onChange === "function") {
                         settings.onChange.call(this, numbers);
                     }
-
+ 					// trigger onToChange function
+					if (typeof settings.onToChange === "function") {
+					 	
+						if(previous_to != numbers.toNumber)
+						{
+						  settings.onToChange.call(this, numbers.toNumber);
+						  previous_to = numbers.toNumber;
+						}					       
+					}
+				    // trigger onFromChange function 
+					if (typeof settings.onFromChange === "function") {
+						
+						if(previous_from != numbers.fromNumber)
+						{
+							settings.onFromChange.call(this, numbers.fromNumber);
+							previous_from = numbers.fromNumber;
+						}				         
+			        }
                     // trigger onFinish function
                     if (typeof settings.onFinish === "function" && !sliderIsActive && !firstStart) {
                         settings.onFinish.call(this, numbers);
