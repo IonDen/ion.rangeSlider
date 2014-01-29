@@ -99,7 +99,20 @@
                 if (slider.prop("value")) {
                     value_array = slider.prop("value").split(";");
                 }
+				
+				if (settings.values.length > 0) {
+					settings.min = 0;
+					settings.max = settings.values.length - 1;
+					if (typeof settings.from !== "undefined") {
+						
+						for(var i=0; i<settings.values.length; i++) {
 
+							if( settings.values[i] != settings.from ) continue;
+							else settings.from = i;
+						}
+					}
+				}
+				
                 if (settings.type === "single") {
 
                     if (value_array && value_array.length > 1) {
