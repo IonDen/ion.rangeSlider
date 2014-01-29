@@ -62,6 +62,7 @@
 
             return this.each(function () {
                 var settings = $.extend({
+                    values : [],
                     min: null,
                     max: null,
                     from: null,
@@ -79,8 +80,6 @@
                     onLoad: null,
                     onFinish: null
                 }, options);
-
-
 
                 var slider = $(this),
                     self = this,
@@ -100,7 +99,20 @@
                 if (slider.prop("value")) {
                     value_array = slider.prop("value").split(";");
                 }
+				
+				if (settings.values.length > 0) {
+					settings.min = 0;
+					settings.max = settings.values.length - 1;
+					if (typeof settings.from !== "undefined") {
+						
+						for(var i=0; i<settings.values.length; i++) {
 
+							if( settings.values[i] != settings.from ) continue;
+							else settings.from = i;
+						}
+					}
+				}
+				
                 if (settings.type === "single") {
 
                     if (value_array && value_array.length > 1) {
@@ -673,10 +685,11 @@
                         toX: 0,
                         toX_pure: 0
                     };
+                    
                     var diapason = settings.max - settings.min;
 
                     if (settings.type === "single") {
-
+	                    
                         nums.fromPers = (nums.fromNumber - settings.min) / diapason * 100;
                         nums.fromX_pure = fullWidth / 100 * nums.fromPers;
                         nums.fromX = Math.round(nums.fromX_pure);
@@ -700,7 +713,6 @@
                         setDiapason();
 
                     }
-
                     numbers = nums;
                     setFields();
                 };
@@ -738,16 +750,21 @@
                         _to, _toW, _toX,
                         _single, _singleW, _singleX,
                         _slW = (sliderWidth / 2);
-
                     if (settings.type === "single") {
 
                         if (!settings.hideText) {
                             $fieldFrom[0].style.display = "none";
                             $fieldTo[0].style.display = "none";
 
-                            _single = settings.prefix +
-                                prettify(numbers.fromNumber) +
-                                settings.postfix;
+                            if(settings.values.length) {
+	                            _single = settings.prefix +
+	                                settings.values[numbers.fromNumber] +
+	                                settings.postfix;
+                            } else {
+	                            _single = settings.prefix +
+	                                prettify(numbers.fromNumber) +
+	                                settings.postfix;
+                            }
                             $fieldSingle.html(_single);
 
                             _singleW = $fieldSingle.outerWidth();
