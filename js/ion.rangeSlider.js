@@ -677,7 +677,7 @@
 
                     if (settings.type === "single") {
 
-                        nums.fromPers = (nums.fromNumber - settings.min) / diapason * 100;
+                        nums.fromPers = (diapason !== 0) ? (nums.fromNumber - settings.min) / diapason * 100 : 0;
                         nums.fromX_pure = fullWidth / 100 * nums.fromPers;
                         nums.fromX = Math.round(nums.fromX_pure);
                         $singleSlider[0].style.left = nums.fromX + "px";
@@ -685,13 +685,13 @@
 
                     } else if (settings.type === "double") {
 
-                        nums.fromPers = (nums.fromNumber - settings.min) / diapason * 100;
+                        nums.fromPers = (diapason !== 0) ? (nums.fromNumber - settings.min) / diapason * 100 : 0;
                         nums.fromX_pure = fullWidth / 100 * nums.fromPers;
                         nums.fromX = Math.round(nums.fromX_pure);
                         $fromSlider[0].style.left = nums.fromX + "px";
                         $.data($fromSlider[0], "x", nums.fromX_pure);
 
-                        nums.toPers = (nums.toNumber - settings.min) / diapason * 100;
+                        nums.toPers = (diapason !== 0) ? (nums.toNumber - settings.min) / diapason * 100 : 1;
                         nums.toX_pure = fullWidth / 100 * nums.toPers;
                         nums.toX = Math.round(nums.toX_pure);
                         $toSlider[0].style.left = nums.toX + "px";
