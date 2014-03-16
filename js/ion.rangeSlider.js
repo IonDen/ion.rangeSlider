@@ -1,4 +1,4 @@
-﻿// Ion.RangeSlider
+// Ion.RangeSlider
 // version 1.8.5 Build: 159
 // © 2013 Denis Ineshin | IonDen.com
 //
@@ -13,6 +13,7 @@
     "use strict";
 
     var pluginCount = 0;
+    var allowedID,movingCursor = 0;
     var isOldie = (function () {
         var n = navigator.userAgent,
             r = /msie\s\d+/i,
@@ -34,6 +35,14 @@
             return false;
         }
     }());
+
+    var launchTimer = function() {
+        movingCursor++;
+    }
+
+    var clearTimer = function() {
+        movingCursor = 0;
+    }
 
     var methods = {
         init: function (options) {
@@ -57,6 +66,8 @@
 
             var disableHTML =
                 '<span class="irs-disable-mask"></span>';
+
+
 
 
 
@@ -360,8 +371,11 @@
 
                             calcDimensions(e, $(this), null);
 
+                            allowedID = $(e.target).closest('.irs').parent('.irs').attr('id');
                             allowDrag = true;
                             sliderIsActive = true;
+
+                            timerActive = setInterval()
 
                             if (isOldie) {
                                 $("*").prop("unselectable", true);
@@ -373,7 +387,7 @@
                                 e.stopPropagation();
 
                                 calcDimensions(e.originalEvent.touches[0], $(this), null);
-
+                                launchTimer();
                                 allowDrag = true;
                                 sliderIsActive = true;
                             });
@@ -391,10 +405,10 @@
                         $fromSlider.on("mousedown", function (e) {
                             e.preventDefault();
                             e.stopPropagation();
-
                             $(this).addClass("last");
                             $toSlider.removeClass("last");
                             calcDimensions(e, $(this), "from");
+                            allowedID = $(e.target).closest('.irs').parent('.irs').attr('id');
                             allowDrag = true;
                             sliderIsActive = true;
 
@@ -409,9 +423,9 @@
                             $(this).addClass("last");
                             $fromSlider.removeClass("last");
                             calcDimensions(e, $(this), "to");
+                            allowedID = $(e.target).closest('.irs').parent('.irs').attr('id');
                             allowDrag = true;
                             sliderIsActive = true;
-
                             if (isOldie) {
                                 $("*").prop("unselectable", true);
                             }
@@ -445,7 +459,8 @@
                         }
                     }
 
-                    var mouseup = function () {
+                    var mouseup = function (count) {
+
                         if (allowDrag) {
                             sliderIsActive = false;
                             allowDrag = false;
@@ -462,26 +477,32 @@
                         }
                     };
                     $body.on("mouseup.irs" + self.pluginCount, function () {
-                        mouseup();
+                        mouseup(self.pluginCount);
                     });
                     $window.on("mouseup.irs" + self.pluginCount, function () {
-                        mouseup();
+                        mouseup(self.pluginCount);
                     });
 
 
                     $body.on("mousemove.irs" + self.pluginCount, function (e) {
                         if (allowDrag) {
+                            launchTimer();
                             mouseX = e.pageX;
                             dragSlider();
                         }
                     });
+
 
                     $container.on("mouseup", function (e) {
                         if (allowDrag || settings.disable) {
                             return;
                         }
 
-                        moveByClick(e.pageX);
+                        var targetReleaseID     =   $(e.target).closest('.irs').parent('.irs').attr('id');
+                        if((allowedID == targetReleaseID) || typeof allowedID == 'undefined' || movingCursor == 0) {
+                           moveByClick(e.pageX);
+                        }
+                        clearTimer();
                     });
 
                     if (isTouch) {
