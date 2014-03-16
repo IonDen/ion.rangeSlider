@@ -1,18 +1,37 @@
-# Ion.Range Slider 1.8.5
+# Ion.Range Slider 1.9.0
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
 Easy and light range slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
 
-Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.8.5.zip">ion.rangeSlider-1.8.5.zip</a>
+Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.9.0.zip">ion.rangeSlider-1.9.0.zip</a>
 
 ***
 
 ## Description
-Ion.RangeSlider — Nice, comfortable and easily customizable range slider with skins support. Also support events and public methods, has flexible settings, can be completely altered with CSS.<br />
-Slider supports negative and fractional values<br />
-Ion.RangeSlider supports touch-devices (iPhone, iPad, etc.).<br />
-Ion.RangeSlider freely distributed under <a href="http://ionden.com/a/plugins/licence-en.html" target="_blank">MIT licence</a>.
+* Ion.RangeSlider — cool, comfortable and easily customizable range slider
+* Supports events and public methods, has flexible settings, can be completely altered with CSS
+* Cross-browser: Google Chrome, Mozilla Firefox 3.6+, Opera 12+, Safari 5+, Internet Explorer 8+
+* Ion.RangeSlider supports touch-devices (iPhone, iPad, Nexus, etc.).
+* Ion.RangeSlider freely distributed under terms of <a href="http://ionden.com/a/plugins/licence.html" target="_blank">MIT licence</a>.
+
+## Key features
+* Skin support. (3 skins included and PSD for skin creation)
+* Any number of sliders at one page without conflicts and big performance problems
+* Two slider types single (1 slider) and double (2 sliders)
+* Support of negative and fractional values
+* Ability to edit step
+* Support of custov values diapason (See months example)
+* Automatically generated grid
+* Ability to disable UI elements (min and max, current value, grid)
+* Postfixes and prefixes for you numbers ($20, 20 &euro; etc.)
+* Additional postfix for maximum value (eg. $0 — $100<b>+</b>)
+* Ability to prettify large numbers (eg. 10000000 -> 10 000 000)
+* Slider writes it's value right into input value field. This makes it easy to use in any html form
+* Any slider value can be set through input data-attribute (eg. data-min="10")
+* Slider supports disable param. You can set it true to make slider inactive
+* Slider supports external methods (update and remove) to control it after creation
+* For advanced users slider has callbacks (onLoad, onChange, onFinish). Slider paste all it's params to callback first argument as object
 
 ## Dependencies
 * <a href="http://jquery.com/" target="_blank">jQuery 1.9+</a>
@@ -39,14 +58,14 @@ Or use the included PSD file and design a custom skin.
 
 ## Initialisation
 
-The slider overrides a native text <code>input</code> element. The input may have the default value of "<code>{min}</code>;<code>{max}</code>", where <code>{min}</code> and <code>{max}</code> are two numbers.
+The slider overrides a native text <code>input</code> element.
 ```html
-<input type="text" id="someID" name="rangeName" value="10;100" />
+<input type="text" id="example_id" name="example_name" value="" />
 ```
 
 To initialise the slider, call ionRangeSlider on the element:
 ```javascript
-$("#someID").ionRangeSlider();
+$("#example_id").ionRangeSlider();
 ```
 
 
@@ -92,9 +111,19 @@ $("#someID").ionRangeSlider();
             <td>Optional property, set slider step value</td>
         </tr>
         <tr>
+            <td>prefix</td>
+            <td>-</td>
+            <td>Optional property, set prefix text to all values. For example: "$" will convert "100" in to "$100"</td>
+        </tr>
+        <tr>
             <td>postfix</td>
             <td>-</td>
-            <td>Optional property, set postfix text to all values. For example: " pounds" will convert "100" in to "100 pounds"</td>
+            <td>Optional property, set postfix text to all values. For example: " &euro;" will convert "100" in to "100 &euro;"</td>
+        </tr>
+        <tr>
+            <td>maxPostfix</td>
+            <td>-</td>
+            <td>Optional property, set postfix text to maximum value. For example: maxPostfix - "+" will convert "100" to "100+"</td>
         </tr>
         <tr>
             <td>hasGrid</td>
@@ -120,6 +149,11 @@ $("#someID").ionRangeSlider();
             <td>disable</td>
             <td>false</td>
             <td>Disables the slider</td>
+        </tr>
+        <tr>
+            <td>values</td>
+            <td>null</td>
+            <td>Array of custom values: [a, b, c] etc.</td>
         </tr>
     </tbody>
 </table>
@@ -155,6 +189,24 @@ $("#someID").ionRangeSlider();
 </table>
 
 
+## Описание данных передаваемых в функцию обратного вызова:
+В любую функцию обратного вызова передается объект с данными сладера:
+```javascript
+Obj: {
+    "input": object,    // jQuery-link to input
+    "slider": object,   // jQuery-link to slider container
+    "min": 10,          // MIN value
+    "max": 20,          // MAX value
+    "fromNumber": 10,   // FROM value
+    "toNumber": 20,     // TO value
+    "fromPers": 25,     // FROM value in percents
+    "toPers": 75,       // TO value in percents
+    "fromX": 100,       // x-coordinate of FROM-slider in pixels
+    "toX": 200          // x-coordinate of TO-slider in pixels
+}
+```
+
+## Creating slider (all params)
 An example of a customised slider:
 ```javascript
 $("#someID").ionRangeSlider({
@@ -164,16 +216,22 @@ $("#someID").ionRangeSlider({
     to: 80,                         // overwrite default TO setting
     type: "single",                 // slider type
     step: 10,                       // slider step
-    postfix: " pounds",             // postfix text
+    prefix: "$",                    // prefix value
+    postfix: " €",                  // postfix value
+    maxPostfix: "+",                // postfix to maximum value
     hasGrid: true,                  // enable grid
     hideMinMax: true,               // hide Min and Max fields
     hideFromTo: true,               // hide From and To fields
     prettify: true,                 // separate large numbers with space, eg. 10 000
-    disable: false,                 // disable the slider
-    onChange: function(obj){        // function-callback, is called on every change
+    disable: false,                 // disable slider
+    values: ["a", "b", "c"],        // array of custom values
+    onLoad: function (obj) {        // callback is called after slider load and update
         console.log(obj);
     },
-    onFinish: function(obj){        // function-callback, is called once, after slider finished it's work
+    onChange: function (obj) {      // callback is called on every slider change
+        console.log(obj);
+    },
+    onFinish: function (obj) {      // callback is called on slider action is finished
         console.log(obj);
     }
 });
@@ -181,15 +239,18 @@ $("#someID").ionRangeSlider({
 
 You can also initialise slider with <code>data-*</code> attributes of input tag:
 ```html
-data-from="30"                      // overwrite default FROM setting
-data-to="70"                        // overwrite default TO setting
+data-from="30"                      // default FROM setting
+data-to="70"                        // default TO setting
 data-type="double"                  // slider type
 data-step="10"                      // slider step
-data-postfix=" pounds"              // postfix text
+data-prefix="$"                     // prefix value
+data-postfix=" €"                   // postfix value
+data-maxpostfix="+"                 // postfix to maximum value
 data-hasgrid="true"                 // enable grid
 data-hideminmax="true"              // hide Min and Max fields
 data-hidefromto="true"              // hide From and To fields
 data-prettify="false"               // don't use spaces in large numbers, eg. 10000 than 10 000
+data-values="a,b,c"                 // comma separated predefined slider values
 ```
 
 ## Public methods
@@ -212,6 +273,7 @@ $("#someID").ionRangeSlider("remove");
 
 
 ## Update history
+* March 16, 2014 - New plugin description. New demos design. Some new slider params. Issues: #65, 68, 70, 77, 78
 * January 12, 2014 - Fixed some bugs and some new features. Issues: # 12, 30, 33, 43, 47, 52, 58
 * October 31, 2013 - Fixed bugs: # 13, 31, 35, 37, 40, and some code optimisations
 * October 10, 2013 - New Flat UI Skin. Some skin optimisations. Fixed issue #25.

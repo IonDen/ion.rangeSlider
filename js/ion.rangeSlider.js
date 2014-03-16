@@ -1,6 +1,6 @@
 ﻿// Ion.RangeSlider
-// version 1.8.5 Build: 159
-// © 2013 Denis Ineshin | IonDen.com
+// version 1.9.0 Build: 167
+// © 2013-2014 Denis Ineshin | IonDen.com
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/
 // GitHub page:     https://github.com/IonDen/ion.rangeSlider
@@ -12,7 +12,9 @@
 (function ($, document, window, navigator) {
     "use strict";
 
-    var pluginCount = 0;
+    var pluginCount = 0,
+        current;
+
     var isOldie = (function () {
         var n = navigator.userAgent,
             r = /msie\s\d+/i,
@@ -26,14 +28,24 @@
         }
         return false;
     }());
-    var isTouch = (function () {
-        try {
-            document.createEvent("TouchEvent");
-            return true;
-        } catch (e) {
-            return false;
+    var isTouch = (('ontouchstart' in window) || (navigator.msMaxTouchPoints > 0));
+
+    var testNumber = function (num) {
+        if (typeof num === "Number") {
+            if (isNaN(num)) {
+                return null;
+            } else {
+                return num;
+            }
+        } else {
+            num = parseFloat(num);
+            if (isNaN(num)) {
+                return null;
+            } else {
+                return num;
+            }
         }
-    }());
+    };
 
     var methods = {
         init: function (options) {
@@ -67,14 +79,16 @@
                     from: null,
                     to: null,
                     type: "single",
-                    step: 1,
+                    step: null,
                     prefix: "",
                     postfix: "",
+                    maxPostfix: "",
                     hasGrid: false,
                     hideMinMax: false,
                     hideFromTo: false,
                     prettify: true,
                     disable: false,
+                    values: null,
                     onChange: null,
                     onLoad: null,
                     onFinish: null
@@ -84,6 +98,7 @@
 
                 var slider = $(this),
                     self = this,
+                    allow_values = false,
                     value_array = null;
 
                 if (slider.data("isActive")) {
@@ -160,23 +175,6 @@
                 }
 
 
-                // Set Min and Max if no
-                if (typeof settings.min !== "number") {
-                    settings.min = 10;
-                }
-                if (typeof settings.max !== "number") {
-                    settings.max = 100;
-                }
-
-
-                // Set From and To if no
-                if (typeof settings.from !== "number") {
-                    settings.from = settings.min;
-                }
-                if (typeof settings.to !== "number") {
-                    settings.to = settings.max;
-                }
-
 
                 // extend from data-*
                 if (typeof slider.data("min") === "number") {
@@ -203,6 +201,9 @@
                 if (slider.data("postfix")) {
                     settings.postfix = slider.data("postfix");
                 }
+                if (slider.data("maxpostfix")) {
+                    settings.maxPostfix = slider.data("maxpostfix");
+                }
                 if (slider.data("hasgrid")) {
                     settings.hasGrid = slider.data("hasgrid");
                 }
@@ -215,15 +216,76 @@
                 if (slider.data("prettify")) {
                     settings.prettify = slider.data("prettify");
                 }
+                if (slider.data("disable")) {
+                    settings.disable = slider.data("disable");
+                }
+                if (slider.data("values")) {
+                    settings.values = slider.data("values").split(",");
+                }
+
+
+
+                // Set Min and Max if no
+                settings.min = testNumber(settings.min);
+                if (!settings.min && settings.min !== 0) {
+                    settings.min = 10;
+                }
+
+                settings.max = testNumber(settings.max);
+                if (!settings.max && settings.max !== 0) {
+                    settings.max = 100;
+                }
+
+
+
+                // Set values
+                if (Object.prototype.toString.call(settings.values) !== "[object Array]") {
+                    settings.values = null;
+                }
+                if (settings.values && settings.values.length > 0) {
+                    settings.min = 0;
+                    settings.max = settings.values.length - 1;
+                    settings.step = 1;
+                    allow_values = true;
+                }
+
+
+
+                // Set From and To if no
+                settings.from = testNumber(settings.from);
+                if (!settings.from && settings.from !== 0) {
+                    settings.from = settings.min;
+                }
+
+                settings.to = testNumber(settings.to);
+                if (!settings.to && settings.to !== 0) {
+                    settings.to = settings.max;
+                }
+
+
+                // Set step
+                settings.step = testNumber(settings.step);
+                if (!settings.step) {
+                    settings.step = 1;
+                }
+
 
 
                 // fix diapason
                 if (settings.from < settings.min) {
                     settings.from = settings.min;
                 }
+                if (settings.from > settings.max) {
+                    settings.from = settings.min;
+                }
+
+                if (settings.to < settings.min) {
+                    settings.to = settings.max;
+                }
                 if (settings.to > settings.max) {
                     settings.to = settings.max;
                 }
+
                 if (settings.type === "double") {
                     if (settings.from > settings.to) {
                         settings.from = settings.to;
@@ -342,8 +404,13 @@
                         $fieldSingle[0].style.display = "none";
                     }
                     if (!settings.hideMinMax) {
-                        $fieldMin.html(settings.prefix + prettify(settings.min) + settings.postfix);
-                        $fieldMax.html(settings.prefix + prettify(settings.max) + settings.postfix);
+                        if (settings.values) {
+                            $fieldMin.html(settings.prefix + settings.values[0] + settings.postfix);
+                            $fieldMax.html(settings.prefix + settings.values[settings.values.length - 1] + settings.maxPostfix + settings.postfix);
+                        } else {
+                            $fieldMin.html(settings.prefix + prettify(settings.min) + settings.postfix);
+                            $fieldMax.html(settings.prefix + prettify(settings.max) + settings.maxPostfix + settings.postfix);
+                        }
 
                         fieldMinWidth = $fieldMin.outerWidth();
                         fieldMaxWidth = $fieldMax.outerWidth();
@@ -362,6 +429,7 @@
 
                             allowDrag = true;
                             sliderIsActive = true;
+                            current = self.pluginCount;
 
                             if (isOldie) {
                                 $("*").prop("unselectable", true);
@@ -376,6 +444,7 @@
 
                                 allowDrag = true;
                                 sliderIsActive = true;
+                                current = self.pluginCount;
                             });
                         }
 
@@ -395,8 +464,10 @@
                             $(this).addClass("last");
                             $toSlider.removeClass("last");
                             calcDimensions(e, $(this), "from");
+
                             allowDrag = true;
                             sliderIsActive = true;
+                            current = self.pluginCount;
 
                             if (isOldie) {
                                 $("*").prop("unselectable", true);
@@ -409,8 +480,10 @@
                             $(this).addClass("last");
                             $fromSlider.removeClass("last");
                             calcDimensions(e, $(this), "to");
+
                             allowDrag = true;
                             sliderIsActive = true;
+                            current = self.pluginCount;
 
                             if (isOldie) {
                                 $("*").prop("unselectable", true);
@@ -425,8 +498,10 @@
                                 $(this).addClass("last");
                                 $toSlider.removeClass("last");
                                 calcDimensions(e.originalEvent.touches[0], $(this), "from");
+
                                 allowDrag = true;
                                 sliderIsActive = true;
+                                current = self.pluginCount;
                             });
                             $toSlider.on("touchstart", function (e) {
                                 e.preventDefault();
@@ -435,8 +510,10 @@
                                 $(this).addClass("last");
                                 $fromSlider.removeClass("last");
                                 calcDimensions(e.originalEvent.touches[0], $(this), "to");
+
                                 allowDrag = true;
                                 sliderIsActive = true;
+                                current = self.pluginCount;
                             });
                         }
 
@@ -446,6 +523,10 @@
                     }
 
                     var mouseup = function () {
+                        if (current !== self.pluginCount) {
+                            return;
+                        }
+
                         if (allowDrag) {
                             sliderIsActive = false;
                             allowDrag = false;
@@ -461,9 +542,6 @@
                             }
                         }
                     };
-                    $body.on("mouseup.irs" + self.pluginCount, function () {
-                        mouseup();
-                    });
                     $window.on("mouseup.irs" + self.pluginCount, function () {
                         mouseup();
                     });
@@ -476,7 +554,15 @@
                         }
                     });
 
+                    $container.on("mousedown", function () {
+                        current = self.pluginCount;
+                    });
+
                     $container.on("mouseup", function (e) {
+                        if (current !== self.pluginCount) {
+                            return;
+                        }
+
                         if (allowDrag || settings.disable) {
                             return;
                         }
@@ -512,6 +598,8 @@
                     }
                     if (settings.disable) {
                         setMask();
+                    } else {
+                        removeMask();
                     }
                 };
 
@@ -605,12 +693,16 @@
                     var nums = {
                         input: slider,
                         slider: $container,
+                        min: settings.min,
+                        max: settings.max,
                         fromNumber: 0,
                         toNumber: 0,
                         fromPers: 0,
                         toPers: 0,
                         fromX: 0,
-                        toX: 0
+                        fromX_pure: 0,
+                        toX: 0,
+                        toX_pure: 0
                     };
                     var diapason = settings.max - settings.min, _from, _to;
 
@@ -629,6 +721,10 @@
 
                         if (stepFloat) {
                             nums.fromNumber = parseInt(nums.fromNumber * stepFloat, 10) / stepFloat;
+                        }
+
+                        if (allow_values) {
+                            nums.fromValue = settings.values[nums.fromNumber];
                         }
 
                     } else if (settings.type === "double") {
@@ -654,6 +750,11 @@
                             nums.toNumber = parseInt(nums.toNumber * stepFloat, 10) / stepFloat;
                         }
 
+                        if (allow_values) {
+                            nums.fromValue = settings.values[nums.fromNumber];
+                            nums.toValue = settings.values[nums.toNumber];
+                        }
+
                     }
 
                     numbers = nums;
@@ -664,6 +765,8 @@
                     var nums = {
                         input: slider,
                         slider: $container,
+                        min: settings.min,
+                        max: settings.max,
                         fromNumber: settings.from,
                         toNumber: settings.to,
                         fromPers: 0,
@@ -737,17 +840,35 @@
                     var _from, _fromW, _fromX,
                         _to, _toW, _toX,
                         _single, _singleW, _singleX,
-                        _slW = (sliderWidth / 2);
+                        _slW = (sliderWidth / 2),
+                        maxPostfix = "";
 
                     if (settings.type === "single") {
+
+                        if (numbers.fromNumber === settings.max) {
+                            maxPostfix = settings.maxPostfix;
+                        } else {
+                            maxPostfix = "";
+                        }
 
                         if (!settings.hideText) {
                             $fieldFrom[0].style.display = "none";
                             $fieldTo[0].style.display = "none";
 
-                            _single = settings.prefix +
-                                prettify(numbers.fromNumber) +
-                                settings.postfix;
+                            if (allow_values) {
+                                _single =
+                                    settings.prefix +
+                                    settings.values[numbers.fromNumber] +
+                                    maxPostfix +
+                                    settings.postfix;
+                            } else {
+                                _single =
+                                    settings.prefix +
+                                    prettify(numbers.fromNumber) +
+                                    maxPostfix +
+                                    settings.postfix;
+                            }
+
                             $fieldSingle.html(_single);
 
                             _singleW = $fieldSingle.outerWidth();
@@ -779,24 +900,73 @@
 
                     } else if (settings.type === "double") {
 
-                        if (!settings.hideText) {
-                            _from = settings.prefix +
-                                prettify(numbers.fromNumber) +
-                                settings.postfix;
-                            _to = settings.prefix +
-                                prettify(numbers.toNumber) +
-                                settings.postfix;
+                        if (numbers.fromNumber === settings.max) {
+                            maxPostfix = settings.maxPostfix;
+                        } else {
+                            maxPostfix = "";
+                        }
 
-                            if (numbers.fromNumber !== numbers.toNumber) {
-                                _single = settings.prefix +
-                                    prettify(numbers.fromNumber) +
-                                    " — " + settings.prefix +
-                                    prettify(numbers.toNumber) +
+                        if (numbers.toNumber === settings.max) {
+                            maxPostfix = settings.maxPostfix;
+                        } else {
+                            maxPostfix = "";
+                        }
+
+                        if (!settings.hideText) {
+                            if (allow_values) {
+                                _from =
+                                    settings.prefix +
+                                    settings.values[numbers.fromNumber] +
                                     settings.postfix;
+
+                                _to =
+                                    settings.prefix +
+                                    settings.values[numbers.toNumber] +
+                                    maxPostfix +
+                                    settings.postfix;
+
+                                if (numbers.fromNumber !== numbers.toNumber) {
+                                    _single =
+                                        settings.prefix +
+                                        settings.values[numbers.fromNumber] +
+                                        " — " + settings.prefix +
+                                        settings.values[numbers.toNumber] +
+                                        maxPostfix +
+                                        settings.postfix;
+                                } else {
+                                    _single =
+                                        settings.prefix +
+                                        settings.values[numbers.fromNumber] +
+                                        maxPostfix +
+                                        settings.postfix;
+                                }
                             } else {
-                                _single = settings.prefix +
+                                _from =
+                                    settings.prefix +
                                     prettify(numbers.fromNumber) +
                                     settings.postfix;
+
+                                _to =
+                                    settings.prefix +
+                                    prettify(numbers.toNumber) +
+                                    maxPostfix +
+                                    settings.postfix;
+
+                                if (numbers.fromNumber !== numbers.toNumber) {
+                                    _single =
+                                        settings.prefix +
+                                        prettify(numbers.fromNumber) +
+                                        " — " + settings.prefix +
+                                        prettify(numbers.toNumber) +
+                                        maxPostfix +
+                                        settings.postfix;
+                                } else {
+                                    _single =
+                                        settings.prefix +
+                                        prettify(numbers.fromNumber) +
+                                        maxPostfix +
+                                        settings.postfix;
+                                }
                             }
 
                             $fieldFrom.html(_from);
@@ -862,19 +1032,22 @@
 
                     }
 
-                    // trigger onChange function
-                    if (typeof settings.onChange === "function") {
-                        settings.onChange.call(this, numbers);
-                    }
+
 
                     // trigger onFinish function
                     if (typeof settings.onFinish === "function" && !sliderIsActive && !firstStart) {
                         settings.onFinish.call(this, numbers);
                     }
 
+                    // trigger onChange function
+                    if (typeof settings.onChange === "function" && !firstStart) {
+                        settings.onChange.call(this, numbers);
+                    }
+
                     // trigger onLoad function
                     if (typeof settings.onLoad === "function" && !sliderIsActive && firstStart) {
                         settings.onLoad.call(this, numbers);
+                        firstStart = false;
                     }
                 };
 
@@ -915,6 +1088,20 @@
                             text = prettify(text);
                         }
 
+                        if (allow_values) {
+                            if (settings.hideMinMax) {
+                                text = Math.round(settings.min + ((settings.max - settings.min) / bigNum * i));
+                                text = Math.round(text / settings.step) * settings.step;
+                                if (i === 0 || i === bigNum) {
+                                    text = settings.values[text];
+                                } else {
+                                    text = "";
+                                }
+                            } else {
+                                text = "";
+                            }
+                        }
+
                         if (i === 0) {
                             tStep = step;
                             gridHTML += '<span class="irs-grid-text" style="left: ' + tStep + 'px; text-align: left;">' + text + '</span>';
@@ -930,10 +1117,20 @@
                     $grid.html(gridHTML);
                 };
 
+
+
+                // Disable state
                 var setMask = function () {
                     $container.addClass("irs-disabled");
                     $container.append(disableHTML);
                 };
+
+                var removeMask = function () {
+                    $container.removeClass("irs-disabled");
+                    $container.find(".irs-disable-mask").remove();
+                };
+
+
 
                 placeHTML();
             });
