@@ -189,8 +189,8 @@ $("#example_id").ionRangeSlider();
 </table>
 
 
-## Описание данных передаваемых в функцию обратного вызова:
-В любую функцию обратного вызова передается объект с данными сладера:
+## Description of data passed to callbacks
+Each callback have object with slider data as a first argument:
 ```javascript
 Obj: {
     "input": object,    // jQuery-link to input
