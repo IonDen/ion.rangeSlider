@@ -909,7 +909,7 @@
                             }
                         }
 
-                        slider.attr("value", parseFloat(numbers.fromNumber));
+                        slider.val(parseFloat(numbers.fromNumber));
 
                     } else if (settings.type === "double") {
 
@@ -1039,7 +1039,7 @@
                             }
                         }
 
-                        slider.attr("value", parseFloat(numbers.fromNumber) + ";" + parseFloat(numbers.toNumber));
+                        slider.val(parseFloat(numbers.fromNumber) + ";" + parseFloat(numbers.toNumber));
 
                     }
 
