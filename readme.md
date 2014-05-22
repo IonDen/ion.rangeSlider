@@ -1,10 +1,10 @@
-# Ion.Range Slider 1.9.0
+# Ion.Range Slider 1.9.1
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
 Easy and light range slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
 
-Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.9.0.zip">ion.rangeSlider-1.9.0.zip</a>
+Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.9.1.zip">ion.rangeSlider-1.9.1.zip</a>
 
 ***
 
@@ -21,7 +21,7 @@ Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1
 * Two slider types single (1 slider) and double (2 sliders)
 * Support of negative and fractional values
 * Ability to edit step
-* Support of custov values diapason (See months example)
+* Support of custom values diapason (See months example)
 * Automatically generated grid
 * Ability to disable UI elements (min and max, current value, grid)
 * Postfixes and prefixes for you numbers ($20, 20 &euro; etc.)
@@ -273,13 +273,14 @@ $("#someID").ionRangeSlider("remove");
 
 
 ## Update history
-* March 16, 2014 - New plugin description. New demos design. Some new slider params. Issues: #65, 68, 70, 77, 78
-* January 12, 2014 - Fixed some bugs and some new features. Issues: # 12, 30, 33, 43, 47, 52, 58
-* October 31, 2013 - Fixed bugs: # 13, 31, 35, 37, 40, and some code optimisations
+* April 15, 2014 - Fixed some bugs: #81, #82, #85
+* March 16, 2014 - New plugin description. New demos design. Some new slider params. Issues: #65, #68, #70, #77, #78
+* January 12, 2014 - Fixed some bugs and some new features. Issues: #12, #30, #33, #43, #47, #52, #58
+* October 31, 2013 - Fixed bugs: #13, #31, #35, #37, #40, and some code optimisations
 * October 10, 2013 - New Flat UI Skin. Some skin optimisations. Fixed issue #25.
 * October 08, 2013 - Fixed issues #20, #21, #23, #24, #26. Removed hideText option. New method and options. Improved code style. Minor optimisations.
-* September 11, 2013 - Fixed bug on Android-devices. Added support for negative and fractional values. Issues #15, 16
-* August 23, 2013 - Issues #7-10 fixed and some enhancements
+* September 11, 2013 - Fixed bug on Android-devices. Added support for negative and fractional values. Issues #15, #16
+* August 23, 2013 - Issues #7, #8, #9, #10 fixed and some enhancements
 * July 29, 2013 - Issue #2 fixed. Versioning changed
 * June 30, 2013 - minor bug fixes and new option "hideText"
 * June 21, 2013 - added the ability to display the grid
