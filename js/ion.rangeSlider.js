@@ -1076,10 +1076,11 @@
                         tStep = 0,
                         gridHTML = '',
                         smNum = 20,
-                        bigNum = 4;
+                        bigNum = 4,
+                        gutter = 8; //left and right margin for the grid so it visually matches.
 
                     for (i = 0; i <= smNum; i += 1) {
-                        step = Math.floor(normalWidth / smNum * i);
+                        step = Math.floor((normalWidth - 2 * gutter) / smNum * i) + gutter;
 
                         if (step >= normalWidth) {
                             step = normalWidth - 1;
@@ -1087,7 +1088,7 @@
                         gridHTML += '<span class="irs-grid-pol small" style="left: ' + step + 'px;"></span>';
                     }
                     for (i = 0; i <= bigNum; i += 1) {
-                        step = Math.floor(normalWidth / bigNum * i);
+                        step = Math.floor((normalWidth - 2 * gutter) / bigNum * i) + gutter;
 
                         if (step >= normalWidth) {
                             step = normalWidth - 1;
