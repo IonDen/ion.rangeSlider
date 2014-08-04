@@ -1,10 +1,10 @@
-# Ion.Range Slider 1.9.1
+# Ion.Range Slider 1.9.2
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
 Easy and light range slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
 
-Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.9.1.zip">ion.rangeSlider-1.9.1.zip</a>
+Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.9.2.zip">ion.rangeSlider-1.9.2.zip</a>
 
 ***
 
@@ -131,6 +131,11 @@ $("#example_id").ionRangeSlider();
             <td>Optional property, enables grid at the bottom of the slider (it adds 20px height and this can be customised through CSS)</td>
         </tr>
         <tr>
+            <td>gridMargin</td>
+            <td>0</td>
+            <td>Optional property, enables margin between slider corner and grid</td>
+        </tr>
+        <tr>
             <td>hideMinMax</td>
             <td>false</td>
             <td>Optional property, disables Min and Max fields.</td>
@@ -220,6 +225,7 @@ $("#someID").ionRangeSlider({
     postfix: " €",                  // postfix value
     maxPostfix: "+",                // postfix to maximum value
     hasGrid: true,                  // enable grid
+    gridMargin: 7,                  // margin between slider corner and grid
     hideMinMax: true,               // hide Min and Max fields
     hideFromTo: true,               // hide From and To fields
     prettify: true,                 // separate large numbers with space, eg. 10 000
@@ -247,6 +253,7 @@ data-prefix="$"                     // prefix value
 data-postfix=" €"                   // postfix value
 data-maxpostfix="+"                 // postfix to maximum value
 data-hasgrid="true"                 // enable grid
+data-gridmargin="7"                 // set grid margin
 data-hideminmax="true"              // hide Min and Max fields
 data-hidefromto="true"              // hide From and To fields
 data-prettify="false"               // don't use spaces in large numbers, eg. 10000 than 10 000
@@ -273,7 +280,8 @@ $("#someID").ionRangeSlider("remove");
 
 
 ## Update history
-* April 15, 2014 - Fixed some bugs: #81, #82, #85
+* 1.9.2: August 04, 2014 - New param gridMargin. Resolved some issues: #89, #94, #96, #97, #98, #103
+* 1.9.1: April 15, 2014 - Fixed some bugs: #81, #82, #85
 * March 16, 2014 - New plugin description. New demos design. Some new slider params. Issues: #65, #68, #70, #77, #78
 * January 12, 2014 - Fixed some bugs and some new features. Issues: #12, #30, #33, #43, #47, #52, #58
 * October 31, 2013 - Fixed bugs: #13, #31, #35, #37, #40, and some code optimisations

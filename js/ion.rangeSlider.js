@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 1.9.1 Build: 171
+// version 1.9.2 Build: 175
 // © 2013-2014 Denis Ineshin | IonDen.com
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/
@@ -12,10 +12,10 @@
 (function ($, document, window, navigator) {
     "use strict";
 
-    var pluginCount = 0,
+    var plugin_count = 0,
         current;
 
-    var isOldie = (function () {
+    var is_old_ie = (function () {
         var n = navigator.userAgent,
             r = /msie\s\d+/i,
             v;
@@ -28,10 +28,10 @@
         }
         return false;
     }());
-    var isTouch = (('ontouchstart' in window) || (navigator.msMaxTouchPoints > 0));
+    var is_touch = (('ontouchstart' in window) || (navigator.msMaxTouchPoints > 0));
 
     var testNumber = function (num) {
-        if (typeof num === "Number") {
+        if (typeof num === "number") {
             if (isNaN(num)) {
                 return null;
             } else {
@@ -84,13 +84,14 @@
                     postfix: "",
                     maxPostfix: "",
                     hasGrid: false,
+                    gridMargin: 0,
                     hideMinMax: false,
                     hideFromTo: false,
                     prettify: true,
                     disable: false,
                     values: null,
-                    onChange: null,
                     onLoad: null,
+                    onChange: null,
                     onFinish: null
                 }, options);
 
@@ -106,8 +107,8 @@
                 }
                 slider.data("isActive", true);
 
-                pluginCount += 1;
-                this.pluginCount = pluginCount;
+                plugin_count += 1;
+                this.plugin_count = plugin_count;
 
 
 
@@ -207,6 +208,9 @@
                 if (slider.data("hasgrid")) {
                     settings.hasGrid = slider.data("hasgrid");
                 }
+                if (slider.data("gridmargin")) {
+                    settings.gridMargin = +slider.data("gridmargin");
+                }
                 if (slider.data("hideminmax")) {
                     settings.hideMinMax = slider.data("hideminmax");
                 }
@@ -305,7 +309,7 @@
                 };
 
 
-                var containerHTML = '<span class="irs" id="irs-' + this.pluginCount + '"></span>';
+                var containerHTML = '<span class="irs" id="irs-' + this.plugin_count + '"></span>';
                 slider[0].style.display = "none";
                 slider.before(containerHTML);
 
@@ -326,8 +330,8 @@
                     $grid;
 
                 var allowDrag = false,
-                    sliderIsActive = false,
-                    firstStart = true,
+                    is_slider_active = false,
+                    is_first_start = true,
                     numbers = {};
 
                 var mouseX = 0,
@@ -352,15 +356,15 @@
 
                 // public methods
                 this.updateData = function (options) {
-                    firstStart = true;
-                    settings = $.extend(settings, options);
+                    $.extend(settings, options);
                     removeHTML();
                 };
                 this.removeSlider = function () {
                     $container.find("*").off();
-                    $window.off("mouseup.irs" + self.pluginCount);
-                    $body.off("mouseup.irs" + self.pluginCount);
-                    $body.off("mousemove.irs" + self.pluginCount);
+                    $window.off("mouseup.irs" + self.plugin_count);
+                    $body.off("mouseup.irs" + self.plugin_count);
+                    $body.off("mouseleave.irs" + self.plugin_count);
+                    $body.off("mousemove.irs" + self.plugin_count);
                     $container.html("").remove();
                     slider.data("isActive", false);
                     slider.show();
@@ -373,9 +377,10 @@
                 // private methods
                 var removeHTML = function () {
                     $container.find("*").off();
-                    $window.off("mouseup.irs" + self.pluginCount);
-                    $body.off("mouseup.irs" + self.pluginCount);
-                    $body.off("mousemove.irs" + self.pluginCount);
+                    $window.off("mouseup.irs" + self.plugin_count);
+                    $body.off("mouseup.irs" + self.plugin_count);
+                    $body.off("mouseleave.irs" + self.plugin_count);
+                    $body.off("mousemove.irs" + self.plugin_count);
                     $container.html("");
 
                     placeHTML();
@@ -421,8 +426,8 @@
                             $fieldMax.html(settings.prefix + prettify(settings.max) + settings.maxPostfix + settings.postfix);
                         }
 
-                        fieldMinWidth = $fieldMin.outerWidth();
-                        fieldMaxWidth = $fieldMax.outerWidth();
+                        fieldMinWidth = $fieldMin.outerWidth(false);
+                        fieldMaxWidth = $fieldMax.outerWidth(false);
                     }
 
                     bindEvents();
@@ -441,14 +446,14 @@
                             calcDimensions(e, $(this), null);
 
                             allowDrag = true;
-                            sliderIsActive = true;
-                            current = self.pluginCount;
+                            is_slider_active = true;
+                            current = self.plugin_count;
 
-                            if (isOldie) {
+                            if (is_old_ie) {
                                 $("*").prop("unselectable", true);
                             }
                         });
-                        if (isTouch) {
+                        if (is_touch) {
                             $singleSlider.on("touchstart", function (e) {
                                 e.preventDefault();
                                 e.stopPropagation();
@@ -456,8 +461,8 @@
                                 calcDimensions(e.originalEvent.touches[0], $(this), null);
 
                                 allowDrag = true;
-                                sliderIsActive = true;
-                                current = self.pluginCount;
+                                is_slider_active = true;
+                                current = self.plugin_count;
                             });
                         }
 
@@ -479,10 +484,10 @@
                             calcDimensions(e, $(this), "from");
 
                             allowDrag = true;
-                            sliderIsActive = true;
-                            current = self.pluginCount;
+                            is_slider_active = true;
+                            current = self.plugin_count;
 
-                            if (isOldie) {
+                            if (is_old_ie) {
                                 $("*").prop("unselectable", true);
                             }
                         });
@@ -495,15 +500,15 @@
                             calcDimensions(e, $(this), "to");
 
                             allowDrag = true;
-                            sliderIsActive = true;
-                            current = self.pluginCount;
+                            is_slider_active = true;
+                            current = self.plugin_count;
 
-                            if (isOldie) {
+                            if (is_old_ie) {
                                 $("*").prop("unselectable", true);
                             }
                         });
 
-                        if (isTouch) {
+                        if (is_touch) {
                             $fromSlider.on("touchstart", function (e) {
                                 e.preventDefault();
                                 e.stopPropagation();
@@ -513,8 +518,8 @@
                                 calcDimensions(e.originalEvent.touches[0], $(this), "from");
 
                                 allowDrag = true;
-                                sliderIsActive = true;
-                                current = self.pluginCount;
+                                is_slider_active = true;
+                                current = self.plugin_count;
                             });
                             $toSlider.on("touchstart", function (e) {
                                 e.preventDefault();
@@ -525,8 +530,8 @@
                                 calcDimensions(e.originalEvent.touches[0], $(this), "to");
 
                                 allowDrag = true;
-                                sliderIsActive = true;
-                                current = self.pluginCount;
+                                is_slider_active = true;
+                                current = self.plugin_count;
                             });
                         }
 
@@ -536,12 +541,12 @@
                     }
 
                     var mouseup = function () {
-                        if (current !== self.pluginCount) {
+                        if (current !== self.plugin_count) {
                             return;
                         }
 
                         if (allowDrag) {
-                            sliderIsActive = false;
+                            is_slider_active = false;
                             allowDrag = false;
                             $activeSlider.removeAttr("id");
                             $activeSlider = null;
@@ -550,17 +555,24 @@
                             }
                             getNumbers();
 
-                            if (isOldie) {
+                            if (is_old_ie) {
                                 $("*").prop("unselectable", false);
                             }
                         }
                     };
-                    $body.on("mouseup.irs" + self.pluginCount, function () {
+
+                    $window.on("mouseup.irs" + self.plugin_count, function () {
                         mouseup();
                     });
 
+                    if (is_old_ie) {
+                        $body.on("mouseleave.irs" + self.plugin_count, function () {
+                            mouseup();
+                        });
+                    }
 
-                    $body.on("mousemove.irs" + self.pluginCount, function (e) {
+
+                    $body.on("mousemove.irs" + self.plugin_count, function (e) {
                         if (allowDrag) {
                             mouseX = e.pageX;
                             dragSlider();
@@ -568,11 +580,11 @@
                     });
 
                     $container.on("mousedown", function () {
-                        current = self.pluginCount;
+                        current = self.plugin_count;
                     });
 
                     $container.on("mouseup", function (e) {
-                        if (current !== self.pluginCount) {
+                        if (current !== self.plugin_count) {
                             return;
                         }
 
@@ -583,10 +595,10 @@
                         moveByClick(e.pageX);
                     });
 
-                    if (isTouch) {
+                    if (is_touch) {
                         $window.on("touchend", function () {
                             if (allowDrag) {
-                                sliderIsActive = false;
+                                is_slider_active = false;
                                 allowDrag = false;
                                 $activeSlider.removeAttr("id");
                                 $activeSlider = null;
@@ -629,9 +641,9 @@
                 var calcDimensions = function (e, currentSlider, whichSlider) {
                     getSize();
 
-                    firstStart = false;
+                    is_first_start = false;
                     $activeSlider = currentSlider;
-                    $activeSlider.attr("id", "irs-active-slider");
+                    $activeSlider.prop("id", "irs-active-slider");
 
                     var _x1 = $activeSlider.offset().left,
                         _x2 = e.pageX - _x1;
@@ -822,7 +834,7 @@
                 };
 
                 var moveByClick = function (page_x) {
-                    firstStart = false;
+                    is_first_start = false;
 
                     var x = page_x - $container.offset().left,
                         d = numbers.toX - numbers.fromX,
@@ -834,7 +846,7 @@
 
                     if (settings.type === "single") {
                         $activeSlider = $singleSlider;
-                        $activeSlider.attr("id", "irs-active-slider");
+                        $activeSlider.prop("id", "irs-active-slider");
                         dragSlider(x);
                     } else if (settings.type === "double") {
                         if (x <= zero_point) {
@@ -842,7 +854,7 @@
                         } else {
                             $activeSlider = $toSlider;
                         }
-                        $activeSlider.attr("id", "irs-active-slider");
+                        $activeSlider.prop("id", "irs-active-slider");
                         dragSlider(x);
                         setDiapason();
                     }
@@ -885,7 +897,7 @@
 
                         $fieldSingle.html(_single);
 
-                        _singleW = $fieldSingle.outerWidth();
+                        _singleW = $fieldSingle.outerWidth(false);
                         _singleX = numbers.fromX - (_singleW / 2) + _slW;
                         if (_singleX < 0) {
                             _singleX = 0;
@@ -909,7 +921,7 @@
                             }
                         }
 
-                        slider.attr("value", parseFloat(numbers.fromNumber));
+                        slider.prop("value", parseFloat(numbers.fromNumber));
 
                     } else if (settings.type === "double") {
 
@@ -985,7 +997,7 @@
                         $fieldTo.html(_to);
                         $fieldSingle.html(_single);
 
-                        _fromW = $fieldFrom.outerWidth();
+                        _fromW = $fieldFrom.outerWidth(false);
                         _fromX = numbers.fromX - (_fromW / 2) + _slW;
                         if (_fromX < 0) {
                             _fromX = 0;
@@ -995,7 +1007,7 @@
                         }
                         $fieldFrom[0].style.left = _fromX + "px";
 
-                        _toW = $fieldTo.outerWidth();
+                        _toW = $fieldTo.outerWidth(false);
                         _toX = numbers.toX - (_toW / 2) + _slW;
                         if (_toX < 0) {
                             _toX = 0;
@@ -1005,7 +1017,7 @@
                         }
                         $fieldTo[0].style.left = _toX + "px";
 
-                        _singleW = $fieldSingle.outerWidth();
+                        _singleW = $fieldSingle.outerWidth(false);
                         _singleX = numbers.fromX + ((numbers.toX - numbers.fromX) / 2) - (_singleW / 2) + _slW;
                         if (_singleX < 0) {
                             _singleX = 0;
@@ -1039,30 +1051,31 @@
                             }
                         }
 
-                        slider.attr("value", parseFloat(numbers.fromNumber) + ";" + parseFloat(numbers.toNumber));
+                        slider.prop("value", parseFloat(numbers.fromNumber) + ";" + parseFloat(numbers.toNumber));
 
                     }
 
-
+                    settings.from = numbers.fromNumber;
+                    settings.to = numbers.toNumber;
                     callbacks();
                 };
 
 
                 var callbacks = function () {
                     // trigger onFinish function
-                    if (typeof settings.onFinish === "function" && !sliderIsActive && !firstStart) {
+                    if (typeof settings.onFinish === "function" && !is_slider_active && !is_first_start) {
                         settings.onFinish.call(this, numbers);
                     }
 
                     // trigger onChange function
-                    if (typeof settings.onChange === "function" && !firstStart) {
+                    if (typeof settings.onChange === "function" && !is_first_start) {
                         settings.onChange.call(this, numbers);
                     }
 
                     // trigger onLoad function
-                    if (typeof settings.onLoad === "function" && !sliderIsActive && firstStart) {
+                    if (typeof settings.onLoad === "function" && !is_slider_active && is_first_start) {
                         settings.onLoad.call(this, numbers);
-                        firstStart = false;
+                        is_first_start = false;
                     }
                 };
 
@@ -1076,21 +1089,24 @@
                         tStep = 0,
                         gridHTML = '',
                         smNum = 20,
-                        bigNum = 4;
+                        bigNum = 4,
+                        cont_width = normalWidth - (settings.gridMargin * 2);
+
+
 
                     for (i = 0; i <= smNum; i += 1) {
-                        step = Math.floor(normalWidth / smNum * i);
+                        step = Math.floor(cont_width / smNum * i);
 
-                        if (step >= normalWidth) {
-                            step = normalWidth - 1;
+                        if (step >= cont_width) {
+                            step = cont_width - 1;
                         }
                         gridHTML += '<span class="irs-grid-pol small" style="left: ' + step + 'px;"></span>';
                     }
                     for (i = 0; i <= bigNum; i += 1) {
-                        step = Math.floor(normalWidth / bigNum * i);
+                        step = Math.floor(cont_width / bigNum * i);
 
-                        if (step >= normalWidth) {
-                            step = normalWidth - 1;
+                        if (step >= cont_width) {
+                            step = cont_width - 1;
                         }
                         gridHTML += '<span class="irs-grid-pol" style="left: ' + step + 'px;"></span>';
 
@@ -1131,6 +1147,7 @@
                     }
 
                     $grid.html(gridHTML);
+                    $grid[0].style.left = settings.gridMargin + "px";
                 };
 
 
