@@ -1,10 +1,10 @@
-# Ion.Range Slider 1.9.2
+# Ion.Range Slider 1.9.3
 
 > <a href="readme.md">English description</a> | Описание на русском
 
 Удобный легкий слайдер диапазонов. <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Страница проекта и демо</a>
 
-Скачать: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.9.2.zip">ion.rangeSlider-1.9.2.zip</a>
+Скачать: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.9.3.zip">ion.rangeSlider-1.9.3.zip</a>
 
 ***
 
@@ -281,6 +281,7 @@ $("#someID").ionRangeSlider("remove");
 ```
 
 ## История обновлений
+* 1.9.3: 06.08.2014 - Добавлена поддержка bower
 * 1.9.2: 04.08.2014 - Новый параметр gridMargin. Выполнены задачи: #89, #94, #96, #97, #98, #103
 * 1.9.1: 15.04.2014 - Исправлено несколько багов. Задачи: #81, #82, #85
 * 16.03.2014 - Обновление описания плагина. Новый дизайн демок. Несколько новых параметров. Задачи: #65, #68, #70, #77, #78
