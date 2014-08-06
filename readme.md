@@ -55,6 +55,10 @@ Don't forget about skin image sprite:
 * sprite-skin-nice.png - Nice skin
 Or use the included PSD file and design a custom skin.
 
+## Install with bower
+
+* bower install ionrangeslider
+
 
 ## Initialisation
 
