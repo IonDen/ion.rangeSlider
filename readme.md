@@ -152,7 +152,12 @@ $("#example_id").ionRangeSlider();
         <tr>
             <td>prettify</td>
             <td>true</td>
-            <td>Optional property, allow to separate large numbers with spaces, eg. 10 000 than 10000</td>
+            <td>Optional property, allow to separate large numbers with prettifyWith setting</td>
+        </tr>
+	<tr>
+            <td>prettifyWith</td>
+            <td><i>Single space</i></td>
+            <td>Optional property, when prettify set to true, overrides the string used to separate large numbers, eg. 10 000 than 10000</td>
         </tr>
         <tr>
             <td>disable</td>
@@ -232,7 +237,8 @@ $("#someID").ionRangeSlider({
     gridMargin: 7,                  // margin between slider corner and grid
     hideMinMax: true,               // hide Min and Max fields
     hideFromTo: true,               // hide From and To fields
-    prettify: true,                 // separate large numbers with space, eg. 10 000
+    prettify: true,                 // separate large numbers with prettifyWith setting
+    prettifyWith: ',',              // separate large numbers with comma, eg. 10,000
     disable: false,                 // disable slider
     values: ["a", "b", "c"],        // array of custom values
     onLoad: function (obj) {        // callback is called after slider load and update
@@ -260,7 +266,8 @@ data-hasgrid="true"                 // enable grid
 data-gridmargin="7"                 // set grid margin
 data-hideminmax="true"              // hide Min and Max fields
 data-hidefromto="true"              // hide From and To fields
-data-prettify="false"               // don't use spaces in large numbers, eg. 10000 than 10 000
+data-prettify="true "               // use prettifyWith setting in large numbers
+data-prettifywith=","               // uses comma to format large numbers, eg. 10,000 than 10 000
 data-values="a,b,c"                 // comma separated predefined slider values
 ```
 
