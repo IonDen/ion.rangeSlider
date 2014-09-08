@@ -88,6 +88,7 @@
                     hideMinMax: false,
                     hideFromTo: false,
                     prettify: true,
+		    prettifyWith: ' ',
                     disable: false,
                     values: null,
                     onLoad: null,
@@ -217,8 +218,11 @@
                 if (slider.data("hidefromto")) {
                     settings.hideFromTo = slider.data("hidefromto");
                 }
-                if (slider.data("prettify")) {
+                if (typeof slider.data("prettify") === "boolean") {
                     settings.prettify = slider.data("prettify");
+                }
+		if (slider.data("prettifywith") != undefined) {
+                    settings.prettifyWith = slider.data("prettifywith");
                 }
                 if (slider.data("disable")) {
                     settings.disable = slider.data("disable");
@@ -303,7 +307,7 @@
                 var prettify = function (num) {
                     var n = num.toString();
                     if (settings.prettify) {
-                        n = n.replace(/(\d{1,3}(?=(?:\d\d\d)+(?!\d)))/g, "$1 ");
+                        n = n.replace(/(\d{1,3}(?=(?:\d\d\d)+(?!\d)))/g, "$1" + settings.prettifyWith);
                     }
                     return n;
                 };
