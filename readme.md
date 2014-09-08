@@ -156,7 +156,7 @@ $("#example_id").ionRangeSlider();
         </tr>
 	<tr>
             <td>prettifyWith</td>
-            <td><i>Empty string</i></td>
+            <td><i>Single space</i></td>
             <td>Optional property, when prettify set to true, overrides the string used to separate large numbers, eg. 10 000 than 10000</td>
         </tr>
         <tr>
