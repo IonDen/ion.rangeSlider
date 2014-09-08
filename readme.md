@@ -152,7 +152,7 @@ $("#example_id").ionRangeSlider();
         <tr>
             <td>prettify</td>
             <td>true</td>
-            <td>Optional property, allow to separate large numbers with spaces, eg. 10 000 than 10000</td>
+            <td>Optional property, allow to separate large numbers with prettifyWith setting</td>
         </tr>
 	<tr>
             <td>prettifyWith</td>
