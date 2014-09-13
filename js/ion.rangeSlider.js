@@ -92,7 +92,10 @@
                     values: null,
                     onLoad: null,
                     onChange: null,
-                    onFinish: null
+                    onFinish: null,
+                    snap: false,
+                    gridSmallSteps: 20,
+                    gridBigSteps: 4
                 }, options);
 
 
@@ -344,7 +347,8 @@
                     left = 0,
                     right = 0,
                     minusX = 0,
-                    stepFloat = 0;
+                    stepFloat = 0,
+                    snapWidth = 0;
 
 
                 if (parseInt(settings.step, 10) !== parseFloat(settings.step)) {
@@ -636,6 +640,10 @@
                         sliderWidth = $fromSlider.width();
                     }
                     fullWidth = normalWidth - sliderWidth;
+                    if (settings.snap) {
+                        snapWidth = fullWidth / (settings.max - settings.min);
+                        snapWidth = snapWidth * settings.step;
+                    }
                 };
 
                 var calcDimensions = function (e, currentSlider, whichSlider) {
@@ -705,6 +713,10 @@
                         }
                         setDiapason();
 
+                    }
+                    
+                    if (settings.snap) {
+                        x_pure = Math.round(x_pure / snapWidth) * snapWidth;
                     }
 
                     $.data($activeSlider[0], "x", x_pure);
@@ -1088,8 +1100,8 @@
                         step = 0,
                         tStep = 0,
                         gridHTML = '',
-                        smNum = 20,
-                        bigNum = 4,
+                        smNum = settings.gridSmallSteps,
+                        bigNum = settings.gridBigSteps,
                         cont_width = normalWidth - (settings.gridMargin * 2);
 
 
