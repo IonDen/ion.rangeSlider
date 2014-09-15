@@ -301,7 +301,10 @@
 
 
                 var prettify = function (num) {
+                    if (!testNumber(num)) return num;
+
                     var n = num.toString();
+
                     if (settings.prettify) {
                         n = n.replace(/(\d{1,3}(?=(?:\d\d\d)+(?!\d)))/g, "$1 ");
                     }
@@ -419,8 +422,8 @@
                         $fieldMax[0].style.visibility = "visible";
 
                         if (settings.values) {
-                            $fieldMin.html(settings.prefix + settings.values[0] + settings.postfix);
-                            $fieldMax.html(settings.prefix + settings.values[settings.values.length - 1] + settings.maxPostfix + settings.postfix);
+                            $fieldMin.html(settings.prefix + prettify(settings.values[0]) + settings.postfix);
+                            $fieldMax.html(settings.prefix + prettify(settings.values[settings.values.length - 1]) + settings.maxPostfix + settings.postfix);
                         } else {
                             $fieldMin.html(settings.prefix + prettify(settings.min) + settings.postfix);
                             $fieldMax.html(settings.prefix + prettify(settings.max) + settings.maxPostfix + settings.postfix);
@@ -884,7 +887,7 @@
                         if (allow_values) {
                             _single =
                                 settings.prefix +
-                                settings.values[numbers.fromNumber] +
+                                prettify(settings.values[numbers.fromNumber]) +
                                 maxPostfix +
                                 settings.postfix;
                         } else {
@@ -940,27 +943,27 @@
                         if (allow_values) {
                             _from =
                                 settings.prefix +
-                                settings.values[numbers.fromNumber] +
+                                prettify(settings.values[numbers.fromNumber]) +
                                 settings.postfix;
 
                             _to =
                                 settings.prefix +
-                                settings.values[numbers.toNumber] +
+                                prettify(settings.values[numbers.toNumber]) +
                                 maxPostfix +
                                 settings.postfix;
 
                             if (numbers.fromNumber !== numbers.toNumber) {
                                 _single =
                                     settings.prefix +
-                                    settings.values[numbers.fromNumber] +
+                                    prettify(settings.values[numbers.fromNumber]) +
                                     " — " + settings.prefix +
-                                    settings.values[numbers.toNumber] +
+                                    prettify(settings.values[numbers.toNumber]) +
                                     maxPostfix +
                                     settings.postfix;
                             } else {
                                 _single =
                                     settings.prefix +
-                                    settings.values[numbers.fromNumber] +
+                                    prettify(settings.values[numbers.fromNumber]) +
                                     maxPostfix +
                                     settings.postfix;
                             }
