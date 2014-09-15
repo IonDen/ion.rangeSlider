@@ -249,6 +249,8 @@ $("#someID").ionRangeSlider({
 
 You can also initialise slider with <code>data-*</code> attributes of input tag:
 ```html
+data-min="0"                        // default MIN setting
+data-max="100"                      // default MAX setting
 data-from="30"                      // default FROM setting
 data-to="70"                        // default TO setting
 data-type="double"                  // slider type
