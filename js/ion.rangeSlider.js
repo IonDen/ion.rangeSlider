@@ -211,6 +211,12 @@
                 if (slider.data("gridmargin")) {
                     settings.gridMargin = +slider.data("gridmargin");
                 }
+                if (slider.data("gridbigmarks")) {
+                    settings.gridBigMarks = +slider.data("gridbigmarks");
+                }
+                if (slider.data("gridsmallmarks")) {
+                    settings.gridSmallMarks = +slider.data("gridsmallmarks");
+                }
                 if (slider.data("hideminmax")) {
                     settings.hideMinMax = slider.data("hideminmax");
                 }
@@ -226,7 +232,6 @@
                 if (slider.data("values")) {
                     settings.values = slider.data("values").split(",");
                 }
-
 
 
                 // Set Min and Max if no
@@ -275,7 +280,7 @@
 
 
 
-                // fix diapason
+                // fix range
                 if (settings.from < settings.min) {
                     settings.from = settings.min;
                 }
