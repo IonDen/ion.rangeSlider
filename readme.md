@@ -140,6 +140,16 @@ $("#example_id").ionRangeSlider();
             <td>Optional property, enables margin between slider corner and grid</td>
         </tr>
         <tr>
+            <td>gridBigMarks</td>
+            <td>4</td>
+            <td>Optional property, set number of big numbered divisions of grid</td>
+        </tr>
+        <tr>
+            <td>gridSmallMarks</td>
+            <td>20</td>
+            <td>Optional property, set number of small unnumbered subdivisions of grid</td>
+        </tr>
+        <tr>
             <td>hideMinMax</td>
             <td>false</td>
             <td>Optional property, disables Min and Max fields.</td>
@@ -230,6 +240,8 @@ $("#someID").ionRangeSlider({
     maxPostfix: "+",                // postfix to maximum value
     hasGrid: true,                  // enable grid
     gridMargin: 7,                  // margin between slider corner and grid
+    gridBigMarks: 6,                // split grid into 6 big chunks
+    gridSmallMarks: 18,             // split grid into 18 small chunks, each big chunk will be divided to 3 small chunks
     hideMinMax: true,               // hide Min and Max fields
     hideFromTo: true,               // hide From and To fields
     prettify: true,                 // separate large numbers with space, eg. 10 000

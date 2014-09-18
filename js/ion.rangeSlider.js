@@ -1084,12 +1084,12 @@
                     $container.addClass("irs-with-grid");
 
                     var i,
-                        text = '',
-                        step = 0,
+                        text  = '',
+                        step  = 0,
                         tStep = 0,
                         gridHTML = '',
-                        smNum = 20,
-                        bigNum = 4,
+                        smNum  = settings.gridSmallMarks || 20,
+                        bigNum = settings.gridBigMarks   ||  4,
                         cont_width = normalWidth - (settings.gridMargin * 2);
 
 
