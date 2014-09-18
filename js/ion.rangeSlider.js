@@ -211,6 +211,12 @@
                 if (slider.data("gridmargin")) {
                     settings.gridMargin = +slider.data("gridmargin");
                 }
+                if (slider.data("gridbigmarks")) {
+                    settings.gridBigMarks = +slider.data("gridbigmarks");
+                }
+                if (slider.data("gridsmallmarks")) {
+                    settings.gridSmallMarks = +slider.data("gridsmallmarks");
+                }
                 if (slider.data("hideminmax")) {
                     settings.hideMinMax = slider.data("hideminmax");
                 }
@@ -226,7 +232,6 @@
                 if (slider.data("values")) {
                     settings.values = slider.data("values").split(",");
                 }
-
 
 
                 // Set Min and Max if no
@@ -275,7 +280,7 @@
 
 
 
-                // fix diapason
+                // fix range
                 if (settings.from < settings.min) {
                     settings.from = settings.min;
                 }
@@ -1084,12 +1089,12 @@
                     $container.addClass("irs-with-grid");
 
                     var i,
-                        text = '',
-                        step = 0,
+                        text  = '',
+                        step  = 0,
                         tStep = 0,
                         gridHTML = '',
-                        smNum = 20,
-                        bigNum = 4,
+                        smNum  = settings.gridSmallMarks || 20,
+                        bigNum = settings.gridBigMarks   ||  4,
                         cont_width = normalWidth - (settings.gridMargin * 2);
 
 
