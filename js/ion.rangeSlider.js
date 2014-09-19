@@ -63,6 +63,7 @@
                 '<span class="irs-slider single"></span>';
 
             var doubleHTML =
+                '<span class="irs-highlight"></span>' +
                 '<span class="irs-diapason"></span>' +
                 '<span class="irs-slider from"></span>' +
                 '<span class="irs-slider to"></span>';
@@ -78,6 +79,8 @@
                     max: null,
                     from: null,
                     to: null,
+                    highlightFrom: null,
+                    highlightTo: null,
                     type: "single",
                     step: null,
                     prefix: "",
@@ -190,6 +193,13 @@
                 if (typeof slider.data("to") === "number") {
                     settings.to = parseFloat(slider.data("to"));
                 }
+                if (typeof slider.data("highlight-from") === "number") {
+                    settings.highlightFrom = parseFloat(slider.data("highlight-from"));
+                }
+                if (typeof slider.data("highlight-to") === "number") {
+                    settings.highlightTo = parseFloat(slider.data("highlight-to"));
+                }
+
                 if (slider.data("step")) {
                     settings.step = parseFloat(slider.data("step"));
                 }
@@ -297,6 +307,14 @@
                     if (settings.to < settings.from) {
                         settings.to = settings.from;
                     }
+
+                    if (settings.highlightFrom < settings.min) {
+                        settings.highlightFrom = settings.min;
+                    }
+
+                    if (settings.highlightTo > settings.max) {
+                        settings.highlightTo = settings.max;
+                    }
                 }
 
 
@@ -327,6 +345,7 @@
                     $toSlider,
                     $activeSlider,
                     $diapason,
+                    $highlight,
                     $grid;
 
                 var allowDrag = false,
@@ -472,6 +491,7 @@
                         $fromSlider = $rangeSlider.find(".from");
                         $toSlider = $rangeSlider.find(".to");
                         $diapason = $rangeSlider.find(".irs-diapason");
+                        $highlight = $rangeSlider.find(".irs-highlight");
 
                         setDiapason();
 
@@ -625,6 +645,10 @@
                         setMask();
                     } else {
                         removeMask();
+                    }
+                    if (settings.highlightFrom !== null && settings.highlightTo !== null)
+                    {
+                        setHighlight();
                     }
                 };
 
@@ -1150,6 +1174,19 @@
                     $grid[0].style.left = settings.gridMargin + "px";
                 };
 
+
+                var setHighlight = function() {
+                    $container.addClass("irs-with-highlight");
+
+                    var cont_width = normalWidth - (settings.gridMargin * 2),
+                        q = cont_width / (settings.max - settings.min),
+                        _hl_x = Math.round((settings.highlightFrom - settings.min) * q),
+                        _hl_w = Math.round((settings.highlightTo - settings.highlightFrom) * q);
+
+                    $highlight[0].style.left = settings.gridMargin + _hl_x + 'px';
+                    $highlight[0].style.width = _hl_w + 'px';
+                    $highlight[0].style.display = 'block';
+                };
 
 
                 // Disable state

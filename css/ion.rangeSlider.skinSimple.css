@@ -41,6 +41,10 @@
     background-position: 0 -60px;
 }
 
+.irs-highlight {
+    height: 6px; top: 25px;
+}
+
 .irs-slider {
     width: 8px; height: 15px;
     top: 21px;
