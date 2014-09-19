@@ -304,16 +304,15 @@
                     if (settings.from > settings.to) {
                         settings.from = settings.to;
                     }
-                    if (settings.to < settings.from) {
-                        settings.to = settings.from;
-                    }
 
                     if (settings.highlightFrom < settings.min) {
                         settings.highlightFrom = settings.min;
                     }
-
                     if (settings.highlightTo > settings.max) {
                         settings.highlightTo = settings.max;
+                    }
+                    if (settings.highlightFrom > settings.highlightTo) {
+                        settings.highlightFrom = settings.highlightTo;
                     }
                 }
 
@@ -1178,14 +1177,18 @@
                 var setHighlight = function() {
                     $container.addClass("irs-with-highlight");
 
-                    var cont_width = normalWidth - (settings.gridMargin * 2),
-                        q = cont_width / (settings.max - settings.min),
-                        _hl_x = Math.round((settings.highlightFrom - settings.min) * q),
-                        _hl_w = Math.round((settings.highlightTo - settings.highlightFrom) * q);
+                    var diaposon = settings.max - settings.min;
 
-                    $highlight[0].style.left = settings.gridMargin + _hl_x + 'px';
-                    $highlight[0].style.width = _hl_w + 'px';
-                    $highlight[0].style.display = 'block';
+                    if (diaposon > 0) {
+                        var cont_width = normalWidth - (settings.gridMargin * 2),
+                            q = cont_width / diaposon,
+                            _hl_x = Math.round((settings.highlightFrom - settings.min) * q),
+                            _hl_w = Math.round((settings.highlightTo - settings.highlightFrom) * q);
+
+                        $highlight[0].style.left = settings.gridMargin + _hl_x + 'px';
+                        $highlight[0].style.width = _hl_w + 'px';
+                        $highlight[0].style.display = 'block';
+                    }
                 };
 
 
