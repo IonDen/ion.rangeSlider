@@ -178,16 +178,16 @@
 
 
                 // extend from data-*
-                if (typeof slider.data("min") === "number") {
+                if (typeof parseFloat(slider.data("min")) === "number") {
                     settings.min = parseFloat(slider.data("min"));
                 }
-                if (typeof slider.data("max") === "number") {
+                if (typeof parseFloat(slider.data("max")) === "number") {
                     settings.max = parseFloat(slider.data("max"));
                 }
-                if (typeof slider.data("from") === "number") {
+                if (typeof parseFloat(slider.data("from")) === "number") {
                     settings.from = parseFloat(slider.data("from"));
                 }
-                if (typeof slider.data("to") === "number") {
+                if (typeof parseFloat(slider.data("to")) === "number") {
                     settings.to = parseFloat(slider.data("to"));
                 }
                 if (slider.data("step")) {
