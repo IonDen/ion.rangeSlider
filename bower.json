@@ -9,6 +9,9 @@
             "homepage": "http://ionden.com"
         }
     ],
+    "dependencies": {
+        "jquery": ">=1.9"
+    },
     "description": "Powerful range slider with skin support",
     "repository": {
         "type": "git",
