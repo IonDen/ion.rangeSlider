@@ -1,3 +1,5 @@
+_Hello, developers. Version 2.0 is coming soon. Please don't do any pull requests until 2.0 release._
+
 # Ion.Range Slider 1.9.3
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
