@@ -90,6 +90,7 @@
                     prettify: true,
                     disable: false,
                     values: null,
+                    abbreviate: false,
                     onLoad: null,
                     onChange: null,
                     onFinish: null
@@ -226,6 +227,9 @@
                 if (slider.data("values")) {
                     settings.values = slider.data("values").split(",");
                 }
+                if (slider.data("abbreviate")) {
+                    settings.abbreviate = slider.data("abbreviate");
+                }
 
 
 
@@ -301,13 +305,33 @@
 
 
                 var prettify = function (num) {
+                    if (!testNumber(num)) return num;
+
                     var n = num.toString();
+
                     if (settings.prettify) {
                         n = n.replace(/(\d{1,3}(?=(?:\d\d\d)+(?!\d)))/g, "$1 ");
                     }
                     return n;
                 };
 
+                function abbreviateNumber(value) {
+                    if (!testNumber(value)) return value;
+
+                    var newValue = value;
+                    if (value >= 1000) {
+                        var suffixes = ["", "k", "m", "b","t"];
+                        var suffixNum = Math.floor( (""+value).length/3 );
+                        var shortValue = '';
+                        for (var precision = 2; precision >= 1; precision--) {
+                            shortValue = parseFloat( (suffixNum != 0 ? (value / Math.pow(1000,suffixNum) ) : value).toPrecision(precision));
+                            var dotLessShortValue = (shortValue + '').replace(/[^a-zA-Z 0-9]+/g,'');
+                            if (dotLessShortValue.length <= 2) { break; }
+                        }
+                        newValue = shortValue+suffixes[suffixNum];
+                    }
+                    return newValue;
+                }
 
                 var containerHTML = '<span class="irs" id="irs-' + this.plugin_count + '"></span>';
                 slider[0].style.display = "none";
@@ -419,8 +443,8 @@
                         $fieldMax[0].style.visibility = "visible";
 
                         if (settings.values) {
-                            $fieldMin.html(settings.prefix + settings.values[0] + settings.postfix);
-                            $fieldMax.html(settings.prefix + settings.values[settings.values.length - 1] + settings.maxPostfix + settings.postfix);
+                            $fieldMin.html(settings.prefix + prettify(settings.values[0]) + settings.postfix);
+                            $fieldMax.html(settings.prefix + prettify(settings.values[settings.values.length - 1]) + settings.maxPostfix + settings.postfix);
                         } else {
                             $fieldMin.html(settings.prefix + prettify(settings.min) + settings.postfix);
                             $fieldMax.html(settings.prefix + prettify(settings.max) + settings.maxPostfix + settings.postfix);
@@ -884,7 +908,7 @@
                         if (allow_values) {
                             _single =
                                 settings.prefix +
-                                settings.values[numbers.fromNumber] +
+                                prettify(settings.values[numbers.fromNumber]) +
                                 maxPostfix +
                                 settings.postfix;
                         } else {
@@ -940,27 +964,27 @@
                         if (allow_values) {
                             _from =
                                 settings.prefix +
-                                settings.values[numbers.fromNumber] +
+                                prettify(settings.values[numbers.fromNumber]) +
                                 settings.postfix;
 
                             _to =
                                 settings.prefix +
-                                settings.values[numbers.toNumber] +
+                                prettify(settings.values[numbers.toNumber]) +
                                 maxPostfix +
                                 settings.postfix;
 
                             if (numbers.fromNumber !== numbers.toNumber) {
                                 _single =
                                     settings.prefix +
-                                    settings.values[numbers.fromNumber] +
+                                    prettify(settings.values[numbers.fromNumber]) +
                                     " — " + settings.prefix +
-                                    settings.values[numbers.toNumber] +
+                                    prettify(settings.values[numbers.toNumber]) +
                                     maxPostfix +
                                     settings.postfix;
                             } else {
                                 _single =
                                     settings.prefix +
-                                    settings.values[numbers.fromNumber] +
+                                    prettify(settings.values[numbers.fromNumber]) +
                                     maxPostfix +
                                     settings.postfix;
                             }
@@ -1117,7 +1141,12 @@
                         } else {
                             text = Math.round(settings.min + ((settings.max - settings.min) / bigNum * i));
                             text = Math.round(text / settings.step) * settings.step;
-                            text = prettify(text);
+                            if (settings.abbreviate) {
+                                text = abbreviateNumber(text);
+                            }
+                            else {
+                                text = prettify(text);
+                            }
                         }
 
                         if (allow_values) {
