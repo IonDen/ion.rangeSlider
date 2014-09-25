@@ -31,6 +31,10 @@
         position: absolute; display: block;
         left: 0; width: 100%;
     }
+    .irs-highlight {
+        position: absolute; display: none;
+        left: 0; width: 100%;
+    }
     .irs-slider {
         position: absolute; display: block;
         cursor: default;
