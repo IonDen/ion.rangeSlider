@@ -60,6 +60,7 @@
                 '<span class="irs-grid"></span>';
 
             var singleHTML =
+                '<span class="irs-diapason"></span>' +
                 '<span class="irs-slider single"></span>';
 
             var doubleHTML =
@@ -438,6 +439,9 @@
                         $rangeSlider.append(singleHTML);
 
                         $singleSlider = $rangeSlider.find(".single");
+                        $diapason = $rangeSlider.find(".irs-diapason");
+
+                        setDiapason();
 
                         $singleSlider.on("mousedown", function (e) {
                             e.preventDefault();
@@ -550,9 +554,7 @@
                             allowDrag = false;
                             $activeSlider.removeAttr("id");
                             $activeSlider = null;
-                            if (settings.type === "double") {
-                                setDiapason();
-                            }
+                            setDiapason();
                             getNumbers();
 
                             if (is_old_ie) {
@@ -602,9 +604,7 @@
                                 allowDrag = false;
                                 $activeSlider.removeAttr("id");
                                 $activeSlider = null;
-                                if (settings.type === "double") {
-                                    setDiapason();
-                                }
+                                setDiapason();
                                 getNumbers();
                             }
                         });
@@ -667,13 +667,20 @@
                 };
 
                 var setDiapason = function () {
-                    var _w = $fromSlider.width(),
-                        _x = $.data($fromSlider[0], "x") || parseInt($fromSlider[0].style.left, 10) || $fromSlider.position().left,
-                        _width = $.data($toSlider[0], "x") || parseInt($toSlider[0].style.left, 10) || $toSlider.position().left,
-                        x = _x + (_w / 2),
+                    var w;
+
+                    if (settings.type === "double"){
+                        var _w = $fromSlider.width(),
+                            _x = $.data($fromSlider[0], "x") || parseInt($fromSlider[0].style.left, 10) || $fromSlider.position().left,
+                            _width = $.data($toSlider[0], "x") || parseInt($toSlider[0].style.left, 10) || $toSlider.position().left,
+                            x = _x + (_w / 2);
                         w = _width - _x;
-                    $diapason[0].style.left = x + "px";
-                    $diapason[0].style.width = w + "px";
+                        $diapason[0].style.left = x + "px";
+                        $diapason[0].style.width = w + "px";
+                    } else if(settings.type === "single") {
+                        w = $.data($singleSlider[0], "x") || parseInt($singleSlider[0].style.left, 10) || $singleSlider.position().left;
+                        $diapason[0].style.width = w + "px";
+                    }
                 };
 
                 var dragSlider = function (manual_x) {
@@ -694,6 +701,7 @@
                         if (x_pure > width) {
                             x_pure = width;
                         }
+                        setDiapason();
 
                     } else if (settings.type === "double") {
 
@@ -811,6 +819,8 @@
                         $singleSlider[0].style.left = nums.fromX + "px";
                         $.data($singleSlider[0], "x", nums.fromX_pure);
 
+                        setDiapason();
+
                     } else if (settings.type === "double") {
 
                         nums.fromPers = (diapason !== 0) ? (nums.fromNumber - settings.min) / diapason * 100 : 0;
@@ -848,6 +858,7 @@
                         $activeSlider = $singleSlider;
                         $activeSlider.prop("id", "irs-active-slider");
                         dragSlider(x);
+                        setDiapason();
                     } else if (settings.type === "double") {
                         if (x <= zero_point) {
                             $activeSlider = $fromSlider;
