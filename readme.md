@@ -75,6 +75,11 @@ Or use the included PSD file and design a custom skin.
 * bower install ionrangeslider
 
 
+## Install with spm [![](http://spmjs.io/badge/ion-rangeslider)](http://spmjs.io/package/ion-rangeslider)
+
+* spm install ion-rangeslider
+
+
 ## Initialisation
 
 The slider overrides a native text <code>input</code> element.

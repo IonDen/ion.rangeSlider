@@ -76,6 +76,11 @@
 * bower install ionrangeslider
 
 
+## Устанавливаем с помощью spm [![](http://spmjs.io/badge/ion-rangeslider)](http://spmjs.io/package/ion-rangeslider)
+
+* spm install ion-rangeslider
+
+
 ## Инициализация
 
 Создаем базовое поле <code>input type="text"</code>:
