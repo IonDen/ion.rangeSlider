@@ -1,12 +1,10 @@
-_Hello, developers. Version 2.0 is coming soon. Please don't do any pull requests until 2.0 release._
-
-# Ion.Range Slider 1.9.3
+# Ion.Range Slider 2.0.0
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
-Easy and light range slider <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
-
-Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1.9.3.zip">ion.rangeSlider-1.9.3.zip</a>
+Easy and light range slider
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.0.zip">Download ion.rangeSlider-2.0.0.zip</a>
 
 ***
 
@@ -16,27 +14,41 @@ Download: <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-1
 * Cross-browser: Google Chrome, Mozilla Firefox 3.6+, Opera 12+, Safari 5+, Internet Explorer 8+
 * Ion.RangeSlider supports touch-devices (iPhone, iPad, Nexus, etc.).
 * Ion.RangeSlider freely distributed under terms of <a href="http://ionden.com/a/plugins/licence.html" target="_blank">MIT licence</a>.
+* With this plugin you will be able to build beautiful range sliders, like this:
+
+![ion.rangeSlider](http://ionden.com/a/plugins/ion.rangeSlider/static/img/ion-range-slider.png)
 
 ## Key features
-* Skin support. (3 skins included and PSD for skin creation)
+* Skin support. (5 skins included and PSD for skin creation)
 * Any number of sliders at one page without conflicts and big performance problems
 * Two slider types single (1 slider) and double (2 sliders)
 * Support of negative and fractional values
-* Ability to edit step
-* Support of custom values diapason (See months example)
-* Automatically generated grid
+* Ability to set custom step and snap grid to step
+* Support of custom values diapason
+* Customisable grid of values
 * Ability to disable UI elements (min and max, current value, grid)
 * Postfixes and prefixes for you numbers ($20, 20 &euro; etc.)
 * Additional postfix for maximum value (eg. $0 — $100<b>+</b>)
-* Ability to prettify large numbers (eg. 10000000 -> 10 000 000)
+* Ability to prettify large numbers (eg. 10000000 -> 10 000 000 or 10.000.000)
 * Slider writes it's value right into input value field. This makes it easy to use in any html form
 * Any slider value can be set through input data-attribute (eg. data-min="10")
 * Slider supports disable param. You can set it true to make slider inactive
-* Slider supports external methods (update and remove) to control it after creation
-* For advanced users slider has callbacks (onLoad, onChange, onFinish). Slider paste all it's params to callback first argument as object
+* Slider supports external methods (update, reset and remove) to control it after creation
+* For advanced users slider has callbacks (onStart, onChange, onFinish, onUpdate). Slider paste all it's params to callback first argument as object
+* Slider supports date and time
+
+
+## Demos
+
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo.html" class="switch__item">Basic demo</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo_advanced.html" class="switch__item">Advanced demo</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo_interactions.html" class="switch__item">Interactions demo</a>
+
 
 ## Dependencies
-* <a href="http://jquery.com/" target="_blank">jQuery 1.9+</a>
+
+* <a href="http://jquery.com/" target="_blank">jQuery 1.8.x+</a>
+
 
 ## Usage
 
@@ -45,17 +57,18 @@ Add the following libraries to the page:
 * ion.rangeSlider.min.js
 
 Add the following stylesheets to the page:
-* normalize.min.css (If not already present)
+* <a href="http://necolas.github.io/normalize.css/" target="_blank">normalize.css</a> (optional)
 * ion.rangeSlider.css
 
-Plus, a skin for the slider. Two skins are included:
-* ion.rangeSlider.skinNice.css
-* ion.rangeSlider.skinSimple.css
+Plus, a skin for the slider. 5 skins are included. Choose one:
+* ion.rangeSlider.skinFlat.css + sprite-skin-flat.png
+* ion.rangeSlider.skinHTML5.css + no images
+* ion.rangeSlider.skinModern.css + sprite-skin-modern.png
+* ion.rangeSlider.skinNice.css + sprite-skin-nice.png
+* ion.rangeSlider.skinSimple.css + sprite-skin-simple.png
 
-Don't forget about skin image sprite:
-* sprite-skin-simple.png - Simple skin
-* sprite-skin-nice.png - Nice skin
 Or use the included PSD file and design a custom skin.
+
 
 ## Install with bower
 
@@ -75,217 +88,364 @@ $("#example_id").ionRangeSlider();
 ```
 
 
+## Demo for juniors
+
+If your are new person in web development and you are not sure how to correctly install the plugin to your web-page, please download
+<a href="http://ionden.com/a/plugins/ion.rangeSlider/ionRangeSliderDemo.zip" class="button">this demo example</a>
+
+
+## Migrating from 1.x to 2.x
+* All params (except functions) are lowercase now: <b>param_name</b>, not paramName
+* Same param names was changed: hasGrid &rarr; <b>grid</b>, onLoad &rarr; <b>onStart</b>
+* Callbacks data object format was changed. Example: fromNumber &rarr; <b>from</b>
+* Slider now writes it's result to value attribute and also to data-from and data-to attributes
+
+
+## <a href="http://jsfiddle.net/IonDen/qv6yrjrv/" target="_blank">Experiments playground</a>
+
+
 ## Settings
 
 <table class="options">
     <thead>
         <tr>
-            <th>Property</th>
-            <th>Default</th>
+            <th>Option</th>
+            <th>Defaults</th>
+            <th>Type</th>
             <th>Description</th>
         </tr>
     </thead>
     <tbody>
-        <tr>
-            <td>type</td>
+        <tr class="options__step">
+            <td>type<div>data-type</div></td>
             <td>"single"</td>
-            <td>Optional property, will select slider type from two options: <code>single</code> - for single range slider, or <code>double</code> - for double range slider</td>
+            <td>string</td>
+            <td>Choose slider type, could be <code>single</code> - for one handle, or <code>double</code> four two handles</td>
         </tr>
+
         <tr>
-            <td>min</td>
+            <td>min<div>data-min</div></td>
             <td>10</td>
-            <td>Optional property, automatically set from the <code>value</code> attribute of base input. For example: if value="10;100", it will be 10</td>
+            <td>number</td>
+            <td>Set slider minimum value</td>
         </tr>
         <tr>
-            <td>max</td>
+            <td>max<div>data-max</div></td>
             <td>100</td>
-            <td>Optional property, automatically set from the <code>value</code> attribute of base input. For example: if value="10;100", it will be 100</td>
+            <td>number</td>
+            <td>Set slider maximum value</td>
         </tr>
         <tr>
-            <td>from</td>
+            <td>from<div>data-from</div></td>
             <td>min</td>
-            <td>Optional property, on default has the same value as min. overwrite default FROM setting</td>
+            <td>number</td>
+            <td>Set start position for left handle (or for single handle)</td>
         </tr>
         <tr>
-            <td>to</td>
+            <td>to<div>data-to</div></td>
             <td>max</td>
-            <td>Optional property, on default has the same value as max. overwrite default TO setting</td>
+            <td>number</td>
+            <td>Set start position for right handle</td>
         </tr>
-        <tr>
-            <td>step</td>
+        <tr class="options__step">
+            <td>step<div>data-step</div></td>
             <td>1</td>
-            <td>Optional property, set slider step value</td>
+            <td>number</td>
+            <td>Set sliders step. Always > 0. Could be fractional.</td>
         </tr>
-        <tr>
-            <td>prefix</td>
-            <td>-</td>
-            <td>Optional property, set prefix text to all values. For example: "$" will convert "100" in to "$100"</td>
+
+        <tr class="options__step">
+            <td>values<div>data-values</div></td>
+            <td>[]</td>
+            <td>array</td>
+            <td>Set up your own array of possible slider values. They could be numbers or strings. If the values array is set up, min, max and step param, are no longer can be changed.</td>
         </tr>
-        <tr>
-            <td>postfix</td>
-            <td>-</td>
-            <td>Optional property, set postfix text to all values. For example: " &euro;" will convert "100" in to "100 &euro;"</td>
-        </tr>
-        <tr>
-            <td>maxPostfix</td>
-            <td>-</td>
-            <td>Optional property, set postfix text to maximum value. For example: maxPostfix - "+" will convert "100" to "100+"</td>
-        </tr>
-        <tr>
-            <td>hasGrid</td>
+
+        <tr class="options__new">
+            <td>from_fixed<div>data-from-fixed</div></td>
             <td>false</td>
-            <td>Optional property, enables grid at the bottom of the slider (it adds 20px height and this can be customised through CSS)</td>
+            <td>boolean</td>
+            <td>Fix position of left (or single) handle.</td>
         </tr>
-        <tr>
-            <td>gridMargin</td>
-            <td>0</td>
-            <td>Optional property, enables margin between slider corner and grid</td>
+        <tr class="options__new">
+            <td>from_min<div>data-from-min</div></td>
+            <td>min</td>
+            <td>number</td>
+            <td>Set minimum limit for left handle.</td>
         </tr>
-        <tr>
-            <td>hideMinMax</td>
+        <tr class="options__new">
+            <td>from_max<div>data-from-max</div></td>
+            <td>max</td>
+            <td>number</td>
+            <td>Set the maximum limit for left handle</td>
+        </tr>
+        <tr class="options__new">
+            <td>from_shadow<div>data-from-shadow</div></td>
             <td>false</td>
-            <td>Optional property, disables Min and Max fields.</td>
+            <td>boolean</td>
+            <td>Highlight the limits for left handle</td>
         </tr>
-        <tr>
-            <td>hideFromTo</td>
+
+        <tr class="options__new">
+            <td>to_fixed<div>data-to-fixed</div></td>
             <td>false</td>
-            <td>Optional property, disables From an To fields.</td>
+            <td>boolean</td>
+            <td>Fix position of right handle.</td>
         </tr>
+        <tr class="options__new">
+            <td>to_min<div>data-to-min</div></td>
+            <td>min</td>
+            <td>number</td>
+            <td>Set the minimum limit for right handle</td>
+        </tr>
+        <tr class="options__new">
+            <td>to_max<div>data-to-max</div></td>
+            <td>max</td>
+            <td>number</td>
+            <td>Set the maximum limit for right handle</td>
+        </tr>
+        <tr class="options__new options__step">
+            <td>to_shadow<div>data-to-shadow</div></td>
+            <td>false</td>
+            <td>boolean</td>
+            <td>Highlight the limits for right handle</td>
+        </tr>
+
         <tr>
-            <td>prettify</td>
+            <td>prettify_enabled<div>data-prettify-enabled</div></td>
             <td>true</td>
-            <td>Optional property, allow to separate large numbers with spaces, eg. 10 000 than 10000</td>
+            <td>boolean</td>
+            <td>Improve readability of long numbers. 10000000 &rarr; 10 000 000</td>
         </tr>
-        <tr>
-            <td>disable</td>
-            <td>false</td>
-            <td>Disables the slider</td>
+        <tr class="options__new">
+            <td>prettify_separator<div>data-prettify-separator</div></td>
+            <td>" "</td>
+            <td>string</td>
+            <td>Set up your own separator for long numbers. 10 000, 10.000, 10-000 и т.п.</td>
         </tr>
-        <tr>
-            <td>values</td>
+        <tr class="options__new options__step">
+            <td>prettify<div>—</div></td>
             <td>null</td>
-            <td>Array of custom values: [a, b, c] etc.</td>
+            <td>function</td>
+            <td>Set up your own prettify function. Can be anything. For example, you can set up unix time as slider values and than transform them to cool looking dates.</td>
+        </tr>
+
+        <tr class="options__new options__step">
+            <td>force_edges<div>data-force-edges</div></td>
+            <td>false</td>
+            <td>boolean</td>
+            <td>Slider will be always inside it's container.</td>
+        </tr>
+
+        <tr class="options__new">
+            <td>keyboard<div>data-keyboard</div></td>
+            <td>false</td>
+            <td>boolean</td>
+            <td>Activates keyboard controls. Move left: &larr;, &darr;, A, S. Move right: &rarr;, &uarr;, W, D.</td>
+        </tr>
+        <tr class="options__new options__step">
+            <td>keyboard_step<div>data-keyboard-step</div></td>
+            <td>5</td>
+            <td>number</td>
+            <td>Movement step, than controling from keyboard. In percents.</td>
+        </tr>
+
+        <tr>
+            <td>grid<div>data-grid</div></td>
+            <td>false</td>
+            <td>boolean</td>
+            <td>Enables grid of values.</td>
+        </tr>
+        <tr>
+            <td>grid_margin<div>data-grid-margin</div></td>
+            <td>true</td>
+            <td>boolean</td>
+            <td>Set left and right grid borders.</td>
+        </tr>
+        <tr class="options__new">
+            <td>grid_num<div>data-grid-num</div></td>
+            <td>4</td>
+            <td>number</td>
+            <td>Number of grid units.</td>
+        </tr>
+        <tr class="options__new options__step">
+            <td>grid_snap<div>data-grid-snap</div></td>
+            <td>false</td>
+            <td>boolean</td>
+            <td>Snap grid to sliders step (step param). If activated, grid_num will not be used.</td>
+        </tr>
+
+        <tr>
+            <td>hide_min_max<div>data-hide-min-max</div></td>
+            <td>false</td>
+            <td>boolean</td>
+            <td>Hides min and max labels</td>
+        </tr>
+        <tr class="options__step">
+            <td>hide_from_to<div>data-hide-from-to</div></td>
+            <td>false</td>
+            <td>boolean</td>
+            <td>Hide from and to lables</td>
+        </tr>
+
+        <tr>
+            <td>prefix<div>data-prefix</div></td>
+            <td>—</td>
+            <td>string</td>
+            <td>Set prefix for values. Will be set up right before the number: $100</td>
+        </tr>
+        <tr>
+            <td>postfix<div>data-postfix</div></td>
+            <td>—</td>
+            <td>string</td>
+            <td>Set postfix for values. Will be set up right after the number: 100k</td>
+        </tr>
+        <tr>
+            <td>max_postfix<div>data-max-postfix</div></td>
+            <td>—</td>
+            <td>string</td>
+            <td>Special postfix, used only for maximum value. Will be showed after handle will reach maximum right position. For example 0 — 100+</td>
+        </tr>
+        <tr class="options__new">
+            <td>decorate_both<div>data-decorate-both</div></td>
+            <td>true</td>
+            <td>boolean</td>
+            <td>Used for "double" type and only if prefix or postfix was set up. Determine how to decorate close values. For example: $10k — $100k or $10 — 100k</td>
+        </tr>
+        <tr class="options__new options__step">
+            <td>values_separator<div>data-values-separator</div></td>
+            <td>" — "</td>
+            <td>string</td>
+            <td>Set your own separator for close values. Used for "double" type. Default: 10 — 100. Or you may set: 10 to 100, 10 + 100, 10 &rarr; 100 etc.</td>
+        </tr>
+
+        <tr class="options__step">
+            <td>disable<div>data-disable</div></td>
+            <td>false</td>
+            <td>boolean</td>
+            <td>Locks slider and makes it inactive.</td>
+        </tr>
+
+        <tr>
+            <td>onStart<div>—</div></td>
+            <td>null</td>
+            <td>function</td>
+            <td>Callback. Is called on slider start.</td>
+        </tr>
+        <tr>
+            <td>onChange<div>—</div></td>
+            <td>null</td>
+            <td>function</td>
+            <td>Callback. IS called on each values change.</td>
+        </tr>
+        <tr>
+            <td>onFinish<div>—</div></td>
+            <td>null</td>
+            <td>function</td>
+            <td>Callback. Is called than user releases handle.</td>
+        </tr>
+        <tr class="options__new">
+            <td>onUpdate<div>—</div></td>
+            <td>null</td>
+            <td>function</td>
+            <td>Callback. Is called than slider is modified by external methods <code>update</code> or <code>reset</code>.</td>
         </tr>
     </tbody>
 </table>
 
 
-## Callbacks
-
-<table class="options">
-    <thead>
-        <tr>
-            <th>Property</th>
-            <th>Default</th>
-            <th>Description</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>onLoad</td>
-            <td>-</td>
-            <td>Triggered once, after slider loaded and each time after slider updated via method Update.</td>
-        </tr>
-        <tr>
-            <td>onChange</td>
-            <td>-</td>
-            <td>Triggered live as the slider value is changed. Returns object with all slider values</td>
-        </tr>
-        <tr>
-            <td>onFinish</td>
-            <td>-</td>
-            <td>Triggered once, after slider work is done. Returns object with all slider values</td>
-        </tr>
-    </tbody>
-</table>
-
-
-## Description of data passed to callbacks
-Each callback have object with slider data as a first argument:
+## Description of data passed to callbacks (onChange and etc.)
+Result is object type and passed to callback as first argument:
 ```javascript
 Obj: {
     "input": object,    // jQuery-link to input
-    "slider": object,   // jQuery-link to slider container
-    "min": 10,          // MIN value
-    "max": 20,          // MAX value
-    "fromNumber": 10,   // FROM value
-    "toNumber": 20,     // TO value
-    "fromPers": 25,     // FROM value in percents
-    "toPers": 75,       // TO value in percents
-    "fromX": 100,       // x-coordinate of FROM-slider in pixels
-    "toX": 200          // x-coordinate of TO-slider in pixels
+    "slider": object,   // jQuery-link to sliders container
+    "min": 0,           // MIN value
+    "max": 1000,        // MAX values
+    "from": 100,        // FROM value
+    "from_percent": 10, // FROM value in percents
+    "from_value": 0,    // FROM index in values array (if used)
+    "to": 900,          // TO value
+    "to_percent": 90,   // TO value in percents
+    "to_value": 0       // TO index in values array (if used)
 }
 ```
 
 ## Creating slider (all params)
 An example of a customised slider:
 ```javascript
-$("#someID").ionRangeSlider({
-    min: 10,                        // min value
-    max: 100,                       // max value
-    from: 30,                       // overwrite default FROM setting
-    to: 80,                         // overwrite default TO setting
-    type: "single",                 // slider type
-    step: 10,                       // slider step
-    prefix: "$",                    // prefix value
-    postfix: " €",                  // postfix value
-    maxPostfix: "+",                // postfix to maximum value
-    hasGrid: true,                  // enable grid
-    gridMargin: 7,                  // margin between slider corner and grid
-    hideMinMax: true,               // hide Min and Max fields
-    hideFromTo: true,               // hide From and To fields
-    prettify: true,                 // separate large numbers with space, eg. 10 000
-    disable: false,                 // disable slider
-    values: ["a", "b", "c"],        // array of custom values
-    onLoad: function (obj) {        // callback is called after slider load and update
-        console.log(obj);
-    },
-    onChange: function (obj) {      // callback is called on every slider change
-        console.log(obj);
-    },
-    onFinish: function (obj) {      // callback is called on slider action is finished
-        console.log(obj);
-    }
+$("#example").ionRangeSlider({
+    min: 0,
+    max: 10000,
+    from: 1000,
+    to: 9000,
+    type: 'double',
+    prefix: "$",
+    grid: true,
+    grid_num: 10
 });
 ```
 
 You can also initialise slider with <code>data-*</code> attributes of input tag:
 ```html
-data-from="30"                      // default FROM setting
-data-to="70"                        // default TO setting
-data-type="double"                  // slider type
-data-step="10"                      // slider step
-data-prefix="$"                     // prefix value
-data-postfix=" €"                   // postfix value
-data-maxpostfix="+"                 // postfix to maximum value
-data-hasgrid="true"                 // enable grid
-data-gridmargin="7"                 // set grid margin
-data-hideminmax="true"              // hide Min and Max fields
-data-hidefromto="true"              // hide From and To fields
-data-prettify="false"               // don't use spaces in large numbers, eg. 10000 than 10 000
-data-values="a,b,c"                 // comma separated predefined slider values
+data-min="0"
+data-max="10000"
+data-from="1000"
+data-to="9000"
+data-type="double"
+data-prefix="$"
+data-grid="true"
+data-grid-num="10"
 ```
 
 ## Public methods
 
-Slider update, method <code>update</code>:
+To use public methods, at first you must save slider instance to variable:
 ```javascript
-$("#someID").ionRangeSlider("update", {
-    min: 20,                        // change min value
-    max: 90,                        // change max value
-    from: 40,                       // change default FROM setting
-    to: 70,                         // change default TO setting
-    step: 5                         // change slider step
+// Launch plugin
+$("#range").ionRangeSlider({
+    type: "double",
+    min: 0,
+    max: 1000,
+    from: 200,
+    to: 500,
+    grid: true
 });
+
+// Saving it's instance to var
+var slider = $("#range").data("ionRangeSlider");
+
+// Fire public method
+slider.reset();
 ```
 
-Slider remove, method <code>remove</code>:
+There are 3 public methods:
 ```javascript
-$("#someID").ionRangeSlider("remove");
+// UPDATE - updates slider to any new values
+slider.update({
+    from: 300,
+    to: 400
+});
+
+// RESET - reset slider to it's first values
+slider.reset();
+
+// DESTROY - destroys slider and restores original input field
+slider.destroy();
 ```
+
+
+## One more look on demos
+
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo.html" class="switch__item">Basic demo</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo_advanced.html" class="switch__item">Advanced demo</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo_interactions.html" class="switch__item">Interactions demo</a>
+
+All plugins options are covered in demos.
 
 
 ## Update history
+* 2.0.0: November 08, 2014 - New API, lot's of bug fixes and improvements.
 * 1.9.3: August 06, 2014 - Bower support added
 * 1.9.2: August 04, 2014 - New param gridMargin. Resolved some issues: #89, #94, #96, #97, #98, #103
 * 1.9.1: April 15, 2014 - Fixed some bugs: #81, #82, #85

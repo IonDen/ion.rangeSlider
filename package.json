@@ -1,0 +1,32 @@
+{
+    "name": "ion.rangeSlider",
+    "version": "2.0.0",
+    "description": "Cool, comfortable and easily customizable range slider with many options and skin support",
+    "keywords": [
+        "jquery",
+        "form",
+        "input",
+        "range",
+        "slider",
+        "rangeslider",
+        "interface",
+        "diapason",
+        "ui",
+        "noui",
+        "skins"
+    ],
+    "author": "IonDen <https://github.com/IonDen>",
+    "homepage": "http://ionden.com/a/plugins/ion.rangeSlider/en.html",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/IonDen/ion.rangeSlider"
+    },
+    "bugs": {
+        "url": "https://github.com/IonDen/ion.rangeSlider/issues"
+    },
+    "license": "MIT",
+
+    "spm": {
+        "main": "js/ion.rangeSlider.js"
+    }
+}
