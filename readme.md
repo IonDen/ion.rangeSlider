@@ -117,235 +117,235 @@ If your are new person in web development and you are not sure how to correctly 
     </thead>
     <tbody>
         <tr class="options__step">
-            <td>type<div>data-type</div></td>
+            <td>type<small>data-type</small></td>
             <td>"single"</td>
             <td>string</td>
             <td>Choose slider type, could be <code>single</code> - for one handle, or <code>double</code> four two handles</td>
         </tr>
 
         <tr>
-            <td>min<div>data-min</div></td>
+            <td>min<small>data-min</small></td>
             <td>10</td>
             <td>number</td>
             <td>Set slider minimum value</td>
         </tr>
         <tr>
-            <td>max<div>data-max</div></td>
+            <td>max<small>data-max</small></td>
             <td>100</td>
             <td>number</td>
             <td>Set slider maximum value</td>
         </tr>
         <tr>
-            <td>from<div>data-from</div></td>
+            <td>from<small>data-from</small></td>
             <td>min</td>
             <td>number</td>
             <td>Set start position for left handle (or for single handle)</td>
         </tr>
         <tr>
-            <td>to<div>data-to</div></td>
+            <td>to<small>data-to</small></td>
             <td>max</td>
             <td>number</td>
             <td>Set start position for right handle</td>
         </tr>
         <tr class="options__step">
-            <td>step<div>data-step</div></td>
+            <td>step<small>data-step</small></td>
             <td>1</td>
             <td>number</td>
             <td>Set sliders step. Always > 0. Could be fractional.</td>
         </tr>
 
         <tr class="options__step">
-            <td>values<div>data-values</div></td>
+            <td>values<small>data-values</small></td>
             <td>[]</td>
             <td>array</td>
             <td>Set up your own array of possible slider values. They could be numbers or strings. If the values array is set up, min, max and step param, are no longer can be changed.</td>
         </tr>
 
         <tr class="options__new">
-            <td>from_fixed<div>data-from-fixed</div></td>
+            <td>from_fixed<small>data-from-fixed</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Fix position of left (or single) handle.</td>
         </tr>
         <tr class="options__new">
-            <td>from_min<div>data-from-min</div></td>
+            <td>from_min<small>data-from-min</small></td>
             <td>min</td>
             <td>number</td>
             <td>Set minimum limit for left handle.</td>
         </tr>
         <tr class="options__new">
-            <td>from_max<div>data-from-max</div></td>
+            <td>from_max<small>data-from-max</small></td>
             <td>max</td>
             <td>number</td>
             <td>Set the maximum limit for left handle</td>
         </tr>
         <tr class="options__new">
-            <td>from_shadow<div>data-from-shadow</div></td>
+            <td>from_shadow<small>data-from-shadow</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Highlight the limits for left handle</td>
         </tr>
 
         <tr class="options__new">
-            <td>to_fixed<div>data-to-fixed</div></td>
+            <td>to_fixed<small>data-to-fixed</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Fix position of right handle.</td>
         </tr>
         <tr class="options__new">
-            <td>to_min<div>data-to-min</div></td>
+            <td>to_min<small>data-to-min</small></td>
             <td>min</td>
             <td>number</td>
             <td>Set the minimum limit for right handle</td>
         </tr>
         <tr class="options__new">
-            <td>to_max<div>data-to-max</div></td>
+            <td>to_max<small>data-to-max</small></td>
             <td>max</td>
             <td>number</td>
             <td>Set the maximum limit for right handle</td>
         </tr>
         <tr class="options__new options__step">
-            <td>to_shadow<div>data-to-shadow</div></td>
+            <td>to_shadow<small>data-to-shadow</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Highlight the limits for right handle</td>
         </tr>
 
         <tr>
-            <td>prettify_enabled<div>data-prettify-enabled</div></td>
+            <td>prettify_enabled<small>data-prettify-enabled</small></td>
             <td>true</td>
             <td>boolean</td>
             <td>Improve readability of long numbers. 10000000 &rarr; 10 000 000</td>
         </tr>
         <tr class="options__new">
-            <td>prettify_separator<div>data-prettify-separator</div></td>
+            <td>prettify_separator<small>data-prettify-separator</small></td>
             <td>" "</td>
             <td>string</td>
             <td>Set up your own separator for long numbers. 10 000, 10.000, 10-000 и т.п.</td>
         </tr>
         <tr class="options__new options__step">
-            <td>prettify<div>—</div></td>
+            <td>prettify<small>—</small></td>
             <td>null</td>
             <td>function</td>
             <td>Set up your own prettify function. Can be anything. For example, you can set up unix time as slider values and than transform them to cool looking dates.</td>
         </tr>
 
         <tr class="options__new options__step">
-            <td>force_edges<div>data-force-edges</div></td>
+            <td>force_edges<small>data-force-edges</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Slider will be always inside it's container.</td>
         </tr>
 
         <tr class="options__new">
-            <td>keyboard<div>data-keyboard</div></td>
+            <td>keyboard<small>data-keyboard</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Activates keyboard controls. Move left: &larr;, &darr;, A, S. Move right: &rarr;, &uarr;, W, D.</td>
         </tr>
         <tr class="options__new options__step">
-            <td>keyboard_step<div>data-keyboard-step</div></td>
+            <td>keyboard_step<small>data-keyboard-step</small></td>
             <td>5</td>
             <td>number</td>
             <td>Movement step, than controling from keyboard. In percents.</td>
         </tr>
 
         <tr>
-            <td>grid<div>data-grid</div></td>
+            <td>grid<small>data-grid</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Enables grid of values.</td>
         </tr>
         <tr>
-            <td>grid_margin<div>data-grid-margin</div></td>
+            <td>grid_margin<small>data-grid-margin</small></td>
             <td>true</td>
             <td>boolean</td>
             <td>Set left and right grid borders.</td>
         </tr>
         <tr class="options__new">
-            <td>grid_num<div>data-grid-num</div></td>
+            <td>grid_num<small>data-grid-num</small></td>
             <td>4</td>
             <td>number</td>
             <td>Number of grid units.</td>
         </tr>
         <tr class="options__new options__step">
-            <td>grid_snap<div>data-grid-snap</div></td>
+            <td>grid_snap<small>data-grid-snap</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Snap grid to sliders step (step param). If activated, grid_num will not be used.</td>
         </tr>
 
         <tr>
-            <td>hide_min_max<div>data-hide-min-max</div></td>
+            <td>hide_min_max<small>data-hide-min-max</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Hides min and max labels</td>
         </tr>
         <tr class="options__step">
-            <td>hide_from_to<div>data-hide-from-to</div></td>
+            <td>hide_from_to<small>data-hide-from-to</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Hide from and to lables</td>
         </tr>
 
         <tr>
-            <td>prefix<div>data-prefix</div></td>
+            <td>prefix<small>data-prefix</small></td>
             <td>—</td>
             <td>string</td>
             <td>Set prefix for values. Will be set up right before the number: $100</td>
         </tr>
         <tr>
-            <td>postfix<div>data-postfix</div></td>
+            <td>postfix<small>data-postfix</small></td>
             <td>—</td>
             <td>string</td>
             <td>Set postfix for values. Will be set up right after the number: 100k</td>
         </tr>
         <tr>
-            <td>max_postfix<div>data-max-postfix</div></td>
+            <td>max_postfix<small>data-max-postfix</small></td>
             <td>—</td>
             <td>string</td>
             <td>Special postfix, used only for maximum value. Will be showed after handle will reach maximum right position. For example 0 — 100+</td>
         </tr>
         <tr class="options__new">
-            <td>decorate_both<div>data-decorate-both</div></td>
+            <td>decorate_both<small>data-decorate-both</small></td>
             <td>true</td>
             <td>boolean</td>
             <td>Used for "double" type and only if prefix or postfix was set up. Determine how to decorate close values. For example: $10k — $100k or $10 — 100k</td>
         </tr>
         <tr class="options__new options__step">
-            <td>values_separator<div>data-values-separator</div></td>
+            <td>values_separator<small>data-values-separator</small></td>
             <td>" — "</td>
             <td>string</td>
             <td>Set your own separator for close values. Used for "double" type. Default: 10 — 100. Or you may set: 10 to 100, 10 + 100, 10 &rarr; 100 etc.</td>
         </tr>
 
         <tr class="options__step">
-            <td>disable<div>data-disable</div></td>
+            <td>disable<small>data-disable</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Locks slider and makes it inactive.</td>
         </tr>
 
         <tr>
-            <td>onStart<div>—</div></td>
+            <td>onStart<small>—</small></td>
             <td>null</td>
             <td>function</td>
             <td>Callback. Is called on slider start.</td>
         </tr>
         <tr>
-            <td>onChange<div>—</div></td>
+            <td>onChange<small>—</small></td>
             <td>null</td>
             <td>function</td>
             <td>Callback. IS called on each values change.</td>
         </tr>
         <tr>
-            <td>onFinish<div>—</div></td>
+            <td>onFinish<small>—</small></td>
             <td>null</td>
             <td>function</td>
             <td>Callback. Is called than user releases handle.</td>
         </tr>
         <tr class="options__new">
-            <td>onUpdate<div>—</div></td>
+            <td>onUpdate<small>—</small></td>
             <td>null</td>
             <td>function</td>
             <td>Callback. Is called than slider is modified by external methods <code>update</code> or <code>reset</code>.</td>

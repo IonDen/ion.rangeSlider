@@ -116,235 +116,235 @@ $("#example_id").ionRangeSlider();
     </thead>
     <tbody>
         <tr class="options__step">
-            <td>type<div>data-type</div></td>
+            <td>type<small>data-type</small></td>
             <td>"single"</td>
             <td>string</td>
             <td>Позволяет выбрать тип слайдера, может принимать значение <code>single</code> - для одиночного слайдера или <code>double</code> - для двойного слайдера</td>
         </tr>
 
         <tr>
-            <td>min<div>data-min</div></td>
+            <td>min<small>data-min</small></td>
             <td>10</td>
             <td>number</td>
             <td>Обозначает минимальное возможное значение слайдера.</td>
         </tr>
         <tr>
-            <td>max<div>data-max</div></td>
+            <td>max<small>data-max</small></td>
             <td>100</td>
             <td>number</td>
             <td>Обозначает максимальное возможное значение слайдера.</td>
         </tr>
         <tr>
-            <td>from<div>data-from</div></td>
+            <td>from<small>data-from</small></td>
             <td>min</td>
             <td>number</td>
             <td>Позволяет задать стартовую позицию левого ползунка (или единственного ползунка)</td>
         </tr>
         <tr>
-            <td>to<div>data-to</div></td>
+            <td>to<small>data-to</small></td>
             <td>max</td>
             <td>number</td>
             <td>Позволяет задать стартовую позицию правого ползунка</td>
         </tr>
         <tr class="options__step">
-            <td>step<div>data-step</div></td>
+            <td>step<small>data-step</small></td>
             <td>1</td>
             <td>number</td>
             <td>Задает шаг движения ползунков. Всегда больше нуля. Может быть дробным.</td>
         </tr>
 
         <tr class="options__step">
-            <td>values<div>data-values</div></td>
+            <td>values<small>data-values</small></td>
             <td>[]</td>
             <td>array</td>
             <td>Переопределяет значения слайдера, значениями взятыми из массива values. Параметры min, max, step переопределяются автоматически.</td>
         </tr>
 
         <tr class="options__new">
-            <td>from_fixed<div>data-from-fixed</div></td>
+            <td>from_fixed<small>data-from-fixed</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Фиксирует позицию левого ползунка (или единственного ползунка).</td>
         </tr>
         <tr class="options__new">
-            <td>from_min<div>data-from-min</div></td>
+            <td>from_min<small>data-from-min</small></td>
             <td>min</td>
             <td>number</td>
             <td>Ограничивает минимальную позицию левого ползунка.</td>
         </tr>
         <tr class="options__new">
-            <td>from_max<div>data-from-max</div></td>
+            <td>from_max<small>data-from-max</small></td>
             <td>max</td>
             <td>number</td>
             <td>Ограничивает максимальную позицию левого ползунка.</td>
         </tr>
         <tr class="options__new">
-            <td>from_shadow<div>data-from-shadow</div></td>
+            <td>from_shadow<small>data-from-shadow</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Подсвечивает ограничения наложенные на левый ползунок.</td>
         </tr>
 
         <tr class="options__new">
-            <td>to_fixed<div>data-to-fixed</div></td>
+            <td>to_fixed<small>data-to-fixed</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Фиксирует позицию правого ползунка.</td>
         </tr>
         <tr class="options__new">
-            <td>to_min<div>data-to-min</div></td>
+            <td>to_min<small>data-to-min</small></td>
             <td>min</td>
             <td>number</td>
             <td>Ограничивает минимальную позицию правого ползунка.</td>
         </tr>
         <tr class="options__new">
-            <td>to_max<div>data-to-max</div></td>
+            <td>to_max<small>data-to-max</small></td>
             <td>max</td>
             <td>number</td>
             <td>Ограничивает максимальную позицию правого ползунка.</td>
         </tr>
         <tr class="options__new options__step">
-            <td>to_shadow<div>data-to-shadow</div></td>
+            <td>to_shadow<small>data-to-shadow</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Подсвечивает ограничения наложенные на правый ползунок.</td>
         </tr>
 
         <tr>
-            <td>prettify_enabled<div>data-prettify-enabled</div></td>
+            <td>prettify_enabled<small>data-prettify-enabled</small></td>
             <td>true</td>
             <td>boolean</td>
             <td>Улучшает внешний вид длинных цифр. 10000000 &rarr; 10 000 000</td>
         </tr>
         <tr class="options__new">
-            <td>prettify_separator<div>data-prettify-separator</div></td>
+            <td>prettify_separator<small>data-prettify-separator</small></td>
             <td>" "</td>
             <td>string</td>
             <td>Позволяет выбирать разделитель для улучшения читаемости длинных цифр. 10 000, 10.000, 10-000 и т.п.</td>
         </tr>
         <tr class="options__new options__step">
-            <td>prettify<div>—</div></td>
+            <td>prettify<small>—</small></td>
             <td>null</td>
             <td>function</td>
             <td>Собственная функция для постобработки значений слайдера. Позволяет делать с цифрами всё что угодно, например приобразовывать в даты и время.</td>
         </tr>
 
         <tr class="options__new options__step">
-            <td>force_edges<div>data-force-edges</div></td>
+            <td>force_edges<small>data-force-edges</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Заставляет слайдер всегда оставаться внутри границ своего контейнера.</td>
         </tr>
 
         <tr class="options__new">
-            <td>keyboard<div>data-keyboard</div></td>
+            <td>keyboard<small>data-keyboard</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Активирует управление слайдером с помощью клавиатуры. Влево: &larr, &darr, A, S. Вправо: &rarr, &uarr, W, D.</td>
         </tr>
         <tr class="options__new options__step">
-            <td>keyboard_step<div>data-keyboard-step</div></td>
+            <td>keyboard_step<small>data-keyboard-step</small></td>
             <td>5</td>
             <td>number</td>
             <td>Шаг движения ползунка при управлении с клавиатуры. Задается в процентах.</td>
         </tr>
 
         <tr>
-            <td>grid<div>data-grid</div></td>
+            <td>grid<small>data-grid</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Включает отображение сетки значений.</td>
         </tr>
         <tr>
-            <td>grid_margin<div>data-grid-margin</div></td>
+            <td>grid_margin<small>data-grid-margin</small></td>
             <td>true</td>
             <td>boolean</td>
             <td>Выравнивает сетку по крайним позициям ползунков, либо по границам контейнера.</td>
         </tr>
         <tr class="options__new">
-            <td>grid_num<div>data-grid-num</div></td>
+            <td>grid_num<small>data-grid-num</small></td>
             <td>4</td>
             <td>number</td>
             <td>Количество ячеек в сетке.</td>
         </tr>
         <tr class="options__new options__step">
-            <td>grid_snap<div>data-grid-snap</div></td>
+            <td>grid_snap<small>data-grid-snap</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Привязка сетки к шагу слайдера (параметр step). Если активирован, то параметр grid_num не учитывается.</td>
         </tr>
 
         <tr>
-            <td>hide_min_max<div>data-hide-min-max</div></td>
+            <td>hide_min_max<small>data-hide-min-max</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Прячет лейблы "min" и "max"</td>
         </tr>
         <tr class="options__step">
-            <td>hide_from_to<div>data-hide-from-to</div></td>
+            <td>hide_from_to<small>data-hide-from-to</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Прячет лейблы "from" и "to"</td>
         </tr>
 
         <tr>
-            <td>prefix<div>data-prefix</div></td>
+            <td>prefix<small>data-prefix</small></td>
             <td>—</td>
             <td>string</td>
             <td>Отобразить префикс для значений слайдера. Будет отображен перед цифрой, например $100.</td>
         </tr>
         <tr>
-            <td>postfix<div>data-postfix</div></td>
+            <td>postfix<small>data-postfix</small></td>
             <td>—</td>
             <td>string</td>
             <td>Отобразить постфикс для значений слайдера. Будет отображен после цифры, например 100 руб.</td>
         </tr>
         <tr>
-            <td>max_postfix<div>data-max-postfix</div></td>
+            <td>max_postfix<small>data-max-postfix</small></td>
             <td>—</td>
             <td>string</td>
             <td>Отобразить дополнительный постфикс для максимального значения слайдера. Будет отображен если один из ползунков достигнет крайнего правого значения. Например 0 — 100+</td>
         </tr>
         <tr class="options__new">
-            <td>decorate_both<div>data-decorate-both</div></td>
+            <td>decorate_both<small>data-decorate-both</small></td>
             <td>true</td>
             <td>boolean</td>
             <td>Используется для типа "double", в случае если задан prefix и/или postfix. Определяет, как декорировать близко расположенные значения.<br/>Например: $10k — $100k или же $10 — 100k</td>
         </tr>
         <tr class="options__new options__step">
-            <td>values_separator<div>data-values-separator</div></td>
+            <td>values_separator<small>data-values-separator</small></td>
             <td>" — "</td>
             <td>string</td>
             <td>Разделитель для близко расположенных значений. Используется для типа "double". Например: 10 — 100, 10 to 100, 10 + 100, 10 &rarr; 100 и т.д.</td>
         </tr>
 
         <tr class="options__step">
-            <td>disable<div>data-disable</div></td>
+            <td>disable<small>data-disable</small></td>
             <td>false</td>
             <td>boolean</td>
             <td>Блокирует слайдер, делает его не активным.</td>
         </tr>
 
         <tr>
-            <td>onStart<div>—</div></td>
+            <td>onStart<small>—</small></td>
             <td>null</td>
             <td>function</td>
             <td>Коллбэк. Вызывается при старте слайдера.</td>
         </tr>
         <tr>
-            <td>onChange<div>—</div></td>
+            <td>onChange<small>—</small></td>
             <td>null</td>
             <td>function</td>
             <td>Коллбэк. Вызывается каждый раз когда обновляются значения слайдера.</td>
         </tr>
         <tr>
-            <td>onFinish<div>—</div></td>
+            <td>onFinish<small>—</small></td>
             <td>null</td>
             <td>function</td>
             <td>Коллбэк. Вызывается когда пользователь заканчивает перемещать ползунок.</td>
         </tr>
         <tr class="options__new">
-            <td>onUpdate<div>—</div></td>
+            <td>onUpdate<small>—</small></td>
             <td>null</td>
             <td>function</td>
             <td>Коллбэк. Вызывается когда слайдер обновляется методом <code>update</code> или <code>reset</code>.</td>
