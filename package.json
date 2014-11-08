@@ -1,5 +1,5 @@
 {
-    "name": "ion-rangeslider",
+    "name": "ion.rangeSlider",
     "version": "2.0.0",
     "description": "Cool, comfortable and easily customizable range slider with many options and skin support",
     "keywords": [
@@ -29,7 +29,11 @@
     "spm": {
         "main": "js/ion.rangeSlider.js",
         "dependencies": {
-            "jquery": "1.8.3"
-        }
+            "jquery": "1.11.1"
+        },
+        "ignore": [
+            ".idea",
+            "PSD"
+        ]
     }
 }
