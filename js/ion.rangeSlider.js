@@ -73,8 +73,8 @@
         this.plugin_count = plugin_count;
         this.current_plugin = 0;
         this.calc_count = 0;
-		this.old_from = 0;
-		this.old_to = 0;
+        this.old_from = 0;
+        this.old_to = 0;
         this.raf_id = null;
         this.dragging = false;
         this.force_redraw = false;
@@ -167,9 +167,9 @@
             values: [],
             p_values: [],
 
-			type: "single",
+            type: "single",
 
-			from_fixed: false,
+            from_fixed: false,
             from_min: null,
             from_max: null,
             from_shadow: false,
@@ -180,8 +180,8 @@
             to_shadow: false,
 
             prettify_enabled: true,
-			prettify_separator: " ",
-			prettify: null,
+            prettify_separator: " ",
+            prettify: null,
 
             force_edges: false,
 
@@ -210,7 +210,7 @@
             onUpdate: null
         }, options);
 
-		this.validate();
+        this.validate();
 
         this.result = {
             input: this.$cache.input,
@@ -239,7 +239,7 @@
             w_handle: 0,
 
             // percents
-			p_gap: 0,
+            p_gap: 0,
             p_step: 0,
             p_pointer: 0,
             p_handle: 0,
@@ -473,7 +473,7 @@
             }
 
             this.force_redraw = true;
-			this.dragging = false;
+            this.dragging = false;
 
             if (is_old_ie) {
                 $("*").prop("unselectable", false);
@@ -496,19 +496,19 @@
             this.coords.x_gap = this.$cache.rs.offset().left;
             this.coords.x_pointer = e_base.pageX - this.coords.x_gap;
 
-			this.calcPointer();
+            this.calcPointer();
 
             switch (target) {
-				case "single":
-					this.coords.p_gap = this.toFixed(this.coords.p_pointer - this.coords.p_single);
-					break;
+                case "single":
+                    this.coords.p_gap = this.toFixed(this.coords.p_pointer - this.coords.p_single);
+                    break;
                 case "from":
-					this.coords.p_gap = this.toFixed(this.coords.p_pointer - this.coords.p_from);
+                    this.coords.p_gap = this.toFixed(this.coords.p_pointer - this.coords.p_from);
                     this.$cache.s_from.addClass("type_last");
                     this.$cache.s_to.removeClass("type_last");
                     break;
                 case "to":
-					this.coords.p_gap = this.toFixed(this.coords.p_pointer - this.coords.p_to);
+                    this.coords.p_gap = this.toFixed(this.coords.p_pointer - this.coords.p_to);
                     this.$cache.s_to.addClass("type_last");
                     this.$cache.s_from.removeClass("type_last");
                     break;
@@ -535,7 +535,7 @@
             this.coords.x_pointer = +(e_base.pageX - this.coords.x_gap).toFixed();
 
             this.force_redraw = true;
-			this.calc();
+            this.calc();
 
             this.$cache.input.trigger("focus");
         },
@@ -619,20 +619,20 @@
                 }
             }
 
-			if (!this.coords.w_rs) {
-				return;
-			}
+            if (!this.coords.w_rs) {
+                return;
+            }
 
             this.calcPointer();
 
             this.coords.p_handle = this.toFixed(this.coords.w_handle / this.coords.w_rs * 100);
-			var real_width = 100 - this.coords.p_handle,
-				real_x = this.toFixed(this.coords.p_pointer - this.coords.p_gap);
+            var real_width = 100 - this.coords.p_handle,
+                real_x = this.toFixed(this.coords.p_pointer - this.coords.p_gap);
 
-			if (this.target === "click") {
-				real_x = this.toFixed(this.coords.p_pointer - (this.coords.p_handle / 2));
-				this.target = this.chooseHandle(real_x);
-			}
+            if (this.target === "click") {
+                real_x = this.toFixed(this.coords.p_pointer - (this.coords.p_handle / 2));
+                this.target = this.chooseHandle(real_x);
+            }
 
             if (real_x < 0) {
                 real_x = 0;
@@ -667,7 +667,7 @@
                         break;
                     }
 
-					this.coords.p_single_real = this.calcWithStep(real_x / real_width * 100);
+                    this.coords.p_single_real = this.calcWithStep(real_x / real_width * 100);
                     this.coords.p_single_real = this.checkDiapason(this.coords.p_single_real, this.options.from_min, this.options.from_max);
                     this.coords.p_single = this.toFixed(this.coords.p_single_real / 100 * real_width);
 
@@ -678,12 +678,12 @@
                         break;
                     }
 
-					this.coords.p_from_real = this.calcWithStep(real_x / real_width * 100);
+                    this.coords.p_from_real = this.calcWithStep(real_x / real_width * 100);
                     if (this.coords.p_from_real > this.coords.p_to_real) {
                         this.coords.p_from_real = this.coords.p_to_real;
                     }
                     this.coords.p_from_real = this.checkDiapason(this.coords.p_from_real, this.options.from_min, this.options.from_max);
-					this.coords.p_from = this.toFixed(this.coords.p_from_real / 100 * real_width);
+                    this.coords.p_from = this.toFixed(this.coords.p_from_real / 100 * real_width);
 
                     break;
 
@@ -692,12 +692,12 @@
                         break;
                     }
 
-					this.coords.p_to_real = this.calcWithStep(real_x / real_width * 100);
+                    this.coords.p_to_real = this.calcWithStep(real_x / real_width * 100);
                     if (this.coords.p_to_real < this.coords.p_from_real) {
                         this.coords.p_to_real = this.coords.p_from_real;
                     }
                     this.coords.p_to_real = this.checkDiapason(this.coords.p_to_real, this.options.to_min, this.options.to_max);
-					this.coords.p_to = this.toFixed(this.coords.p_to_real / 100 * real_width);
+                    this.coords.p_to = this.toFixed(this.coords.p_to_real / 100 * real_width);
 
                     break;
             }
@@ -729,33 +729,33 @@
             this.calcLabels();
         },
 
-		calcPointer: function () {
-			if (!this.coords.w_rs) {
-				this.coords.p_pointer = 0;
-				return;
-			}
+        calcPointer: function () {
+            if (!this.coords.w_rs) {
+                this.coords.p_pointer = 0;
+                return;
+            }
 
-			if (this.coords.x_pointer < 0) {
-				this.coords.x_pointer = 0;
-			} else if (this.coords.x_pointer > this.coords.w_rs) {
-				this.coords.x_pointer = this.coords.w_rs;
-			}
+            if (this.coords.x_pointer < 0) {
+                this.coords.x_pointer = 0;
+            } else if (this.coords.x_pointer > this.coords.w_rs) {
+                this.coords.x_pointer = this.coords.w_rs;
+            }
 
-			this.coords.p_pointer = this.toFixed(this.coords.x_pointer / this.coords.w_rs * 100);
-		},
+            this.coords.p_pointer = this.toFixed(this.coords.x_pointer / this.coords.w_rs * 100);
+        },
 
-		chooseHandle: function (real_x) {
-			if (this.options.type === "single") {
-				return "single";
-			} else {
-				var m_point = this.coords.p_from_real + ((this.coords.p_to_real - this.coords.p_from_real) / 2);
-				if (real_x >= m_point) {
-					return "to";
-				} else {
-					return "from";
-				}
-			}
-		},
+        chooseHandle: function (real_x) {
+            if (this.options.type === "single") {
+                return "single";
+            } else {
+                var m_point = this.coords.p_from_real + ((this.coords.p_to_real - this.coords.p_from_real) / 2);
+                if (real_x >= m_point) {
+                    return "to";
+                } else {
+                    return "from";
+                }
+            }
+        },
 
         calcMinMax: function () {
             if (!this.coords.w_rs) {
@@ -803,54 +803,54 @@
 
 
 
-		// =============================================================================================================
-		// Drawings
+        // =============================================================================================================
+        // Drawings
 
         updateScene: function () {
-			this.drawHandles();
+            this.drawHandles();
 
             this.raf_id = requestAnimationFrame(this.updateScene.bind(this));
         },
 
-		drawHandles: function () {
-			this.coords.w_rs = this.$cache.rs.outerWidth(false);
+        drawHandles: function () {
+            this.coords.w_rs = this.$cache.rs.outerWidth(false);
 
             if (this.coords.w_rs !== this.coords.w_rs_old) {
                 this.target = "base";
             }
 
-			if (this.coords.w_rs !== this.coords.w_rs_old || this.force_redraw) {
+            if (this.coords.w_rs !== this.coords.w_rs_old || this.force_redraw) {
                 this.setMinMax();
-				this.calc(true);
-				this.drawLabels();
+                this.calc(true);
+                this.drawLabels();
                 if (this.options.grid) {
                     this.calcGridMargin();
                     this.calcGridLabels();
                 }
-				this.force_redraw = true;
-				this.coords.w_rs_old = this.coords.w_rs;
+                this.force_redraw = true;
+                this.coords.w_rs_old = this.coords.w_rs;
                 this.drawShadow();
-			}
+            }
 
-			if (!this.coords.w_rs) {
-				return;
-			}
+            if (!this.coords.w_rs) {
+                return;
+            }
 
-			if (!this.dragging && !this.force_redraw && !this.is_key) {
-				return;
-			}
+            if (!this.dragging && !this.force_redraw && !this.is_key) {
+                return;
+            }
 
-			if (this.old_from !== this.result.from || this.old_to !== this.result.to || this.force_redraw || this.is_key) {
+            if (this.old_from !== this.result.from || this.old_to !== this.result.to || this.force_redraw || this.is_key) {
 
                 this.drawLabels();
 
-				this.$cache.bar[0].style.left = this.coords.p_bar_x + "%";
-				this.$cache.bar[0].style.width = this.coords.p_bar_w + "%";
+                this.$cache.bar[0].style.left = this.coords.p_bar_x + "%";
+                this.$cache.bar[0].style.width = this.coords.p_bar_w + "%";
 
-				if (this.options.type === "single") {
-					this.$cache.s_single[0].style.left = this.coords.p_single + "%";
+                if (this.options.type === "single") {
+                    this.$cache.s_single[0].style.left = this.coords.p_single + "%";
 
-					this.$cache.single[0].style.left = this.labels.p_single_left + "%";
+                    this.$cache.single[0].style.left = this.labels.p_single_left + "%";
 
                     if (this.options.values.length) {
                         this.$cache.input.prop("value", this.result.from_value);
@@ -859,18 +859,18 @@
                         this.$cache.input.prop("value", this.result.from);
                         this.$cache.input.data("from", this.result.from);
                     }
-				} else {
-					this.$cache.s_from[0].style.left = this.coords.p_from + "%";
-					this.$cache.s_to[0].style.left = this.coords.p_to + "%";
+                } else {
+                    this.$cache.s_from[0].style.left = this.coords.p_from + "%";
+                    this.$cache.s_to[0].style.left = this.coords.p_to + "%";
 
-					if (this.old_from !== this.result.from || this.force_redraw) {
-						this.$cache.from[0].style.left = this.labels.p_from_left + "%";
-					}
-					if (this.old_to !== this.result.to || this.force_redraw) {
-						this.$cache.to[0].style.left = this.labels.p_to_left + "%";
-					}
+                    if (this.old_from !== this.result.from || this.force_redraw) {
+                        this.$cache.from[0].style.left = this.labels.p_from_left + "%";
+                    }
+                    if (this.old_to !== this.result.to || this.force_redraw) {
+                        this.$cache.to[0].style.left = this.labels.p_to_left + "%";
+                    }
 
-					this.$cache.single[0].style.left = this.labels.p_single_left + "%";
+                    this.$cache.single[0].style.left = this.labels.p_single_left + "%";
 
                     if (this.options.values.length) {
                         this.$cache.input.prop("value", this.result.from_value + ";" + this.result.to_value);
@@ -881,23 +881,23 @@
                         this.$cache.input.data("from", this.result.from);
                         this.$cache.input.data("to", this.result.to);
                     }
-				}
+                }
                 this.$cache.input.trigger("change");
 
-				this.old_from = this.result.from;
-				this.old_to = this.result.to;
+                this.old_from = this.result.from;
+                this.old_to = this.result.to;
 
                 var is_function = this.options.onChange && typeof this.options.onChange === "function";
                 if (is_function && !this.is_update && !this.is_start) {
                     this.options.onChange(this.result);
                 }
                 this.is_update = false;
-			}
+            }
 
             this.is_start = false;
             this.is_key = false;
-			this.force_redraw = false;
-		},
+            this.force_redraw = false;
+        },
 
         drawLabels: function () {
             var values_num = this.options.values.length,
@@ -985,11 +985,11 @@
                     if (this.result.from === this.result.to) {
                         this.$cache.from[0].style.visibility = "visible";
                         this.$cache.single[0].style.visibility = "hidden";
-						max = to_left;
+                        max = to_left;
                     } else {
                         this.$cache.from[0].style.visibility = "hidden";
                         this.$cache.single[0].style.visibility = "visible";
-						max = Math.max(single_left, to_left);
+                        max = Math.max(single_left, to_left);
                     }
                 } else {
                     this.$cache.from[0].style.visibility = "visible";
@@ -997,17 +997,17 @@
                     this.$cache.single[0].style.visibility = "hidden";
                 }
 
-				if (min < this.labels.p_min + 1) {
-					this.$cache.min[0].style.visibility = "hidden";
-				} else {
-					this.$cache.min[0].style.visibility = "visible";
-				}
+                if (min < this.labels.p_min + 1) {
+                    this.$cache.min[0].style.visibility = "hidden";
+                } else {
+                    this.$cache.min[0].style.visibility = "visible";
+                }
 
-				if (max > 100 - this.labels.p_max - 1) {
-					this.$cache.max[0].style.visibility = "hidden";
-				} else {
-					this.$cache.max[0].style.visibility = "visible";
-				}
+                if (max > 100 - this.labels.p_max - 1) {
+                    this.$cache.max[0].style.visibility = "hidden";
+                } else {
+                    this.$cache.max[0].style.visibility = "visible";
+                }
 
             }
         },
@@ -1082,15 +1082,15 @@
         },
 
         calcReal: function (percent) {
-			var min = this.options.min,
-				max = this.options.max,
-				abs = 0;
+            var min = this.options.min,
+                max = this.options.max,
+                abs = 0;
 
-			if (min < 0) {
-				abs = Math.abs(min);
-				min = min + abs;
-				max = max + abs;
-			}
+            if (min < 0) {
+                abs = Math.abs(min);
+                min = min + abs;
+                max = max + abs;
+            }
 
             var number = ((max - min) / 100 * percent) + min,
                 string = this.options.step.toString().split(".")[1];
@@ -1103,9 +1103,9 @@
                 number = +number.toFixed(0);
             }
 
-			if (abs) {
-				number -= abs;
-			}
+            if (abs) {
+                number -= abs;
+            }
 
             if (number < this.options.min) {
                 number = this.options.min;
@@ -1151,10 +1151,10 @@
             return this.calcPercent(num);
         },
 
-		toFixed: function (num) {
-			num = num.toFixed(5);
-			return +num;
-		},
+        toFixed: function (num) {
+            num = num.toFixed(5);
+            return +num;
+        },
 
         _prettify: function (num) {
             if (!this.options.prettify_enabled) {
@@ -1187,8 +1187,8 @@
             return this.toFixed(left);
         },
 
-		validate: function () {
-			var o = this.options,
+        validate: function () {
+            var o = this.options,
                 r = this.result,
                 v = o.values,
                 pv = o.p_values,
@@ -1196,14 +1196,14 @@
                 value,
                 i;
 
-			if (o.max <= o.min) {
+            if (o.max <= o.min) {
                 if (o.min) {
-				    o.max = o.min * 2;
+                    o.max = o.min * 2;
                 } else {
                     o.max = o.min + 1;
                 }
-				o.step = 1;
-			}
+                o.step = 1;
+            }
 
             if (vl) {
                 o.min = 0;
@@ -1226,29 +1226,29 @@
                 }
             }
 
-			if (typeof o.from !== "number" || isNaN(o.from)) {
-				o.from = o.min;
-			}
+            if (typeof o.from !== "number" || isNaN(o.from)) {
+                o.from = o.min;
+            }
 
-			if (typeof o.to !== "number" || isNaN(o.from)) {
-				o.to = o.max;
-			}
+            if (typeof o.to !== "number" || isNaN(o.from)) {
+                o.to = o.max;
+            }
 
-			if (o.from < o.min || o.from > o.max) {
-				o.from = o.min;
-			}
+            if (o.from < o.min || o.from > o.max) {
+                o.from = o.min;
+            }
 
-			if (o.to > o.max || o.to < o.min) {
-				o.to = o.max;
-			}
+            if (o.to > o.max || o.to < o.min) {
+                o.to = o.max;
+            }
 
-			if (o.from > o.to) {
-				o.from = o.to;
-			}
+            if (o.from > o.to) {
+                o.from = o.to;
+            }
 
-			if (typeof o.step !== "number" || isNaN(o.step) || !o.step || o.step < 0) {
-				o.step = 1;
-			}
+            if (typeof o.step !== "number" || isNaN(o.step) || !o.step || o.step < 0) {
+                o.step = 1;
+            }
 
             if (typeof o.keyboard_step !== "number" || isNaN(o.keyboard_step) || !o.keyboard_step || o.keyboard_step < 0) {
                 o.keyboard_step = 5;
@@ -1287,7 +1287,7 @@
                     r.to = o.to;
                 }
             }
-		},
+        },
 
         decorate: function (num, original) {
             var decorated = "",
