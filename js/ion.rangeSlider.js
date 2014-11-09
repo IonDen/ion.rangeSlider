@@ -168,6 +168,7 @@
             p_values: [],
 
             type: "single",
+            min_interval_length: null,
 
             from_fixed: false,
             from_min: null,
@@ -192,6 +193,7 @@
             grid_margin: true,
             grid_num: 4,
             grid_snap: false,
+            grid_step_label_max: false,
 
             hide_min_max: false,
             hide_from_to: false,
@@ -678,7 +680,14 @@
                         break;
                     }
 
+                    var previousCoords = this.coords.p_from_real;
                     this.coords.p_from_real = this.calcWithStep(real_x / real_width * 100);
+                    if (this.options.min_interval_length && this.options.type === "double") {
+                        if ((this.calcReal(this.coords.p_to_real) - this.calcReal(this.coords.p_from_real)) / this.options.step < this.options.min_interval_length) {
+                            this.coords.p_from_real = previousCoords;
+                            break;
+                        }
+                    }
                     if (this.coords.p_from_real > this.coords.p_to_real) {
                         this.coords.p_from_real = this.coords.p_to_real;
                     }
@@ -692,7 +701,14 @@
                         break;
                     }
 
+                    var previousCoords = this.coords.p_to_real;
                     this.coords.p_to_real = this.calcWithStep(real_x / real_width * 100);
+                    if (this.options.min_interval_length && this.options.type === "double") {
+                        if ((this.calcReal(this.coords.p_to_real) - this.calcReal(this.coords.p_from_real)) / this.options.step < this.options.min_interval_length) {
+                            this.coords.p_to_real = previousCoords;
+                            break;
+                        }
+                    }
                     if (this.coords.p_to_real < this.coords.p_from_real) {
                         this.coords.p_to_real = this.coords.p_from_real;
                     }
@@ -1507,7 +1523,8 @@
         // TODO: Refactor then have plenty of time
         calcGridCollision: function (step, start, finish) {
             var i, next_i, label,
-                num = this.coords.big_num;
+                num = this.coords.big_num,
+                o = this.options;
 
             for (i = 0; i < num; i += step) {
                 next_i = i + (step / 2);
@@ -1517,7 +1534,7 @@
 
                 label = this.$cache.grid_labels[next_i][0];
 
-                if (finish[i] <= start[next_i]) {
+                if (finish[i] <= start[next_i] && (o.grid_step_label_max === false || (o.grid_step_label_max && (next_i % o.grid_step_label_max) == 0))) {
                     label.style.visibility = "visible";
                 } else {
                     label.style.visibility = "hidden";
