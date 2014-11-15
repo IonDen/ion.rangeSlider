@@ -1,6 +1,6 @@
 {
     "name": "ion.rangeSlider",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "homepage": "https://github.com/IonDen/ion.rangeSlider",
     "authors": [
         {
@@ -27,6 +27,7 @@
         "globals"
     ],
     "keywords": [
+        "jquery-plugin",
         "diapason",
         "ion",
         "range",

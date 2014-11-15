@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 2.0.0 Build: 270
+// version 2.0.1 Build: 276
 // © Denis Ineshin, 2014    https://github.com/IonDen
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/en.html
@@ -33,6 +33,51 @@
     } ());
 
     var is_touch = (('ontouchstart' in window) || (navigator.msMaxTouchPoints > 0));
+
+
+    // IE8 fix
+    if (!Function.prototype.bind) {
+        Function.prototype.bind = function bind(that) {
+
+            var target = this;
+            var slice = [].slice;
+
+            if (typeof target != "function") {
+                throw new TypeError();
+            }
+
+            var args = slice.call(arguments, 1),
+                bound = function () {
+
+                    if (this instanceof bound) {
+
+                        var F = function(){};
+                        F.prototype = target.prototype;
+                        var self = new F();
+
+                        var result = target.apply(
+                            self,
+                            args.concat(slice.call(arguments))
+                        );
+                        if (Object(result) === result) {
+                            return result;
+                        }
+                        return self;
+
+                    } else {
+
+                        return target.apply(
+                            that,
+                            args.concat(slice.call(arguments))
+                        );
+
+                    }
+
+                };
+
+            return bound;
+        };
+    }
 
 
 
@@ -82,6 +127,8 @@
         this.is_update = false;
         this.is_start = true;
         this.is_active = false;
+        this.is_resize = false;
+        this.is_click = false;
 
         this.$cache = {
             win: $(window),
@@ -109,15 +156,18 @@
         // get config data attributes
         var $inp = this.$cache.input;
         var data = {
+            type: $inp.data("type"),
+
             min: $inp.data("min"),
             max: $inp.data("max"),
             from: $inp.data("from"),
             to: $inp.data("to"),
             step: $inp.data("step"),
 
-            values: $inp.data("values"),
+            min_interval: $inp.data("minInterval"),
+            max_interval: $inp.data("maxInterval"),
 
-            type: $inp.data("type"),
+            values: $inp.data("values"),
 
             from_fixed: $inp.data("fromFixed"),
             from_min: $inp.data("fromMin"),
@@ -158,16 +208,19 @@
 
         // get config from options
         this.options = $.extend({
+            type: "single",
+
             min: 10,
             max: 100,
             from: null,
             to: null,
             step: 1,
 
+            min_interval: 0,
+            max_interval: 0,
+
             values: [],
             p_values: [],
-
-            type: "single",
 
             from_fixed: false,
             from_min: null,
@@ -531,6 +584,7 @@
             this.current_plugin = this.plugin_count;
             this.target = target;
 
+            this.is_click = true;
             this.coords.x_gap = this.$cache.rs.offset().left;
             this.coords.x_pointer = +(e_base.pageX - this.coords.x_gap).toFixed();
 
@@ -683,6 +737,7 @@
                         this.coords.p_from_real = this.coords.p_to_real;
                     }
                     this.coords.p_from_real = this.checkDiapason(this.coords.p_from_real, this.options.from_min, this.options.from_max);
+                    this.coords.p_from_real = this.checkInterval(this.coords.p_from_real, this.coords.p_to_real, "from");
                     this.coords.p_from = this.toFixed(this.coords.p_from_real / 100 * real_width);
 
                     break;
@@ -697,6 +752,7 @@
                         this.coords.p_to_real = this.coords.p_from_real;
                     }
                     this.coords.p_to_real = this.checkDiapason(this.coords.p_to_real, this.options.to_min, this.options.to_max);
+                    this.coords.p_to_real = this.checkInterval(this.coords.p_to_real, this.coords.p_from_real, "to");
                     this.coords.p_to = this.toFixed(this.coords.p_to_real / 100 * real_width);
 
                     break;
@@ -817,6 +873,7 @@
 
             if (this.coords.w_rs !== this.coords.w_rs_old) {
                 this.target = "base";
+                this.is_resize = true;
             }
 
             if (this.coords.w_rs !== this.coords.w_rs_old || this.force_redraw) {
@@ -887,15 +944,23 @@
                 this.old_from = this.result.from;
                 this.old_to = this.result.to;
 
-                var is_function = this.options.onChange && typeof this.options.onChange === "function";
+                var is_function = this.options.onChange && typeof this.options.onChange === "function" && !this.is_resize;
                 if (is_function && !this.is_update && !this.is_start) {
                     this.options.onChange(this.result);
                 }
+
+                var is_finish = this.options.onFinish && typeof this.options.onFinish === "function";
+                if (is_finish && (this.is_key || this.is_click)) {
+                    this.options.onFinish(this.result);
+                }
+
                 this.is_update = false;
+                this.is_resize = false;
             }
 
             this.is_start = false;
             this.is_key = false;
+            this.is_click = false;
             this.force_redraw = false;
         },
 
@@ -1133,6 +1198,41 @@
             return this.toFixed(rounded);
         },
 
+        checkInterval: function (p_current, p_next, type) {
+            var o = this.options,
+                current,
+                next;
+
+            if (!o.min_interval && !o.max_interval) {
+                return p_current;
+            }
+
+            current = this.calcReal(p_current);
+            next = this.calcReal(p_next);
+
+            if (type === "from") {
+
+                if (o.min_interval && next - current < o.min_interval) {
+                    current = next - o.min_interval;
+                }
+                if (o.max_interval && next - current > o.max_interval) {
+                    current = next - o.max_interval;
+                }
+
+            } else {
+
+                if (o.min_interval && current - next < o.min_interval) {
+                    current = next + o.min_interval;
+                }
+                if (o.max_interval && current - next > o.max_interval) {
+                    current = next + o.max_interval;
+                }
+
+            }
+
+            return this.calcPercent(current);
+        },
+
         checkDiapason: function (p_num, min, max) {
             if (!min && !max) {
                 return p_num;
@@ -1191,10 +1291,23 @@
             var o = this.options,
                 r = this.result,
                 v = o.values,
-                pv = o.p_values,
                 vl = v.length,
                 value,
                 i;
+
+            if (typeof o.min === "string") o.min = +o.min;
+            if (typeof o.max === "string") o.max = +o.max;
+            if (typeof o.from === "string") o.from = +o.from;
+            if (typeof o.to === "string") o.to = +o.to;
+            if (typeof o.step === "string") o.step = +o.step;
+
+            if (typeof o.from_min === "string") o.from_min = +o.from_min;
+            if (typeof o.from_max === "string") o.from_max = +o.from_max;
+            if (typeof o.to_min === "string") o.to_min = +o.to_min;
+            if (typeof o.to_max === "string") o.to_max = +o.to_max;
+
+            if (typeof o.keyboard_step === "string") o.keyboard_step = +o.keyboard_step;
+            if (typeof o.grid_num === "string") o.grid_num = +o.grid_num;
 
             if (o.max <= o.min) {
                 if (o.min) {
@@ -1206,11 +1319,13 @@
             }
 
             if (vl) {
+                o.p_values = [];
                 o.min = 0;
                 o.max = vl - 1;
                 o.step = 1;
                 o.grid_num = o.max;
                 o.grid_snap = true;
+
 
                 for (i = 0; i < vl; i++) {
                     value = +v[i];
@@ -1222,7 +1337,7 @@
                         value = v[i];
                     }
 
-                    pv.push(value);
+                    o.p_values.push(value);
                 }
             }
 
@@ -1287,6 +1402,22 @@
                     r.to = o.to;
                 }
             }
+
+            if (typeof o.min_interval !== "number" || isNaN(o.min_interval) || !o.min_interval || o.min_interval < 0) {
+                o.min_interval = 0;
+            }
+
+            if (typeof o.max_interval !== "number" || isNaN(o.max_interval) || !o.max_interval || o.max_interval < 0) {
+                o.max_interval = 0;
+            }
+
+            if (o.min_interval && o.min_interval > o.max - o.min) {
+                o.min_interval = o.max - o.min;
+            }
+
+            if (o.max_interval && o.max_interval > o.max - o.min) {
+                o.max_interval = o.max - o.min;
+            }
         },
 
         decorate: function (num, original) {
@@ -1342,11 +1473,14 @@
 
             if (options) {
 
-                if (options.from) {
+                if (typeof options.from === "string") options.from = +options.from;
+                if (typeof options.to === "string") options.to = +options.to;
+
+                if (typeof options.from === "number" && !isNaN(options.from)) {
                     this.updateFrom();
                 }
 
-                if (options.to) {
+                if (typeof options.to === "number" && !isNaN(options.to)) {
                     this.updateTo();
                 }
 

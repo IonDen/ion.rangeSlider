@@ -1,5 +1,5 @@
 /* Ion.RangeSlider
-// css version 2.0.0
+// css version 2.0.1
 // © 2013-2014 Denis Ineshin | IonDen.com
 // ===================================================================================================================*/
 
@@ -55,30 +55,12 @@
         .irs-slider.single {
             left: 10px;
         }
-            .irs-slider.single:before {
-                position: absolute; display: block; content: "";
-                top: -30%; left: -30%;
-                width: 160%; height: 160%;
-                background: rgba(0,0,0,0.0);
-            }
         .irs-slider.from {
             left: 100px;
         }
-            .irs-slider.from:before {
-                position: absolute; display: block; content: "";
-                top: -30%; left: -30%;
-                width: 130%; height: 160%;
-                background: rgba(0,0,0,0.0);
-            }
         .irs-slider.to {
             left: 300px;
         }
-            .irs-slider.to:before {
-                position: absolute; display: block; content: "";
-                top: -30%; left: 0;
-                width: 130%; height: 160%;
-                background: rgba(0,0,0,0.0);
-            }
         .irs-slider.type_last {
             z-index: 2;
         }
@@ -157,4 +139,7 @@
     margin: 0 !important;
     outline: none !important;
     z-index: -9999 !important;
+    background: none !important;
+    border-style: solid !important;
+    border-color: transparent !important;
 }

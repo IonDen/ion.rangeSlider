@@ -1,10 +1,10 @@
-# Ion.Range Slider 2.0.0
+# Ion.Range Slider 2.0.1
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
 Easy and light range slider
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.0.zip">Download ion.rangeSlider-2.0.0.zip</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.1.zip">Download ion.rangeSlider-2.0.1.zip</a>
 
 ***
 
@@ -157,6 +157,19 @@ If your are new person in web development and you are not sure how to correctly 
             <td>1</td>
             <td>number</td>
             <td>Set sliders step. Always > 0. Could be fractional.</td>
+        </tr>
+
+        <tr>
+            <td>min_interval<div>data-min-interval</div></td>
+            <td>—</td>
+            <td>number</td>
+            <td>Set minimum diapason between sliders. Only in "double" type</td>
+        </tr>
+        <tr class="options__step">
+            <td>max_interval<div>data-max-interval</div></td>
+            <td>—</td>
+            <td>number</td>
+            <td>Set maximum diapason between sliders. Only in "double" type</td>
         </tr>
 
         <tr class="options__step">
@@ -450,6 +463,7 @@ All plugins options are covered in demos.
 
 
 ## Update history
+* 2.0.1: November 15, 2014 - Some bugs fixed and few new methods.
 * 2.0.0: November 08, 2014 - New API, lot's of bug fixes and improvements.
 * 1.9.3: August 06, 2014 - Bower support added
 * 1.9.2: August 04, 2014 - New param gridMargin. Resolved some issues: #89, #94, #96, #97, #98, #103
