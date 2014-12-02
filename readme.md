@@ -1,10 +1,10 @@
-# Ion.Range Slider 2.0.1
+# Ion.Range Slider 2.0.2
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
 Easy and light range slider
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.1.zip">Download ion.rangeSlider-2.0.1.zip</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.2.zip">Download ion.rangeSlider-2.0.2.zip</a>
 
 ***
 
@@ -170,6 +170,12 @@ If your are new person in web development and you are not sure how to correctly 
             <td>—</td>
             <td>number</td>
             <td>Set maximum diapason between sliders. Only in "double" type</td>
+        </tr>
+        <tr class="options__step">
+            <td>drag_interval<div>data-drag-interval</div></td>
+            <td>false</td>
+            <td>boolean</td>
+            <td>Allow user to drag whole range. Only in "double" type (beta)</td>
         </tr>
 
         <tr class="options__step">
@@ -463,6 +469,7 @@ All plugins options are covered in demos.
 
 
 ## Update history
+* 2.0.2: December 02, 2014 - Issues fixed: #143, #148, #153, #155, #159. API update.
 * 2.0.1: November 15, 2014 - Some bugs fixed and few new methods.
 * 2.0.0: November 08, 2014 - New API, lot's of bug fixes and improvements.
 * 1.9.3: August 06, 2014 - Bower support added

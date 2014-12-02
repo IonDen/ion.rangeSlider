@@ -1,10 +1,10 @@
-# Ion.Range Slider 2.0.1
+# Ion.Range Slider 2.0.2
 
 > <a href="readme.md">English description</a> | Описание на русском
 
 Удобный легкий слайдер диапазонов
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/index.html">Страница проекта и демо</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.1.zip">Download ion.rangeSlider-2.0.1.zip</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.2.zip">Download ion.rangeSlider-2.0.2.zip</a>
 
 ***
 
@@ -169,6 +169,12 @@ $("#example_id").ionRangeSlider();
             <td>—</td>
             <td>number</td>
             <td>Задает максимальный диапазон между ползунками. Только для типа "double"</td>
+        </tr>
+        <tr class="options__step">
+            <td>drag_interval<div>data-drag-interval</div></td>
+            <td>false</td>
+            <td>boolean</td>
+            <td>Разрешает пользователю перетаскивать весь диапазон. Только для типа "double" (beta)</td>
         </tr>
 
         <tr class="options__step">
@@ -463,6 +469,7 @@ slider.destroy();
 
 
 ## История обновлений
+* 2.0.2: 02.12.2014 - Выполнены задачи: #143, #148, #153, #155, #159. Обновление API.
 * 2.0.1: 15.11.2014 - Исправлено несколько багов, доавлена пара новых методов.
 * 2.0.0: 08.11.2014 - Новый API. Внесено множество улучшений и исправлено множество багов.
 * 1.9.3: 06.08.2014 - Добавлена поддержка bower
