@@ -1,10 +1,10 @@
-# Ion.Range Slider 2.0.2
+# Ion.Range Slider 2.0.3
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
 Easy and light range slider
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.2.zip">Download ion.rangeSlider-2.0.2.zip</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.3.zip">Download ion.rangeSlider-2.0.3.zip</a>
 
 ***
 
@@ -469,6 +469,7 @@ All plugins options are covered in demos.
 
 
 ## Update history
+* 2.0.3: December 29, 2014 - Issues fixed: #160, #165, #166, #168, #170
 * 2.0.2: December 02, 2014 - Issues fixed: #143, #148, #153, #155, #159. API update.
 * 2.0.1: November 15, 2014 - Some bugs fixed and few new methods.
 * 2.0.0: November 08, 2014 - New API, lot's of bug fixes and improvements.
