@@ -159,19 +159,19 @@ $("#example_id").ionRangeSlider();
         </tr>
 
         <tr>
-            <td>min_interval<div>data-min-interval</div></td>
+            <td>min_interval<div><sup>data-min-interval</sup></div></td>
             <td>—</td>
             <td>number</td>
             <td>Задает минимальный диапазон между ползунками. Только для типа "double"</td>
         </tr>
         <tr class="options__step">
-            <td>max_interval<div>data-max-interval</div></td>
+            <td>max_interval<div><sup>data-max-interval</sup></div></td>
             <td>—</td>
             <td>number</td>
             <td>Задает максимальный диапазон между ползунками. Только для типа "double"</td>
         </tr>
         <tr class="options__step">
-            <td>drag_interval<div>data-drag-interval</div></td>
+            <td>drag_interval<div><sup>data-drag-interval</sup></div></td>
             <td>false</td>
             <td>boolean</td>
             <td>Разрешает пользователю перетаскивать весь диапазон. Только для типа "double" (beta)</td>

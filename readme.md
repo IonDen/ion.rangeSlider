@@ -160,19 +160,19 @@ If your are new person in web development and you are not sure how to correctly 
         </tr>
 
         <tr>
-            <td>min_interval<div>data-min-interval</div></td>
+            <td>min_interval<div><sup>data-min-interval</sup></div></td>
             <td>—</td>
             <td>number</td>
             <td>Set minimum diapason between sliders. Only in "double" type</td>
         </tr>
         <tr class="options__step">
-            <td>max_interval<div>data-max-interval</div></td>
+            <td>max_interval<div><sup>data-max-interval</sup></div></td>
             <td>—</td>
             <td>number</td>
             <td>Set maximum diapason between sliders. Only in "double" type</td>
         </tr>
         <tr class="options__step">
-            <td>drag_interval<div>data-drag-interval</div></td>
+            <td>drag_interval<div><sup>data-drag-interval</sup></div></td>
             <td>false</td>
             <td>boolean</td>
             <td>Allow user to drag whole range. Only in "double" type (beta)</td>
