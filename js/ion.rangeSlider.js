@@ -196,6 +196,8 @@
             prefix: $inp.data("prefix"),
             postfix: $inp.data("postfix"),
             max_postfix: $inp.data("maxPostfix"),
+            left_postfix: $inp.data("leftPostfix"),
+            right_postfix: $inp.data("rightPostfix"),
             decorate_both: $inp.data("decorateBoth"),
             values_separator: $inp.data("valuesSeparator"),
 
@@ -251,6 +253,8 @@
             prefix: "",
             postfix: "",
             max_postfix: "",
+            left_postfix: "",
+            right_postfix: "",
             decorate_both: true,
             values_separator: " — ",
 
@@ -1047,13 +1051,14 @@
                 }
 
             } else {
+                //console.log('double: true');
 
                 if (values_num) {
 
                     if (this.options.decorate_both) {
-                        text_single = this.decorate(p_values[this.result.from]);
+                        text_single = this.decorate_left(p_values[this.result.from]);
                         text_single += this.options.values_separator;
-                        text_single += this.decorate(p_values[this.result.to]);
+                        text_single += this.decorate_right(p_values[this.result.to]);
                     } else {
                         text_single = this.decorate(p_values[this.result.from] + this.options.values_separator + p_values[this.result.to]);
                     }
@@ -1067,14 +1072,14 @@
                 } else {
 
                     if (this.options.decorate_both) {
-                        text_single = this.decorate(this._prettify(this.result.from));
+                        text_single = this.decorate_left(this._prettify(this.result.from));
                         text_single += this.options.values_separator;
-                        text_single += this.decorate(this._prettify(this.result.to));
+                        text_single += this.decorate_right(this._prettify(this.result.to));
                     } else {
                         text_single = this.decorate(this._prettify(this.result.from) + this.options.values_separator + this._prettify(this.result.to), this.result.from);
                     }
-                    text_from = this.decorate(this._prettify(this.result.from), this.result.from);
-                    text_to = this.decorate(this._prettify(this.result.to), this.result.to);
+                    text_from = this.decorate_left(this._prettify(this.result.from));
+                    text_to = this.decorate_right(this._prettify(this.result.to));
 
                     this.$cache.single.html(text_single);
                     this.$cache.from.html(text_from);
@@ -1520,9 +1525,125 @@
             }
 
             if (o.postfix) {
-                decorated += o.postfix;
+                if (typeof(o.postfix) != 'function') {
+                    decorated += o.postfix;
+                } else {
+                    decorated += o.postfix();
+                }
             }
 
+            if (o.left_postfix) {
+                decorated = "";
+                decorated += num;
+                if (typeof(o.left_postfix) != 'function') {
+                    decorated += o.left_postfix;
+                } else {
+                    decorated += o.left_postfix();
+                }
+            }
+
+            if (o.right_postfix) {
+                decorated = "";
+                decorated += num;
+                if (typeof(o.right_postfix) != 'function') {
+                    decorated += o.right_postfix;
+                } else {
+                    decorated += o.right_postfix();
+                }
+            }
+
+            return decorated;
+        },
+
+        decorate_left: function (num, original) {
+
+            var decorated = "",
+              o = this.options;
+            //debugger;
+
+            if (o.prefix) {
+                decorated += o.prefix;
+            }
+
+            decorated += num;
+
+            if (o.max_postfix) {
+                if (o.values.length && num === o.p_values[o.max]) {
+                    decorated += o.max_postfix;
+                    if (o.postfix) {
+                        decorated += " ";
+                    }
+                } else if (original === o.max) {
+                    decorated += o.max_postfix;
+                    if (o.postfix) {
+                        decorated += " ";
+                    }
+                }
+            }
+
+            if (o.postfix) {
+                if (typeof(o.postfix) != 'function') {
+                    decorated += o.postfix;
+                } else {
+                    decorated += o.postfix();
+                }
+            }
+
+            if (o.left_postfix) {
+                decorated = "";
+                decorated += num;
+                if (typeof(o.left_postfix) != 'function') {
+                    decorated += o.left_postfix;
+                } else {
+                    decorated += o.left_postfix();
+                }
+            }
+            return decorated;
+        },
+
+
+        decorate_right: function (num, original) {
+
+            var decorated = "",
+              o = this.options;
+
+            if (o.prefix) {
+                decorated += o.prefix;
+            }
+
+            decorated += num;
+
+            if (o.max_postfix) {
+                if (o.values.length && num === o.p_values[o.max]) {
+                    decorated += o.max_postfix;
+                    if (o.postfix) {
+                        decorated += " ";
+                    }
+                } else if (original === o.max) {
+                    decorated += o.max_postfix;
+                    if (o.postfix) {
+                        decorated += " ";
+                    }
+                }
+            }
+
+            if (o.postfix) {
+                if (typeof(o.postfix) != 'function') {
+                    decorated += o.postfix;
+                } else {
+                    decorated += o.postfix();
+                }
+            }
+
+            if (o.right_postfix) {
+                decorated = "";
+                decorated += num;
+                if (typeof(o.right_postfix) != "function") {
+                    decorated += o.right_postfix;
+                } else {
+                    decorated += o.right_postfix();
+                }
+            }
             return decorated;
         },
 
