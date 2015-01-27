@@ -127,7 +127,6 @@
         this.is_resize      = false;
         this.is_click       = false;
         this.display_parent = null;
-        this.class_parent   = "";
 
         this.$cache = {
             win         : $(window),
@@ -203,8 +202,7 @@
 
             disable: $inp.data("disable"),
 
-            display_parent : $inp.data("display_parent"),
-            class_parent   : $inp.data("class_parent")
+            display_parent : $inp.data("display_parent")
         };
 
         data.values = data.values && data.values.split(",");
@@ -263,7 +261,6 @@
             disable: false,
 
             display_parent : "",
-            class_parent   : "",
 
             onStart  : null,
             onChange : null,
@@ -278,7 +275,6 @@
             slider         : null,
 
             display_parent : this.options.display_parent,
-            class_parent   : this.options.class_parent,
 
             min : this.options.min,
             max : this.options.max,
@@ -880,12 +876,8 @@
 
             var id            = this.options.display_parent
             var displayParent = document.getElementById(id)
-            if (this.options.class_parent != "" && displayParent.className.indexOf(this.options.class_parent) == -1)
-                return;
-            else if (displayParent.style.display == 'none')
-                return;
-
-            this.drawHandles();
+            if (displayParent.offsetWidth > 0 || displayParent.offsetHeight > 0)
+                this.drawHandles();
 
             this.raf_id = requestAnimationFrame(this.updateScene.bind(this));
         },
