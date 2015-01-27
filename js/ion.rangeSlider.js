@@ -127,6 +127,7 @@
         this.is_resize      = false;
         this.is_click       = false;
         this.display_parent = null;
+        this.class_parent   = "";
 
         this.$cache = {
             win         : $(window),
@@ -202,7 +203,8 @@
 
             disable: $inp.data("disable"),
 
-            display_parent: $inp.data("display_parent")
+            display_parent : $inp.data("display_parent"),
+            class_parent   : $inp.data("class_parent")
         };
 
         data.values = data.values && data.values.split(",");
@@ -260,7 +262,8 @@
 
             disable: false,
 
-            display_parent: "",
+            display_parent : "",
+            class_parent   : "",
 
             onStart  : null,
             onChange : null,
@@ -272,8 +275,10 @@
 
         this.result = {
             input          : this.$cache.input,
-            display_parent : this.options.display_parent,
             slider         : null,
+
+            display_parent : this.options.display_parent,
+            class_parent   : this.options.class_parent,
 
             min : this.options.min,
             max : this.options.max,
@@ -871,20 +876,14 @@
 
         updateScene: function () {
             if (!this.options)
-                return
-            var id = this.options.display_parent
-            if (id != null) {
-                var displayParent = document.getElementById(id)
-                if (displayParent.style.display == 'none')
-                    return;
-            } else {
-                var slider = this
-                while (slider.parentNode) {
-                    slider = slider.parentNode;
-                    if (slider.style.display == 'none')
-                        return
-                }
-            }
+                return;
+
+            var id            = this.options.display_parent
+            var displayParent = document.getElementById(id)
+            if (this.options.class_parent != "" && displayParent.className.indexOf(this.options.class_parent) == -1)
+                return;
+            else if (displayParent.style.display == 'none')
+                return;
 
             this.drawHandles();
 
