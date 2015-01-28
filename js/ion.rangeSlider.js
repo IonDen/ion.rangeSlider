@@ -491,7 +491,9 @@
             if (!this.dragging)
                 return;
 
-            var x                 = e.pageX || e.originalEvent.touches && e.originalEvent.touches[0].pageX;
+            var x = e.pageX || e.originalEvent.touches && e.originalEvent.touches[0].pageX;
+            if (typeof(x) === 'undefined')
+                x = 0
             this.coords.x_pointer = x - this.coords.x_gap;
 
             this.calc();
@@ -802,6 +804,7 @@
                 this.coords.x_pointer = this.coords.w_rs;
 
             this.coords.p_pointer = this.toFixed(this.coords.x_pointer / this.coords.w_rs * 100);
+            console.log(this.coords.p_pointer + "__" + this.coords.x_pointer)
         },
 
         chooseHandle: function (real_x) {
