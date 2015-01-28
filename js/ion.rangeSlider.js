@@ -804,7 +804,6 @@
                 this.coords.x_pointer = this.coords.w_rs;
 
             this.coords.p_pointer = this.toFixed(this.coords.x_pointer / this.coords.w_rs * 100);
-            console.log(this.coords.p_pointer + "__" + this.coords.x_pointer)
         },
 
         chooseHandle: function (real_x) {
