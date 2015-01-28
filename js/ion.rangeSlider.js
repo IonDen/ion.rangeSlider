@@ -126,7 +126,6 @@
         this.is_active      = false;
         this.is_resize      = false;
         this.is_click       = false;
-        this.display_parent = null;
 
         this.$cache = {
             win         : $(window),
@@ -200,9 +199,7 @@
             decorate_both    : $inp.data("decorateBoth"),
             values_separator : $inp.data("valuesSeparator"),
 
-            disable: $inp.data("disable"),
-
-            display_parent : $inp.data("display_parent")
+            disable: $inp.data("disable")
         };
 
         data.values = data.values && data.values.split(",");
@@ -260,8 +257,6 @@
 
             disable: false,
 
-            display_parent : "",
-
             onStart  : null,
             onChange : null,
             onFinish : null,
@@ -273,8 +268,6 @@
         this.result = {
             input          : this.$cache.input,
             slider         : null,
-
-            display_parent : this.options.display_parent,
 
             min : this.options.min,
             max : this.options.max,
@@ -874,9 +867,7 @@
             if (!this.options)
                 return;
 
-            var id            = this.options.display_parent
-            var displayParent = document.getElementById(id)
-            if (displayParent.offsetWidth > 0 || displayParent.offsetHeight > 0)
+            if (!this.$cache.input.parents().is(':hidden'))
                 this.drawHandles();
 
             this.raf_id = requestAnimationFrame(this.updateScene.bind(this));
