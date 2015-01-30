@@ -1133,9 +1133,9 @@
                 to_max;
 
             if (o.type === "single") {
-                if (o.from_shadow && (o.from_min || o.from_max)) {
-                    from_min = this.calcPercent(o.from_min || o.min);
-                    from_max = this.calcPercent(o.from_max || o.max) - from_min;
+                if (o.from_shadow && (o.from_min !== null || o.from_max !== null)) {
+                    from_min = this.calcPercent(o.from_min !== null ? o.from_min : o.min);
+                    from_max = this.calcPercent(o.from_max !== null ? o.from_max : o.max) - from_min;
                     from_min = this.toFixed(from_min - (this.coords.p_handle / 100 * from_min));
                     from_max = this.toFixed(from_max - (this.coords.p_handle / 100 * from_max));
                     from_min = from_min + (this.coords.p_handle / 2);
@@ -1147,9 +1147,9 @@
                     c.shad_single[0].style.display = "none";
                 }
             } else {
-                if (o.from_shadow && (o.from_min || o.from_max)) {
-                    from_min = this.calcPercent(o.from_min || o.min);
-                    from_max = this.calcPercent(o.from_max || o.max) - from_min;
+                if (o.from_shadow && (o.from_min !== null || o.from_max !== null)) {
+                    from_min = this.calcPercent(o.from_min !== null ? o.from_min : o.min);
+                    from_max = this.calcPercent(o.from_max !== null ? o.from_max : o.max) - from_min;
                     from_min = this.toFixed(from_min - (this.coords.p_handle / 100 * from_min));
                     from_max = this.toFixed(from_max - (this.coords.p_handle / 100 * from_max));
                     from_min = from_min + (this.coords.p_handle / 2);
@@ -1161,9 +1161,9 @@
                     c.shad_from[0].style.display = "none";
                 }
 
-                if (o.to_shadow && (o.to_min || o.to_max)) {
-                    to_min = this.calcPercent(o.to_min || o.min);
-                    to_max = this.calcPercent(o.to_max || o.max) - to_min;
+                if (o.to_shadow && (o.to_min !== null || o.to_max !== null)) {
+                    to_min = this.calcPercent(o.to_min !== null ? o.to_min : o.min);
+                    to_max = this.calcPercent(o.to_max !== null ? o.to_max : o.max) - to_min;
                     to_min = this.toFixed(to_min - (this.coords.p_handle / 100 * to_min));
                     to_max = this.toFixed(to_max - (this.coords.p_handle / 100 * to_max));
                     to_min = to_min + (this.coords.p_handle / 2);
