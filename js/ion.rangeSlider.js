@@ -869,7 +869,7 @@
             if (!this.options)
                 return;
 
-            if (!this.$cache.input.parents().is(':hidden'))
+            if (this.$cache.input.closest(':hidden').length == 0)
                 this.drawHandles();
 
             this.raf_id = requestAnimationFrame(this.updateScene.bind(this));
