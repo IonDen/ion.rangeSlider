@@ -1,4 +1,4 @@
-﻿// Ion.RangeSlider
+// Ion.RangeSlider
 // version 2.0.4 Build: 296
 // © Denis Ineshin, 2015
 // https://github.com/IonDen
@@ -153,12 +153,13 @@
 
         // get config data attributes
         var $inp = this.$cache.input;
+
         var data = {
             type: $inp.data("type"),
 
             min: $inp.data("min"),
             max: $inp.data("max"),
-            from: $inp.data("from"),
+
             to: $inp.data("to"),
             step: $inp.data("step"),
 
@@ -263,6 +264,29 @@
             onUpdate: null
         }, options);
 
+        //Get the default value from input
+        if(input.value){
+
+            //split the values, if using a single type range then will output a single value array
+            var values = input.value.split(';');
+
+            //If the values array are set, then get the index of the value, and inject into from
+            if(this.options.values.length>0){
+                this.options.from = this.options.values.indexOf(parseInt(values[0]));
+
+                //If type is double, updte "to" param too.
+                if(values[1]){
+                    this.options.to = this.options.values.indexOf(parseInt(values[1]));
+                }
+            } else {
+                //When values are not set, uses default min,max,from and to
+                this.options.from = values[0];
+                if(values[1]){
+                    this.options.to = values[1];
+                }
+            }
+        }
+
         this.validate();
 
         this.result = {
@@ -334,6 +358,8 @@
             p_single: 0,
             p_single_left: 0
         };
+
+
 
         this.init();
     };
@@ -1811,7 +1837,7 @@
         for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
             window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
             window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame']
-                || window[vendors[x]+'CancelRequestAnimationFrame'];
+            || window[vendors[x]+'CancelRequestAnimationFrame'];
         }
 
         if (!window.requestAnimationFrame)
