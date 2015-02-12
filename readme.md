@@ -1,10 +1,10 @@
-# Ion.Range Slider 2.0.3
+# Ion.Range Slider 2.0.4
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
 Easy and light range slider
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.3.zip">Download ion.rangeSlider-2.0.3.zip</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.4.zip">Download ion.rangeSlider-2.0.4.zip</a>
 
 ***
 
@@ -73,6 +73,11 @@ Or use the included PSD file and design a custom skin.
 ## Install with bower
 
 * bower install ionrangeslider
+
+
+## Install with npm
+
+* npm install ion-rangeslider
 
 
 ## Install with spm [![](http://spmjs.io/badge/ion-rangeslider)](http://spmjs.io/package/ion-rangeslider)
@@ -468,26 +473,7 @@ slider.destroy();
 All plugins options are covered in demos.
 
 
-## Update history
-* 2.0.3: December 29, 2014 - Issues fixed: #160, #165, #166, #168, #170
-* 2.0.2: December 02, 2014 - Issues fixed: #143, #148, #153, #155, #159. API update.
-* 2.0.1: November 15, 2014 - Some bugs fixed and few new methods.
-* 2.0.0: November 08, 2014 - New API, lot's of bug fixes and improvements.
-* 1.9.3: August 06, 2014 - Bower support added
-* 1.9.2: August 04, 2014 - New param gridMargin. Resolved some issues: #89, #94, #96, #97, #98, #103
-* 1.9.1: April 15, 2014 - Fixed some bugs: #81, #82, #85
-* March 16, 2014 - New plugin description. New demos design. Some new slider params. Issues: #65, #68, #70, #77, #78
-* January 12, 2014 - Fixed some bugs and some new features. Issues: #12, #30, #33, #43, #47, #52, #58
-* October 31, 2013 - Fixed bugs: #13, #31, #35, #37, #40, and some code optimisations
-* October 10, 2013 - New Flat UI Skin. Some skin optimisations. Fixed issue #25.
-* October 08, 2013 - Fixed issues #20, #21, #23, #24, #26. Removed hideText option. New method and options. Improved code style. Minor optimisations.
-* September 11, 2013 - Fixed bug on Android-devices. Added support for negative and fractional values. Issues #15, #16
-* August 23, 2013 - Issues #7, #8, #9, #10 fixed and some enhancements
-* July 29, 2013 - Issue #2 fixed. Versioning changed
-* June 30, 2013 - minor bug fixes and new option "hideText"
-* June 21, 2013 - added the ability to display the grid
-* June 21, 2013 - minor bug fix
-* June 06, 2013 - new public methods and some code optimisations
-* June 06, 2013 - some small css updates
-* April 30, 2013 - new method onFinish
-* February 15, 2013 - new feature to set slider settings through data-* attributes of input tag
+## <a href="history.md">Update history</a>
+
+## Support
+[![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)

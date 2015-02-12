@@ -1,8 +1,15 @@
 {
     "name": "ion-rangeslider",
-    "version": "2.0.3",
+    "version": "2.0.4",
     "description": "Cool, comfortable and easily customizable range slider with many options and skin support",
+    "homepage": "http://ionden.com/a/plugins/ion.rangeSlider/en.html",
+    "author": {
+        "name": "Denis Ineshin (IonDen)",
+        "email": "ionden.tech@gmail.com",
+        "url": "https://github.com/IonDen"
+    },
     "keywords": [
+        "jquery-plugin",
         "jquery",
         "form",
         "input",
@@ -15,21 +22,33 @@
         "noui",
         "skins"
     ],
-    "author": "IonDen <https://github.com/IonDen>",
-    "homepage": "http://ionden.com/a/plugins/ion.rangeSlider/en.html",
+    "main": "./js/ion.rangeSlider.js",
+    "directories": {
+        "lib": "js"
+    },
     "repository": {
         "type": "git",
-        "url": "https://github.com/IonDen/ion.rangeSlider"
+        "url": "git://github.com/IonDen/ion.rangeSlider.git"
     },
     "bugs": {
         "url": "https://github.com/IonDen/ion.rangeSlider/issues"
     },
     "license": "MIT",
+    "dependencies": {
+        "jquery": ">=1.8"
+    },
+    "ignore": [
+        ".idea",
+        "PSD",
+        "bower.json",
+        "ion-rangeSlider.jquery.json",
+        "readme.ru.md"
+    ],
 
     "spm": {
         "main": "js/ion.rangeSlider.js",
         "dependencies": {
-            "jquery": "1.11.1"
+            "jquery": "1.11.2"
         },
         "ignore": [
             ".idea",

@@ -1,6 +1,7 @@
 ﻿// Ion.RangeSlider
-// version 2.0.3 Build: 293
-// © Denis Ineshin, 2014    https://github.com/IonDen
+// version 2.0.4 Build: 296
+// © Denis Ineshin, 2015
+// https://github.com/IonDen
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/en.html
 // GitHub page:     https://github.com/IonDen/ion.rangeSlider
@@ -492,8 +493,6 @@
                 return;
 
             var x = e.pageX || e.originalEvent.touches && e.originalEvent.touches[0].pageX;
-            if (typeof(x) === 'undefined')
-                x = 0
             this.coords.x_pointer = x - this.coords.x_gap;
 
             this.calc();
@@ -798,7 +797,7 @@
                 return;
             }
 
-            if (this.coords.x_pointer < 0)
+            if (this.coords.x_pointer < 0 || isNaN(this.coords.x_pointer))
                 this.coords.x_pointer = 0;
             else if (this.coords.x_pointer > this.coords.w_rs)
                 this.coords.x_pointer = this.coords.w_rs;
@@ -1714,6 +1713,10 @@
         // Public methods
 
         update: function (options) {
+            if (!this.input) {
+                return;
+            }
+
             this.is_update = true;
 
             this.options.from = this.result.from;
@@ -1729,11 +1732,19 @@
         },
 
         reset: function () {
+            if (!this.input) {
+                return;
+            }
+
             this.updateResult();
             this.update();
         },
 
         destroy: function () {
+            if (!this.input) {
+                return;
+            }
+
             this.toggleInput();
             this.$cache.input.prop("readonly", false);
             $.data(this.input, "ionRangeSlider", null);
