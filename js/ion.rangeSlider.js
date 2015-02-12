@@ -823,7 +823,7 @@
                 return;
             }
 
-            if (this.coords.x_pointer < 0) {
+            if (this.coords.x_pointer < 0 || isNaN(this.coords.x_pointer)  ) {
                 this.coords.x_pointer = 0;
             } else if (this.coords.x_pointer > this.coords.w_rs) {
                 this.coords.x_pointer = this.coords.w_rs;
