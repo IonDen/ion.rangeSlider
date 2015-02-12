@@ -264,7 +264,7 @@
             onUpdate: null
         }, options);
 
-        //Get the default value from input
+        //Get the default value from input.
         if(input.value){
 
             //split the values, if using a single type range then will output a single value array
