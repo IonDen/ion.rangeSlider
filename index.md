@@ -1,10 +1,10 @@
-# Ion.Range Slider 2.0.3
+# Ion.Range Slider 2.0.4
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
 Easy and light range slider
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.3.zip">Download ion.rangeSlider-2.0.3.zip</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.4.zip">Download ion.rangeSlider-2.0.4.zip</a>
 
 ***
 
@@ -48,3 +48,10 @@ Easy and light range slider
 ## GitHub
 
 * <a href="https://github.com/IonDen/ion.rangeSlider">GitHub page</a>
+
+
+## <a href="history.md">Update history</a>
+
+
+## Support
+[![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
