@@ -1,6 +1,7 @@
 ﻿// Ion.RangeSlider
-// version 2.0.3 Build: 293
-// © Denis Ineshin, 2014    https://github.com/IonDen
+// version 2.0.4 Build: 296
+// © Denis Ineshin, 2015
+// https://github.com/IonDen
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/en.html
 // GitHub page:     https://github.com/IonDen/ion.rangeSlider
@@ -1744,6 +1745,10 @@
         // Public methods
 
         update: function (options) {
+            if (!this.input) {
+                return;
+            }
+
             this.is_update = true;
 
             this.options.from = this.result.from;
@@ -1759,11 +1764,19 @@
         },
 
         reset: function () {
+            if (!this.input) {
+                return;
+            }
+
             this.updateResult();
             this.update();
         },
 
         destroy: function () {
+            if (!this.input) {
+                return;
+            }
+
             this.toggleInput();
             this.$cache.input.prop("readonly", false);
             $.data(this.input, "ionRangeSlider", null);
