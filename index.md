@@ -1,10 +1,10 @@
-# Ion.Range Slider 2.0.4
+# Ion.Range Slider 2.0.5
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
 Easy and light range slider
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.4.zip">Download ion.rangeSlider-2.0.4.zip</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.5.zip">Download ion.rangeSlider-2.0.5.zip</a>
 
 ***
 

@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 2.0.4 Build: 296
+// version 2.0.5 Build: 298
 // © Denis Ineshin, 2015
 // https://github.com/IonDen
 //
@@ -111,7 +111,7 @@
     // Core
 
     var IonRangeSlider = function (input, options, plugin_count) {
-        this.VERSION = "2.0.3";
+        this.VERSION = "2.0.5";
         this.input = input;
         this.plugin_count = plugin_count;
         this.current_plugin = 0;
@@ -204,6 +204,20 @@
         };
         data.values = data.values && data.values.split(",");
         options = $.extend(data, options);
+
+        // get from and to out of input
+        var val = $inp.prop("value");
+        if (val) {
+            val = val.split(";");
+        }
+
+        if (val && options.values && options.values.length) {
+            data.from = val[0] && options.values.indexOf(val[0]);
+            data.to = val[1] && options.values.indexOf(val[1]);
+        } else {
+            data.from = val[0] && +val[0];
+            data.to = val[1] && +val[1];
+        }
 
         // get config from options
         this.options = $.extend({
@@ -1128,13 +1142,19 @@
         drawShadow: function () {
             var o = this.options,
                 c = this.$cache,
+
+                is_from_min = typeof o.from_min === "number" && !isNaN(o.from_min),
+                is_from_max = typeof o.from_max === "number" && !isNaN(o.from_max),
+                is_to_min = typeof o.to_min === "number" && !isNaN(o.to_min),
+                is_to_max = typeof o.to_max === "number" && !isNaN(o.to_max),
+
                 from_min,
                 from_max,
                 to_min,
                 to_max;
 
             if (o.type === "single") {
-                if (o.from_shadow && (o.from_min || o.from_max)) {
+                if (o.from_shadow && (is_from_min || is_from_max)) {
                     from_min = this.calcPercent(o.from_min || o.min);
                     from_max = this.calcPercent(o.from_max || o.max) - from_min;
                     from_min = this.toFixed(from_min - (this.coords.p_handle / 100 * from_min));
@@ -1148,7 +1168,7 @@
                     c.shad_single[0].style.display = "none";
                 }
             } else {
-                if (o.from_shadow && (o.from_min || o.from_max)) {
+                if (o.from_shadow && (is_from_min || is_from_max)) {
                     from_min = this.calcPercent(o.from_min || o.min);
                     from_max = this.calcPercent(o.from_max || o.max) - from_min;
                     from_min = this.toFixed(from_min - (this.coords.p_handle / 100 * from_min));
@@ -1162,7 +1182,7 @@
                     c.shad_from[0].style.display = "none";
                 }
 
-                if (o.to_shadow && (o.to_min || o.to_max)) {
+                if (o.to_shadow && (is_to_min || is_to_max)) {
                     to_min = this.calcPercent(o.to_min || o.min);
                     to_max = this.calcPercent(o.to_max || o.max) - to_min;
                     to_min = this.toFixed(to_min - (this.coords.p_handle / 100 * to_min));
