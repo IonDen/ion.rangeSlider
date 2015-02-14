@@ -209,14 +209,14 @@
         var val = $inp.prop("value");
         if (val) {
             val = val.split(";");
-        }
 
-        if (val && options.values && options.values.length) {
-            data.from = val[0] && options.values.indexOf(val[0]);
-            data.to = val[1] && options.values.indexOf(val[1]);
-        } else {
-            data.from = val[0] && +val[0];
-            data.to = val[1] && +val[1];
+            if (options.values && options.values.length) {
+                data.from = val[0] && options.values.indexOf(val[0]);
+                data.to = val[1] && options.values.indexOf(val[1]);
+            } else {
+                data.from = val[0] && +val[0];
+                data.to = val[1] && +val[1];
+            }
         }
 
         // get config from options
