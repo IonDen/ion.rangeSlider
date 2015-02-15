@@ -1,4 +1,4 @@
-﻿// Ion.RangeSlider
+// Ion.RangeSlider
 // version 2.0.5 Build: 298
 // © Denis Ineshin, 2015
 // https://github.com/IonDen
@@ -92,11 +92,14 @@
         '<span class="irs-bar"></span>';
 
     var single_html =
+        '<span class="irs-mark mark-single"></span>' +
         '<span class="irs-bar-edge"></span>' +
         '<span class="irs-shadow shadow-single"></span>' +
         '<span class="irs-slider single"></span>';
 
     var double_html =
+        '<span class="irs-mark mark-from"></span>' +
+        '<span class="irs-mark mark-to"></span>' +
         '<span class="irs-shadow shadow-from"></span>' +
         '<span class="irs-shadow shadow-to"></span>' +
         '<span class="irs-slider from"></span>' +
@@ -148,7 +151,10 @@
             shad_from: null,
             shad_to: null,
             grid: null,
-            grid_labels: []
+            grid_labels: [],
+            mark_single: null,
+            mark_from: null,
+            mark_to: null
         };
 
         // get config data attributes
@@ -172,11 +178,13 @@
             from_min: $inp.data("fromMin"),
             from_max: $inp.data("fromMax"),
             from_shadow: $inp.data("fromShadow"),
+            from_mark: $inp.data("fromMark"),
 
             to_fixed: $inp.data("toFixed"),
             to_min: $inp.data("toMin"),
             to_max: $inp.data("toMax"),
             to_shadow: $inp.data("toShadow"),
+            to_mark: $inp.data("toMark"),
 
             prettify_enabled: $inp.data("prettifyEnabled"),
             prettify_separator: $inp.data("prettifySeparator"),
@@ -240,11 +248,13 @@
             from_min: null,
             from_max: null,
             from_shadow: false,
+            from_mark: false,
 
             to_fixed: false,
             to_min: null,
             to_max: null,
             to_shadow: false,
+            to_mark: false,
 
             prettify_enabled: true,
             prettify_separator: " ",
@@ -377,6 +387,8 @@
                 }
             }
 
+            this.drawMark();
+
             this.updateScene();
             this.raf_id = requestAnimationFrame(this.updateScene.bind(this));
         },
@@ -405,12 +417,15 @@
                 this.$cache.from[0].style.visibility = "hidden";
                 this.$cache.to[0].style.visibility = "hidden";
                 this.$cache.shad_single = this.$cache.cont.find(".shadow-single");
+                this.$cache.mark_single = this.$cache.cont.find(".mark-single");
             } else {
                 this.$cache.cont.append(double_html);
                 this.$cache.s_from = this.$cache.cont.find(".from");
                 this.$cache.s_to = this.$cache.cont.find(".to");
                 this.$cache.shad_from = this.$cache.cont.find(".shadow-from");
                 this.$cache.shad_to = this.$cache.cont.find(".shadow-to");
+                this.$cache.mark_from = this.$cache.cont.find(".mark-from");
+                this.$cache.mark_to = this.$cache.cont.find(".mark-to");
             }
 
             if (this.options.hide_from_to) {
@@ -1198,6 +1213,33 @@
             }
         },
 
+        drawMark: function () {
+            var o = this.options,
+                c = this.$cache;
+
+            if (o.type === "single") {
+                if (o.from_mark) {
+                    c.mark_single[0].style.display = "block";
+                    c.mark_single[0].style.left = this.coords.p_single + (this.coords.p_handle / 2.0) + "%";
+                } else {
+                    c.mark_single[0].style.display = "none";
+                }
+            } else {
+                if (o.from_mark) {
+                    c.mark_from[0].style.display = "block";
+                    c.mark_from[0].style.left = this.coords.p_from + (this.coords.p_handle / 2.0) + "%";
+                } else {
+                    c.mark_from[0].style.display = "none";
+                }
+
+                if (o.to_mark) {
+                    c.mark_to[0].style.display = "block";
+                    c.mark_to[0].style.left = this.coords.p_to + (this.coords.p_handle / 2.0) + "%";
+                } else {
+                    c.mark_to[0].style.display = "none";
+                }
+            }
+        },
 
 
         // =============================================================================================================
