@@ -48,6 +48,13 @@
         left: 0; width: 0;
     }
 
+    .irs-mark {
+        position: absolute; display: block;
+        cursor: default;
+        z-index: 0;
+        background: rgba(0,0,0,0.0);
+    }
+
     .irs-slider {
         position: absolute; display: block;
         cursor: default;
