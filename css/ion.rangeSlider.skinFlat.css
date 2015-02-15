@@ -56,6 +56,12 @@
     filter: alpha(opacity=25);
 }
 
+.irs-mark {
+    width: 2px; height: 18px;
+    top: 22px;
+    background: #E34724;
+}
+
 .irs-slider {
     width: 16px; height: 18px;
     top: 22px;
