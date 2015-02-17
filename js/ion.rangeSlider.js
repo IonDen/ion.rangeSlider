@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 2.0.5 Build: 298
+// version 2.0.6 Build: 300
 // © Denis Ineshin, 2015
 // https://github.com/IonDen
 //
@@ -76,6 +76,34 @@
             return bound;
         };
     }
+    if (!Array.prototype.indexOf) {
+        Array.prototype.indexOf = function(searchElement, fromIndex) {
+            var k;
+            if (this == null) {
+                throw new TypeError('"this" is null or not defined');
+            }
+            var O = Object(this);
+            var len = O.length >>> 0;
+            if (len === 0) {
+                return -1;
+            }
+            var n = +fromIndex || 0;
+            if (Math.abs(n) === Infinity) {
+                n = 0;
+            }
+            if (n >= len) {
+                return -1;
+            }
+            k = Math.max(n >= 0 ? n : len - Math.abs(n), 0);
+            while (k < len) {
+                if (k in O && O[k] === searchElement) {
+                    return k;
+                }
+                k++;
+            }
+            return -1;
+        };
+    }
 
 
 
@@ -111,7 +139,7 @@
     // Core
 
     var IonRangeSlider = function (input, options, plugin_count) {
-        this.VERSION = "2.0.5";
+        this.VERSION = "2.0.6";
         this.input = input;
         this.plugin_count = plugin_count;
         this.current_plugin = 0;
@@ -209,14 +237,21 @@
         var val = $inp.prop("value");
         if (val) {
             val = val.split(";");
-        }
 
-        if (val && options.values && options.values.length) {
-            data.from = val[0] && options.values.indexOf(val[0]);
-            data.to = val[1] && options.values.indexOf(val[1]);
-        } else {
-            data.from = val[0] && +val[0];
-            data.to = val[1] && +val[1];
+            if (val[0] && val[0] == +val[0]) {
+                val[0] = +val[0];
+            }
+            if (val[1] && val[1] == +val[1]) {
+                val[1] = +val[1];
+            }
+
+            if (options.values && options.values.length) {
+                data.from = val[0] && options.values.indexOf(val[0]);
+                data.to = val[1] && options.values.indexOf(val[1]);
+            } else {
+                data.from = val[0] && +val[0];
+                data.to = val[1] && +val[1];
+            }
         }
 
         // get config from options
