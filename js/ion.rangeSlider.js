@@ -155,6 +155,7 @@
         this.is_active = false;
         this.is_resize = false;
         this.is_click = false;
+        this.prev_val = 0;
 
         this.$cache = {
             win: $(window),
@@ -227,6 +228,8 @@
             max_postfix: $inp.data("maxPostfix"),
             decorate_both: $inp.data("decorateBoth"),
             values_separator: $inp.data("valuesSeparator"),
+            
+            previous_from: $inp.data("previousFrom"),
 
             disable: $inp.data("disable")
         };
@@ -303,6 +306,8 @@
             max_postfix: "",
             decorate_both: true,
             values_separator: " — ",
+            
+            previous_from: false,
 
             disable: false,
 
@@ -849,6 +854,10 @@
                 if (this.options.values.length) {
                     this.result.from_value = this.options.values[this.result.from];
                 }
+                if(this.options.previous_from) {
+                    this.result.from_previous = this.prev_val;
+                    this.result.from_percent_previous = this.calcPercent(this.prev_val);
+                }
             } else {
                 this.coords.p_bar_x = this.toFixed(this.coords.p_from + (this.coords.p_handle / 2));
                 this.coords.p_bar_w = this.toFixed(this.coords.p_to - this.coords.p_from);
@@ -860,6 +869,10 @@
                 if (this.options.values.length) {
                     this.result.from_value = this.options.values[this.result.from];
                     this.result.to_value = this.options.values[this.result.to];
+                }
+                if(this.options.previous_from) {
+                    this.result.from_previous = this.prev_val;
+                    this.result.from_percent_previous = this.calcPercent(this.prev_val);
                 }
             }
 
@@ -1034,6 +1047,7 @@
                     this.$cache.input.trigger("change");
                 }
 
+                this.prev_val = this.old_from;
                 this.old_from = this.result.from;
                 this.old_to = this.result.to;
 
