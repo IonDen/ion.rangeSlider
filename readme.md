@@ -2,7 +2,7 @@
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
-Easy and light range slider
+Easy and light weight range slider
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.6.zip">Download ion.rangeSlider-2.0.6.zip</a>
 
@@ -27,14 +27,14 @@ Easy and light range slider
 * Support of custom values diapason
 * Customisable grid of values
 * Ability to disable UI elements (min and max, current value, grid)
-* Postfixes and prefixes for you numbers ($20, 20 &euro; etc.)
+* Postfixes and prefixes for your numbers ($20, 20 &euro; etc.)
 * Additional postfix for maximum value (eg. $0 — $100<b>+</b>)
 * Ability to prettify large numbers (eg. 10000000 -> 10 000 000 or 10.000.000)
-* Slider writes it's value right into input value field. This makes it easy to use in any html form
+* Slider writes its value right into input value field. This makes it easy to use in any html form
 * Any slider value can be set through input data-attribute (eg. data-min="10")
 * Slider supports disable param. You can set it true to make slider inactive
 * Slider supports external methods (update, reset and remove) to control it after creation
-* For advanced users slider has callbacks (onStart, onChange, onFinish, onUpdate). Slider paste all it's params to callback first argument as object
+* For advanced users slider has callbacks (onStart, onChange, onFinish, onUpdate). Slider pastes all its params to callback first argument as object
 * Slider supports date and time
 
 
@@ -100,7 +100,7 @@ $("#example_id").ionRangeSlider();
 
 ## Demo for juniors
 
-If your are new person in web development and you are not sure how to correctly install the plugin to your web-page, please download
+If your are new in web development and you are not sure how to correctly install the plugin to your web-page, please download
 <a href="http://ionden.com/a/plugins/ion.rangeSlider/ionRangeSliderDemo.zip" class="button">this demo example</a>
 
 
@@ -130,7 +130,7 @@ If your are new person in web development and you are not sure how to correctly 
             <td>type<div><sup>data-type</sup></div></td>
             <td>"single"</td>
             <td>string</td>
-            <td>Choose slider type, could be <code>single</code> - for one handle, or <code>double</code> four two handles</td>
+            <td>Choose slider type, could be <code>single</code> - for one handle, or <code>double</code> for two handles</td>
         </tr>
 
         <tr>
