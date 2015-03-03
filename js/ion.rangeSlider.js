@@ -825,6 +825,10 @@
                     break;
 
                 case "both":
+                    if (this.options.from_fixed || this.options.to_fixed) {
+                        break;
+                    }
+
                     real_x = this.toFixed(real_x + (this.coords.p_handle * 0.1));
 
                     this.coords.p_from_real = this.calcWithStep((real_x - this.coords.p_gap_left) / real_width * 100);
