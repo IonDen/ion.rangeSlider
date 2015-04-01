@@ -1591,7 +1591,7 @@
                 }
             }
             
-            if (o.postfix) {
+            if (o.postfix && !(o.min_postfix && num === o.p_values[o.min]) && !(o.max_postfix && num === o.p_values[o.max])) {
                 decorated += o.postfix;
             }
 
