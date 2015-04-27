@@ -307,6 +307,7 @@
             disable: false,
 
             onStart: null,
+            onBegin: null,
             onChange: null,
             onFinish: null,
             onUpdate: null
@@ -629,6 +630,11 @@
             }
 
             this.$cache.line.trigger("focus");
+
+            if (this.options.onBegin && typeof this.options.onBegin === "function") {
+                    this.options.onBegin(this.result);
+            }
+
         },
 
         pointerClick: function (target, e) {
