@@ -335,6 +335,12 @@ If your are new in web development and you are not sure how to correctly install
             <td>string</td>
             <td>Special postfix, used only for maximum value. Will be showed after handle will reach maximum right position. For example 0 — 100+</td>
         </tr>
+        <tr>
+            <td>min_postfix<div><sup>data-min-postfix</sup></div></td>
+            <td>—</td>
+            <td>string</td>
+            <td>Special postfix, used only for minimum value. For example 1 year — 10 years</td>
+        </tr>        
         <tr class="options__new">
             <td>decorate_both<div><sup>data-decorate-both</sup></div></td>
             <td>true</td>

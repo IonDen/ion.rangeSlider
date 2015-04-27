@@ -225,6 +225,7 @@
             prefix: $inp.data("prefix"),
             postfix: $inp.data("postfix"),
             max_postfix: $inp.data("maxPostfix"),
+            min_postfix: $inp.data("minPostfix"),
             decorate_both: $inp.data("decorateBoth"),
             values_separator: $inp.data("valuesSeparator"),
 
@@ -301,6 +302,7 @@
             prefix: "",
             postfix: "",
             max_postfix: "",
+            min_postfix: "",
             decorate_both: true,
             values_separator: " — ",
 
@@ -1578,8 +1580,22 @@
                     }
                 }
             }
-
-            if (o.postfix) {
+            
+            if (o.min_postfix) {
+                if (o.values.length && num === o.p_values[o.min]) {
+                    decorated += o.min_postfix;
+                    if (o.postfix) {
+                        decorated += " ";
+                    }
+                } else if (original === o.min) {
+                    decorated += o.min_postfix;
+                    if (o.postfix) {
+                        decorated += " ";
+                    }
+                }
+            }
+            
+            if (o.postfix && !(o.min_postfix && num === o.p_values[o.min]) && !(o.max_postfix && num === o.p_values[o.max])) {
                 decorated += o.postfix;
             }
 
