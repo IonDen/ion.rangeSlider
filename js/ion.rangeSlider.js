@@ -1726,15 +1726,15 @@
             }
 
             if (this.options.force_edges) {
-                if (start[0] < this.coords.grid_gap) {
-                    start[0] = this.coords.grid_gap;
+                if (start[0] < -this.coords.grid_gap) {
+                    start[0] = -this.coords.grid_gap;
                     finish[0] = this.toFixed(start[0] + this.coords.big_p[0]);
 
                     this.coords.big_x[0] = this.coords.grid_gap;
                 }
 
-                if (finish[num - 1] > 100 - this.coords.grid_gap) {
-                    finish[num - 1] = 100 - this.coords.grid_gap;
+                if (finish[num - 1] > 100 + this.coords.grid_gap) {
+                    finish[num - 1] = 100 + this.coords.grid_gap;
                     start[num - 1] = this.toFixed(finish[num - 1] - this.coords.big_p[num - 1]);
 
                     this.coords.big_x[num - 1] = this.toFixed(this.coords.big_p[num - 1] - this.coords.grid_gap);
