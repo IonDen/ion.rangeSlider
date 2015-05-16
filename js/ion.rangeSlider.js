@@ -412,8 +412,8 @@
                 }
             }
 
-            this.updateScene();
-            this.raf_id = requestAnimationFrame(this.updateScene.bind(this));
+            this.updateScene(this);
+            //this.raf_id = requestAnimationFrame(this.updateScene.bind(this));
         },
 
         append: function () {
@@ -948,117 +948,120 @@
         // =============================================================================================================
         // Drawings
 
-        updateScene: function () {
-            if (!this.options) {
+        updateScene: function (obj) {
+            if (!obj.options) {
                 return;
             }
-
-            this.drawHandles();
-
-            this.raf_id = requestAnimationFrame(this.updateScene.bind(this));
-        },
-
-        drawHandles: function () {
-            this.coords.w_rs = this.$cache.rs.outerWidth(false);
-
-            if (!this.coords.w_rs) {
-                return;
-            }
-
-            if (this.coords.w_rs !== this.coords.w_rs_old) {
-                this.target = "base";
-                this.is_resize = true;
-            }
-
-            if (this.coords.w_rs !== this.coords.w_rs_old || this.force_redraw) {
-                this.setMinMax();
-                this.calc(true);
-                this.drawLabels();
-                if (this.options.grid) {
-                    this.calcGridMargin();
-                    this.calcGridLabels();
+            obj.drawHandles(obj);
+            obj.raf_id = requestAnimationFrame(
+                function(){
+                    obj.updateScene(obj);
                 }
-                this.force_redraw = true;
-                this.coords.w_rs_old = this.coords.w_rs;
-                this.drawShadow();
-            }
+           );
+        },
+        
+        drawHandles: function (obj) {
 
-            if (!this.coords.w_rs) {
+            obj.coords.w_rs = obj.$cache.rs.outerWidth(false);
+
+            if (!obj.coords.w_rs) {
                 return;
             }
 
-            if (!this.dragging && !this.force_redraw && !this.is_key) {
+            if (obj.coords.w_rs !== obj.coords.w_rs_old) {
+                obj.target = "base";
+                obj.is_resize = true;
+            }
+
+            if (obj.coords.w_rs !== obj.coords.w_rs_old || obj.force_redraw) {
+                obj.setMinMax();
+                obj.calc(true);
+                obj.drawLabels();
+                if (obj.options.grid) {
+                    obj.calcGridMargin();
+                    obj.calcGridLabels();
+                }
+                obj.force_redraw = true;
+                obj.coords.w_rs_old = obj.coords.w_rs;
+                obj.drawShadow();
+            }
+
+            if (!obj.coords.w_rs) {
                 return;
             }
 
-            if (this.old_from !== this.result.from || this.old_to !== this.result.to || this.force_redraw || this.is_key) {
+            if (!obj.dragging && !obj.force_redraw && !obj.is_key) {
+                return;
+            }
 
-                this.drawLabels();
+            if (obj.old_from !== obj.result.from || obj.old_to !== obj.result.to || obj.force_redraw || obj.is_key) {
 
-                this.$cache.bar[0].style.left = this.coords.p_bar_x + "%";
-                this.$cache.bar[0].style.width = this.coords.p_bar_w + "%";
+                obj.drawLabels();
 
-                if (this.options.type === "single") {
-                    this.$cache.s_single[0].style.left = this.coords.p_single + "%";
+                obj.$cache.bar[0].style.left = obj.coords.p_bar_x + "%";
+                obj.$cache.bar[0].style.width = obj.coords.p_bar_w + "%";
 
-                    this.$cache.single[0].style.left = this.labels.p_single_left + "%";
+                if (obj.options.type === "single") {
+                    obj.$cache.s_single[0].style.left = obj.coords.p_single + "%";
 
-                    if (this.options.values.length) {
-                        this.$cache.input.prop("value", this.result.from_value);
-                        this.$cache.input.data("from", this.result.from_value);
+                    obj.$cache.single[0].style.left = obj.labels.p_single_left + "%";
+
+                    if (obj.options.values.length) {
+                        obj.$cache.input.prop("value", obj.result.from_value);
+                        obj.$cache.input.data("from", obj.result.from_value);
                     } else {
-                        this.$cache.input.prop("value", this.result.from);
-                        this.$cache.input.data("from", this.result.from);
+                        obj.$cache.input.prop("value", obj.result.from);
+                        obj.$cache.input.data("from", obj.result.from);
                     }
                 } else {
-                    this.$cache.s_from[0].style.left = this.coords.p_from + "%";
-                    this.$cache.s_to[0].style.left = this.coords.p_to + "%";
+                    obj.$cache.s_from[0].style.left = obj.coords.p_from + "%";
+                    obj.$cache.s_to[0].style.left = obj.coords.p_to + "%";
 
-                    if (this.old_from !== this.result.from || this.force_redraw) {
-                        this.$cache.from[0].style.left = this.labels.p_from_left + "%";
+                    if (obj.old_from !== obj.result.from || obj.force_redraw) {
+                        obj.$cache.from[0].style.left = obj.labels.p_from_left + "%";
                     }
-                    if (this.old_to !== this.result.to || this.force_redraw) {
-                        this.$cache.to[0].style.left = this.labels.p_to_left + "%";
+                    if (obj.old_to !== obj.result.to || obj.force_redraw) {
+                        obj.$cache.to[0].style.left = obj.labels.p_to_left + "%";
                     }
 
-                    this.$cache.single[0].style.left = this.labels.p_single_left + "%";
+                    obj.$cache.single[0].style.left = obj.labels.p_single_left + "%";
 
-                    if (this.options.values.length) {
-                        this.$cache.input.prop("value", this.result.from_value + ";" + this.result.to_value);
-                        this.$cache.input.data("from", this.result.from_value);
-                        this.$cache.input.data("to", this.result.to_value);
+                    if (obj.options.values.length) {
+                        obj.$cache.input.prop("value", obj.result.from_value + ";" + obj.result.to_value);
+                        obj.$cache.input.data("from", obj.result.from_value);
+                        obj.$cache.input.data("to", obj.result.to_value);
                     } else {
-                        this.$cache.input.prop("value", this.result.from + ";" + this.result.to);
-                        this.$cache.input.data("from", this.result.from);
-                        this.$cache.input.data("to", this.result.to);
+                        obj.$cache.input.prop("value", obj.result.from + ";" + obj.result.to);
+                        obj.$cache.input.data("from", obj.result.from);
+                        obj.$cache.input.data("to", obj.result.to);
                     }
                 }
 
-                if ((this.old_from !== this.result.from || this.old_to !== this.result.to) && !this.is_start) {
-                    this.$cache.input.trigger("change");
+                if ((obj.old_from !== obj.result.from || obj.old_to !== obj.result.to) && !obj.is_start) {
+                    obj.$cache.input.trigger("change");
                 }
 
-                this.old_from = this.result.from;
-                this.old_to = this.result.to;
+                obj.old_from = obj.result.from;
+                obj.old_to = obj.result.to;
 
-                var is_function = this.options.onChange && typeof this.options.onChange === "function" && !this.is_resize;
-                if (is_function && !this.is_update && !this.is_start) {
-                    this.options.onChange(this.result);
+                var is_function = obj.options.onChange && typeof obj.options.onChange === "function" && !obj.is_resize;
+                if (is_function && !obj.is_update && !obj.is_start) {
+                    obj.options.onChange(obj.result);
                 }
 
-                var is_finish = this.options.onFinish && typeof this.options.onFinish === "function";
-                if (is_finish && (this.is_key || this.is_click)) {
-                    this.options.onFinish(this.result);
+                var is_finish = obj.options.onFinish && typeof obj.options.onFinish === "function";
+                if (is_finish && (obj.is_key || obj.is_click)) {
+                    obj.options.onFinish(obj.result);
                 }
 
-                this.is_update = false;
-                this.is_resize = false;
+                obj.is_update = false;
+                obj.is_resize = false;
             }
 
-            this.is_start = false;
-            this.is_key = false;
-            this.is_click = false;
-            this.force_redraw = false;
+            obj.is_start = false;
+            obj.is_key = false;
+            obj.is_click = false;
+            obj.force_redraw = false;
         },
 
         drawLabels: function () {
