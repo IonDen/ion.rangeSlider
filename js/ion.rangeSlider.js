@@ -892,9 +892,9 @@
             } else {
                 var m_point = this.coords.p_from_real + ((this.coords.p_to_real - this.coords.p_from_real) / 2);
                 if (real_x >= m_point) {
-                    return "to";
+                    return this.options.to_fixed ? "from" : "to";
                 } else {
-                    return "from";
+                    return this.options.from_fixed ? "to" : "from";
                 }
             }
         },
