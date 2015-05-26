@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 2.0.6 Build: 300
+// version 2.0.7 Build: 315
 // © Denis Ineshin, 2015
 // https://github.com/IonDen
 //
@@ -139,11 +139,12 @@
     // Core
 
     var IonRangeSlider = function (input, options, plugin_count) {
-        this.VERSION = "2.0.6";
+        this.VERSION = "2.0.7";
         this.input = input;
         this.plugin_count = plugin_count;
         this.current_plugin = 0;
         this.calc_count = 0;
+        this.update_tm = 0;
         this.old_from = 0;
         this.old_to = 0;
         this.raf_id = null;
@@ -413,7 +414,6 @@
             }
 
             this.updateScene();
-            this.raf_id = requestAnimationFrame(this.updateScene.bind(this));
         },
 
         append: function () {
@@ -580,6 +580,8 @@
             if (is_old_ie) {
                 $("*").prop("unselectable", false);
             }
+
+            this.updateScene();
         },
 
         pointerDown: function (target, e) {
@@ -629,6 +631,8 @@
             }
 
             this.$cache.line.trigger("focus");
+
+            this.updateScene();
         },
 
         pointerClick: function (target, e) {
@@ -949,13 +953,25 @@
         // Drawings
 
         updateScene: function () {
+            if (this.raf_id) {
+                cancelAnimationFrame(this.raf_id);
+                this.raf_id = null;
+            }
+
+            clearTimeout(this.update_tm);
+            this.update_tm = null;
+
             if (!this.options) {
                 return;
             }
 
             this.drawHandles();
 
-            this.raf_id = requestAnimationFrame(this.updateScene.bind(this));
+            if (this.is_active) {
+                this.raf_id = requestAnimationFrame(this.updateScene.bind(this));
+            } else {
+                this.update_tm = setTimeout(this.updateScene.bind(this), 300);
+            }
         },
 
         drawHandles: function () {

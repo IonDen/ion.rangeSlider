@@ -1,5 +1,12 @@
 # Ion.RangeSlider Update History
 
+### Version 2.0.7. May 26, 2015
+* Fixed memory issue: #220
+* Fixed CPU issue: #186
+* Merged PR: #235
+* Merged PR: #226
+* Merged PR: #209
+
 ### Version 2.0.6. February 17, 2015
 * Issues done: #197
 * Fixed bug with broken From and To

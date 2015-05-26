@@ -1,15 +1,15 @@
-# Ion.Range Slider 2.0.6
+# Ion.Range Slider 2.0.7
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
-Easy and light range slider
+Easy, flexible and responsive range slider
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.6.zip">Download ion.rangeSlider-2.0.6.zip</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.7.zip">Download ion.rangeSlider-2.0.7.zip</a>
 
 ***
 
 ## Description
-* Ion.RangeSlider — cool, comfortable and easily customizable range slider
+* Ion.RangeSlider — cool, comfortable, responsive and easily customizable range slider
 * Supports events and public methods, has flexible settings, can be completely altered with CSS
 * Cross-browser: Google Chrome, Mozilla Firefox 3.6+, Opera 12+, Safari 5+, Internet Explorer 8+
 * Ion.RangeSlider supports touch-devices (iPhone, iPad, Nexus, etc.).
@@ -27,14 +27,14 @@ Easy and light range slider
 * Support of custom values diapason
 * Customisable grid of values
 * Ability to disable UI elements (min and max, current value, grid)
-* Postfixes and prefixes for you numbers ($20, 20 &euro; etc.)
+* Postfixes and prefixes for your numbers ($20, 20 &euro; etc.)
 * Additional postfix for maximum value (eg. $0 — $100<b>+</b>)
 * Ability to prettify large numbers (eg. 10000000 -> 10 000 000 or 10.000.000)
-* Slider writes it's value right into input value field. This makes it easy to use in any html form
+* Slider writes its value right into input value field. This makes it easy to use in any html form
 * Any slider value can be set through input data-attribute (eg. data-min="10")
 * Slider supports disable param. You can set it true to make slider inactive
 * Slider supports external methods (update, reset and remove) to control it after creation
-* For advanced users slider has callbacks (onStart, onChange, onFinish, onUpdate). Slider paste all it's params to callback first argument as object
+* For advanced users slider has callbacks (onStart, onChange, onFinish, onUpdate). Slider pastes all its params to callback first argument as object
 * Slider supports date and time
 
 

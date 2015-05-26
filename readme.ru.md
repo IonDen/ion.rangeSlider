@@ -1,15 +1,15 @@
-# Ion.Range Slider 2.0.6
+# Ion.Range Slider 2.0.7
 
 > <a href="readme.md">English description</a> | Описание на русском
 
-Удобный легкий слайдер диапазонов
+Удобный, гибкий и отзывчивый слайдер диапазонов
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/index.html">Страница проекта и демо</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.6.zip">Download ion.rangeSlider-2.0.6.zip</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.7.zip">Download ion.rangeSlider-2.0.7.zip</a>
 
 ***
 
 ## Описание
-* Ion.RangeSlider — классный, удобный и легко настраиваемый слайдер диапазонов
+* Ion.RangeSlider — классный, удобный, отзывчивый и легко настраиваемый слайдер диапазонов
 * Слайдер поддерживает события и публичные методы, имеет гибкие настройки, может быть полностью видоизменен через CSS
 * Кроссбраузерная поддержка: Google Chrome, Mozilla Firefox 3.6+, Opera 12+, Safari 5+, Internet Explorer 8+
 * Плагин поддерживает устройства с touch-экраном (iPhone, iPad, Nexus, etc.)
