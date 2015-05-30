@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 2.0.7 Build: 315
+// version 2.0.8 Build: 320
 // © Denis Ineshin, 2015
 // https://github.com/IonDen
 //
@@ -18,6 +18,7 @@
 
     var plugin_count = 0;
 
+    // IE8 fix
     var is_old_ie = (function () {
         var n = navigator.userAgent,
             r = /msie\s\d+/i,
@@ -32,8 +33,6 @@
         }
         return false;
     } ());
-
-    // IE8 fix
     if (!Function.prototype.bind) {
         Function.prototype.bind = function bind(that) {
 
@@ -139,7 +138,7 @@
     // Core
 
     var IonRangeSlider = function (input, options, plugin_count) {
-        this.VERSION = "2.0.7";
+        this.VERSION = "2.0.8";
         this.input = input;
         this.plugin_count = plugin_count;
         this.current_plugin = 0;
@@ -232,7 +231,6 @@
             disable: $inp.data("disable")
         };
         data.values = data.values && data.values.split(",");
-        options = $.extend(data, options);
 
         // get from and to out of input
         var val = $inp.prop("value");
@@ -254,6 +252,9 @@
                 data.to = val[1] && +val[1];
             }
         }
+
+        // JS config has a priority
+        options = $.extend(data, options);
 
         // get config from options
         this.options = $.extend({
@@ -446,6 +447,8 @@
                 this.$cache.s_to = this.$cache.cont.find(".to");
                 this.$cache.shad_from = this.$cache.cont.find(".shadow-from");
                 this.$cache.shad_to = this.$cache.cont.find(".shadow-to");
+
+                this.setTopHandler();
             }
 
             if (this.options.hide_from_to) {
@@ -463,6 +466,19 @@
                 this.$cache.cont.removeClass("irs-disabled");
                 this.$cache.input[0].disabled = false;
                 this.bindEvents();
+            }
+        },
+
+        setTopHandler: function () {
+            var min = this.options.min,
+                max = this.options.max,
+                from = this.options.from,
+                to = this.options.to;
+
+            if (from > min && to === max) {
+                this.$cache.s_from.addClass("type_last");
+            } else if (to < max) {
+                this.$cache.s_to.addClass("type_last");
             }
         },
 
@@ -681,7 +697,7 @@
             return true;
         },
 
-        // Move by key beta
+        // Move by key. Beta
         // TODO: refactor than have plenty of time
         moveByKey: function (right) {
             var p = this.coords.p_pointer;
@@ -1137,11 +1153,11 @@
                 } else {
 
                     if (this.options.decorate_both) {
-                        text_single = this.decorate(this._prettify(this.result.from));
+                        text_single = this.decorate(this._prettify(this.result.from), this.result.from);
                         text_single += this.options.values_separator;
-                        text_single += this.decorate(this._prettify(this.result.to));
+                        text_single += this.decorate(this._prettify(this.result.to), this.result.to);
                     } else {
-                        text_single = this.decorate(this._prettify(this.result.from) + this.options.values_separator + this._prettify(this.result.to), this.result.from);
+                        text_single = this.decorate(this._prettify(this.result.from) + this.options.values_separator + this._prettify(this.result.to), this.result.to);
                     }
                     text_from = this.decorate(this._prettify(this.result.from), this.result.from);
                     text_to = this.decorate(this._prettify(this.result.to), this.result.to);
@@ -1281,7 +1297,8 @@
             }
 
             var number = ((max - min) / 100 * percent) + min,
-                string = this.options.step.toString().split(".")[1];
+                string = this.options.step.toString().split(".")[1],
+                result;
 
             if (string) {
                 number = +number.toFixed(string.length);
@@ -1295,17 +1312,19 @@
                 number -= abs;
             }
 
-            if (number < this.options.min) {
-                number = this.options.min;
-            } else if (number > this.options.max) {
-                number = this.options.max;
+            if (string) {
+                result = +number.toFixed(string.length);
+            } else {
+                result = this.toFixed(number);
             }
 
-            if (string) {
-                return +number.toFixed(string.length);
-            } else {
-                return this.toFixed(number);
+            if (result < this.options.min) {
+                result = this.options.min;
+            } else if (result > this.options.max) {
+                result = this.options.max;
             }
+
+            return result;
         },
 
         calcWithStep: function (percent) {
@@ -1500,16 +1519,28 @@
                 o.to = o.max;
             }
 
-            if (o.from < o.min || o.from > o.max) {
-                o.from = o.min;
-            }
+            if (o.type === "single") {
 
-            if (o.to > o.max || o.to < o.min) {
-                o.to = o.max;
-            }
+                if (o.from < o.min) {
+                    o.from = o.min;
+                }
 
-            if (o.type === "double" && o.from > o.to) {
-                o.from = o.to;
+                if (o.from > o.max) {
+                    o.from = o.max;
+                }
+
+            } else {
+
+                if (o.from < o.min || o.from > o.max) {
+                    o.from = o.min;
+                }
+                if (o.to > o.max || o.to < o.min) {
+                    o.to = o.max;
+                }
+                if (o.from > o.to) {
+                    o.from = o.to;
+                }
+
             }
 
             if (typeof o.step !== "number" || isNaN(o.step) || !o.step || o.step < 0) {
