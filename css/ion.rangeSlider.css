@@ -37,12 +37,10 @@
     .irs-bar {
         position: absolute; display: block;
         left: 0; width: 0;
-        cursor: move;
     }
         .irs-bar-edge {
             position: absolute; display: block;
             top: 0; left: 0;
-            cursor: move;
         }
 
     .irs-shadow {
