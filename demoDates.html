@@ -7,15 +7,17 @@
 			$(function () {
 	            $("#jQueryDateRangePicker").ionRangeSlider({
 	                type: "double",
-	                min: +moment("2014-01-01").subtract(12, "hours").format("X"),
-	                max: +moment("2019-01-31").subtract(12, "hours").format("X"),
+	                min: +moment("2014-01-01").format("X"),
+	                max: +moment("2019-01-31").format("X"),
 	                from: +moment().month(0).date(1).format("X"),
 	                to: +moment().date(1).format("X"),
 	                over_limit:true,
-	                step: 2 * 24 * 3600,
+	                drag_interval:true,
+	                step: 86400,
 	                grid: true,
+	                grid_num:5,
 	                force_edges: true,
-	                max_interval: 365.25 * 24 * 3600,
+	                max_interval: 334 * 24 * 3600,
 	                prettify: function (num) {
 	                    return moment(num, "X").format("YYYY/MM");
 	                },

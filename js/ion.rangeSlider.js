@@ -472,6 +472,10 @@
                 this.$cache.input[0].disabled = false;
                 this.bindEvents();
             }
+
+            if(this.options.drag_interval){
+                this.$cache.bar[0].style.cursor = "move";
+            }
         },
 
         setTopHandler: function () {
@@ -871,13 +875,6 @@
                     this.coords.p_to_real = this.checkDiapason(this.coords.p_to_real, this.options.to_min, this.options.to_max);
                     this.coords.p_to_real = this.checkMinInterval(this.coords.p_to_real, this.coords.p_from_real, "to");
                     this.coords.p_to = this.toFixed(this.coords.p_to_real / 100 * real_width);
-
-                    break;
-                case "drag_bar":
-
-
-                    real_x = this.toFixed(real_x + (this.coords.p_handle * 0.1));
-
 
                     break;
             }
