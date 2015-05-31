@@ -201,6 +201,8 @@
             from_max: $inp.data("fromMax"),
             from_shadow: $inp.data("fromShadow"),
 
+            over_limit: false;
+
             to_fixed: $inp.data("toFixed"),
             to_min: $inp.data("toMin"),
             to_max: $inp.data("toMax"),
@@ -357,6 +359,7 @@
             p_to_real: 0,
             p_bar_x: 0,
             p_bar_w: 0,
+            p_over_limit: false,
 
             // grid
             grid_gap: 0,
@@ -818,14 +821,17 @@
                     }
 
                     this.coords.p_from_real = this.calcWithStep(real_x / real_width * 100);
-                    if (this.coords.p_from_real > this.coords.p_to_real) {
-                        this.coords.p_from_real = this.coords.p_to_real;
+                    this.coords.p_over_limit = this.coords.p_from_real > this.coords.p_to_real;
+                    if (this.coords.p_over_limit) {
+                        if(this.over_limit) this.coords.p_to_real = this.coords.p_from_real;
+                        else this.coords.p_from_real = this.coords.p_to_real;
                     }
                     this.coords.p_from_real = this.checkDiapason(this.coords.p_from_real, this.options.from_min, this.options.from_max);
                     this.coords.p_from_real = this.checkMinInterval(this.coords.p_from_real, this.coords.p_to_real, "from");
                     this.coords.p_from_real = this.checkMaxInterval(this.coords.p_from_real, this.coords.p_to_real, "from");
+                    
                     this.coords.p_from = this.toFixed(this.coords.p_from_real / 100 * real_width);
-
+                    if (this.coords.p_over_limit && this.over_limit) this.coords.p_to = this.toFixed(this.coords.p_to_real / 100 * real_width);
                     break;
 
                 case "to":
@@ -834,13 +840,16 @@
                     }
 
                     this.coords.p_to_real = this.calcWithStep(real_x / real_width * 100);
-                    if (this.coords.p_to_real < this.coords.p_from_real) {
-                        this.coords.p_to_real = this.coords.p_from_real;
+                    this.coords.p_over_limit = this.coords.p_to_real < this.coords.p_from_real;
+                    if (this.coords.p_over_limit) {
+                        if (this.over_limit) this.coords.p_from_real = this.coords.p_to_real;
+                        else this.coords.p_to_real = this.coords.p_from_real;
                     }
                     this.coords.p_to_real = this.checkDiapason(this.coords.p_to_real, this.options.to_min, this.options.to_max);
                     this.coords.p_to_real = this.checkMinInterval(this.coords.p_to_real, this.coords.p_from_real, "to");
                     this.coords.p_to_real = this.checkMaxInterval(this.coords.p_to_real, this.coords.p_from_real, "to");
                     this.coords.p_to = this.toFixed(this.coords.p_to_real / 100 * real_width);
+                    if (this.coords.p_over_limit && this.over_limit) this.coords.p_from = this.toFixed(this.coords.p_from_real / 100 * real_width);
 
                     break;
 
