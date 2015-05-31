@@ -1,0 +1,45 @@
+<html>
+	<head>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+		<script src="js/ion.rangeSlider.js"></script>
+		<script src="js/moment.js"></script>
+		<script>
+			$(function () {
+	            $("#jQueryDateRangePicker").ionRangeSlider({
+	                type: "double",
+	                min: +moment("2014-01-01").subtract(12, "hours").format("X"),
+	                max: +moment("2019-01-31").subtract(12, "hours").format("X"),
+	                from: +moment().month(0).date(1).format("X"),
+	                to: +moment().date(1).format("X"),
+	                over_limit:true,
+	                step: 2 * 24 * 3600,
+	                grid: true,
+	                force_edges: true,
+	                max_interval: 365.25 * 24 * 3600,
+	                prettify: function (num) {
+	                    return moment(num, "X").format("YYYY/MM");
+	                },
+	                onChange: function (data) {
+	                    
+	                },
+	                onFinish: function (data) {
+	                    
+	                },
+	                onUpdate: function (data) {
+	                    
+	                }
+	            });
+	        });
+	    </script>	    
+	    <link href="css/ion.rangeSlider.css" rel="stylesheet" />
+	    <link href="css/ion.rangeSlider.skinModern.css" rel="stylesheet" />
+	    <link href="css/normalize.css" rel="stylesheet" />
+    <head>
+	<body>
+	    <div style="position: relative; padding: 20px;">
+	        <div>
+	            <input type="text" id="jQueryDateRangePicker" value="" name="jQueryDateRangePicker" />
+	        </div>
+	    </div>
+	</body>
+</html>
