@@ -1,5 +1,7 @@
 # Ion.Range Slider 2.0.9
 
+[![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
+
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
 Easy, flexible and responsive range slider
