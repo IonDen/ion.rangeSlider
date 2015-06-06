@@ -1,5 +1,8 @@
 # Ion.RangeSlider Update History
 
+### Version 2.0.10. June 06, 2015
+* Fixed rounding bug. Issue #247
+
 ### Version 2.0.9. May 30, 2015
 * Fixed critical bug. Issue #246
 

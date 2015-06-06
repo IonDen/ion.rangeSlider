@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 2.0.9 Build: 321
+// version 2.0.10 Build: 323
 // © Denis Ineshin, 2015
 // https://github.com/IonDen
 //
@@ -138,7 +138,7 @@
     // Core
 
     var IonRangeSlider = function (input, options, plugin_count) {
-        this.VERSION = "2.0.9";
+        this.VERSION = "2.0.10";
         this.input = input;
         this.plugin_count = plugin_count;
         this.current_plugin = 0;
@@ -1288,12 +1288,28 @@
         calcReal: function (percent) {
             var min = this.options.min,
                 max = this.options.max,
+                min_decimals = min.toString().split(".")[1],
+                max_decimals = max.toString().split(".")[1],
+                min_length, max_length,
+                avg_decimals = 0,
                 abs = 0;
+
+            if (min_decimals) {
+                min_length = min_decimals.length;
+                avg_decimals = min_length;
+            }
+            if (max_decimals) {
+                max_length = max_decimals.length;
+                avg_decimals = max_length;
+            }
+            if (min_length && max_length) {
+                avg_decimals = (min_length >= max_length) ? min_length : max_length;
+            }
 
             if (min < 0) {
                 abs = Math.abs(min);
-                min = min + abs;
-                max = max + abs;
+                min = +(min + abs).toFixed(avg_decimals);
+                max = +(max + abs).toFixed(avg_decimals);
             }
 
             var number = ((max - min) / 100 * percent) + min,
@@ -1301,7 +1317,11 @@
                 result;
 
             if (string) {
-                number = +number.toFixed(string.length);
+                if (number !== min && number !== max) {
+                    number = +number.toFixed(string.length);
+                } else {
+                    number = +number.toFixed(avg_decimals);
+                }
             } else {
                 number = number / this.options.step;
                 number = number * this.options.step;
@@ -1310,10 +1330,16 @@
 
             if (abs) {
                 number -= abs;
+                min = this.options.min;
+                max = this.options.max;
             }
 
             if (string) {
-                result = +number.toFixed(string.length);
+                if (number !== min && number !== max) {
+                    result = +number.toFixed(string.length);
+                } else {
+                    result = +number.toFixed(avg_decimals);
+                }
             } else {
                 result = this.toFixed(number);
             }
@@ -1709,6 +1735,7 @@
                 local_small_max = small_max;
 
                 big_w = this.toFixed(big_p * i);
+
                 if (big_w > 100) {
                     big_w = 100;
 
