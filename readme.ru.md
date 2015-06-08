@@ -9,6 +9,7 @@
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.10.zip">Download ion.rangeSlider-2.0.10.zip</a>
 
 ***
+*<sup><a href="https://github.com/IonDen/ion.rangeSlider/blob/master/designer.md">Ищу дизайнера</a></sup>*
 
 ## Описание
 * Ion.RangeSlider — классный, удобный, отзывчивый и легко настраиваемый слайдер диапазонов
