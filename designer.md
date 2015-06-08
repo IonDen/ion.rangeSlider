@@ -1,4 +1,4 @@
-# Looking for designer
+# Designer wanted
 
 Hi friends. I need a designer to create logos for all series of plugins: Ion.RangeSlider, Ion.Sound etc.
 For free. In exchange i will put your name and link to your web site in to description of all products.
