@@ -1,4 +1,4 @@
-﻿// Ion.RangeSlider
+// Ion.RangeSlider
 // version 2.0.10 Build: 323
 // © Denis Ineshin, 2015
 // https://github.com/IonDen
@@ -224,7 +224,15 @@
 
             prefix: $inp.data("prefix"),
             postfix: $inp.data("postfix"),
+            
             max_postfix: $inp.data("maxPostfix"),
+            max_prefix: $inp.data("maxPrefix"),
+            max_label: $inp.data("maxLabel"),
+            
+            min_postfix: $inp.data("minPostfix"),
+            min_prefix: $inp.data("minPrefix"),
+            min_label: $inp.data("minLabel"),
+            
             decorate_both: $inp.data("decorateBoth"),
             values_separator: $inp.data("valuesSeparator"),
 
@@ -302,7 +310,16 @@
 
             prefix: "",
             postfix: "",
+            
             max_postfix: "",
+            max_prefix: "",
+            max_label: false,
+            
+            min_postfix: "",
+            min_prefix: "",
+            min_label: false,
+            
+            
             decorate_both: true,
             values_separator: " — ",
 
@@ -1630,33 +1647,39 @@
 
         decorate: function (num, original) {
             var decorated = "",
+            	prefix = "",
+            	postfix = "",
                 o = this.options;
-
-            if (o.prefix) {
-                decorated += o.prefix;
+			
+			if (o.prefix) {
+            	prefix = o.prefix;
             }
-
-            decorated += num;
-
-            if (o.max_postfix) {
-                if (o.values.length && num === o.p_values[o.max]) {
-                    decorated += o.max_postfix;
-                    if (o.postfix) {
-                        decorated += " ";
-                    }
-                } else if (original === o.max) {
-                    decorated += o.max_postfix;
-                    if (o.postfix) {
-                        decorated += " ";
-                    }
-                }
-            }
-
-            if (o.postfix) {
+			if (o.postfix) {
                 decorated += o.postfix;
             }
 
-            return decorated;
+			if(original === o.min || (o.values.length && num === o.p_values[o.min])){
+				//is min
+				prefix = o.min_prefix;
+				postfix = o.min_postfix;
+				if(typeof(o.min_label) == 'string'){
+					prefix = '';
+					postfix = '';
+					num = o.min_label;
+				}
+			}
+			if(original === o.max || (o.values.length && num === o.p_values[o.max])){
+				//is max
+				prefix = o.max_prefix;
+				postfix = o.max_postfix;
+				if(typeof(o.max_label) == 'string'){
+					prefix = '';
+					postfix = '';
+					num = o.max_label;
+				}
+			}
+            
+            return prefix+num+postfix;
         },
 
         updateFrom: function () {
