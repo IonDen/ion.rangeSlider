@@ -336,8 +336,40 @@ If your are new in web development and you are not sure how to correctly install
             <td>max_postfix<div><sup>data-max-postfix</sup></div></td>
             <td>—</td>
             <td>string</td>
-            <td>Special postfix, used only for maximum value. Will be showed after handle will reach maximum right position. For example 0 — 100+</td>
+            <td>Special postfix, used only for maximum value. Will be showed after handle will reach maximum right position. The normal postfix will be ignored. For example 0 — 100+</td>
         </tr>
+        <tr>
+            <td>max_prefix<div><sup>data-max-prefix</sup></div></td>
+            <td>—</td>
+            <td>string</td>
+            <td>Special prefix, used only for maximum value. Will be showed after handle will reach maximum right position. The normal postfix will be ignored. For example 0 — >100</td>
+        </tr>
+        <tr>
+            <td>max_label<div><sup>data-max-label</sup></div></td>
+            <td>—</td>
+            <td>string</td>
+            <td>Special prefix, used only for maximum value. Will be showed after handle will reach maximum right position. For example 21 — to Old</td>
+        </tr>
+        <tr>
+            <td>min_postfix<div><sup>data-min-postfix</sup></div></td>
+            <td>—</td>
+            <td>string</td>
+            <td>Special postfix, used only for minimum value. Will be showed after handle will reach minimum left position. The normal postfix will be ignored. For example 0 and below — 100</td>
+        </tr>
+        <tr>
+            <td>min_prefix<div><sup>data-min-prefix</sup></div></td>
+            <td>—</td>
+            <td>string</td>
+            <td>Special prefix, used only for minimum value. Will be showed after handle will reach minimum left position. The normal prefix will be ignored. For example <0 — 100</td>
+        </tr>
+        
+        <tr>
+            <td>min_label<div><sup>data-min-label</sup></div></td>
+            <td>—</td>
+            <td>string</td>
+            <td>Special label, used only for minimum value. Will be showed after handle will reach minimum left position. For example underage — 100</td>
+        </tr>
+        
         <tr class="options__new">
             <td>decorate_both<div><sup>data-decorate-both</sup></div></td>
             <td>true</td>
