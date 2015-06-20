@@ -123,6 +123,11 @@
         '<span class="irs-shadow shadow-single"></span>' +
         '<span class="irs-slider single"></span>';
 
+    var balanced_html =
+        '<span class="irs-center"></span>' +
+        '<span class="irs-shadow shadow-single"></span>' +
+        '<span class="irs-slider single"></span>';
+
     var double_html =
         '<span class="irs-shadow shadow-from"></span>' +
         '<span class="irs-shadow shadow-to"></span>' +
@@ -443,6 +448,12 @@
                 this.$cache.from[0].style.visibility = "hidden";
                 this.$cache.to[0].style.visibility = "hidden";
                 this.$cache.shad_single = this.$cache.cont.find(".shadow-single");
+            } else if (this.options.type ==="balanced") {
+                this.$cache.cont.append(balanced_html);
+                this.$cache.s_single = this.$cache.cont.find(".single");
+                this.$cache.from[0].style.visibility = "hidden";
+                this.$cache.to[0].style.visibility = "hidden";
+                this.$cache.shad_single = this.$cache.cont.find(".shadow-single");
             } else {
                 this.$cache.cont.append(double_html);
                 this.$cache.s_from = this.$cache.cont.find(".from");
@@ -533,7 +544,7 @@
                 this.$cache.bar.on("mousedown.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
             }
 
-            if (this.options.type === "single") {
+            if (this.options.type === "single" || this.options.type ==="balanced") {
                 this.$cache.s_single.on("touchstart.irs_" + this.plugin_count, this.pointerDown.bind(this, "single"));
                 this.$cache.shad_single.on("touchstart.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
 
@@ -753,7 +764,7 @@
             if (this.calc_count === 10 || update) {
                 this.calc_count = 0;
                 this.coords.w_rs = this.$cache.rs.outerWidth(false);
-                if (this.options.type === "single") {
+                if (this.options.type === "single" || this.options.type ==="balanced") {
                     this.coords.w_handle = this.$cache.s_single.outerWidth(false);
                 } else {
                     this.coords.w_handle = this.$cache.s_from.outerWidth(false);
@@ -875,6 +886,24 @@
                 if (this.options.values.length) {
                     this.result.from_value = this.options.values[this.result.from];
                 }
+            } else if (this.options.type ==="balanced") {
+                this.result.from_percent = this.coords.p_single_real;
+                this.result.from = this.calcReal(this.coords.p_single_real);
+
+                if (this.result.from_percent == 50) {
+                    this.coords.p_bar_x = 50;
+                    this.coords.p_bar_w = 0;
+                } else if (this.result.from_percent > 50) {
+                    this.coords.p_bar_x = 50;
+                    this.coords.p_bar_w = this.result.from_percent - 50 - this.coords.p_handle / 2;
+                } else {
+                    this.coords.p_bar_x = this.result.from_percent + this.coords.p_handle / 2;
+                    this.coords.p_bar_w = 50 - this.result.from_percent - this.coords.p_handle / 2;
+                }
+
+                if (this.options.values.length) {
+                    this.result.from_value = this.options.values[this.result.from];
+                }
             } else {
                 this.coords.p_bar_x = this.toFixed(this.coords.p_from + (this.coords.p_handle / 2));
                 this.coords.p_bar_w = this.toFixed(this.coords.p_to - this.coords.p_from);
@@ -909,7 +938,7 @@
         },
 
         chooseHandle: function (real_x) {
-            if (this.options.type === "single") {
+            if (this.options.type === "single" || this.options.type ==="balanced") {
                 return "single";
             } else {
                 var m_point = this.coords.p_from_real + ((this.coords.p_to_real - this.coords.p_from_real) / 2);
@@ -935,7 +964,7 @@
                 return;
             }
 
-            if (this.options.type === "single") {
+            if (this.options.type === "single" || this.options.type ==="balanced") {
 
                 this.labels.w_single = this.$cache.single.outerWidth(false);
                 this.labels.p_single = this.labels.w_single / this.coords.w_rs * 100;
@@ -1032,7 +1061,7 @@
                 this.$cache.bar[0].style.left = this.coords.p_bar_x + "%";
                 this.$cache.bar[0].style.width = this.coords.p_bar_w + "%";
 
-                if (this.options.type === "single") {
+                if (this.options.type === "single" || this.options.type ==="balanced") {
                     this.$cache.s_single[0].style.left = this.coords.p_single + "%";
 
                     this.$cache.single[0].style.left = this.labels.p_single_left + "%";
@@ -1044,6 +1073,7 @@
                         this.$cache.input.prop("value", this.result.from);
                         this.$cache.input.data("from", this.result.from);
                     }
+
                 } else {
                     this.$cache.s_from[0].style.left = this.coords.p_from + "%";
                     this.$cache.s_to[0].style.left = this.coords.p_to + "%";
@@ -1110,7 +1140,7 @@
                 return;
             }
 
-            if (this.options.type === "single") {
+            if (this.options.type === "single" || this.options.type ==="balanced") {
 
                 if (values_num) {
                     text_single = this.decorate(p_values[this.result.from]);
@@ -1226,7 +1256,7 @@
                 to_min,
                 to_max;
 
-            if (o.type === "single") {
+            if (o.type === "single" || o.type ==="balanced") {
                 if (o.from_shadow && (is_from_min || is_from_max)) {
                     from_min = this.calcPercent(o.from_min || o.min);
                     from_max = this.calcPercent(o.from_max || o.max) - from_min;
@@ -1547,7 +1577,7 @@
                 o.to = o.max;
             }
 
-            if (o.type === "single") {
+            if (o.type === "single" || o.type ==="balanced") {
 
                 if (o.from < o.min) {
                     o.from = o.min;
@@ -1876,7 +1906,7 @@
                 return;
             }
 
-            if (this.options.type === "single") {
+            if (this.options.type === "single" || this.options.type ==="balanced") {
                 this.coords.w_handle = this.$cache.s_single.outerWidth(false);
             } else {
                 this.coords.w_handle = this.$cache.s_from.outerWidth(false);

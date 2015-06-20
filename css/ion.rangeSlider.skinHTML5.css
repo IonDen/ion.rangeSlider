@@ -48,6 +48,14 @@
         border-radius: 16px 0 0 16px;
         -moz-border-radius: 16px 0 0 16px;
     }
+    
+.irs-center {
+    background: #428BCA;
+    width: 2px;
+    height: 18px;
+    top: 30px;
+    margin-left: -1px;
+}
 
 .irs-shadow {
     height: 2px; top: 38px;
