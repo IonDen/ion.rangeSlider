@@ -4,7 +4,7 @@
 
 This fork of easy, flexible and responsive range slider, add additional slider type **balanced** and **min_prefix** option.
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
-* <a href="http://codepen.io/M_O_Z_G/pen/yNzxO">Demos of additional features</a> added in **this** fork by <a href="https://github.com/M-O-Z-G">Aleksandr "M.O.Z.G" Dikov<a>
+* <a target="_blank" href="http://codepen.io/M_O_Z_G/pen/yNzxOy">Demos of additional features</a> added in **this** fork by <a href="https://github.com/M-O-Z-G">Aleksandr "M.O.Z.G" Dikov<a>
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.10.zip">Download ion.rangeSlider-2.0.10.zip</a>
 
 ***
