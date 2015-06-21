@@ -30,7 +30,7 @@ This fork of easy, flexible and responsive range slider, add additional slider t
 * Ability to disable UI elements (min and max, current value, grid)
 * Postfixes and prefixes for your numbers ($20, 20 &euro; etc.)
 * Additional postfix for maximum value (eg. $0 — $100<b>+</b>)
-* Additional prefix for minimum value (eg. <b><</b> $0 — $100)
+* Additional prefix for minimum value (eg. <b><</b> $10,000 — $50,000)
 * Ability to prettify large numbers (eg. 10000000 -> 10 000 000 or 10.000.000)
 * Slider writes its value right into input value field. This makes it easy to use in any html form
 * Any slider value can be set through input data-attribute (eg. data-min="10")
