@@ -1,4 +1,4 @@
-# Ion.Range Slider 2.0.10 # Ion.Range Slider 2.0.10 (mod)
+# Ion.Range Slider 2.0.10 (mod)
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
