@@ -2,8 +2,9 @@
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
-Easy, flexible and responsive range slider
+This fork of easy, flexible and responsive range slider, add additional slider type **balanced** and **min_prefix** option.
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
+* <a href="http://codepen.io/M_O_Z_G/pen/yNzxO">Demos of additional features</a> added in **this** fork by <a href="https://github.com/M-O-Z-G">Aleksandr "M.O.Z.G" Dikov<a>
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.10.zip">Download ion.rangeSlider-2.0.10.zip</a>
 
 ***
@@ -21,7 +22,7 @@ Easy, flexible and responsive range slider
 ## Key features
 * Skin support. (5 skins included and PSD for skin creation)
 * Any number of sliders at one page without conflicts and big performance problems
-* Two slider types single (1 slider) and double (2 sliders)
+* Three slider types: single (1 slider), balanced (1 slider with center offset) and double (2 sliders)
 * Support of negative and fractional values
 * Ability to set custom step and snap grid to step
 * Support of custom values diapason
@@ -29,6 +30,7 @@ Easy, flexible and responsive range slider
 * Ability to disable UI elements (min and max, current value, grid)
 * Postfixes and prefixes for your numbers ($20, 20 &euro; etc.)
 * Additional postfix for maximum value (eg. $0 — $100<b>+</b>)
+* Additional prefix for minimum value (eg. <b><</b> $0 — $100)
 * Ability to prettify large numbers (eg. 10000000 -> 10 000 000 or 10.000.000)
 * Slider writes its value right into input value field. This makes it easy to use in any html form
 * Any slider value can be set through input data-attribute (eg. data-min="10")
@@ -43,11 +45,12 @@ Easy, flexible and responsive range slider
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo.html" class="switch__item">Basic demo</a>
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo_advanced.html" class="switch__item">Advanced demo</a>
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo_interactions.html" class="switch__item">Interactions demo</a>
+* <a href="http://codepen.io/M_O_Z_G/pen/yNzxO">Demos of additional features</a>
 
 
 ## GitHub
 
-* <a href="https://github.com/IonDen/ion.rangeSlider">GitHub page</a>
+* <a href="https://github.com/IonDen/ion.rangeSlider">GitHub page of orginal script</a>
 
 
 ## <a href="history.md">Update history</a>
