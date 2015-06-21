@@ -45,7 +45,7 @@ This fork of easy, flexible and responsive range slider, add additional slider t
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo.html" class="switch__item">Basic demo</a>
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo_advanced.html" class="switch__item">Advanced demo</a>
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo_interactions.html" class="switch__item">Interactions demo</a>
-* <a href="http://codepen.io/M_O_Z_G/pen/yNzxO">Demos of additional features</a>
+* <a target="_blank" href="http://codepen.io/M_O_Z_G/pen/yNzxOy">Demos of additional features</a>
 
 
 ## GitHub
