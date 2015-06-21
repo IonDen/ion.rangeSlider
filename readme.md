@@ -1,11 +1,12 @@
-# Ion.Range Slider 2.0.10
+# Ion.Range Slider 2.0.10 (mod)
 
 [![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
-Easy, flexible and responsive range slider
+This fork of easy, flexible and responsive range slider, add additional slider type **balanced** and **min_prefix** option.
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
+* <a target="_blank" href="http://codepen.io/M_O_Z_G/pen/yNzxOy">Demos of additional features</a> added in **this** fork by <a href="https://github.com/M-O-Z-G">Aleksandr "M.O.Z.G" Dikov<a>
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.10.zip">Download ion.rangeSlider-2.0.10.zip</a>
 
 ***
@@ -19,12 +20,12 @@ Easy, flexible and responsive range slider
 * Ion.RangeSlider freely distributed under terms of <a href="http://ionden.com/a/plugins/licence.html" target="_blank">MIT licence</a>.
 * With this plugin you will be able to build beautiful range sliders, like this:
 
-![ion.rangeSlider](http://ionden.com/a/plugins/ion.rangeSlider/static/img/ion-range-slider.png)
+![ion.rangeSlider](http://i.imgur.com/z5FGsaz.png)
 
 ## Key features
 * Skin support. (5 skins included and PSD for skin creation)
 * Any number of sliders at one page without conflicts and big performance problems
-* Two slider types single (1 slider) and double (2 sliders)
+* Three slider types: single (1 slider), balanced (1 slider with center offset) and double (2 sliders)
 * Support of negative and fractional values
 * Ability to set custom step and snap grid to step
 * Support of custom values diapason
@@ -32,6 +33,7 @@ Easy, flexible and responsive range slider
 * Ability to disable UI elements (min and max, current value, grid)
 * Postfixes and prefixes for your numbers ($20, 20 &euro; etc.)
 * Additional postfix for maximum value (eg. $0 — $100<b>+</b>)
+* Additional prefix for minimum value (eg. <b><</b> $10,000 — $50,000)
 * Ability to prettify large numbers (eg. 10000000 -> 10 000 000 or 10.000.000)
 * Slider writes its value right into input value field. This makes it easy to use in any html form
 * Any slider value can be set through input data-attribute (eg. data-min="10")
@@ -46,6 +48,7 @@ Easy, flexible and responsive range slider
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo.html" class="switch__item">Basic demo</a>
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo_advanced.html" class="switch__item">Advanced demo</a>
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo_interactions.html" class="switch__item">Interactions demo</a>
+* <a target="_blank" href="http://codepen.io/M_O_Z_G/pen/yNzxOy">Demos of additional features</a>
 
 
 ## Dependencies
@@ -133,7 +136,7 @@ If your are new in web development and you are not sure how to correctly install
             <td>type<div><sup>data-type</sup></div></td>
             <td>"single"</td>
             <td>string</td>
-            <td>Choose slider type, could be <code>single</code> - for one handle, or <code>double</code> for two handles</td>
+            <td>Choose slider type, could be <code>single</code> - for one handle, <code>balanced</code> - for one handler with offset from center, or <code>double</code> for two handles</td>
         </tr>
 
         <tr>
@@ -327,6 +330,12 @@ If your are new in web development and you are not sure how to correctly install
             <td>Set prefix for values. Will be set up right before the number: $100</td>
         </tr>
         <tr>
+            <td>min_prefix<div><sup>data-min-prefix</sup></div></td>
+            <td>—</td>
+            <td>string</td>
+            <td>Special prefix, used only for minimum value. Will be showed before handle will reach minimum left position. For example <10 — 100</td>
+        </tr>
+        <tr>
             <td>postfix<div><sup>data-postfix</sup></div></td>
             <td>—</td>
             <td>string</td>
@@ -472,6 +481,7 @@ slider.destroy();
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo.html" class="switch__item">Basic demo</a>
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo_advanced.html" class="switch__item">Advanced demo</a>
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo_interactions.html" class="switch__item">Interactions demo</a>
+* <a target="_blank" href="http://codepen.io/M_O_Z_G/pen/yNzxOy">Demos of additional features</a>
 
 All plugins options are covered in demos.
 

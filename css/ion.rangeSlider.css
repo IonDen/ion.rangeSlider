@@ -43,6 +43,11 @@
             top: 0; left: 0;
         }
 
+	.irs-center {
+		position: absolute;
+		left: 50%;
+	}
+
     .irs-shadow {
         position: absolute; display: none;
         left: 0; width: 0;
