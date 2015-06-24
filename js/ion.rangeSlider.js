@@ -224,6 +224,7 @@
 
             prefix: $inp.data("prefix"),
             postfix: $inp.data("postfix"),
+            min_prefix: $inp.data("minPrefix"),
             max_postfix: $inp.data("maxPostfix"),
             decorate_both: $inp.data("decorateBoth"),
             values_separator: $inp.data("valuesSeparator"),
@@ -302,6 +303,7 @@
 
             prefix: "",
             postfix: "",
+            min_prefix: "",
             max_postfix: "",
             decorate_both: true,
             values_separator: " — ",
@@ -1631,6 +1633,20 @@
         decorate: function (num, original) {
             var decorated = "",
                 o = this.options;
+
+            if (o.min_prefix) {
+                if (num === o.p_values[o.min]) {
+                    decorated += o.min_prefix;
+                    if (o.postfix) {
+                        decorated += " ";
+                    }
+                } else if (original === o.min) {
+                    decorated += o.min_prefix;
+                    if (o.postfix) {
+                        decorated += " ";
+                    }
+                }
+            }
 
             if (o.prefix) {
                 decorated += o.prefix;

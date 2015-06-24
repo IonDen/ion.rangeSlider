@@ -32,6 +32,7 @@ Easy, flexible and responsive range slider
 * Ability to disable UI elements (min and max, current value, grid)
 * Postfixes and prefixes for your numbers ($20, 20 &euro; etc.)
 * Additional postfix for maximum value (eg. $0 — $100<b>+</b>)
+* Additional prefix for minimum value (eg. <b><</b> $10,000 — $50,000)
 * Ability to prettify large numbers (eg. 10000000 -> 10 000 000 or 10.000.000)
 * Slider writes its value right into input value field. This makes it easy to use in any html form
 * Any slider value can be set through input data-attribute (eg. data-min="10")
@@ -325,6 +326,12 @@ If your are new in web development and you are not sure how to correctly install
             <td>—</td>
             <td>string</td>
             <td>Set prefix for values. Will be set up right before the number: $100</td>
+        </tr>
+        <tr>
+            <td>min_prefix<div><sup>data-min-prefix</sup></div></td>
+            <td>—</td>
+            <td>string</td>
+            <td>Special prefix, used only for minimum value. Will be showed before handle will reach minimum left position. For example <10 — 100</td>
         </tr>
         <tr>
             <td>postfix<div><sup>data-postfix</sup></div></td>
