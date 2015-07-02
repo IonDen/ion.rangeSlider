@@ -1,4 +1,4 @@
-# Ion.Range Slider 2.0.10
+# Ion.Range Slider 2.0.11
 
 [![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
 
@@ -6,7 +6,7 @@
 
 Удобный, гибкий и отзывчивый слайдер диапазонов
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/index.html">Страница проекта и демо</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.10.zip">Download ion.rangeSlider-2.0.10.zip</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.11.zip">Download ion.rangeSlider-2.0.11.zip</a>
 
 ***
 

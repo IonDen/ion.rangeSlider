@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 2.0.10 Build: 323
+// version 2.0.11 Build: 327
 // © Denis Ineshin, 2015
 // https://github.com/IonDen
 //
@@ -138,7 +138,7 @@
     // Core
 
     var IonRangeSlider = function (input, options, plugin_count) {
-        this.VERSION = "2.0.10";
+        this.VERSION = "2.0.11";
         this.input = input;
         this.plugin_count = plugin_count;
         this.current_plugin = 0;
@@ -1226,8 +1226,8 @@
 
             if (o.type === "single") {
                 if (o.from_shadow && (is_from_min || is_from_max)) {
-                    from_min = this.calcPercent(o.from_min || o.min);
-                    from_max = this.calcPercent(o.from_max || o.max) - from_min;
+                    from_min = this.calcPercent(is_from_min ? o.from_min : o.min);
+                    from_max = this.calcPercent(is_from_max ? o.from_max : o.max) - from_min;
                     from_min = this.toFixed(from_min - (this.coords.p_handle / 100 * from_min));
                     from_max = this.toFixed(from_max - (this.coords.p_handle / 100 * from_max));
                     from_min = from_min + (this.coords.p_handle / 2);
@@ -1240,8 +1240,8 @@
                 }
             } else {
                 if (o.from_shadow && (is_from_min || is_from_max)) {
-                    from_min = this.calcPercent(o.from_min || o.min);
-                    from_max = this.calcPercent(o.from_max || o.max) - from_min;
+                    from_min = this.calcPercent(is_from_min ? o.from_min : o.min);
+                    from_max = this.calcPercent(is_from_max ? o.from_max : o.max) - from_min;
                     from_min = this.toFixed(from_min - (this.coords.p_handle / 100 * from_min));
                     from_max = this.toFixed(from_max - (this.coords.p_handle / 100 * from_max));
                     from_min = from_min + (this.coords.p_handle / 2);
@@ -1254,8 +1254,8 @@
                 }
 
                 if (o.to_shadow && (is_to_min || is_to_max)) {
-                    to_min = this.calcPercent(o.to_min || o.min);
-                    to_max = this.calcPercent(o.to_max || o.max) - to_min;
+                    to_min = this.calcPercent(is_to_min ? o.to_min : o.min);
+                    to_max = this.calcPercent(is_to_max ? o.to_max : o.max) - to_min;
                     to_min = this.toFixed(to_min - (this.coords.p_handle / 100 * to_min));
                     to_max = this.toFixed(to_max - (this.coords.p_handle / 100 * to_max));
                     to_min = to_min + (this.coords.p_handle / 2);
@@ -1325,7 +1325,12 @@
             } else {
                 number = number / this.options.step;
                 number = number * this.options.step;
-                number = +number.toFixed(0);
+
+                if (number !== min && number !== max) {
+                    number = +number.toFixed(0);
+                } else {
+                    number = +number.toFixed(avg_decimals);
+                }
             }
 
             if (abs) {
@@ -1428,11 +1433,11 @@
             var num = this.calcReal(p_num),
                 o = this.options;
 
-            if (!min || typeof min !== "number") {
+            if (typeof min !== "number") {
                 min = o.min;
             }
 
-            if (!max || typeof max !== "number") {
+            if (typeof max !== "number") {
                 max = o.max;
             }
 
@@ -1577,19 +1582,19 @@
                 o.keyboard_step = 5;
             }
 
-            if (o.from_min && o.from < o.from_min) {
+            if (typeof o.from_min === "number" && o.from < o.from_min) {
                 o.from = o.from_min;
             }
 
-            if (o.from_max && o.from > o.from_max) {
+            if (typeof o.from_max === "number" && o.from > o.from_max) {
                 o.from = o.from_max;
             }
 
-            if (o.to_min && o.to < o.to_min) {
+            if (typeof o.to_min === "number" && o.to < o.to_min) {
                 o.to = o.to_min;
             }
 
-            if (o.to_max && o.from > o.to_max) {
+            if (typeof o.to_max === "number" && o.from > o.to_max) {
                 o.to = o.to_max;
             }
 
