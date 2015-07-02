@@ -9,6 +9,7 @@ Easy, flexible and responsive range slider
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.11.zip">Download ion.rangeSlider-2.0.11.zip</a>
 
 ***
+*<sup><a href="https://github.com/IonDen/ion.rangeSlider/blob/master/designer.md">Designer wanted</a></sup>*
 
 ## Description
 * Ion.RangeSlider — cool, comfortable, responsive and easily customizable range slider
