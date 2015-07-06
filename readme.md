@@ -394,7 +394,7 @@ Obj: {
     "slider": object,   // jQuery-link to sliders container
     "min": 0,           // MIN value
     "max": 1000,        // MAX values
-    "from": 100,        // FROM value
+    "from": 100,        // FROM value - This is the current value of the slider 
     "from_percent": 10, // FROM value in percents
     "from_value": 0,    // FROM index in values array (if used)
     "to": 900,          // TO value
