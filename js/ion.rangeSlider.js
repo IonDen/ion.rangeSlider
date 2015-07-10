@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 2.0.11 Build: 327
+// version 2.0.12 Build: 331
 // © Denis Ineshin, 2015
 // https://github.com/IonDen
 //
@@ -138,7 +138,7 @@
     // Core
 
     var IonRangeSlider = function (input, options, plugin_count) {
-        this.VERSION = "2.0.11";
+        this.VERSION = "2.0.12";
         this.input = input;
         this.plugin_count = plugin_count;
         this.current_plugin = 0;
@@ -175,6 +175,7 @@
             shad_single: null,
             shad_from: null,
             shad_to: null,
+            edge: null,
             grid: null,
             grid_labels: []
         };
@@ -437,6 +438,7 @@
 
             if (this.options.type === "single") {
                 this.$cache.cont.append(single_html);
+                this.$cache.edge = this.$cache.cont.find(".irs-bar-edge");
                 this.$cache.s_single = this.$cache.cont.find(".single");
                 this.$cache.from[0].style.visibility = "hidden";
                 this.$cache.to[0].style.visibility = "hidden";
@@ -536,6 +538,7 @@
                 this.$cache.shad_single.on("touchstart.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
 
                 this.$cache.s_single.on("mousedown.irs_" + this.plugin_count, this.pointerDown.bind(this, "single"));
+                this.$cache.edge.on("mousedown.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
                 this.$cache.shad_single.on("mousedown.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
             } else {
                 this.$cache.s_from.on("touchstart.irs_" + this.plugin_count, this.pointerDown.bind(this, "from"));
@@ -600,24 +603,7 @@
             this.updateScene();
         },
 
-        pointerDown: function (target, e) {
-            e.preventDefault();
-            var x = e.pageX || e.originalEvent.touches && e.originalEvent.touches[0].pageX;
-            if (e.button === 2) {
-                return;
-            }
-
-            this.current_plugin = this.plugin_count;
-            this.target = target;
-
-            this.is_active = true;
-            this.dragging = true;
-
-            this.coords.x_gap = this.$cache.rs.offset().left;
-            this.coords.x_pointer = x - this.coords.x_gap;
-
-            this.calcPointer();
-
+        changeLevel: function (target) {
             switch (target) {
                 case "single":
                     this.coords.p_gap = this.toFixed(this.coords.p_pointer - this.coords.p_single);
@@ -641,6 +627,26 @@
                     this.$cache.s_from.removeClass("type_last");
                     break;
             }
+        },
+
+        pointerDown: function (target, e) {
+            e.preventDefault();
+            var x = e.pageX || e.originalEvent.touches && e.originalEvent.touches[0].pageX;
+            if (e.button === 2) {
+                return;
+            }
+
+            this.current_plugin = this.plugin_count;
+            this.target = target;
+
+            this.is_active = true;
+            this.dragging = true;
+
+            this.coords.x_gap = this.$cache.rs.offset().left;
+            this.coords.x_pointer = x - this.coords.x_gap;
+
+            this.calcPointer();
+            this.changeLevel(target);
 
             if (is_old_ie) {
                 $("*").prop("unselectable", true);
@@ -769,7 +775,8 @@
                 real_x = this.toFixed(this.coords.p_pointer - this.coords.p_gap);
 
             if (this.target === "click") {
-                real_x = this.toFixed(this.coords.p_pointer - (this.coords.p_handle / 2));
+                this.coords.p_gap = this.coords.p_handle / 2;
+                real_x = this.toFixed(this.coords.p_pointer - this.coords.p_gap);
                 this.target = this.chooseHandle(real_x);
             }
 
@@ -1294,6 +1301,14 @@
                 avg_decimals = 0,
                 abs = 0;
 
+            if (percent === 0) {
+                return this.options.min;
+            }
+            if (percent === 100) {
+                return this.options.max;
+            }
+
+
             if (min_decimals) {
                 min_length = min_decimals.length;
                 avg_decimals = min_length;
@@ -1317,34 +1332,20 @@
                 result;
 
             if (string) {
-                if (number !== min && number !== max) {
-                    number = +number.toFixed(string.length);
-                } else {
-                    number = +number.toFixed(avg_decimals);
-                }
+                number = +number.toFixed(string.length);
             } else {
                 number = number / this.options.step;
                 number = number * this.options.step;
 
-                if (number !== min && number !== max) {
-                    number = +number.toFixed(0);
-                } else {
-                    number = +number.toFixed(avg_decimals);
-                }
+                number = +number.toFixed(0);
             }
 
             if (abs) {
                 number -= abs;
-                min = this.options.min;
-                max = this.options.max;
             }
 
             if (string) {
-                if (number !== min && number !== max) {
-                    result = +number.toFixed(string.length);
-                } else {
-                    result = +number.toFixed(avg_decimals);
-                }
+                result = +number.toFixed(string.length);
             } else {
                 result = this.toFixed(number);
             }
@@ -1453,7 +1454,7 @@
         },
 
         toFixed: function (num) {
-            num = num.toFixed(5);
+            num = num.toFixed(9);
             return +num;
         },
 
