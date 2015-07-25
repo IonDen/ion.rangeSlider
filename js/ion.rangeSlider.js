@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 2.0.12 Build: 331
+// version 2.0.13 Build: 335
 // © Denis Ineshin, 2015
 // https://github.com/IonDen
 //
@@ -137,8 +137,16 @@
     // =================================================================================================================
     // Core
 
+    /**
+     * Main plugin constructor
+     *
+     * @param input {object}
+     * @param options {object}
+     * @param plugin_count {number}
+     * @constructor
+     */
     var IonRangeSlider = function (input, options, plugin_count) {
-        this.VERSION = "2.0.12";
+        this.VERSION = "2.0.13";
         this.input = input;
         this.plugin_count = plugin_count;
         this.current_plugin = 0;
@@ -152,6 +160,7 @@
         this.is_key = false;
         this.is_update = false;
         this.is_start = true;
+        this.is_finish = false;
         this.is_active = false;
         this.is_resize = false;
         this.is_click = false;
@@ -403,16 +412,14 @@
                 this.force_redraw = true;
                 this.calc(true);
 
-                if (this.options.onUpdate && typeof this.options.onUpdate === "function") {
-                    this.options.onUpdate(this.result);
-                }
+                // callbacks called
+                this.callOnUpdate();
             } else {
                 this.force_redraw = true;
                 this.calc(true);
 
-                if (this.options.onStart && typeof this.options.onStart === "function") {
-                    this.options.onStart(this.result);
-                }
+                // callbacks called
+                this.callOnStart();
             }
 
             this.updateScene();
@@ -534,19 +541,28 @@
             }
 
             if (this.options.type === "single") {
+                this.$cache.single.on("touchstart.irs_" + this.plugin_count, this.pointerDown.bind(this, "single"));
                 this.$cache.s_single.on("touchstart.irs_" + this.plugin_count, this.pointerDown.bind(this, "single"));
                 this.$cache.shad_single.on("touchstart.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
 
+                this.$cache.single.on("mousedown.irs_" + this.plugin_count, this.pointerDown.bind(this, "single"));
                 this.$cache.s_single.on("mousedown.irs_" + this.plugin_count, this.pointerDown.bind(this, "single"));
                 this.$cache.edge.on("mousedown.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
                 this.$cache.shad_single.on("mousedown.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
             } else {
+                this.$cache.single.on("touchstart.irs_" + this.plugin_count, this.pointerDown.bind(this, "from"));
+                this.$cache.single.on("mousedown.irs_" + this.plugin_count, this.pointerDown.bind(this, "from"));
+
+                this.$cache.from.on("touchstart.irs_" + this.plugin_count, this.pointerDown.bind(this, "from"));
                 this.$cache.s_from.on("touchstart.irs_" + this.plugin_count, this.pointerDown.bind(this, "from"));
+                this.$cache.to.on("touchstart.irs_" + this.plugin_count, this.pointerDown.bind(this, "to"));
                 this.$cache.s_to.on("touchstart.irs_" + this.plugin_count, this.pointerDown.bind(this, "to"));
                 this.$cache.shad_from.on("touchstart.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
                 this.$cache.shad_to.on("touchstart.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
 
+                this.$cache.from.on("mousedown.irs_" + this.plugin_count, this.pointerDown.bind(this, "from"));
                 this.$cache.s_from.on("mousedown.irs_" + this.plugin_count, this.pointerDown.bind(this, "from"));
+                this.$cache.to.on("mousedown.irs_" + this.plugin_count, this.pointerDown.bind(this, "to"));
                 this.$cache.s_to.on("mousedown.irs_" + this.plugin_count, this.pointerDown.bind(this, "to"));
                 this.$cache.shad_from.on("mousedown.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
                 this.$cache.shad_to.on("mousedown.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
@@ -584,11 +600,10 @@
                 return;
             }
 
-            var is_function = this.options.onFinish && typeof this.options.onFinish === "function",
-                is_original = $.contains(this.$cache.cont[0], e.target) || this.dragging;
-
-            if (is_function && is_original) {
-                this.options.onFinish(this.result);
+            // callbacks call
+            if ($.contains(this.$cache.cont[0], e.target) || this.dragging) {
+                this.is_finish = true;
+                this.callOnFinish();
             }
 
             this.$cache.cont.find(".state_hover").removeClass("state_hover");
@@ -1080,24 +1095,45 @@
                 this.old_from = this.result.from;
                 this.old_to = this.result.to;
 
-                var is_function = this.options.onChange && typeof this.options.onChange === "function" && !this.is_resize;
-                if (is_function && !this.is_update && !this.is_start) {
-                    this.options.onChange(this.result);
+                // callbacks call
+                if (!this.is_resize && !this.is_update && !this.is_start && !this.is_finish) {
+                    this.callOnChange();
                 }
-
-                var is_finish = this.options.onFinish && typeof this.options.onFinish === "function";
-                if (is_finish && (this.is_key || this.is_click)) {
-                    this.options.onFinish(this.result);
+                if (this.is_key || this.is_click) {
+                    this.callOnFinish();
                 }
 
                 this.is_update = false;
                 this.is_resize = false;
+                this.is_finish = false;
             }
 
             this.is_start = false;
             this.is_key = false;
             this.is_click = false;
             this.force_redraw = false;
+        },
+
+        // callbacks
+        callOnStart: function () {
+            if (this.options.onStart && typeof this.options.onStart === "function") {
+                this.options.onStart(this.result);
+            }
+        },
+        callOnChange: function () {
+            if (this.options.onChange && typeof this.options.onChange === "function") {
+                this.options.onChange(this.result);
+            }
+        },
+        callOnFinish: function () {
+            if (this.options.onFinish && typeof this.options.onFinish === "function") {
+                this.options.onFinish(this.result);
+            }
+        },
+        callOnUpdate: function () {
+            if (this.options.onUpdate && typeof this.options.onUpdate === "function") {
+                this.options.onUpdate(this.result);
+            }
         },
 
         drawLabels: function () {

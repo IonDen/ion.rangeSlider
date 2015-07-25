@@ -1,5 +1,9 @@
 # Ion.RangeSlider Update History
 
+### Version 2.0.13. July 25, 2015
+* Fixed bugs. Issues: #208, #270, #273
+* New features. Requests: #233
+
 ### Version 2.0.12. July 10, 2015
 * Fixed more bugs. Issues: #247, #263, #265, #269
 
