@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+				
+		<link href="css/ion.rangeSlider.css" rel="stylesheet"></link>
+		<link href="css/ion.rangeSlider.skinFlat.css" rel="stylesheet"></link>
+		
+		
+		<script src="js/jquery-1.js" type="text/javascript"></script>
+		<script src="js/jquery-migrate-1.js" type="text/javascript"></script>
+		<script type="text/javascript" src="js/ion.rangeSlider.js"></script>
+
+		<style type="text/css">
+			body {
+				padding: 50px;
+			}
+			.redText1 {
+				color: #CB171D;
+				float: left;
+			}		
+			.demo-big__example {
+				background: rgba(51,51,51, 0.5);
+				color: #fff;
+				padding: 10px;
+			}
+			.irs-grid-text {
+				color: #fff;
+			}
+			.widgetScale {
+				margin: 10px 0;
+			}			
+			.irs-small {
+				position: absolute;
+				left: 2%;
+				top: -2px;
+			}
+			.irs-medium {
+				position: absolute;				
+				top: -2px;				
+				margin-left: -5%;
+				text-align: center;
+			}
+			.irs-big {
+				position: absolute;
+				right: 30px;
+				top: -2px;
+			}
+			.irs-from, .irs-to {
+				z-index: 999990 !important;
+			}
+			.irs-small, .irs-to, .irs-medium {
+				z-index: 999999 !important;
+			}
+			.irs-shadow {
+				background: #2ba6ef none repeat scroll 0 0;
+				height: 12px;
+				opacity: 1;
+				top: 25px;
+				width: 0;
+				display: block !important;
+				margin-left: 5px;
+			}
+		</style>
+
+		<title>Range-Slider demo</title>
+	</head>
+	<body>
+
+		<div class="">
+			
+			<div id="devTable1" cellspacing="0" style="margin:0 auto;width:98%;">							
+				<div class="demo-big__example">
+					<div class="widgetScale smallType">
+						<input type="text" class="js-range-slider-1" id="smallFromValue" value="" />
+					</div>
+				</div>
+			</div>
+
+					
+		</div>
+
+		<div class="clear"></div>
+		
+		<script type="text/javascript">
+			jQuery(document).ready(function() {
+				var $range1 = $(".js-range-slider-1"), range_instance_1;
+
+				var values = [];
+				var small = [];
+				var medium = [];
+				var big = [];
+
+				$range1.ionRangeSlider({
+					type : "double",
+					min : 0,
+					max : 100,
+					from : 30,					
+					from_shadow : true,
+					to : 40,					
+					drag_interval : true,
+					grid : true,
+					onChange : function(data) {						
+						var w = $(".from").position();
+						$(".irs-shadow").width($(".from").position().left + 2 + "px");
+					},
+					onFinish : function(data) {
+						values = [];
+						values = data;
+						getValues();
+					}
+				});
+
+				range_instance_1 = $range1.data("ionRangeSlider");
+				values = $range1.data();
+
+				getValues();
+
+				function getValues() {				
+					small = [];
+					medium = [];
+					big = [];
+
+					values.min = 0;
+					values.max = 100;
+
+					small.push(values.min);
+					small.push(values.from);					
+
+					medium.push(values.from);
+					medium.push(values.to);					
+
+					big.push(values.to);
+					big.push(values.max);					
+				}
+								
+				$(".irs-shadow").width(values.from + "%");				
+			});
+		</script>
+	</body>
+</html>

@@ -406,9 +406,6 @@
 
             this.toggleInput();
             this.append();
-            
-            this.addRangeText();
-            
             this.setMinMax();
 
             if (is_update) {
@@ -480,12 +477,6 @@
                 this.bindEvents();
             }
         },
-        
-        addRangeText: function () {        	
-        	this.$cache.cont.find(".irs").append("<span class='irs-type-txt irs-small'>Small</span>");
-        	this.$cache.cont.find(".irs").append("<span class='irs-type-txt irs-medium'>Medium</span>");
-        	this.$cache.cont.find(".irs").append("<span class='irs-type-txt irs-big'>Big</span>");
-        },
 
         setTopHandler: function () {
             var min = this.options.min,
@@ -498,8 +489,6 @@
             } else if (to < max) {
                 this.$cache.s_to.addClass("type_last");
             }
-            
-            
         },
 
         appendDisableMask: function () {
@@ -598,60 +587,6 @@
             this.coords.x_pointer = x - this.coords.x_gap;
 
             this.calc();
-            
-            var LeftPosition = $('.irs-from').position();
-            var RightPosition = $('.irs-to').position();            
-            var LeftHandelPos = LeftPosition.left;
-            var RightHandelPos = RightPosition.left;
-            
-            //console.log("Left: "+ LeftPosition.left);
-            /*console.log("Right: "+ RightPosition.left);*/           
-           //console.log(LeftHandelPos +" ---- "+ RightHandelPos);
-           
-           //console.log("Bar Width: "+ $(".irs-bar").css("width"));
-           var width = $(".irs-bar").css("width").replace(/[^-\d\.]/g, '');
-           var half = (width/2);
-           
-           //console.log("Half Width: "+ half);
-           
-           
-          
-           //var width=$(".irs-bar").css("width");
-		   //var half=width/2;
-		   
-		   
-		   
-		   $('.irs-medium').css("left",RightPosition.left);
-           
-            /*----------------------------------------*/
-            if(LeftPosition.left < 76) {
-            	$('.irs-small').css({
-	        		left: "2%",
-	        	});	        	      	
-            }
-            else {
-            	$('.irs-small').css({
-	        		left: (LeftPosition.left-50)
-	        	});	
-	        	$('.irs-medium').css({
-	           		left:LeftPosition.left+50
-	           });        	
-            }
-            /*----------------------------------------*/
-            if(RightPosition.left > 996) {	        	
-	        	$('.irs-big').css({
-	        		right: "30px"
-	        	});	        	
-	        }
-	        else {
-	        	$('.irs-big').css({
-	        		left: (RightPosition.left+40)
-	        	});	   
-	        	$('.irs-medium').css({
-	           		left:RightPosition.left-40
-	           });     	
-	        }
-	        /*----------------------------------------*/
         },
 
         pointerUp: function (e) {
@@ -1177,18 +1112,6 @@
             this.is_key = false;
             this.is_click = false;
             this.force_redraw = false;
-            
-            var RightPosition = $('.irs-to').position();
-        	//alert(RightPosition.left)
-            $('.irs-medium').css("left",RightPosition.left-20);
-            
-            /*var c = this.$cache;
-            var shadowWidth = this.$cache.from[0].style.left+"%";
-            console.log(shadowWidth);
-            $(".irs-shadow").css("display","block");
-            //$(".irs-shadow").css("width",shadowWidth+"!important");            
-            c.shad_from[0].style.width = shadowWidth + "%";*/
-            
         },
 
         // callbacks
