@@ -298,6 +298,8 @@
             prettify: null,
 
             prettify_labels: null,
+            additional_grid_line_class: null,
+            grid_line_visible: null,
 
             force_edges: false,
 
@@ -1521,6 +1523,20 @@
             return this._prettify(num);
         },
 
+        _additionalGridLineClass: function (num) {
+            if (this.options.additional_grid_line_class && typeof this.options.additional_grid_line_class === "function") {
+                return this.options.additional_grid_line_class(num);
+            }
+        },
+
+        _gridLineVisible: function (num) {
+            if (this.options.grid_line_visible && typeof this.options.grid_line_visible === "function") {
+                return this.options.grid_line_visible(num);
+            } else {
+                return true;
+            }
+        },
+
         checkEdges: function (left, width) {
             if (!this.options.force_edges) {
                 return this.toFixed(left);
@@ -1810,9 +1826,12 @@
                     html += '<span class="irs-grid-pol small" style="left: ' + small_w + '%"></span>';
                 }
 
-                html += '<span class="irs-grid-pol" style="left: ' + big_w + '%"></span>';
-
                 result = this.calcReal(big_w);
+
+                if (this._gridLineVisible(result)) {
+                    html += '<span class="irs-grid-pol ' + this._additionalGridLineClass(result) + '" style="left: ' + big_w + '%"></span>';
+                }
+
                 if (o.values.length) {
                     result = o.p_values[result];
                 } else {
