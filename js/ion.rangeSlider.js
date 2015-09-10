@@ -325,7 +325,8 @@
             onStart: null,
             onChange: null,
             onFinish: null,
-            onUpdate: null
+            onUpdate: null,
+            onLabelClick: null
         }, options);
 
         this.validate();
@@ -512,6 +513,8 @@
             this.$cache.win.off("touchend.irs_" + this.plugin_count);
             this.$cache.win.off("mouseup.irs_" + this.plugin_count);
 
+            this.$cache.grid.off("click");
+
             if (is_old_ie) {
                 this.$cache.body.off("mouseup.irs_" + this.plugin_count);
                 this.$cache.body.off("mouseleave.irs_" + this.plugin_count);
@@ -535,6 +538,11 @@
 
             this.$cache.line.on("touchstart.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
             this.$cache.line.on("mousedown.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
+
+            var that = this;
+            this.$cache.grid.on("click", ".irs-grid-text", function(event) {
+                that._onLabelClick(event, $(this).data('result'));
+            });
 
             if (this.options.drag_interval && this.options.type === "double") {
                 this.$cache.bar.on("touchstart.irs_" + this.plugin_count, this.pointerDown.bind(this, "both"));
@@ -1523,6 +1531,12 @@
             return this._prettify(num);
         },
 
+        _onLabelClick: function (event, result) {
+            if (this.options.onLabelClick && typeof this.options.onLabelClick === "function") {
+                this.options.onLabelClick(this.$cache.input.data('ionRangeSlider'), event, +result);
+            }
+        },
+
         _additionalGridLineClass: function (num) {
             if (this.options.additional_grid_line_class && typeof this.options.additional_grid_line_class === "function") {
                 return this.options.additional_grid_line_class(num);
@@ -1840,7 +1854,7 @@
 
                 // Do not render blank labels to improve performance
                 if (result && result.length) {
-                    html += '<span class="irs-grid-text js-grid-text-' + i + '" style="left: ' + big_w + '%">' + result + '</span>';
+                    html += '<span class="irs-grid-text js-grid-text-' + i + '" style="left: ' + big_w + '%" data-result="' + this.calcReal(big_w) + '">' + result + '</span>';
                 }
             }
             this.coords.big_num = Math.ceil(big_num + 1);
