@@ -316,6 +316,8 @@
             decorate_both: true,
             values_separator: " — ",
 
+            input_values_separator: ";",
+
             disable: false,
 
             onStart: null,
@@ -1078,11 +1080,11 @@
                     this.$cache.single[0].style.left = this.labels.p_single_left + "%";
 
                     if (this.options.values.length) {
-                        this.$cache.input.prop("value", this.result.from_value + ";" + this.result.to_value);
+                        this.$cache.input.prop("value", this.result.from_value + this.options.input_values_separator + this.result.to_value);
                         this.$cache.input.data("from", this.result.from_value);
                         this.$cache.input.data("to", this.result.to_value);
                     } else {
-                        this.$cache.input.prop("value", this.result.from + ";" + this.result.to);
+                        this.$cache.input.prop("value", this.result.from + this.options.input_values_separator + this.result.to);
                         this.$cache.input.data("from", this.result.from);
                         this.$cache.input.data("to", this.result.to);
                     }
