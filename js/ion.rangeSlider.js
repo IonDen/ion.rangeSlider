@@ -201,7 +201,9 @@
             step: $inp.data("step"),
 
             min_interval: $inp.data("minInterval"),
+            min_interval_chain: $inp.data("minIntervalChain"),
             max_interval: $inp.data("maxInterval"),
+            max_interval_chain: $inp.data("maxIntervalChain"),
             drag_interval: $inp.data("dragInterval"),
 
             values: $inp.data("values"),
@@ -277,7 +279,9 @@
             step: 1,
 
             min_interval: 0,
+            min_interval_chain: false,
             max_interval: 0,
+            max_interval_chain: false,
             drag_interval: false,
 
             values: [],
@@ -837,6 +841,7 @@
                     break;
 
                 case "from":
+                    var realMinInterval, realMaxInterval;
                     if (this.options.from_fixed) {
                         break;
                     }
@@ -846,13 +851,31 @@
                         this.coords.p_from_real = this.coords.p_to_real;
                     }
                     this.coords.p_from_real = this.checkDiapason(this.coords.p_from_real, this.options.from_min, this.options.from_max);
+
+                    // Check for keeping the "to" close by
+                    if (this.options.min_interval && this.options.min_interval_chain === true) {
+                        realMinInterval = this.calcPercent(this.options.min + this.options.min_interval);
+                        this.coords.p_to_real = Math.max(this.coords.p_from_real + realMinInterval, this.coords.p_to_real);
+                        this.coords.p_to_real = Math.min(this.coords.p_to_real, 100);
+                    }
+
+                    // Check for keeping the "to" far away
+                    if (this.options.max_interval && this.options.max_interval_chain === true) {
+                        realMaxInterval = this.calcPercent(this.options.min + this.options.max_interval);
+                        this.coords.p_to_real = Math.min(this.coords.p_from_real + realMaxInterval, this.coords.p_to_real);
+                    }
+                    // Update the "to", although it might not have changed.
+                    this.coords.p_to = this.toFixed(this.coords.p_to_real / 100 * real_width);
+
                     this.coords.p_from_real = this.checkMinInterval(this.coords.p_from_real, this.coords.p_to_real, "from");
                     this.coords.p_from_real = this.checkMaxInterval(this.coords.p_from_real, this.coords.p_to_real, "from");
+
                     this.coords.p_from = this.toFixed(this.coords.p_from_real / 100 * real_width);
 
                     break;
 
                 case "to":
+                    var realMinInterval, realMaxInterval;
                     if (this.options.to_fixed) {
                         break;
                     }
@@ -862,8 +885,23 @@
                         this.coords.p_to_real = this.coords.p_from_real;
                     }
                     this.coords.p_to_real = this.checkDiapason(this.coords.p_to_real, this.options.to_min, this.options.to_max);
+
+                    // Check for keeping the "from" close by
+                    if (this.options.min_interval && this.options.min_interval_chain === true) {
+                        realMinInterval = this.calcPercent(this.options.min + this.options.min_interval);
+                        this.coords.p_from_real = Math.min(this.coords.p_to_real - realMinInterval, this.coords.p_from_real);
+                    }
+                    // Check for keeping the "from" far away
+                    if (this.options.max_interval && this.options.max_interval_chain === true) {
+                        realMaxInterval = this.calcPercent(this.options.min + this.options.max_interval);
+                        this.coords.p_from_real = Math.max(0, this.coords.p_to_real - realMaxInterval, this.coords.p_from_real);
+                    }
+                    // Update the "from", although it might not have changed.
+                    this.coords.p_from = this.toFixed(this.coords.p_from_real / 100 * real_width);
+
                     this.coords.p_to_real = this.checkMinInterval(this.coords.p_to_real, this.coords.p_from_real, "to");
                     this.coords.p_to_real = this.checkMaxInterval(this.coords.p_to_real, this.coords.p_from_real, "to");
+
                     this.coords.p_to = this.toFixed(this.coords.p_to_real / 100 * real_width);
 
                     break;
