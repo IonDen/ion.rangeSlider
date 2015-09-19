@@ -297,6 +297,10 @@
             prettify_separator: " ",
             prettify: null,
 
+            prettify_labels: null,
+            additional_grid_line_class: null,
+            grid_line_visible: null,
+
             force_edges: false,
 
             keyboard: false,
@@ -323,7 +327,8 @@
             onStart: null,
             onChange: null,
             onFinish: null,
-            onUpdate: null
+            onUpdate: null,
+            onLabelClick: null
         }, options);
 
         this.validate();
@@ -510,6 +515,8 @@
             this.$cache.win.off("touchend.irs_" + this.plugin_count);
             this.$cache.win.off("mouseup.irs_" + this.plugin_count);
 
+            this.$cache.grid.off("click");
+
             if (is_old_ie) {
                 this.$cache.body.off("mouseup.irs_" + this.plugin_count);
                 this.$cache.body.off("mouseleave.irs_" + this.plugin_count);
@@ -533,6 +540,11 @@
 
             this.$cache.line.on("touchstart.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
             this.$cache.line.on("mousedown.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
+
+            var that = this;
+            this.$cache.grid.on("click", ".irs-grid-text", function(event) {
+                that._onLabelClick(event, $(this).data('result'));
+            });
 
             if (this.options.drag_interval && this.options.type === "double") {
                 this.$cache.bar.on("touchstart.irs_" + this.plugin_count, this.pointerDown.bind(this, "both"));
@@ -1513,6 +1525,34 @@
             return n.replace(/(\d{1,3}(?=(?:\d\d\d)+(?!\d)))/g, "$1" + this.options.prettify_separator);
         },
 
+        _prettifyLabels: function (num) {
+            if (this.options.prettify_labels && typeof this.options.prettify_labels === "function") {
+                return this.options.prettify_labels(num);
+            }
+
+            return this._prettify(num);
+        },
+
+        _onLabelClick: function (event, result) {
+            if (this.options.onLabelClick && typeof this.options.onLabelClick === "function") {
+                this.options.onLabelClick(this.$cache.input.data('ionRangeSlider'), event, +result);
+            }
+        },
+
+        _additionalGridLineClass: function (num) {
+            if (this.options.additional_grid_line_class && typeof this.options.additional_grid_line_class === "function") {
+                return this.options.additional_grid_line_class(num);
+            }
+        },
+
+        _gridLineVisible: function (num) {
+            if (this.options.grid_line_visible && typeof this.options.grid_line_visible === "function") {
+                return this.options.grid_line_visible(num);
+            } else {
+                return true;
+            }
+        },
+
         checkEdges: function (left, width) {
             if (!this.options.force_edges) {
                 return this.toFixed(left);
@@ -1802,16 +1842,22 @@
                     html += '<span class="irs-grid-pol small" style="left: ' + small_w + '%"></span>';
                 }
 
-                html += '<span class="irs-grid-pol" style="left: ' + big_w + '%"></span>';
-
                 result = this.calcReal(big_w);
+
+                if (this._gridLineVisible(result)) {
+                    html += '<span class="irs-grid-pol ' + this._additionalGridLineClass(result) + '" style="left: ' + big_w + '%"></span>';
+                }
+
                 if (o.values.length) {
                     result = o.p_values[result];
                 } else {
-                    result = this._prettify(result);
+                    result = this._prettifyLabels(result);
                 }
 
-                html += '<span class="irs-grid-text js-grid-text-' + i + '" style="left: ' + big_w + '%">' + result + '</span>';
+                // Do not render blank labels to improve performance
+                if (result && result.length) {
+                    html += '<span class="irs-grid-text js-grid-text-' + i + '" style="left: ' + big_w + '%" data-result="' + this.calcReal(big_w) + '">' + result + '</span>';
+                }
             }
             this.coords.big_num = Math.ceil(big_num + 1);
 
@@ -1839,6 +1885,13 @@
                 num = this.coords.big_num;
 
             for (i = 0; i < num; i++) {
+                // zeroify blank labels
+                if (!this.$cache.grid_labels[i].length) {
+                    this.coords.big_w[i] = this.coords.big_p[i] = this.coords.big_x[i] =
+                    start[i] = finish[i] = 0;
+                    continue;
+                }
+
                 this.coords.big_w[i] = this.$cache.grid_labels[i].outerWidth(false);
                 this.coords.big_p[i] = this.toFixed(this.coords.big_w[i] / this.coords.w_rs * 100);
                 this.coords.big_x[i] = this.toFixed(this.coords.big_p[i] / 2);
@@ -1868,6 +1921,10 @@
 
             for (i = 0; i < num; i++) {
                 label = this.$cache.grid_labels[i][0];
+
+                // Skip blank labels
+                if (!label) { continue; }
+
                 label.style.marginLeft = -this.coords.big_x[i] + "%";
             }
         },
@@ -1885,6 +1942,9 @@
                 }
 
                 label = this.$cache.grid_labels[next_i][0];
+
+                // Since we do not render blank labels, skip if encounter one
+                if (!label) { continue; }
 
                 if (finish[i] <= start[next_i]) {
                     label.style.visibility = "visible";
