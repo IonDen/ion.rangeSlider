@@ -1,15 +1,16 @@
-# Ion.Range Slider 2.0.13
-
-[![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
+![ion.rangeSlider](_tmp/logo-ion-range-slider.png)
 
 > <a href="readme.md">English description</a> | Описание на русском
 
 Удобный, гибкий и отзывчивый слайдер диапазонов
+
+***
+
+* Версия: 2.0.13
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/index.html">Страница проекта и демо</a>
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.13.zip">Download ion.rangeSlider-2.0.13.zip</a>
 
-***
-*<sup><a href="https://github.com/IonDen/ion.rangeSlider/blob/master/designer.md">Ищу дизайнера, создать логотип для проекта</a></sup>*
+[![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
 
 ## Описание
 * Ion.RangeSlider — классный, удобный, отзывчивый и легко настраиваемый слайдер диапазонов
