@@ -1,4 +1,4 @@
-![ion.rangeSlider](_tmp/logo-ion-range-slider.png)
+![ion.rangeSlider](_tmp/logo-ion-range-slider.png) v.2.0.13
 
 [![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
 
@@ -7,9 +7,6 @@
 Easy, flexible and responsive range slider
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.13.zip">Download ion.rangeSlider-2.0.13.zip</a>
-
-***
-*<sup><a href="https://github.com/IonDen/ion.rangeSlider/blob/master/designer.md">Designer wanted to create a logo</a></sup>*
 
 ## Description
 * version 2.0.13
