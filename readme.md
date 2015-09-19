@@ -478,7 +478,10 @@ slider.destroy();
 All plugins options are covered in demos.
 
 
-## <a href="history.md">Update history</a>
+### <a href="history.md">Update history</a>
 
-## Support
+***
+
+Support the plugin:
+
 [![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)

@@ -1,4 +1,6 @@
-# Ion.RangeSlider Update History
+![ion.rangeSlider](_tmp/logo-ion-range-slider.png)
+
+# Update History
 
 ### Version 2.0.13. July 25, 2015
 * Fixed bugs. Issues: #208, #270, #273
@@ -110,3 +112,9 @@
 
 ### December, 2012
 * Plugin release
+
+***
+
+Support the plugin:
+
+[![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
