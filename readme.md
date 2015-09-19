@@ -11,7 +11,6 @@ Ion.RangeSlider, v.2.0.13. Is an easy, flexible and responsive range slider with
  [![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
 
 ## Description
-* version 2.0.13
 * Ion.RangeSlider — cool, comfortable, responsive and easily customizable range slider
 * Supports events and public methods, has flexible settings, can be completely altered with CSS
 * Cross-browser: Google Chrome, Mozilla Firefox 3.6+, Opera 12+, Safari 5+, Internet Explorer 8+
