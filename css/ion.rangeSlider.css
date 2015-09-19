@@ -89,7 +89,17 @@
     bottom: 0; left: 0;
     width: 100%; height: 20px;
 }
-.irs-with-grid .irs-grid {
+
+.irs-top-grid {
+    position: absolute; display: none;
+    bottom: 0; left: 0;
+    width: 100%;
+    top: 0;
+    height: 16px;
+}
+
+.irs-with-grid .irs-grid,
+.irs-with-grid .irs-top-grid {
     display: block;
 }
     .irs-grid-pol {
@@ -101,7 +111,8 @@
     .irs-grid-pol.small {
         height: 4px;
     }
-    .irs-grid-text {
+    .irs-grid-text,
+    .irs-top-grid-text {
         position: absolute;
         bottom: 0; left: 0;
         white-space: nowrap;

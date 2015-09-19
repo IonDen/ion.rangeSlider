@@ -111,6 +111,7 @@
 
     var base_html =
         '<span class="irs">' +
+        '<span class="irs-top-grid"></span>' +
         '<span class="irs-line" tabindex="-1"><span class="irs-line-left"></span><span class="irs-line-mid"></span><span class="irs-line-right"></span></span>' +
         '<span class="irs-min">0</span><span class="irs-max">1</span>' +
         '<span class="irs-from">0</span><span class="irs-to">0</span><span class="irs-single">0</span>' +
@@ -186,7 +187,8 @@
             shad_to: null,
             edge: null,
             grid: null,
-            grid_labels: []
+            grid_labels: [],
+            top_grid_labels: []
         };
 
         // get config data attributes
@@ -307,6 +309,10 @@
             grid_num: 4,
             grid_snap: false,
 
+            top_grid: false,
+            prettifyTopGridLabels: null,
+            topGridLabelVisible: null,
+
             hide_min_max: false,
             hide_from_to: false,
 
@@ -323,7 +329,8 @@
             onStart: null,
             onChange: null,
             onFinish: null,
-            onUpdate: null
+            onUpdate: null,
+            onTopLabelClick: null
         }, options);
 
         this.validate();
@@ -376,7 +383,10 @@
             big: [],
             big_w: [],
             big_p: [],
-            big_x: []
+            big_x: [],
+            top_label_big_w: [],
+            top_label_big_p: [],
+            top_label_big_x: []
         };
 
         this.labels = {
@@ -444,6 +454,7 @@
             this.$cache.bar = this.$cache.cont.find(".irs-bar");
             this.$cache.line = this.$cache.cont.find(".irs-line");
             this.$cache.grid = this.$cache.cont.find(".irs-grid");
+            this.$cache.top_grid = this.$cache.cont.find(".irs-top-grid");
 
             if (this.options.type === "single") {
                 this.$cache.cont.append(single_html);
@@ -510,6 +521,8 @@
             this.$cache.win.off("touchend.irs_" + this.plugin_count);
             this.$cache.win.off("mouseup.irs_" + this.plugin_count);
 
+            this.$cache.top_grid.off("click");
+
             if (is_old_ie) {
                 this.$cache.body.off("mouseup.irs_" + this.plugin_count);
                 this.$cache.body.off("mouseleave.irs_" + this.plugin_count);
@@ -520,6 +533,11 @@
             this.coords.big_w = [];
             this.coords.big_p = [];
             this.coords.big_x = [];
+
+            this.$cache.top_grid_labels = [];
+            this.coords.top_label_big_w = [];
+            this.coords.top_label_big_p = [];
+            this.coords.top_label_big_x = [];
 
             cancelAnimationFrame(this.raf_id);
         },
@@ -533,6 +551,11 @@
 
             this.$cache.line.on("touchstart.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
             this.$cache.line.on("mousedown.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
+
+            var that = this;
+            this.$cache.top_grid.on("click", ".irs-top-grid-text", function(event) {
+                that._onTopGridLabelClick(event, $(this).data('result'));
+            });
 
             if (this.options.drag_interval && this.options.type === "double") {
                 this.$cache.bar.on("touchstart.irs_" + this.plugin_count, this.pointerDown.bind(this, "both"));
@@ -1513,6 +1536,28 @@
             return n.replace(/(\d{1,3}(?=(?:\d\d\d)+(?!\d)))/g, "$1" + this.options.prettify_separator);
         },
 
+        _prettifyTopGridLabels: function (num) {
+            if (this.options.prettifyTopGridLabels && typeof this.options.prettifyTopGridLabels === "function") {
+                return this.options.prettifyTopGridLabels(num);
+            }
+
+            return this._prettify(num);
+        },
+
+        _topGridLabelVisible: function (num) {
+            if (this.options.topGridLabelVisible && typeof this.options.topGridLabelVisible === "function") {
+                return this.options.topGridLabelVisible(num);
+            }
+
+            return false;
+        },
+
+        _onTopGridLabelClick: function (event, result) {
+            if (this.options.onTopGridLabelClick && typeof this.options.onTopGridLabelClick === "function") {
+                this.options.onTopGridLabelClick(this.$cache.input.data('ionRangeSlider'), event, +result);
+            }
+        },
+
         checkEdges: function (left, width) {
             if (!this.options.force_edges) {
                 return this.toFixed(left);
@@ -1805,6 +1850,13 @@
                 html += '<span class="irs-grid-pol" style="left: ' + big_w + '%"></span>';
 
                 result = this.calcReal(big_w);
+
+                if (this.options.top_grid && this._topGridLabelVisible(result)) {
+                    var label = $('<span class="irs-top-grid-text js-top-grid-text-' + i + '" style="left: ' + big_w + '%"' + '>' + this._prettifyTopGridLabels(result) + '</span>');
+                    label.data('result', result);
+                    this.$cache.top_grid.prepend(label);
+                }
+
                 if (o.values.length) {
                     result = o.p_values[result];
                 } else {
@@ -1823,12 +1875,15 @@
         },
 
         cacheGridLabels: function () {
-            var $label, i,
+            var $label, $top_grid_label, i,
                 num = this.coords.big_num;
 
             for (i = 0; i < num; i++) {
                 $label = this.$cache.grid.find(".js-grid-text-" + i);
                 this.$cache.grid_labels.push($label);
+
+                $top_grid_label = this.$cache.top_grid.find(".js-top-grid-text-" + i);
+                this.$cache.top_grid_labels.push($top_grid_label);
             }
 
             this.calcGridLabels();
@@ -1836,6 +1891,7 @@
 
         calcGridLabels: function () {
             var i, label, start = [], finish = [],
+                top_grid_label, top_label_start = [], top_label_finish = [],
                 num = this.coords.big_num;
 
             for (i = 0; i < num; i++) {
@@ -1845,6 +1901,19 @@
 
                 start[i] = this.toFixed(this.coords.big[i] - this.coords.big_x[i]);
                 finish[i] = this.toFixed(start[i] + this.coords.big_p[i]);
+
+                // Top grid labels
+                if (this.$cache.top_grid_labels[i].length) {
+                  this.coords.top_label_big_w[i] = this.$cache.top_grid_labels[i].outerWidth(false);
+                  this.coords.top_label_big_p[i] = this.toFixed(this.coords.big_w[i] / this.coords.w_rs * 100);
+                  this.coords.top_label_big_x[i] = this.toFixed(this.coords.top_label_big_p[i] / 2);
+
+                  top_label_start[i] = this.toFixed(this.coords.big[i] - this.coords.top_label_big_x[i]);
+                  top_label_finish[i] = this.toFixed(top_label_start[i] + this.coords.top_label_big_p[i]);
+                } else {
+                  this.coords.top_label_big_w[i] = this.coords.top_label_big_p[i] = this.coords.top_label_big_x[i] =
+                  top_label_start[i] = top_label_finish[i] = 0;
+                }
             }
 
             if (this.options.force_edges) {
@@ -1861,20 +1930,43 @@
 
                     this.coords.big_x[num - 1] = this.toFixed(this.coords.big_p[num - 1] - this.coords.grid_gap);
                 }
+
+                // Top grid labels
+                if (top_label_start[0] < -this.coords.grid_gap) {
+                    top_label_start[0] = -this.coords.grid_gap;
+                    top_label_finish[0] = this.toFixed(top_label_start[0] + this.coords.top_label_big_p[0]);
+
+                    this.coords.top_label_big_x[0] = this.coords.grid_gap;
+                }
+
+                if (top_label_finish[num - 1] > 100 + this.coords.grid_gap) {
+                    top_label_finish[num - 1] = 100 + this.coords.grid_gap;
+                    top_label_start[num - 1] = this.toFixed(top_label_finish[num - 1] - this.coords.top_label_big_p[num - 1]);
+
+                    this.coords.top_label_big_x[num - 1] = this.toFixed(this.coords.top_label_big_p[num - 1] - this.coords.grid_gap);
+                }
             }
 
             this.calcGridCollision(2, start, finish);
             this.calcGridCollision(4, start, finish);
 
+            this.calcGridCollision(2, top_label_start, top_label_finish, true);
+            this.calcGridCollision(4, top_label_start, top_label_finish, true);
+
             for (i = 0; i < num; i++) {
                 label = this.$cache.grid_labels[i][0];
                 label.style.marginLeft = -this.coords.big_x[i] + "%";
+
+                top_grid_label = this.$cache.top_grid_labels[i][0];
+                if (top_grid_label) {
+                    top_grid_label.style.marginLeft = -this.coords.top_label_big_x[i] + "%";
+                }
             }
         },
 
         // Collisions Calc Beta
         // TODO: Refactor then have plenty of time
-        calcGridCollision: function (step, start, finish) {
+        calcGridCollision: function (step, start, finish, isTopGrid) {
             var i, next_i, label,
                 num = this.coords.big_num;
 
@@ -1884,7 +1976,13 @@
                     break;
                 }
 
-                label = this.$cache.grid_labels[next_i][0];
+                if (isTopGrid) {
+                  label = this.$cache.top_grid_labels[next_i][0];
+                } else {
+                  label = this.$cache.grid_labels[next_i][0];
+                }
+
+                if (!label) { continue; }
 
                 if (finish[i] <= start[next_i]) {
                     label.style.visibility = "visible";
