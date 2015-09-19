@@ -1,10 +1,12 @@
-![ion.rangeSlider](_tmp/logo-ion-range-slider.png) [![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
+![ion.rangeSlider](_tmp/logo-ion-range-slider.png)
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
-Easy, flexible and responsive range slider
+Ion.RangeSlider, v.2.0.13. Is an easy, flexible and responsive range slider with tons of options.
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.13.zip">Download ion.rangeSlider-2.0.13.zip</a>
+
+ [![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
 
 ## Description
 * version 2.0.13
