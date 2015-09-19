@@ -1,7 +1,5 @@
 ![ion.rangeSlider](_tmp/logo-ion-range-slider.png)
 
-## version 2.0.13
-
 [![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
@@ -14,6 +12,7 @@ Easy, flexible and responsive range slider
 *<sup><a href="https://github.com/IonDen/ion.rangeSlider/blob/master/designer.md">Designer wanted to create a logo</a></sup>*
 
 ## Description
+* version 2.0.13
 * Ion.RangeSlider — cool, comfortable, responsive and easily customizable range slider
 * Supports events and public methods, has flexible settings, can be completely altered with CSS
 * Cross-browser: Google Chrome, Mozilla Firefox 3.6+, Opera 12+, Safari 5+, Internet Explorer 8+
