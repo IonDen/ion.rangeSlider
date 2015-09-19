@@ -1,6 +1,4 @@
-![ion.rangeSlider](_tmp/logo-ion-range-slider.png) v.2.0.13
-
-[![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
+![ion.rangeSlider](_tmp/logo-ion-range-slider.png) [![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
