@@ -8,7 +8,7 @@
 
 * Версия: 2.0.13
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/index.html">Страница проекта и демо</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.13.zip">Download ion.rangeSlider-2.0.13.zip</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.13.zip">Загрузить ZIP-архив</a>
 
 [![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
 
