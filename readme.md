@@ -6,10 +6,9 @@ Ion.RangeSlider. Is an easy, flexible and responsive range slider with tons of o
 
 ***
 
-* Version: 2.0.13
+* Version: 2.1.0
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.13.zip">Download ZIP</a>
-
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.1.0.zip">Download ZIP</a>
 
 [![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
 
@@ -351,6 +350,13 @@ If your are new in web development and you are not sure how to correctly install
             <td>" — "</td>
             <td>string</td>
             <td>Set your own separator for close values. Used for "double" type. Default: 10 — 100. Or you may set: 10 to 100, 10 + 100, 10 &rarr; 100 etc.</td>
+        </tr>
+        
+        <tr class="options__step">
+            <td>input_values_separator<div><sup>data-input-values-separator</sup></div></td>
+            <td>" ; "</td>
+            <td>string</td>
+            <td>Separator for double values in input value property.</td>
         </tr>
 
         <tr class="options__step">

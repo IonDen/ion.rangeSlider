@@ -2,6 +2,12 @@
 
 # Update History
 
+### Version 2.1.0. September 20, 2015
+* Fixed bugs. Issues: #288
+* New features. Requests: #281, #284, #286, #289
+* Some code refactoring
+* Code documentation updated
+
 ### Version 2.0.13. July 25, 2015
 * Fixed bugs. Issues: #208, #270, #273
 * New features. Requests: #233
@@ -24,9 +30,7 @@
 ### Version 2.0.7. May 26, 2015
 * Fixed memory issue: #220
 * Fixed CPU issue: #186
-* Merged PR: #235
-* Merged PR: #226
-* Merged PR: #209
+* Merged PRs: #209, #226, #235
 
 ### Version 2.0.6. February 17, 2015
 * Issues done: #197

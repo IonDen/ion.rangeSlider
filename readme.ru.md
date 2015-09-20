@@ -6,9 +6,9 @@
 
 ***
 
-* Версия: 2.0.13
+* Версия: 2.1.0
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/index.html">Страница проекта и демо</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.0.13.zip">Загрузить ZIP-архив</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.1.0.zip">Загрузить ZIP-архив</a>
 
 [![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
 
@@ -349,6 +349,13 @@ $("#example_id").ionRangeSlider();
             <td>" — "</td>
             <td>string</td>
             <td>Разделитель для близко расположенных значений. Используется для типа "double". Например: 10 — 100, 10 to 100, 10 + 100, 10 &rarr; 100 и т.д.</td>
+        </tr>
+        
+        <tr class="options__step">
+            <td>input_values_separator<div><sup>data-input-values-separator</sup></div></td>
+            <td>" ; "</td>
+            <td>string</td>
+            <td>Разделитель для двойных значений в поле value у базового input-элемента</td>
         </tr>
 
         <tr class="options__step">
