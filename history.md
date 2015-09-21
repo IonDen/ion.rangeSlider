@@ -2,6 +2,10 @@
 
 # Update History
 
+### Version 2.1.1. September 21, 2015
+* Fixed bugs. Issues: #305
+* New features. Requests: #282
+
 ### Version 2.1.0. September 20, 2015
 * Fixed bugs. Issues: #288
 * New features. Requests: #281, #284, #286, #289

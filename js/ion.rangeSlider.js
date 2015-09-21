@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 2.1.0 Build: 347
+// version 2.1.1 Build: 347
 // © Denis Ineshin, 2015
 // https://github.com/IonDen
 //
@@ -146,7 +146,7 @@
      * @constructor
      */
     var IonRangeSlider = function (input, options, plugin_count) {
-        this.VERSION = "2.1.0";
+        this.VERSION = "2.1.1";
         this.input = input;
         this.plugin_count = plugin_count;
         this.current_plugin = 0;
@@ -154,7 +154,7 @@
         this.update_tm = 0;
         this.old_from = 0;
         this.old_to = 0;
-        this.old_min_interval = 0;
+        this.old_min_interval = null;
         this.raf_id = null;
         this.dragging = false;
         this.force_redraw = false;
@@ -893,7 +893,7 @@
         setTempMinInterval: function () {
             var interval = this.result.to - this.result.from;
 
-            if (this.options.min_interval) {
+            if (this.old_min_interval === null) {
                 this.old_min_interval = this.options.min_interval;
             }
 
@@ -904,9 +904,9 @@
          * Restore min_interval option to original
          */
         restoreOriginalMinInterval: function () {
-            if (this.old_min_interval) {
+            if (this.old_min_interval !== null) {
                 this.options.min_interval = this.old_min_interval;
-                this.old_min_interval = 0;
+                this.old_min_interval = null;
             }
         },
 
