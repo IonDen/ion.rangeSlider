@@ -2034,6 +2034,7 @@
                 small_max = 4,
                 local_small_max,
                 small_p,
+                local_small_p,
                 small_w = 0,
 
                 result,
@@ -2054,7 +2055,7 @@
             } 
             
             // big tick percent interval  
-            big_p = this.toFixed(100 / big_num);
+            big_p = 100 / big_num;
 
             if (big_num > 4) {
                 small_max = 3;
@@ -2080,12 +2081,17 @@
                 big_w = this.toFixed(big_p * i);
 
                 if (big_w > 100) {
-                    big_w = 100;
 
-                    local_small_max -= 2;
-                    if (local_small_max < 0) {
-                        local_small_max = 0;
+                    local_small_p = this.toFixed(big_p / small_max);
+
+                    for (z = 0; z < small_max; z++) {
+                        if (big_w - (local_small_p * z) > 100) {
+                            local_small_max--;
+                        } else {
+                            break;
+                        }
                     }
+                    big_w = 100;
                 }
                 this.coords.big[i] = big_w;
 
