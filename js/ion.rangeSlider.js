@@ -2030,6 +2030,7 @@
                 big_p = 0,
                 big_w = 0,
 
+                small_min = 0, // grid with big_num > 28
                 small_max = 4,
                 local_small_max,
                 small_p,
@@ -2044,10 +2045,16 @@
 
             if (o.grid_snap) {
                 big_num = total / o.step;
-                big_p = this.toFixed(o.step / (total / 100));
-            } else {
-                big_p = this.toFixed(100 / big_num);
             }
+
+            // if big_num is superior to 28, display only 14 big tick and convert others into small ticks
+            if (big_num > 28) {
+                small_min = Math.floor(big_num / 14)
+                big_num /= small_min;
+            } 
+            
+            // big tick percent interval  
+            big_p = this.toFixed(100 / big_num);
 
             if (big_num > 4) {
                 small_max = 3;
@@ -2060,6 +2067,11 @@
             }
             if (big_num > 28) {
                 small_max = 0;
+            }
+
+            // if we have small min tick, use it
+            if (small_min) {
+                small_max = small_min - 1;
             }
 
             for (i = 0; i < big_num + 1; i++) {
