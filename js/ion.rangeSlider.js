@@ -724,7 +724,6 @@
             this.$cache.cont.find(".state_hover").removeClass("state_hover");
 
             this.force_redraw = true;
-            this.dragging = false;
 
             if (is_old_ie) {
                 $("*").prop("unselectable", false);
@@ -738,6 +737,8 @@
                 this.is_finish = true;
                 this.callOnFinish();
             }
+            
+            this.dragging = false;
         },
 
         /**
