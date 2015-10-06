@@ -375,7 +375,7 @@
 
         for (prop in config_from_data) {
             if (config_from_data.hasOwnProperty(prop)) {
-                if (!config_from_data[prop]) {
+                if (!config_from_data[prop] && config_from_data[prop] !== 0) {
                     delete config_from_data[prop];
                 }
             }
