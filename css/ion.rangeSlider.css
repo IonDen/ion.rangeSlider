@@ -42,6 +42,9 @@
             position: absolute; display: block;
             top: 0; left: 0;
         }
+            .irs-bar-edge.reverse {
+                left:auto; right:0;
+            }
 
     .irs-shadow {
         position: absolute; display: none;
