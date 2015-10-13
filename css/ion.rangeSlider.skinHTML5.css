@@ -49,6 +49,7 @@
         -moz-border-radius: 16px 0 0 16px;
     }
         .irs-bar-edge.reverse {
+            margin-right: 1px;
             border-width: 1px 1px 1px 0;
             border-radius:0 16px 16px 0;
             -moz-border-radius:0 16px 16px 0;
