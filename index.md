@@ -6,9 +6,9 @@ Ion.RangeSlider. Is an easy, flexible and responsive range slider with tons of o
 
 ***
 
-* Version: 2.1.1
+* Version: 2.1.2
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.1.1.zip">Download ZIP</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.1.2.zip">Download ZIP</a>
 
 [![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
 

@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 2.1.1 Build: 347
+// version 2.1.2 Build: 350
 // © Denis Ineshin, 2015
 // https://github.com/IonDen
 //
@@ -140,13 +140,13 @@
     /**
      * Main plugin constructor
      *
-     * @param input {object} link to base input element
-     * @param options {object} slider config
-     * @param plugin_count {number}
+     * @param input {Object} link to base input element
+     * @param options {Object} slider config
+     * @param plugin_count {Number}
      * @constructor
      */
     var IonRangeSlider = function (input, options, plugin_count) {
-        this.VERSION = "2.1.1";
+        this.VERSION = "2.1.2";
         this.input = input;
         this.plugin_count = plugin_count;
         this.current_plugin = 0;
@@ -557,7 +557,7 @@
          * Determine which handles was clicked last
          * and which handler should have hover effect
          *
-         * @param target {string}
+         * @param target {String}
          */
         changeLevel: function (target) {
             switch (target) {
@@ -659,8 +659,8 @@
                 this.$cache.edge.on("mousedown.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
                 this.$cache.shad_single.on("mousedown.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
             } else {
-                this.$cache.single.on("touchstart.irs_" + this.plugin_count, this.pointerDown.bind(this, "from"));
-                this.$cache.single.on("mousedown.irs_" + this.plugin_count, this.pointerDown.bind(this, "from"));
+                this.$cache.single.on("touchstart.irs_" + this.plugin_count, this.pointerDown.bind(this, null));
+                this.$cache.single.on("mousedown.irs_" + this.plugin_count, this.pointerDown.bind(this, null));
 
                 this.$cache.from.on("touchstart.irs_" + this.plugin_count, this.pointerDown.bind(this, "from"));
                 this.$cache.s_from.on("touchstart.irs_" + this.plugin_count, this.pointerDown.bind(this, "from"));
@@ -691,7 +691,7 @@
          * Mousemove or touchmove
          * only for handlers
          *
-         * @param e {object} event object
+         * @param e {Object} event object
          */
         pointerMove: function (e) {
             if (!this.dragging) {
@@ -708,7 +708,7 @@
          * Mouseup or touchend
          * only for handlers
          *
-         * @param e {object} event object
+         * @param e {Object} event object
          */
         pointerUp: function (e) {
             if (this.current_plugin !== this.plugin_count) {
@@ -745,8 +745,8 @@
          * Mousedown or touchstart
          * only for handlers
          *
-         * @param target {string}
-         * @param e {object} event object
+         * @param target {String|null}
+         * @param e {Object} event object
          */
         pointerDown: function (target, e) {
             e.preventDefault();
@@ -757,6 +757,10 @@
 
             if (target === "both") {
                 this.setTempMinInterval();
+            }
+
+            if (!target) {
+                target = this.target;
             }
 
             this.current_plugin = this.plugin_count;
@@ -784,8 +788,8 @@
          * Mousedown or touchstart
          * for other slider elements, like diapason line
          *
-         * @param target {string}
-         * @param e {object} event object
+         * @param target {String}
+         * @param e {Object} event object
          */
         pointerClick: function (target, e) {
             e.preventDefault();
@@ -810,8 +814,8 @@
         /**
          * Keyborard controls for focused slider
          *
-         * @param target {string}
-         * @param e {object} event object
+         * @param target {String}
+         * @param e {Object} event object
          * @returns {boolean|undefined}
          */
         key: function (target, e) {
@@ -1163,8 +1167,8 @@
         /**
          * Find closest handle to pointer click
          *
-         * @param real_x {number}
-         * @returns {string}
+         * @param real_x {Number}
+         * @returns {String}
          */
         chooseHandle: function (real_x) {
             if (this.options.type === "single") {
@@ -1457,11 +1461,16 @@
                     this.$cache.single[0].style.visibility = "visible";
 
                     if (this.result.from === this.result.to) {
-                        this.$cache.from[0].style.visibility = "visible";
+                        if (this.target === "from") {
+                            this.$cache.from[0].style.visibility = "visible";
+                        } else if (this.target === "to") {
+                            this.$cache.to[0].style.visibility = "visible";
+                        }
                         this.$cache.single[0].style.visibility = "hidden";
                         max = to_left;
                     } else {
                         this.$cache.from[0].style.visibility = "hidden";
+                        this.$cache.to[0].style.visibility = "hidden";
                         this.$cache.single[0].style.visibility = "visible";
                         max = Math.max(single_left, to_left);
                     }
@@ -1586,9 +1595,9 @@
         /**
          * Convert real value to percent
          *
-         * @param value {number} X in real
+         * @param value {Number} X in real
          * @param no_min {boolean=} don't use min value
-         * @returns {number} X in percent
+         * @returns {Number} X in percent
          */
         convertToPercent: function (value, no_min) {
             var diapason = this.options.max - this.options.min,
@@ -1614,8 +1623,8 @@
         /**
          * Convert percent to real values
          *
-         * @param percent {number} X in percent
-         * @returns {number} X in real
+         * @param percent {Number} X in percent
+         * @returns {Number} X in real
          */
         convertToValue: function (percent) {
             var min = this.options.min,
@@ -1687,8 +1696,8 @@
         /**
          * Round percent value with step
          *
-         * @param percent {number}
-         * @returns percent {number} rounded
+         * @param percent {Number}
+         * @returns percent {Number} rounded
          */
         calcWithStep: function (percent) {
             var rounded = Math.round(percent / this.coords.p_step) * this.coords.p_step;

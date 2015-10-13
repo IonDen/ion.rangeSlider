@@ -6,9 +6,9 @@
 
 ***
 
-* Версия: 2.1.1
+* Версия: 2.1.2
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/index.html">Страница проекта и демо</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.1.1.zip">Загрузить ZIP-архив</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.1.2.zip">Загрузить ZIP-архив</a>
 
 [![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
 
