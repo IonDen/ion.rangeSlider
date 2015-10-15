@@ -867,6 +867,10 @@
          */
         moveByKey: function (right) {
             var p = this.coords.p_pointer;
+            
+            if (this.options.reverse) {
+                right = !right;
+            }
 
             if (right) {
                 p += this.options.keyboard_step;
@@ -874,7 +878,12 @@
                 p -= this.options.keyboard_step;
             }
 
-            this.coords.x_pointer = this.toFixed(this.coords.w_rs / 100 * p);
+            if (this.options.reverse) {
+                this.coords.x_pointer = this.coords.w_rs - this.toFixed(this.coords.w_rs / 100 * p);
+            } else {
+                this.coords.x_pointer = this.toFixed(this.coords.w_rs / 100 * p);
+            }
+            
             this.is_key = true;
             this.calc();
         },
