@@ -10,8 +10,6 @@
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/index.html">Страница проекта и демо</a>
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.1.2.zip">Загрузить ZIP-архив</a>
 
-[![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
-
 ## Описание
 * Ion.RangeSlider — классный, удобный, отзывчивый и легко настраиваемый слайдер диапазонов
 * Слайдер поддерживает события и публичные методы, имеет гибкие настройки, может быть полностью видоизменен через CSS
@@ -488,6 +486,10 @@ slider.destroy();
 
 ***
 
-Поддержите плагин:
+#### Поддержите разработку плагинов серии Ion:
 
-[![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
+* Пожертвовать через сервис Pledgie: [![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
+
+* Пожертвовать напрямую через Paypal: https://www.paypal.me/IonDen
+
+* Пожертвовать напрямую через Яндекс.Деньги: http://yasobe.ru/na/razrabotku
