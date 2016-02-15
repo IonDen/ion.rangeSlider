@@ -1,4 +1,4 @@
-﻿// Ion.RangeSlider
+// Ion.RangeSlider
 // version 2.1.2 Build: 350
 // © Denis Ineshin, 2015
 // https://github.com/IonDen
@@ -10,7 +10,16 @@
 // http://ionden.com/a/plugins/licence-en.html
 // =====================================================================================================================
 
-;(function ($, document, window, navigator, undefined) {
+(function (factory) {
+    /* jshint strict: false */
+    if (typeof define === 'function' && define.amd) {
+        // AMD. Register as an anonymous module depending on jQuery.
+        define(['jquery'], factory(jQuery, document, window, navigator));
+    } else {
+        // No AMD. Register plugin with global jQuery object.
+        factory(jQuery, document, window, navigator);
+    }
+}(function ($, document, window, navigator, undefined) {
     "use strict";
 
     // =================================================================================================================
@@ -2304,4 +2313,4 @@
             };
     }());
 
-} (jQuery, document, window, navigator));
+}));
