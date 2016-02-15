@@ -252,7 +252,7 @@ If your are new in web development and you are not sure how to correctly install
             <td>prettify_separator<div><sup>data-prettify-separator</sup></div></td>
             <td>" "</td>
             <td>string</td>
-            <td>Set up your own separator for long numbers. 10 000, 10.000, 10-000 и т.п.</td>
+            <td>Set up your own separator for long numbers. 10 000, 10.000, 10-000, etc.</td>
         </tr>
         <tr class="options__new options__step">
             <td>prettify<div><sup>—</sup></div></td>
