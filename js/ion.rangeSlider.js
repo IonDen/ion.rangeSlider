@@ -1,5 +1,5 @@
 ﻿// Ion.RangeSlider
-// version 2.1.2 Build: 350
+// version 2.1.3 Build: 350
 // © Denis Ineshin, 2015
 // https://github.com/IonDen
 //
@@ -1348,7 +1348,7 @@
                 this.old_to = this.result.to;
 
                 // callbacks call
-                if (!this.is_resize && !this.is_update && !this.is_start && !this.is_finish) {
+                if (!this.is_resize && !this.is_update && !this.is_start) {
                     this.callOnChange();
                 }
                 if (this.is_key || this.is_click) {
