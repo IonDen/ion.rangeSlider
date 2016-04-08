@@ -1461,11 +1461,8 @@
                     this.$cache.single[0].style.visibility = "visible";
 
                     if (this.result.from === this.result.to) {
-                        if (this.target === "from") {
-                            this.$cache.from[0].style.visibility = "visible";
-                        } else if (this.target === "to") {
-                            this.$cache.to[0].style.visibility = "visible";
-                        }
+                        this.$cache.from[0].style.visibility = "hidden";
+                        this.$cache.to[0].style.visibility = "visible";
                         this.$cache.single[0].style.visibility = "hidden";
                         max = to_left;
                     } else {
