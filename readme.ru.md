@@ -6,9 +6,9 @@
 
 ***
 
-* Версия: 2.1.2
+* Версия: 2.1.3
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/index.html">Страница проекта и демо</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.1.2.zip">Загрузить ZIP-архив</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.1.3.zip">Загрузить ZIP-архив</a>
 
 ## Описание
 * Ion.RangeSlider — классный, удобный, отзывчивый и легко настраиваемый слайдер диапазонов
@@ -81,11 +81,6 @@
 ## Устанавливаем с помощью npm
 
 * npm install ion-rangeslider
-
-
-## Устанавливаем с помощью spm [![](http://spmjs.io/badge/ion-rangeslider)](http://spmjs.io/package/ion-rangeslider)
-
-* spm install ion-rangeslider
 
 
 ## Инициализация

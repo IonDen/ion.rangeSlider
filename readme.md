@@ -6,9 +6,9 @@ Ion.RangeSlider. Is an easy, flexible and responsive range slider with tons of o
 
 ***
 
-* Version: 2.1.2
+* Version: 2.1.3
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.1.2.zip">Download ZIP</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.1.3.zip">Download ZIP</a>
 
 ## Description
 * Ion.RangeSlider — cool, comfortable, responsive and easily customizable range slider
@@ -80,11 +80,6 @@ Or use the included PSD file and design a custom skin.
 ## Install with npm
 
 * npm install ion-rangeslider
-
-
-## Install with spm [![](http://spmjs.io/badge/ion-rangeslider)](http://spmjs.io/package/ion-rangeslider)
-
-* spm install ion-rangeslider
 
 
 ## Initialisation
