@@ -320,6 +320,8 @@
 
             disable: false,
 
+            reverse: false,
+
             onStart: null,
             onChange: null,
             onFinish: null,
@@ -378,7 +380,9 @@
 
             input_values_separator: $inp.data("inputValuesSeparator"),
 
-            disable: $inp.data("disable")
+            disable: $inp.data("disable"),
+            
+            reverse: $inp.data("reverse")
         };
         config_from_data.values = config_from_data.values && config_from_data.values.split(",");
 
@@ -497,8 +501,15 @@
 
             this.$cache.cont.html(base_html);
             this.$cache.rs = this.$cache.cont.find(".irs");
-            this.$cache.min = this.$cache.cont.find(".irs-min");
-            this.$cache.max = this.$cache.cont.find(".irs-max");
+
+            if (this.options.reverse) {
+                this.$cache.min = this.$cache.cont.find(".irs-max");
+                this.$cache.max = this.$cache.cont.find(".irs-min");
+            } else {
+                this.$cache.min = this.$cache.cont.find(".irs-min");
+                this.$cache.max = this.$cache.cont.find(".irs-max");
+            }
+
             this.$cache.from = this.$cache.cont.find(".irs-from");
             this.$cache.to = this.$cache.cont.find(".irs-to");
             this.$cache.single = this.$cache.cont.find(".irs-single");
@@ -508,7 +519,7 @@
 
             if (this.options.type === "single") {
                 this.$cache.cont.append(single_html);
-                this.$cache.edge = this.$cache.cont.find(".irs-bar-edge");
+                this.$cache.edge = this.$cache.cont.find(".irs-bar-edge")
                 this.$cache.s_single = this.$cache.cont.find(".single");
                 this.$cache.from[0].style.visibility = "hidden";
                 this.$cache.to[0].style.visibility = "hidden";
@@ -542,6 +553,10 @@
 
             if (this.options.drag_interval) {
                 this.$cache.bar[0].style.cursor = "ew-resize";
+            }
+            
+            if (this.options.type === "single") {
+                this.$cache.edge.toggleClass('reverse', this.options.reverse);
             }
         },
 
@@ -861,6 +876,10 @@
          */
         moveByKey: function (right) {
             var p = this.coords.p_pointer;
+            
+            if (this.options.reverse) {
+                right = !right;
+            }
 
             if (right) {
                 p += this.options.keyboard_step;
@@ -868,7 +887,12 @@
                 p -= this.options.keyboard_step;
             }
 
-            this.coords.x_pointer = this.toFixed(this.coords.w_rs / 100 * p);
+            if (this.options.reverse) {
+                this.coords.x_pointer = this.coords.w_rs - this.toFixed(this.coords.w_rs / 100 * p);
+            } else {
+                this.coords.x_pointer = this.toFixed(this.coords.w_rs / 100 * p);
+            }
+            
             this.is_key = true;
             this.calc();
         },
@@ -1137,7 +1161,12 @@
                 this.coords.x_pointer = this.coords.w_rs;
             }
 
-            this.coords.p_pointer = this.toFixed(this.coords.x_pointer / this.coords.w_rs * 100);
+            if (this.options.reverse) {
+                this.coords.p_pointer = this.toFixed(this.convertToReversePercent(this.coords.x_pointer / this.coords.w_rs * 100));
+            } else {
+                this.coords.p_pointer = this.toFixed(this.coords.x_pointer / this.coords.w_rs * 100);
+            }
+            
         },
 
         convertToRealPercent: function (fake) {
@@ -1312,14 +1341,21 @@
             if (this.old_from !== this.result.from || this.old_to !== this.result.to || this.force_redraw || this.is_key) {
 
                 this.drawLabels();
-
-                this.$cache.bar[0].style.left = this.coords.p_bar_x + "%";
+                if (this.options.reverse) {
+                    this.$cache.bar[0].style.left = this.convertToReversePercent(this.coords.p_bar_x) - this.coords.p_bar_w + "%";
+                } else {
+                    this.$cache.bar[0].style.left = this.coords.p_bar_x + "%";
+                }
                 this.$cache.bar[0].style.width = this.coords.p_bar_w + "%";
 
                 if (this.options.type === "single") {
-                    this.$cache.s_single[0].style.left = this.coords.p_single_fake + "%";
-
-                    this.$cache.single[0].style.left = this.labels.p_single_left + "%";
+                    if (this.options.reverse) {
+                        this.$cache.s_single[0].style.left = this.convertToReversePercent(this.coords.p_single_fake) - this.coords.p_handle + "%"
+                        this.$cache.single[0].style.left = this.convertToReversePercent(this.labels.p_single_left) - this.labels.p_single_fake + "%";
+                    } else {
+                        this.$cache.s_single[0].style.left = this.coords.p_single_fake + "%";
+                        this.$cache.single[0].style.left = this.labels.p_single_left + "%";
+                    }
 
                     if (this.options.values.length) {
                         this.$cache.input.prop("value", this.result.from_value);
@@ -1328,17 +1364,36 @@
                     }
                     this.$cache.input.data("from", this.result.from);
                 } else {
-                    this.$cache.s_from[0].style.left = this.coords.p_from_fake + "%";
-                    this.$cache.s_to[0].style.left = this.coords.p_to_fake + "%";
 
+                    if (this.options.reverse) {
+                        this.$cache.s_from[0].style.left = this.convertToReversePercent(this.coords.p_from_fake) - this.coords.p_handle + "%";                                                           
+                        this.$cache.s_to[0].style.left = this.convertToReversePercent(this.coords.p_to_fake) - this.coords.p_handle + "%";
+                    } else {
+                        this.$cache.s_from[0].style.left = this.coords.p_from_fake + "%";
+                        this.$cache.s_to[0].style.left = this.coords.p_to_fake + "%";
+                    }
+                    
                     if (this.old_from !== this.result.from || this.force_redraw) {
-                        this.$cache.from[0].style.left = this.labels.p_from_left + "%";
+                        if (this.options.reverse) {
+                            this.$cache.from[0].style.left = this.convertToReversePercent(this.labels.p_from_left) - this.labels.p_from_fake + "%";
+                        } else {
+                            this.$cache.from[0].style.left = this.labels.p_from_left + "%";
+                        }
                     }
+                    
                     if (this.old_to !== this.result.to || this.force_redraw) {
-                        this.$cache.to[0].style.left = this.labels.p_to_left + "%";
+                        if (this.options.reverse) {
+                            this.$cache.to[0].style.left = this.convertToReversePercent(this.labels.p_to_left) - this.labels.p_to_fake +  "%";                                                          
+                        } else {
+                            this.$cache.to[0].style.left = this.labels.p_to_left + "%";
+                        }
                     }
-
-                    this.$cache.single[0].style.left = this.labels.p_single_left + "%";
+                    
+                    if (this.options.reverse) {
+                        this.$cache.single[0].style.left = this.convertToReversePercent(this.labels.p_single_left) - this.labels.p_single_fake + "%";
+                    } else {
+                        this.$cache.single[0].style.left = this.labels.p_single_left + "%";
+                    }
 
                     if (this.options.values.length) {
                         this.$cache.input.prop("value", this.result.from_value + this.options.input_values_separator + this.result.to_value);
@@ -1529,6 +1584,10 @@
                     from_max = this.toFixed(from_max - (this.coords.p_handle / 100 * from_max));
                     from_min = from_min + (this.coords.p_handle / 2);
 
+                    if (this.options.reverse) {
+                        from_min = this.convertToReversePercent(from_min) - from_max;
+                    }
+
                     c.shad_single[0].style.display = "block";
                     c.shad_single[0].style.left = from_min + "%";
                     c.shad_single[0].style.width = from_max + "%";
@@ -1543,6 +1602,10 @@
                     from_max = this.toFixed(from_max - (this.coords.p_handle / 100 * from_max));
                     from_min = from_min + (this.coords.p_handle / 2);
 
+                    if (this.options.reverse) {
+                        from_min = this.convertToReversePercent(from_min) - from_max;
+                    }
+
                     c.shad_from[0].style.display = "block";
                     c.shad_from[0].style.left = from_min + "%";
                     c.shad_from[0].style.width = from_max + "%";
@@ -1556,6 +1619,10 @@
                     to_min = this.toFixed(to_min - (this.coords.p_handle / 100 * to_min));
                     to_max = this.toFixed(to_max - (this.coords.p_handle / 100 * to_max));
                     to_min = to_min + (this.coords.p_handle / 2);
+
+                    if (this.options.reverse) {
+                        to_min = this.convertToReversePercent(to_min) - to_max;
+                    }
 
                     c.shad_to[0].style.display = "block";
                     c.shad_to[0].style.left = to_min + "%";
@@ -1627,6 +1694,16 @@
             percent = val / one_percent;
 
             return this.toFixed(percent);
+        },
+
+        /**
+         * Convert percent to its reverse
+         *
+         * @param value {Number} X in percent
+         * @returns {Number} X in reverse percent
+         */
+        convertToReversePercent: function (value) {
+            return this.toFixed(100 - value);
         },
 
         /**
@@ -2104,11 +2181,18 @@
                     }
 
                     small_w = this.toFixed(big_w - (small_p * z));
-
-                    html += '<span class="irs-grid-pol small" style="left: ' + small_w + '%"></span>';
+                    if (this.options.reverse) {
+                        html += '<span class="irs-grid-pol small" style="left: ' + this.convertToReversePercent(small_w) + '%"></span>';
+                    } else {
+                        html += '<span class="irs-grid-pol small" style="left: ' + small_w + '%"></span>';
+                    }
                 }
 
-                html += '<span class="irs-grid-pol" style="left: ' + big_w + '%"></span>';
+                if (this.options.reverse) {
+                    html += '<span class="irs-grid-pol" style="left: ' + this.convertToReversePercent(big_w) + '%"></span>';
+                } else {
+                    html += '<span class="irs-grid-pol" style="left: ' + big_w + '%"></span>';
+                }
 
                 result = this.convertToValue(big_w);
                 if (o.values.length) {
@@ -2117,7 +2201,11 @@
                     result = this._prettify(result);
                 }
 
-                html += '<span class="irs-grid-text js-grid-text-' + i + '" style="left: ' + big_w + '%">' + result + '</span>';
+                if (this.options.reverse) {
+                    html += '<span class="irs-grid-text js-grid-text-' + i + '" style="left: ' + this.convertToReversePercent(big_w) + '%">' + result + '</span>';
+                } else {
+                    html += '<span class="irs-grid-text js-grid-text-' + i + '" style="left: ' + big_w + '%">' + result + '</span>';
+                }
             }
             this.coords.big_num = Math.ceil(big_num + 1);
 
@@ -2174,7 +2262,11 @@
 
             for (i = 0; i < num; i++) {
                 label = this.$cache.grid_labels[i][0];
-                label.style.marginLeft = -this.coords.big_x[i] + "%";
+                if (this.options.reverse) {
+                    label.style.marginLeft = this.coords.big_x[i] - this.coords.big_p[i] + "%";
+                } else {
+                    label.style.marginLeft = -this.coords.big_x[i] + "%";
+                }
             }
         },
 
