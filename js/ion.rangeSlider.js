@@ -12,7 +12,9 @@
 
 (function (factory) {
     if (typeof define === 'function' && define.amd) {
-        define(['jquery'], factory(jQuery, document, window, navigator));
+        define(['jquery'], function ($) {
+            factory($, document, window, navigator);
+        });
     } else {
         factory(jQuery, document, window, navigator);
     }
