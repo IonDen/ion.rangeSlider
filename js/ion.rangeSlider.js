@@ -1,5 +1,5 @@
 // Ion.RangeSlider
-// version 2.1.3 Build: 352
+// version 2.1.4 Build: 355
 // © Denis Ineshin, 2016
 // https://github.com/IonDen
 //
@@ -154,7 +154,7 @@
      * @constructor
      */
     var IonRangeSlider = function (input, options, plugin_count) {
-        this.VERSION = "2.1.3";
+        this.VERSION = "2.1.4";
         this.input = input;
         this.plugin_count = plugin_count;
         this.current_plugin = 0;
@@ -1473,6 +1473,8 @@
                             this.$cache.from[0].style.visibility = "visible";
                         } else if (this.target === "to") {
                             this.$cache.to[0].style.visibility = "visible";
+                        } else if (!this.target) {
+                            this.$cache.from[0].style.visibility = "visible";
                         }
                         this.$cache.single[0].style.visibility = "hidden";
                         max = to_left;
