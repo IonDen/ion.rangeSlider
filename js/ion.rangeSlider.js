@@ -1278,10 +1278,6 @@
         drawHandles: function () {
             this.coords.w_rs = this.$cache.rs.outerWidth(false);
 
-            if (!this.coords.w_rs) {
-                return;
-            }
-
             if (this.coords.w_rs !== this.coords.w_rs_old) {
                 this.target = "base";
                 this.is_resize = true;
@@ -1298,10 +1294,6 @@
                 this.force_redraw = true;
                 this.coords.w_rs_old = this.coords.w_rs;
                 this.drawShadow();
-            }
-
-            if (!this.coords.w_rs) {
-                return;
             }
 
             if (!this.dragging && !this.force_redraw && !this.is_key) {
@@ -1469,11 +1461,8 @@
                     this.$cache.single[0].style.visibility = "visible";
 
                     if (this.result.from === this.result.to) {
-                        if (this.target === "from") {
-                            this.$cache.from[0].style.visibility = "visible";
-                        } else if (this.target === "to") {
-                            this.$cache.to[0].style.visibility = "visible";
-                        }
+                        this.$cache.from[0].style.visibility = "hidden";
+                        this.$cache.to[0].style.visibility = "visible";
                         this.$cache.single[0].style.visibility = "hidden";
                         max = to_left;
                     } else {
