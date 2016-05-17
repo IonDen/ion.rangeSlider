@@ -318,7 +318,8 @@
             input_values_separator: ";",
 
             disable: false,
-
+			
+            onInit: null,
             onStart: null,
             onChange: null,
             onFinish: null,
@@ -478,7 +479,7 @@
                 this.calc(true);
 
                 // callbacks called
-                this.callOnStart();
+                this.callOnInit();
             }
 
             this.updateScene();
@@ -790,6 +791,8 @@
             this.$cache.line.trigger("focus");
 
             this.updateScene();
+			
+            this.callOnStart();
         },
 
         /**
@@ -1571,7 +1574,12 @@
 
         // =============================================================================================================
         // Callbacks
-
+		
+        callOnInit: function () {
+            if (this.options.onInit && typeof this.options.onInit === "function") {
+                this.options.onInit(this.result);
+            }
+        },
         callOnStart: function () {
             if (this.options.onStart && typeof this.options.onStart === "function") {
                 this.options.onStart(this.result);
