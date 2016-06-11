@@ -2175,7 +2175,9 @@
 
             for (i = 0; i < num; i++) {
                 label = this.$cache.grid_labels[i][0];
-                label.style.marginLeft = -this.coords.big_x[i] + "%";
+
+                if (this.coords.big_x[i] != Number.POSITIVE_INFINITY)
+                    label.style.marginLeft = -this.coords.big_x[i] + "%";
             }
         },
 
