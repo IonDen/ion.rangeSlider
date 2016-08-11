@@ -343,7 +343,6 @@
             drag_interval: $inp.data("dragInterval"),
 
             values: $inp.data("values"),
-            input_values: $inp.data("input-values"),
 
             from_fixed: $inp.data("fromFixed"),
             from_min: $inp.data("fromMin"),
@@ -377,6 +376,7 @@
             decorate_both: $inp.data("decorateBoth"),
             values_separator: $inp.data("valuesSeparator"),
 
+            input_values: $inp.data("input-values"),
             input_values_separator: $inp.data("inputValuesSeparator"),
 
             disable: $inp.data("disable")
@@ -405,7 +405,10 @@
                 val[1] = +val[1];
             }
 
-            if (options && options.values && options.values.length) {
+            if (config_from_data.input_values && config_from_data.input_values.length) {
+                config.from = val[0] && config_from_data.input_values.indexOf(''+val[0]);
+                config.to = val[1] && config_from_data.input_values.indexOf(''+val[1]);
+            } else if (options && options.values && options.values.length) {
                 config.from = val[0] && options.values.indexOf(val[0]);
                 config.to = val[1] && options.values.indexOf(val[1]);
             } else {
