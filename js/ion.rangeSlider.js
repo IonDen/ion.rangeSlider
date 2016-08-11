@@ -1106,6 +1106,7 @@
                 if (this.options.values.length) {
                     this.result.from_value = this.options.values[this.result.from];
                     this.result.from_input_value = this.options.input_values[this.result.from];
+                    if (this.result.from_input_value == undefined) this.result.from_input_value = this.result.from_value
                 }
             } else {
                 this.coords.p_bar_x = this.toFixed(this.coords.p_from_fake + (this.coords.p_handle / 2));
@@ -1119,8 +1120,10 @@
                 if (this.options.values.length) {
                     this.result.from_value = this.options.values[this.result.from];
                     this.result.from_input_value = this.options.input_values[this.result.from];
+                    if (this.result.from_input_value == undefined) this.result.from_input_value = this.result.from_value
                     this.result.to_value = this.options.values[this.result.to];
                     this.result.to_input_value = this.options.input_values[this.result.to];
+                    if (this.result.to_input_value == undefined) this.result.to_input_value = this.result.to_value
                 }
             }
 
