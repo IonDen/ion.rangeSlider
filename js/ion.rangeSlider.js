@@ -315,6 +315,7 @@
             decorate_both: true,
             values_separator: " — ",
 
+            input_values: [],
             input_values_separator: ";",
 
             disable: false,
@@ -342,6 +343,7 @@
             drag_interval: $inp.data("dragInterval"),
 
             values: $inp.data("values"),
+            input_values: $inp.data("input-values"),
 
             from_fixed: $inp.data("fromFixed"),
             from_min: $inp.data("fromMin"),
@@ -380,6 +382,7 @@
             disable: $inp.data("disable")
         };
         config_from_data.values = config_from_data.values && config_from_data.values.split(",");
+        config_from_data.input_values = config_from_data.input_values && config_from_data.input_values.split(",");
 
         for (prop in config_from_data) {
             if (config_from_data.hasOwnProperty(prop)) {
@@ -439,10 +442,12 @@
             from: this.options.from,
             from_percent: 0,
             from_value: null,
+            from_input_value: null,
 
             to: this.options.to,
             to_percent: 0,
-            to_value: null
+            to_value: null,
+            to_input_value: null,
         };
 
 
@@ -745,7 +750,7 @@
                 this.is_finish = true;
                 this.callOnFinish();
             }
-            
+
             this.dragging = false;
         },
 
@@ -1100,6 +1105,7 @@
 
                 if (this.options.values.length) {
                     this.result.from_value = this.options.values[this.result.from];
+                    this.result.from_input_value = this.options.input_values[this.result.from];
                 }
             } else {
                 this.coords.p_bar_x = this.toFixed(this.coords.p_from_fake + (this.coords.p_handle / 2));
@@ -1112,7 +1118,9 @@
 
                 if (this.options.values.length) {
                     this.result.from_value = this.options.values[this.result.from];
+                    this.result.from_input_value = this.options.input_values[this.result.from];
                     this.result.to_value = this.options.values[this.result.to];
+                    this.result.to_input_value = this.options.input_values[this.result.to];
                 }
             }
 
@@ -1321,7 +1329,7 @@
                     this.$cache.single[0].style.left = this.labels.p_single_left + "%";
 
                     if (this.options.values.length) {
-                        this.$cache.input.prop("value", this.result.from_value);
+                        this.$cache.input.prop("value", this.result.from_input_value);
                     } else {
                         this.$cache.input.prop("value", this.result.from);
                     }
@@ -1340,7 +1348,7 @@
                     this.$cache.single[0].style.left = this.labels.p_single_left + "%";
 
                     if (this.options.values.length) {
-                        this.$cache.input.prop("value", this.result.from_value + this.options.input_values_separator + this.result.to_value);
+                        this.$cache.input.prop("value", this.result.from_input_value + this.options.input_values_separator + this.result.to_input_value);
                     } else {
                         this.$cache.input.prop("value", this.result.from + this.options.input_values_separator + this.result.to);
                     }
@@ -2015,6 +2023,7 @@
             this.result.from_percent = this.convertToPercent(this.result.from);
             if (this.options.values) {
                 this.result.from_value = this.options.values[this.result.from];
+                this.result.from_input_value = this.options.input_values[this.result.from];
             }
         },
 
@@ -2023,6 +2032,7 @@
             this.result.to_percent = this.convertToPercent(this.result.to);
             if (this.options.values) {
                 this.result.to_value = this.options.values[this.result.to];
+                this.result.to_input_value = this.options.input_values[this.result.to];
             }
         },
 
