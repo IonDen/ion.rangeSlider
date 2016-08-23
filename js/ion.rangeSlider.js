@@ -407,13 +407,16 @@
 
             if (config_from_data.input_values && config_from_data.input_values.length) {
                 config.from = val[0] && config_from_data.input_values.indexOf(''+val[0]);
-                config.to = val[1] && config_from_data.input_values.indexOf(''+val[1]);
+                config.to   = val[1] && config_from_data.input_values.indexOf(''+val[1]);
             } else if (options && options.values && options.values.length) {
                 config.from = val[0] && options.values.indexOf(val[0]);
-                config.to = val[1] && options.values.indexOf(val[1]);
+                config.to   = val[1] && options.values.indexOf(val[1]);
+            } else if (config_from_data && config_from_data.values && config_from_data.values.length) {
+                config.from = val[0] && config_from_data.values.indexOf(''+val[0]);
+                config.to   = val[1] && config_from_data.values.indexOf(''+val[1]);
             } else {
                 config.from = val[0] && +val[0];
-                config.to = val[1] && +val[1];
+                config.to   = val[1] && +val[1];
             }
         }
 
