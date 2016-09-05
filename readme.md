@@ -184,7 +184,7 @@ If your are new in web development and you are not sure how to correctly install
             <td>values<div><sup>data-values</sup></div></td>
             <td>[]</td>
             <td>array</td>
-            <td>Set up your own array of possible slider values. They could be numbers or strings. If the values array is set up, min, max and step param, are no longer can be changed.</td>
+            <td>Set up your own array of possible slider values. They could be numbers or strings. If the values array is set up, min, max and step param, can no longer be changed.</td>
         </tr>
 
         <tr class="options__new">
