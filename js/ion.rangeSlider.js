@@ -1804,7 +1804,7 @@
         },
 
         toFixed: function (num) {
-            num = num.toFixed(9);
+            num = num.toFixed(20);
             return +num;
         },
 
