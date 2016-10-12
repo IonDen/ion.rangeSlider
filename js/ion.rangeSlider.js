@@ -169,6 +169,7 @@
         this.no_diapason = false;
         this.is_key = false;
         this.is_update = false;
+        this.is_first_update = true;
         this.is_start = true;
         this.is_finish = false;
         this.is_active = false;
@@ -1359,9 +1360,10 @@
                 if (!this.is_resize && !this.is_update && !this.is_start && !this.is_finish) {
                     this.callOnChange();
                 }
-                if (this.is_key || this.is_click) {
+                if (this.is_key || this.is_click || this.is_first_update) {
                     this.is_key = false;
                     this.is_click = false;
+                    this.is_first_update = false;
                     this.callOnFinish();
                 }
 
