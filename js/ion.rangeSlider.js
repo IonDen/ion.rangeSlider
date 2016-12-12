@@ -321,6 +321,8 @@
             values_separator: " — ",
 
             input_values_separator: ";",
+            alt_max: false,
+            alt_min: false,
 
             disable: false,
 
@@ -381,6 +383,8 @@
             values_separator: $inp.data("valuesSeparator"),
 
             input_values_separator: $inp.data("inputValuesSeparator"),
+            alt_max: $inp.data("altMax"),
+            alt_min: $inp.data("altMin"),
 
             disable: $inp.data("disable")
         };
@@ -399,6 +403,16 @@
         // input value extends default config
         if (val !== "") {
             val = val.split(config_from_data.input_values_separator || options.input_values_separator || ";");
+
+            var alt_min = config_from_data.alt_min || options.alt_min || false;
+            if (alt_min && val[0] && val[0] == alt_min) {
+                val[0] = config_from_data.min || options.min || config.min;
+            }
+
+            var alt_max = config_from_data.alt_max || options.alt_max || false;
+            if (alt_max && val[1] && val[1] == alt_max) {
+                val[1] = config_from_data.max || options.max || config.max;
+            }
 
             if (val[0] && val[0] == +val[0]) {
                 val[0] = +val[0];
@@ -1332,9 +1346,9 @@
                     this.$cache.single[0].style.left = this.labels.p_single_left + "%";
 
                     if (this.options.values.length) {
-                        this.$cache.input.prop("value", this.result.from_value);
+                        this.updateInputValue(this.result.from_value);
                     } else {
-                        this.$cache.input.prop("value", this.result.from);
+                        this.updateInputValue(this.result.from);
                     }
                     this.$cache.input.data("from", this.result.from);
                 } else {
@@ -1351,9 +1365,9 @@
                     this.$cache.single[0].style.left = this.labels.p_single_left + "%";
 
                     if (this.options.values.length) {
-                        this.$cache.input.prop("value", this.result.from_value + this.options.input_values_separator + this.result.to_value);
+                        this.updateInputValue(this.result.from_value, this.result.to_value);
                     } else {
-                        this.$cache.input.prop("value", this.result.from + this.options.input_values_separator + this.result.to);
+                        this.updateInputValue(this.result.from, this.result.to);
                     }
                     this.$cache.input.data("from", this.result.from);
                     this.$cache.input.data("to", this.result.to);
@@ -1386,6 +1400,30 @@
             this.is_key = false;
             this.is_click = false;
             this.force_redraw = false;
+        },
+
+        /**
+         * Updates the value from the underlying text input.
+         *
+         * @param from {Number}
+         * @param to {Number}
+         */
+        updateInputValue: function(from, to) {
+            if (this.options.alt_min && from === this.options.min) {
+                from = this.options.alt_min;
+            }
+
+            var value = from;
+
+            if (typeof to !== "undefined") {
+                if (this.options.alt_max && to === this.options.max) {
+                    to = this.options.alt_max;
+                }
+
+                value += this.options.input_values_separator + to;
+            }
+
+            this.$cache.input.prop("value", value);
         },
 
         /**
