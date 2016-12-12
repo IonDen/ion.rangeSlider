@@ -1,5 +1,5 @@
 // Ion.RangeSlider
-// version 2.1.4 Build: 355
+// version 2.1.5 Build: 365
 // © Denis Ineshin, 2016
 // https://github.com/IonDen
 //
@@ -10,11 +10,13 @@
 // http://ionden.com/a/plugins/licence-en.html
 // =====================================================================================================================
 
-(function (factory) {
-    if (typeof define === 'function' && define.amd) {
-        define(['jquery'], function ($) {
-            factory($, document, window, navigator);
+;(function(factory) {
+    if (typeof define === "function" && define.amd) {
+        define(["jquery"], function (jQuery) {
+            return factory(jQuery, document, window, navigator);
         });
+    } else if (typeof exports === "object") {
+        factory(require("jquery"), document, window, navigator);
     } else {
         factory(jQuery, document, window, navigator);
     }
@@ -154,7 +156,7 @@
      * @constructor
      */
     var IonRangeSlider = function (input, options, plugin_count) {
-        this.VERSION = "2.1.4";
+        this.VERSION = "2.1.5";
         this.input = input;
         this.plugin_count = plugin_count;
         this.current_plugin = 0;
@@ -175,6 +177,8 @@
         this.is_active = false;
         this.is_resize = false;
         this.is_click = false;
+
+        options = options || {};
 
         // cache for links to all DOM elements
         this.$cache = {
@@ -384,7 +388,7 @@
 
         for (prop in config_from_data) {
             if (config_from_data.hasOwnProperty(prop)) {
-                if (!config_from_data[prop] && config_from_data[prop] !== 0) {
+                if (config_from_data[prop] === undefined || config_from_data[prop] === "") {
                     delete config_from_data[prop];
                 }
             }
@@ -393,7 +397,7 @@
 
 
         // input value extends default config
-        if (val) {
+        if (val !== "") {
             val = val.split(config_from_data.input_values_separator || options.input_values_separator || ";");
 
             if (val[0] && val[0] == +val[0]) {
@@ -425,6 +429,7 @@
 
 
         // validate config, to be sure that all data types are correct
+        this.update_check = {};
         this.validate();
 
 
@@ -456,7 +461,7 @@
         /**
          * Starts or updates the plugin instance
          *
-         * @param is_update {boolean}
+         * @param [is_update] {boolean}
          */
         init: function (is_update) {
             this.no_diapason = false;
@@ -743,7 +748,6 @@
 
             // callbacks call
             if ($.contains(this.$cache.cont[0], e.target) || this.dragging) {
-                this.is_finish = true;
                 this.callOnFinish();
             }
             
@@ -769,7 +773,7 @@
             }
 
             if (!target) {
-                target = this.target;
+                target = this.target || "from";
             }
 
             this.current_plugin = this.plugin_count;
@@ -955,6 +959,12 @@
             this.calcPointerPercent();
             var handle_x = this.getHandleX();
 
+
+            if (this.target === "both") {
+                this.coords.p_gap = 0;
+                handle_x = this.getHandleX();
+            }
+
             if (this.target === "click") {
                 this.coords.p_gap = this.coords.p_handle / 2;
                 handle_x = this.getHandleX();
@@ -1042,7 +1052,7 @@
                         break;
                     }
 
-                    handle_x = this.toFixed(handle_x + (this.coords.p_handle * 0.1));
+                    handle_x = this.toFixed(handle_x + (this.coords.p_handle * 0.001));
 
                     this.coords.p_from_real = this.convertToRealPercent(handle_x) - this.coords.p_gap_left;
                     this.coords.p_from_real = this.calcWithStep(this.coords.p_from_real);
@@ -1894,31 +1904,36 @@
                 o.from = o.min;
             }
 
-            if (typeof o.to !== "number" || isNaN(o.from)) {
+            if (typeof o.to !== "number" || isNaN(o.to)) {
                 o.to = o.max;
             }
 
             if (o.type === "single") {
 
-                if (o.from < o.min) {
-                    o.from = o.min;
-                }
-
-                if (o.from > o.max) {
-                    o.from = o.max;
-                }
+                if (o.from < o.min) o.from = o.min;
+                if (o.from > o.max) o.from = o.max;
 
             } else {
 
-                if (o.from < o.min || o.from > o.max) {
-                    o.from = o.min;
+                if (o.from < o.min) o.from = o.min;
+                if (o.from > o.max) o.from = o.max;
+
+                if (o.to < o.min) o.to = o.min;
+                if (o.to > o.max) o.to = o.max;
+
+                if (this.update_check.from) {
+
+                    if (this.update_check.from !== o.from) {
+                        if (o.from > o.to) o.from = o.to;
+                    }
+                    if (this.update_check.to !== o.to) {
+                        if (o.to < o.from) o.to = o.from;
+                    }
+
                 }
-                if (o.to > o.max || o.to < o.min) {
-                    o.to = o.max;
-                }
-                if (o.from > o.to) {
-                    o.from = o.to;
-                }
+
+                if (o.from > o.to) o.from = o.to;
+                if (o.to < o.from) o.to = o.from;
 
             }
 
@@ -2242,6 +2257,8 @@
 
             this.options.from = this.result.from;
             this.options.to = this.result.to;
+            this.update_check.from = this.result.from;
+            this.update_check.to = this.result.to;
 
             this.options = $.extend(this.options, options);
             this.validate();
