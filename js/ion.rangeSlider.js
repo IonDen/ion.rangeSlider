@@ -1,5 +1,5 @@
 // Ion.RangeSlider
-// version 2.1.5 Build: 365
+// version 2.1.6 Build: 369
 // © Denis Ineshin, 2016
 // https://github.com/IonDen
 //
@@ -156,7 +156,7 @@
      * @constructor
      */
     var IonRangeSlider = function (input, options, plugin_count) {
-        this.VERSION = "2.1.5";
+        this.VERSION = "2.1.6";
         this.input = input;
         this.plugin_count = plugin_count;
         this.current_plugin = 0;
@@ -331,6 +331,11 @@
         };
 
 
+        // check if base element is input
+        if ($inp[0].nodeName !== "INPUT") {
+            console && console.warn && console.warn("Base element should be <input>!", $inp[0]);
+        }
+
 
         // config from data-attributes extends js config
         config_from_data = {
@@ -395,9 +400,8 @@
         }
 
 
-
         // input value extends default config
-        if (val !== "") {
+        if (val !== undefined && val !== "") {
             val = val.split(config_from_data.input_values_separator || options.input_values_separator || ";");
 
             if (val[0] && val[0] == +val[0]) {
@@ -1330,13 +1334,6 @@
                     this.$cache.s_single[0].style.left = this.coords.p_single_fake + "%";
 
                     this.$cache.single[0].style.left = this.labels.p_single_left + "%";
-
-                    if (this.options.values.length) {
-                        this.$cache.input.prop("value", this.result.from_value);
-                    } else {
-                        this.$cache.input.prop("value", this.result.from);
-                    }
-                    this.$cache.input.data("from", this.result.from);
                 } else {
                     this.$cache.s_from[0].style.left = this.coords.p_from_fake + "%";
                     this.$cache.s_to[0].style.left = this.coords.p_to_fake + "%";
@@ -1349,18 +1346,13 @@
                     }
 
                     this.$cache.single[0].style.left = this.labels.p_single_left + "%";
-
-                    if (this.options.values.length) {
-                        this.$cache.input.prop("value", this.result.from_value + this.options.input_values_separator + this.result.to_value);
-                    } else {
-                        this.$cache.input.prop("value", this.result.from + this.options.input_values_separator + this.result.to);
-                    }
-                    this.$cache.input.data("from", this.result.from);
-                    this.$cache.input.data("to", this.result.to);
                 }
+
+                this.writeToInput();
 
                 if ((this.old_from !== this.result.from || this.old_to !== this.result.to) && !this.is_start) {
                     this.$cache.input.trigger("change");
+                    this.$cache.input.trigger("input");
                 }
 
                 this.old_from = this.result.from;
@@ -1581,29 +1573,62 @@
 
 
 
+        /**
+         * Write values to input element
+         */
+        writeToInput: function () {
+            if (this.options.type === "single") {
+                if (this.options.values.length) {
+                    this.$cache.input.prop("value", this.result.from_value);
+                } else {
+                    this.$cache.input.prop("value", this.result.from);
+                }
+                this.$cache.input.data("from", this.result.from);
+            } else {
+                if (this.options.values.length) {
+                    this.$cache.input.prop("value", this.result.from_value + this.options.input_values_separator + this.result.to_value);
+                } else {
+                    this.$cache.input.prop("value", this.result.from + this.options.input_values_separator + this.result.to);
+                }
+                this.$cache.input.data("from", this.result.from);
+                this.$cache.input.data("to", this.result.to);
+            }
+        },
+
+
+
         // =============================================================================================================
         // Callbacks
 
         callOnStart: function () {
+            this.writeToInput();
+
             if (this.options.onStart && typeof this.options.onStart === "function") {
                 this.options.onStart(this.result);
             }
         },
         callOnChange: function () {
+            this.writeToInput();
+
             if (this.options.onChange && typeof this.options.onChange === "function") {
                 this.options.onChange(this.result);
             }
         },
         callOnFinish: function () {
+            this.writeToInput();
+
             if (this.options.onFinish && typeof this.options.onFinish === "function") {
                 this.options.onFinish(this.result);
             }
         },
         callOnUpdate: function () {
+            this.writeToInput();
+
             if (this.options.onUpdate && typeof this.options.onUpdate === "function") {
                 this.options.onUpdate(this.result);
             }
         },
+
 
 
 
