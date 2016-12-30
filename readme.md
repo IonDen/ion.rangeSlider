@@ -36,7 +36,7 @@ Ion.RangeSlider. Is an easy, flexible and responsive range slider with tons of o
 * Any slider value can be set through input data-attribute (eg. data-min="10")
 * Slider supports disable param. You can set it true to make slider inactive
 * Slider supports external methods (update, reset and remove) to control it after creation
-* For advanced users slider has callbacks (onStart, onChange, onFinish, onUpdate). Slider pastes all its params to callback first argument as object
+* For advanced users slider has callbacks (onInit, onStart, onChange, onFinish, onUpdate). Slider pastes all its params to callback first argument as object
 * Slider supports date and time
 
 
@@ -103,7 +103,7 @@ If your are new in web development and you are not sure how to correctly install
 
 ## Migrating from 1.x to 2.x
 * All params (except functions) are lowercase now: <b>param_name</b>, not paramName
-* Same param names was changed: hasGrid &rarr; <b>grid</b>, onLoad &rarr; <b>onStart</b>
+* Same param names was changed: hasGrid &rarr; <b>grid</b>, onLoad &rarr; <b>onInit</b>
 * Callbacks data object format was changed. Example: fromNumber &rarr; <b>from</b>
 * Slider now writes it's result to value attribute and also to data-from and data-to attributes
 
@@ -358,24 +358,30 @@ If your are new in web development and you are not sure how to correctly install
             <td>boolean</td>
             <td>Locks slider and makes it inactive.</td>
         </tr>
-
+		
         <tr>
-            <td>onStart<div><sup>—</sup></div></td>
+            <td>onInit<div><sup>—</sup></div></td>
             <td>null</td>
             <td>function</td>
             <td>Callback. Is called on slider start.</td>
         </tr>
         <tr>
+            <td>onStart<div><sup>—</sup></div></td>
+            <td>null</td>
+            <td>function</td>
+            <td>Callback. Is called when user grabs handle.</td>
+        </tr>
+        <tr>
             <td>onChange<div><sup>—</sup></div></td>
             <td>null</td>
             <td>function</td>
-            <td>Callback. IS called on each values change.</td>
+            <td>Callback. Is called on each values change.</td>
         </tr>
         <tr>
             <td>onFinish<div><sup>—</sup></div></td>
             <td>null</td>
             <td>function</td>
-            <td>Callback. Is called than user releases handle.</td>
+            <td>Callback. Is called when user releases handle.</td>
         </tr>
         <tr class="options__new">
             <td>onUpdate<div><sup>—</sup></div></td>
