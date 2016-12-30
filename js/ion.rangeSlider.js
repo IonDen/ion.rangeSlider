@@ -2092,9 +2092,11 @@
                 big_p = 0,
                 big_w = 0,
 
+                small_min = 0, // grid with big_num > 28
                 small_max = 4,
                 local_small_max,
                 small_p,
+                local_small_p,
                 small_w = 0,
 
                 result,
@@ -2106,10 +2108,16 @@
 
             if (o.grid_snap) {
                 big_num = total / o.step;
-                big_p = this.toFixed(o.step / (total / 100));
-            } else {
-                big_p = this.toFixed(100 / big_num);
             }
+
+            // if big_num is superior to 28, display only 14 big tick and convert others into small ticks
+            if (big_num > 28) {
+                small_min = Math.floor(big_num / 14)
+                big_num /= small_min;
+            } 
+            
+            // big tick percent interval  
+            big_p = 100 / big_num;
 
             if (big_num > 4) {
                 small_max = 3;
@@ -2124,18 +2132,28 @@
                 small_max = 0;
             }
 
+            // if we have small min tick, use it
+            if (small_min) {
+                small_max = small_min - 1;
+            }
+
             for (i = 0; i < big_num + 1; i++) {
                 local_small_max = small_max;
 
                 big_w = this.toFixed(big_p * i);
 
                 if (big_w > 100) {
-                    big_w = 100;
 
-                    local_small_max -= 2;
-                    if (local_small_max < 0) {
-                        local_small_max = 0;
+                    local_small_p = this.toFixed(big_p / small_max);
+
+                    for (z = 0; z < small_max; z++) {
+                        if (big_w - (local_small_p * z) > 100) {
+                            local_small_max--;
+                        } else {
+                            break;
+                        }
                     }
+                    big_w = 100;
                 }
                 this.coords.big[i] = big_w;
 
