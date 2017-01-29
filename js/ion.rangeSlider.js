@@ -2294,6 +2294,8 @@
             this.init(true);
         },
 
+        // Resets to the values in the <input> element in the HTML. May differ from default values in options-
+        // if the server has responded with a 'value' attribute in the <input> element.
         reset: function () {
             if (!this.input) {
                 return;
@@ -2301,6 +2303,14 @@
 
             this.updateResult();
             this.update();
+        },
+
+        // Resets to the default values set in options
+        resetToDefault: function() {
+            this.update({
+                from: this.options.min,
+                to: this.options.max
+            });
         },
 
         destroy: function () {
