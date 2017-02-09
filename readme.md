@@ -2,6 +2,9 @@
 
 > English description | <a href="readme.ru.md">Описание на русском</a>
 
+[![OpenCollective](https://opencollective.com/ionrangeslider/backers/badge.svg)](#backers) 
+[![OpenCollective](https://opencollective.com/ionrangeslider/sponsors/badge.svg)](#sponsors)
+
 Ion.RangeSlider. Is an easy, flexible and responsive range slider with tons of options.
 
 ***
@@ -488,3 +491,70 @@ All plugins options are covered in demos.
 * Donate direct to my Paypal account: https://www.paypal.me/IonDen
 
 * Donate direct to my Yandex.Money account: http://yasobe.ru/na/razrabotku
+
+####Backers
+Support us with a monthly donation and help us continue our activities. [[Become a backer](https://opencollective.com/ionrangeslider#backer)]
+
+<a href="https://opencollective.com/ionrangeslider/backer/0/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/0/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/1/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/1/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/2/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/2/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/3/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/3/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/4/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/4/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/5/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/5/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/6/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/6/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/7/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/7/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/8/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/8/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/9/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/9/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/10/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/10/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/11/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/11/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/12/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/12/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/13/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/13/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/14/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/14/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/15/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/15/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/16/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/16/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/17/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/17/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/18/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/18/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/19/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/19/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/20/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/20/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/21/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/21/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/22/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/22/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/23/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/23/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/24/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/24/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/25/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/25/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/26/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/26/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/27/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/27/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/28/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/28/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/backer/29/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/backer/29/avatar.svg"></a>
+
+####Sponsors
+Become a sponsor and get your logo on our README on Github with a link to your site. [[Become a sponsor](https://opencollective.com/ionrangeslider#sponsor)]
+<a href="https://opencollective.com/ionrangeslider/sponsor/0/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/0/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/1/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/1/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/2/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/2/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/3/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/3/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/4/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/4/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/5/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/5/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/6/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/6/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/7/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/7/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/8/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/8/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/9/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/9/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/10/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/10/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/11/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/11/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/12/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/12/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/13/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/13/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/14/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/14/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/15/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/15/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/16/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/16/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/17/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/17/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/18/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/18/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/19/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/19/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/20/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/20/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/21/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/21/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/22/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/22/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/23/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/23/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/24/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/24/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/25/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/25/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/26/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/26/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/27/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/27/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/28/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/28/avatar.svg"></a>
+<a href="https://opencollective.com/ionrangeslider/sponsor/29/website" target="_blank"><img src="https://opencollective.com/ionrangeslider/sponsor/29/avatar.svg"></a>
