@@ -53,6 +53,10 @@ Ion.RangeSlider. Is an easy, flexible and responsive range slider with tons of o
 
 * <a href="https://github.com/IonDen/ion.rangeSlider">GitHub page</a>
 
+| Option | Defaults | Type | Description |
+| --- | --- | --- | --- |
+| type<br>`data-type` | "single" | string | Choose slider type, could be `single` - for one handle, or `double` for two handles |
+
 
 ### <a href="history.md">Update history</a>
 
