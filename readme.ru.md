@@ -113,7 +113,7 @@ $("#example_id").ionRangeSlider();
 ## Настройка
 
 | Option | Data-Attr | Defaults | Type | Description |
-| --- | --- | --- | --- |
+| --- | --- | --- | --- | --- |
 | `type` | `data-type` | `single` | string | Choose slider type, could be `single` - for one handle, or `double` for two handles |
 | `min` | `data-min` | `10` | number | Set slider minimum value |
 | `max` | `data-max` | `100` | number | Set slider maximum value |
