@@ -6,9 +6,9 @@ Ion.RangeSlider. Is an easy, flexible and responsive range slider with tons of o
 
 ***
 
-* Version: 2.1.6 | *Version 3.x is under developement now*
+* Version: 2.1.7 | *Version 3.x is under development now*
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.1.6.zip">Download ZIP</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.1.7.zip">Download ZIP</a>
 
 [![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
 
@@ -52,10 +52,6 @@ Ion.RangeSlider. Is an easy, flexible and responsive range slider with tons of o
 ## GitHub
 
 * <a href="https://github.com/IonDen/ion.rangeSlider">GitHub page</a>
-
-| Option | Defaults | Type | Description |
-| --- | --- | --- | --- |
-| type<br><sup>data-type</sup> | "single" | string | Choose slider type, could be `single` - for one handle, or `double` for two handles |
 
 
 ### <a href="history.md">Update history</a>

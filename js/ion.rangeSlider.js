@@ -1,6 +1,6 @@
 // Ion.RangeSlider
-// version 2.1.6 Build: 369
-// © Denis Ineshin, 2016
+// version 2.1.7 Build: 371
+// © Denis Ineshin, 2017
 // https://github.com/IonDen
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/en.html
@@ -156,7 +156,7 @@
      * @constructor
      */
     var IonRangeSlider = function (input, options, plugin_count) {
-        this.VERSION = "2.1.6";
+        this.VERSION = "2.1.7";
         this.input = input;
         this.plugin_count = plugin_count;
         this.current_plugin = 0;
@@ -171,7 +171,6 @@
         this.no_diapason = false;
         this.is_key = false;
         this.is_update = false;
-        this.is_first_update = true;
         this.is_start = true;
         this.is_finish = false;
         this.is_active = false;
@@ -1362,10 +1361,9 @@
                 if (!this.is_resize && !this.is_update && !this.is_start && !this.is_finish) {
                     this.callOnChange();
                 }
-                if (this.is_key || this.is_click || this.is_first_update) {
+                if (this.is_key || this.is_click) {
                     this.is_key = false;
                     this.is_click = false;
-                    this.is_first_update = false;
                     this.callOnFinish();
                 }
 
@@ -1910,7 +1908,6 @@
                 o.grid_num = o.max;
                 o.grid_snap = true;
 
-
                 for (i = 0; i < vl; i++) {
                     value = +v[i];
 
@@ -2105,8 +2102,15 @@
             this.calcGridMargin();
 
             if (o.grid_snap) {
-                big_num = total / o.step;
-                big_p = this.toFixed(o.step / (total / 100));
+
+                if (total > 50) {
+                    big_num = 50 / o.step;
+                    big_p = this.toFixed(o.step / 0.5);
+                } else {
+                    big_num = total / o.step;
+                    big_p = this.toFixed(o.step / (total / 100));
+                }
+
             } else {
                 big_p = this.toFixed(100 / big_num);
             }
