@@ -103,7 +103,7 @@ If your are new in web development and you are not sure how to correctly install
 
 ## <a href="http://jsfiddle.net/IonDen/qv6yrjrv/" target="_blank">Experiments playground</a>
 
-Here you can find bunch of advanced JSFIDDLE demos with different use cases:
+Here you can find bunch of advanced JSFIDDLE demos with different, non-standart use cases:
 * [Reverse or RTL](http://jsfiddle.net/IonDen/gbmszmp4/)
 * [1 handle bind to 1 input](http://jsfiddle.net/IonDen/mvrfg2vc/)
 * [2 handles bind to 2 inputs](http://jsfiddle.net/IonDen/r5aox84v/)
