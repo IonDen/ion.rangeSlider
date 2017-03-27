@@ -100,14 +100,29 @@ $("#example_id").ionRangeSlider();
 <a href="http://ionden.com/a/plugins/ion.rangeSlider/ionRangeSliderDemo.zip" class="button">этот демо пример</a>
 
 
-## Миграция с версии 1.x на 2.x
-* Все параметры (кроме функций) теперь записываются так: <b>param_name</b>, а не paramName
-* Изменились названия некоторых параметров: hasGrid &rarr; <b>grid</b>, onLoad &rarr; <b>onStart</b>
-* Изменился формат объекта с данными слайдера, возвращаемый в колбэки. Например: fromNumber &rarr; <b>from</b>
-* Слайдер теперь постоянно записывает свои значения в поле value и в атрибуты data-from и data-to
-
-
 ## <a href="http://jsfiddle.net/IonDen/qv6yrjrv/" target="_blank">Площадка для эксперементов с плагином</a>
+
+Здесь вы найдете несколько полезных JSFIDDLE-демо, по нестандартному использованию плагина:
+* [Reverse or RTL](http://jsfiddle.net/IonDen/gbmszmp4/)
+* [1 handle bind to 1 input](http://jsfiddle.net/IonDen/mvrfg2vc/)
+* [2 handles bind to 2 inputs](http://jsfiddle.net/IonDen/r5aox84v/)
+* [2 sliders connected to each other](http://jsfiddle.net/IonDen/4k3d4y3s/)
+* [1st slider disables/enables 2nd slider](http://jsfiddle.net/IonDen/ctkouh69/)
+* [Non-linear slider](http://jsfiddle.net/IonDen/pzjaoxe7/)
+* [Plus and Minus buttons](http://jsfiddle.net/IonDen/wsk7y08a/)
+* [Calculating sum](http://codepen.io/anon/pen/QyzwJZ)
+* [Adding one more diapazon on 1 slider](http://jsfiddle.net/IonDen/st9eotpy/)
+* [Live editing of Min and Max values](http://jsfiddle.net/IonDen/wL8gq4py/)
+* [Prettify and transform values at the same time](http://jsfiddle.net/IonDen/j0tLzgq1/)
+* [Custom marks on slider](http://jsfiddle.net/IonDen/spez12kt/)
+* [Rendering money value n.nn](http://jsfiddle.net/IonDen/vrqqL2Lw/)
+* [Rendering Dates with Moment.js](http://jsfiddle.net/tvn2ckj2/)
+* [Changing step live](http://jsfiddle.net/IonDen/ca6ykae6/)
+* [Toggle slider](http://jsfiddle.net/IonDen/t936wtjv/)
+* [Using different skin color at the same time](http://jsfiddle.net/IonDen/2sruxk4e/)
+* [2 dependant sliders](http://jsfiddle.net/IonDen/n2sxswv2/)
+* [Skip some values](http://jsfiddle.net/IonDen/4qgq9bto/)
+* [Good Prettify example](http://jsfiddle.net/IonDen/bvbvr0xs/)
 
 
 ## Настройка
