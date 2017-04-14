@@ -313,6 +313,7 @@
             hide_min_max: false,
             hide_from_to: false,
 
+            decorator: null, // function
             prefix: "",
             postfix: "",
             max_postfix: "",
@@ -2021,6 +2022,11 @@
         decorate: function (num, original) {
             var decorated = "",
                 o = this.options;
+
+            if (o.decorator) {
+                // run the decorator function and return
+                return o.decorator(num);
+            }
 
             if (o.prefix) {
                 decorated += o.prefix;
