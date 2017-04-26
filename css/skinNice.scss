@@ -1,0 +1,85 @@
+// No images
+// Require compass
+
+$height-rangeSlider: 14px;
+$color-rangeSlider: #95a0a8;
+
+.irs {
+    height: 40px;
+}
+.irs-with-grid {
+    height: 60px;
+}
+.irs-line {
+    height: $height-rangeSlider;
+    top: 25px;
+    border:1px solid rgba(0,0,0,.2);
+    @include border-radius(6px);
+    background-color: #fff;
+}
+.irs-line-left {
+	height: $height-rangeSlider;
+}
+.irs-line-mid {
+	height: $height-rangeSlider;
+}
+.irs-line-right {
+	height: $height-rangeSlider;
+}
+
+.irs-diapason {
+	height: $height-rangeSlider;
+	top: 25px;
+	border:1px solid rgba(0,0,0,.1);
+	background-color: $color-rangeSlider;
+	@include background-image(linear-gradient(top, lighten($color-rangeSlider, 10), darken($color-rangeSlider, 10)));
+}
+
+.irs-slider {
+	width: 18px;
+	height: 18px;
+	top: $height-rangeSlider+9;
+	border:5px solid white;
+	background-color: $color-rangeSlider;
+	cursor: pointer;
+	@include box-shadow(0 0 0 1px $color-rangeSlider);
+	@include border-radius(20px);
+}
+#irs-active-slider, .irs-slider:hover {
+	background-color:$color-rangeSlider;
+}
+
+.irs-min, .irs-max {
+    color: rgba(0,0,0,.7);
+    font-size: 12px;
+    line-height: 1.333;
+    text-shadow: none;
+    top: -2px;
+}
+.lt-ie9 .irs-min, .lt-ie9 .irs-max {
+    background: #ccc;
+}
+
+.irs-from, .irs-to, .irs-single {
+    color: #fff;
+    font-size: 10px;
+    line-height: 1.333;
+    text-shadow: none;
+    padding: 2px 5px;
+    background-color: $color-rangeSlider;
+    font-weight: bold;
+    @include border-radius(3px);
+    @include text-shadow(0 1px 1px rgba(0,0,0,.5));
+    margin-top:-6px;
+}
+
+.lt-ie9 .irs-from, .lt-ie9 .irs-to, .lt-ie9 .irs-single {
+    background: #999;
+}
+
+.irs-grid-pol {
+    background:rgba(0,0,0,.2);
+}
+.irs-grid-text {
+    color: rgba(0,0,0,.4);
+}
