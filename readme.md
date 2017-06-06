@@ -170,8 +170,8 @@ Here you can find bunch of advanced JSFIDDLE demos with different, non-standart 
 | `disable` | `data-disable` | `false` | boolean | Locks slider and makes it inactive |
 | `onStart` | `-` | `null` | function | Callback. Is called on slider start. Gets all slider data as a 1st attribute |
 | `onChange` | `-` | `null` | function | Callback. IS called on each values change. Gets all slider data as a 1st attribute |
-| `onFinish` | `-` | `null` | function | Callback. Is called than user releases handle. Gets all slider data as a 1st attribute |
-| `onUpdate` | `-` | `null` | function | Callback. Is called than slider is modified by external methods `update` or `reset` |
+| `onFinish` | `-` | `null` | function | Callback. Is called when user releases handle. Gets all slider data as a 1st attribute |
+| `onUpdate` | `-` | `null` | function | Callback. Is called when slider is modified by external methods `update` or `reset` |
 
 
 
