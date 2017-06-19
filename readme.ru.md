@@ -6,9 +6,9 @@
 
 ***
 
-* Версия: 2.1.7
+* Версия: 2.1.8
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/index.html">Страница проекта и демо</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.1.7.zip">Загрузить ZIP-архив</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.1.8.zip">Загрузить ZIP-архив</a>
 
 ## Описание
 * Ion.RangeSlider — классный, удобный, отзывчивый и легко настраиваемый слайдер диапазонов

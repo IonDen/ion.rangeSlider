@@ -1,6 +1,6 @@
 ﻿{
     "name": "ion-rangeSlider",
-    "version": "2.1.7",
+    "version": "2.1.8",
     "title": "Ion.RangeSlider",
     "description": "Cool, comfortable and easily customizable range slider with many options and skin support",
     "keywords": [
@@ -30,7 +30,7 @@
     "homepage": "https://github.com/IonDen/ion.rangeSlider",
     "docs": "https://github.com/IonDen/ion.rangeSlider/blob/master/readme.md",
     "demo": "http://ionden.com/a/plugins/ion.rangeSlider/en.html",
-    "download": "http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.1.7.zip",
+    "download": "http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.1.8.zip",
     "dependencies": {
         "jquery": ">=1.8"
     }

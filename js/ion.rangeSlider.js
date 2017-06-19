@@ -1,5 +1,5 @@
 // Ion.RangeSlider
-// version 2.1.7 Build: 371
+// version 2.1.8 Build: 374
 // © Denis Ineshin, 2017
 // https://github.com/IonDen
 //
@@ -156,7 +156,7 @@
      * @constructor
      */
     var IonRangeSlider = function (input, options, plugin_count) {
-        this.VERSION = "2.1.7";
+        this.VERSION = "2.1.8";
         this.input = input;
         this.plugin_count = plugin_count;
         this.current_plugin = 0;
@@ -580,6 +580,7 @@
             switch (target) {
                 case "single":
                     this.coords.p_gap = this.toFixed(this.coords.p_pointer - this.coords.p_single_fake);
+                    this.$cache.s_single.addClass("state_hover");
                     break;
                 case "from":
                     this.coords.p_gap = this.toFixed(this.coords.p_pointer - this.coords.p_from_fake);
@@ -2135,11 +2136,6 @@
 
                 if (big_w > 100) {
                     big_w = 100;
-
-                    local_small_max -= 2;
-                    if (local_small_max < 0) {
-                        local_small_max = 0;
-                    }
                 }
                 this.coords.big[i] = big_w;
 
