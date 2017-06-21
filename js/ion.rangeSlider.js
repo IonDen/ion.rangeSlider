@@ -1,5 +1,5 @@
 // Ion.RangeSlider
-// version 2.1.8 Build: 374
+// version 2.2.0 Build: 380
 // © Denis Ineshin, 2017
 // https://github.com/IonDen
 //
@@ -121,7 +121,7 @@
 
     var base_html =
         '<span class="irs">' +
-        '<span class="irs-line" tabindex="-1"><span class="irs-line-left"></span><span class="irs-line-mid"></span><span class="irs-line-right"></span></span>' +
+        '<span class="irs-line" tabindex="0"><span class="irs-line-left"></span><span class="irs-line-mid"></span><span class="irs-line-right"></span></span>' +
         '<span class="irs-min">0</span><span class="irs-max">1</span>' +
         '<span class="irs-from">0</span><span class="irs-to">0</span><span class="irs-single">0</span>' +
         '</span>' +
@@ -156,7 +156,7 @@
      * @constructor
      */
     var IonRangeSlider = function (input, options, plugin_count) {
-        this.VERSION = "2.1.8";
+        this.VERSION = "2.2.0";
         this.input = input;
         this.plugin_count = plugin_count;
         this.current_plugin = 0;
@@ -169,6 +169,7 @@
         this.dragging = false;
         this.force_redraw = false;
         this.no_diapason = false;
+        this.has_tab_index = true;
         this.is_key = false;
         this.is_update = false;
         this.is_start = true;
@@ -302,8 +303,7 @@
 
             force_edges: false,
 
-            keyboard: false,
-            keyboard_step: 5,
+            keyboard: true,
 
             grid: false,
             grid_margin: true,
@@ -322,7 +322,11 @@
             input_values_separator: ";",
 
             disable: false,
+            block: false,
 
+            extra_classes: "",
+
+            scope: null,
             onStart: null,
             onChange: null,
             onFinish: null,
@@ -368,7 +372,6 @@
             force_edges: $inp.data("forceEdges"),
 
             keyboard: $inp.data("keyboard"),
-            keyboard_step: $inp.data("keyboardStep"),
 
             grid: $inp.data("grid"),
             grid_margin: $inp.data("gridMargin"),
@@ -386,7 +389,10 @@
 
             input_values_separator: $inp.data("inputValuesSeparator"),
 
-            disable: $inp.data("disable")
+            disable: $inp.data("disable"),
+            block: $inp.data("block"),
+
+            extra_classes: $inp.data("extraClasses"),
         };
         config_from_data.values = config_from_data.values && config_from_data.values.split(",");
 
@@ -497,7 +503,7 @@
          * Appends slider template to a DOM
          */
         append: function () {
-            var container_html = '<span class="irs js-irs-' + this.plugin_count + '"></span>';
+            var container_html = '<span class="irs js-irs-' + this.plugin_count + ' ' + this.options.extra_classes + '"></span>';
             this.$cache.input.before(container_html);
             this.$cache.input.prop("readonly", true);
             this.$cache.cont = this.$cache.input.prev();
@@ -543,9 +549,18 @@
                 this.appendDisableMask();
                 this.$cache.input[0].disabled = true;
             } else {
-                this.$cache.cont.removeClass("irs-disabled");
                 this.$cache.input[0].disabled = false;
+                this.removeDisableMask();
                 this.bindEvents();
+            }
+
+            // block only if not disabled
+            if (!this.options.disable) {
+                if (this.options.block) {
+                    this.appendDisableMask();
+                } else {
+                    this.removeDisableMask();
+                }
             }
 
             if (this.options.drag_interval) {
@@ -613,8 +628,17 @@
         },
 
         /**
+         * Then slider is not disabled
+         * remove disable mask
+         */
+        removeDisableMask: function () {
+            this.$cache.cont.remove(".irs-disable-mask");
+            this.$cache.cont.removeClass("irs-disabled");
+        },
+
+        /**
          * Remove slider instance
-         * and ubind all events
+         * and unbind all events
          */
         remove: function () {
             this.$cache.cont.remove();
@@ -659,6 +683,8 @@
             this.$cache.line.on("touchstart.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
             this.$cache.line.on("mousedown.irs_" + this.plugin_count, this.pointerClick.bind(this, "click"));
 
+            this.$cache.line.on("focus.irs_" + this.plugin_count, this.pointerFocus.bind(this));
+
             if (this.options.drag_interval && this.options.type === "double") {
                 this.$cache.bar.on("touchstart.irs_" + this.plugin_count, this.pointerDown.bind(this, "both"));
                 this.$cache.bar.on("mousedown.irs_" + this.plugin_count, this.pointerDown.bind(this, "both"));
@@ -702,6 +728,29 @@
             if (is_old_ie) {
                 this.$cache.body.on("mouseup.irs_" + this.plugin_count, this.pointerUp.bind(this));
                 this.$cache.body.on("mouseleave.irs_" + this.plugin_count, this.pointerUp.bind(this));
+            }
+        },
+
+        /**
+         * Focus with tabIndex
+         *
+         * @param e {Object} event object
+         */
+        pointerFocus: function (e) {
+            if (!this.target) {
+                var x;
+                var $handle;
+
+                if (this.options.type === "single") {
+                    $handle = this.$cache.single;
+                } else {
+                    $handle = this.$cache.from;
+                }
+
+                x = $handle.offset().left;
+                x += ($handle.width() / 2) - 1;
+
+                this.pointerClick("single", {preventDefault: function () {}, pageX: x});
             }
         },
 
@@ -862,18 +911,19 @@
         },
 
         /**
-         * Move by key. Beta
-         * @todo refactor than have plenty of time
+         * Move by key
          *
          * @param right {boolean} direction to move
          */
         moveByKey: function (right) {
             var p = this.coords.p_pointer;
+            var p_step = (this.options.max - this.options.min) / 100;
+            p_step = this.options.step / p_step;
 
             if (right) {
-                p += this.options.keyboard_step;
+                p += p_step;
             } else {
-                p -= this.options.keyboard_step;
+                p -= p_step;
             }
 
             this.coords.x_pointer = this.toFixed(this.coords.w_rs / 100 * p);
@@ -900,8 +950,14 @@
                 this.$cache.min.html(this.decorate(this.options.p_values[this.options.min]));
                 this.$cache.max.html(this.decorate(this.options.p_values[this.options.max]));
             } else {
-                this.$cache.min.html(this.decorate(this._prettify(this.options.min), this.options.min));
-                this.$cache.max.html(this.decorate(this._prettify(this.options.max), this.options.max));
+                var min_pretty = this._prettify(this.options.min);
+                var max_pretty = this._prettify(this.options.max);
+
+                this.result.min_pretty = min_pretty;
+                this.result.max_pretty = max_pretty;
+
+                this.$cache.min.html(this.decorate(min_pretty, this.options.min));
+                this.$cache.max.html(this.decorate(max_pretty, this.options.max));
             }
 
             this.labels.w_min = this.$cache.min.outerWidth(false);
@@ -1112,6 +1168,7 @@
 
                 this.result.from_percent = this.coords.p_single_real;
                 this.result.from = this.convertToValue(this.coords.p_single_real);
+                this.result.from_pretty = this._prettify(this.result.from);
 
                 if (this.options.values.length) {
                     this.result.from_value = this.options.values[this.result.from];
@@ -1122,8 +1179,10 @@
 
                 this.result.from_percent = this.coords.p_from_real;
                 this.result.from = this.convertToValue(this.coords.p_from_real);
+                this.result.from_pretty = this._prettify(this.result.from);
                 this.result.to_percent = this.coords.p_to_real;
                 this.result.to = this.convertToValue(this.coords.p_to_real);
+                this.result.to_pretty = this._prettify(this.result.to);
 
                 if (this.options.values.length) {
                     this.result.from_value = this.options.values[this.result.from];
@@ -1389,11 +1448,13 @@
                 return;
             }
 
-            var values_num = this.options.values.length,
-                p_values = this.options.p_values,
-                text_single,
-                text_from,
-                text_to;
+            var values_num = this.options.values.length;
+            var p_values = this.options.p_values;
+            var text_single;
+            var text_from;
+            var text_to;
+            var from_pretty;
+            var to_pretty;
 
             if (this.options.hide_from_to) {
                 return;
@@ -1405,7 +1466,9 @@
                     text_single = this.decorate(p_values[this.result.from]);
                     this.$cache.single.html(text_single);
                 } else {
-                    text_single = this.decorate(this._prettify(this.result.from), this.result.from);
+                    from_pretty = this._prettify(this.result.from);
+
+                    text_single = this.decorate(from_pretty, this.result.from);
                     this.$cache.single.html(text_single);
                 }
 
@@ -1442,16 +1505,18 @@
                     this.$cache.to.html(text_to);
 
                 } else {
+                    from_pretty = this._prettify(this.result.from);
+                    to_pretty = this._prettify(this.result.to);
 
                     if (this.options.decorate_both) {
-                        text_single = this.decorate(this._prettify(this.result.from), this.result.from);
+                        text_single = this.decorate(from_pretty, this.result.from);
                         text_single += this.options.values_separator;
-                        text_single += this.decorate(this._prettify(this.result.to), this.result.to);
+                        text_single += this.decorate(to_pretty, this.result.to);
                     } else {
-                        text_single = this.decorate(this._prettify(this.result.from) + this.options.values_separator + this._prettify(this.result.to), this.result.to);
+                        text_single = this.decorate(from_pretty + this.options.values_separator + to_pretty, this.result.to);
                     }
-                    text_from = this.decorate(this._prettify(this.result.from), this.result.from);
-                    text_to = this.decorate(this._prettify(this.result.to), this.result.to);
+                    text_from = this.decorate(from_pretty, this.result.from);
+                    text_to = this.decorate(to_pretty, this.result.to);
 
                     this.$cache.single.html(text_single);
                     this.$cache.from.html(text_from);
@@ -1603,28 +1668,44 @@
             this.writeToInput();
 
             if (this.options.onStart && typeof this.options.onStart === "function") {
-                this.options.onStart(this.result);
+                if (this.options.scope) {
+                    this.options.onStart.call(this.options.scope, this.result);
+                } else {
+                    this.options.onStart(this.result);
+                }
             }
         },
         callOnChange: function () {
             this.writeToInput();
 
             if (this.options.onChange && typeof this.options.onChange === "function") {
-                this.options.onChange(this.result);
+                if (this.options.scope) {
+                    this.options.onChange.call(this.options.scope, this.result);
+                } else {
+                    this.options.onChange(this.result);
+                }
             }
         },
         callOnFinish: function () {
             this.writeToInput();
 
             if (this.options.onFinish && typeof this.options.onFinish === "function") {
-                this.options.onFinish(this.result);
+                if (this.options.scope) {
+                    this.options.onFinish.call(this.options.scope, this.result);
+                } else {
+                    this.options.onFinish(this.result);
+                }
             }
         },
         callOnUpdate: function () {
             this.writeToInput();
 
             if (this.options.onUpdate && typeof this.options.onUpdate === "function") {
-                this.options.onUpdate(this.result);
+                if (this.options.scope) {
+                    this.options.onUpdate.call(this.options.scope, this.result);
+                } else {
+                    this.options.onUpdate(this.result);
+                }
             }
         },
 
@@ -1636,6 +1717,14 @@
 
         toggleInput: function () {
             this.$cache.input.toggleClass("irs-hidden-input");
+
+            if (this.has_tab_index) {
+                this.$cache.input.prop("tabindex", -1);
+            } else {
+                this.$cache.input.removeProp("tabindex");
+            }
+
+            this.has_tab_index = !this.has_tab_index;
         },
 
         /**
@@ -1894,7 +1983,6 @@
             if (typeof o.to_min === "string") o.to_min = +o.to_min;
             if (typeof o.to_max === "string") o.to_max = +o.to_max;
 
-            if (typeof o.keyboard_step === "string") o.keyboard_step = +o.keyboard_step;
             if (typeof o.grid_num === "string") o.grid_num = +o.grid_num;
 
             if (o.max < o.min) {
@@ -1962,10 +2050,6 @@
 
             if (typeof o.step !== "number" || isNaN(o.step) || !o.step || o.step < 0) {
                 o.step = 1;
-            }
-
-            if (typeof o.keyboard_step !== "number" || isNaN(o.keyboard_step) || !o.keyboard_step || o.keyboard_step < 0) {
-                o.keyboard_step = 5;
             }
 
             if (typeof o.from_min === "number" && o.from < o.from_min) {
@@ -2053,6 +2137,7 @@
         updateFrom: function () {
             this.result.from = this.options.from;
             this.result.from_percent = this.convertToPercent(this.result.from);
+            this.result.from_pretty = this._prettify(this.result.from);
             if (this.options.values) {
                 this.result.from_value = this.options.values[this.result.from];
             }
@@ -2061,6 +2146,7 @@
         updateTo: function () {
             this.result.to = this.options.to;
             this.result.to_percent = this.convertToPercent(this.result.to);
+            this.result.to_pretty = this._prettify(this.result.to);
             if (this.options.values) {
                 this.result.to_value = this.options.values[this.result.to];
             }

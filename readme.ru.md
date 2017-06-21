@@ -6,9 +6,9 @@
 
 ***
 
-* Версия: 2.1.8
+* Версия: 2.2.0
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/index.html">Страница проекта и демо</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.1.8.zip">Загрузить ZIP-архив</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.2.0.zip">Загрузить ZIP-архив</a>
 
 ## Описание
 * Ion.RangeSlider — классный, удобный, отзывчивый и легко настраиваемый слайдер диапазонов
@@ -151,8 +151,7 @@ $("#example_id").ionRangeSlider();
 | `prettify_separator` | `data-prettify-separator` | ` ` | string | Set up your own separator for long numbers: 10000000 &rarr; 10,000,000 etc. |
 | `prettify` | `-` | `null` | function | Set up your own prettify function. Can be anything. For example, you can set up unix time as slider values and than transform them to cool looking dates |
 | `force_edges` | `data-force-edges` | `false` | boolean | Sliders handles and tooltips will be always inside it's container |
-| `keyboard` | `data-keyboard` | `false` | boolean | Activates keyboard controls. Move left: &larr;, &darr;, A, S. Move right: &rarr;, &uarr;, W, D. |
-| `keyboard_step` | `data-keyboard-step` | `5` | number | Movement step, than controlling from keyboard. In percents |
+| `keyboard` | `data-keyboard` | `true` | boolean | Activates keyboard controls. Move left: &larr;, &darr;, A, S. Move right: &rarr;, &uarr;, W, D. |
 | `grid` | `data-grid` | `false` | boolean | Enables grid of values above the slider |
 | `grid_margin` | `data-grid-margin` | `true` | boolean | Set left and right grid gaps |
 | `grid_num` | `data-grid-num` | `4` | number | Number of grid units |
@@ -165,7 +164,10 @@ $("#example_id").ionRangeSlider();
 | `decorate_both` | `data-decorate-both` | `true` | boolean | Used for **double** type and only if prefix or postfix was set up. Determine how to decorate close values. For example: **$10k — $100k** or **$10 — 100k** |
 | `values_separator` | `data-decorate-both` | ` - ` | string | Set your own separator for close values. Used for **double** type. Default: **10 — 100**. Or you may set: **10 to 100, 10 + 100, 10 &rarr; 100** etc. |
 | `input_values_separator` | `data-input-values-separator` | ` ; ` | string | Separator for **double** values in input value property. `<input value="25;42">` |
-| `disable` | `data-disable` | `false` | boolean | Locks slider and makes it inactive |
+| `disable` | `data-disable` | `false` | boolean | Locks slider and makes it inactive. Input is disabled too. Invisible to forms |
+| `block` | `data-blokc` | `false` | boolean | Locks slider and makes it inactive. Input is NOT disabled. Can be send with forms |
+| `extra_classes` | `data-extra-classes` | `—` | string | Traverse extra CSS-classes to sliders container |
+| `scope` | `-` | `null` | object | Scope for callbacks. Pass any object |
 | `onStart` | `-` | `null` | function | Callback. Is called on slider start. Gets all slider data as a 1st attribute |
 | `onChange` | `-` | `null` | function | Callback. IS called on each values change. Gets all slider data as a 1st attribute |
 | `onFinish` | `-` | `null` | function | Callback. Is called than user releases handle. Gets all slider data as a 1st attribute |
@@ -178,16 +180,20 @@ $("#example_id").ionRangeSlider();
 Результат имеет тип object и передается коллбэк первым аргументом:
 ```javascript
 Obj: {
-    "input": object,    // jQuery-ссылка на input
-    "slider": object,   // jQuery-ссылка на контейнер слайдера
-    "min": 0,           // значение MIN
-    "max": 1000,        // значение MAX
-    "from": 100,        // значение ОТ (значение левого или единственного ползунка)
-    "from_percent": 10, // значение ОТ в процентах
-    "from_value": 0,    // индекс ОТ массива values (если используется)
-    "to": 900,          // значение ДО (значение правого ползунка)
-    "to_percent": 90,   // значение ДО в процентах
-    "to_value": 0       // индекс ДО массива values (если используется)
+    "input": object,            // jQuery-link to input
+    "slider": object,           // jQuery-link to sliders container
+    "min": 1000,                // MIN value
+    "max": 100000,              // MAX values
+    "from": 10000,              // FROM value
+    "from_percent": 10,         // FROM value in percents
+    "from_value": 0,            // FROM index in values array (if used)
+    "to": 90000,                // TO value
+    "to_percent": 90,           // TO value in percents
+    "to_value": 0,              // TO index in values array (if used)
+    "min_pretty": "1 000",      // MIN prettified (if used)
+    "max_pretty": "100 000",    // MAX prettified (if used)
+    "from_pretty": "10 000",    // FROM prettified (if used)
+    "to_pretty": "90 000"       // TO prettified (if used)
 }
 ```
 

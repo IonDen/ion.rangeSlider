@@ -2,6 +2,16 @@
 
 # Update History
 
+### Version 2.2.0. June 21, 2017
+* Slider has `TabIndex` support now. Issue #321
+* `keyboard_step` option removed as confusing.
+* `keyboard` controls are enabled by default now
+* `keyboard` movement is bind to step now
+* Traverse extra class names to container. Issue #318
+* Prettified values added to `result object`. Issue #356
+* It is possible to pass `scope` for callbacks now. Issue #402
+* New option `block`. Light version of `disabled` but sliders value can be send with form. Issue #242
+
 ### Version 2.1.8. June 19, 2017
 * Issues resolved: #420, #423, #441, #464, #479
 
