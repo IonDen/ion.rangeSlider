@@ -153,7 +153,7 @@ Here you can find bunch of advanced JSFIDDLE demos with different, non-standart 
 | `prettify_separator` | `data-prettify-separator` | ` ` | string | Set up your own separator for long numbers: 10000000 &rarr; 10,000,000 etc. |
 | `prettify` | `-` | `null` | function | Set up your own prettify function. Can be anything. For example, you can set up unix time as slider values and than transform them to cool looking dates |
 | `force_edges` | `data-force-edges` | `false` | boolean | Sliders handles and tooltips will be always inside it's container |
-| `keyboard` | `data-keyboard` | `false` | boolean | Activates keyboard controls. Move left: &larr;, &darr;, A, S. Move right: &rarr;, &uarr;, W, D. |
+| `keyboard` | `data-keyboard` | `true` | boolean | Activates keyboard controls. Move left: &larr;, &darr;, A, S. Move right: &rarr;, &uarr;, W, D. |
 | `grid` | `data-grid` | `true` | boolean | Enables grid of values above the slider |
 | `grid_margin` | `data-grid-margin` | `true` | boolean | Set left and right grid gaps |
 | `grid_num` | `data-grid-num` | `4` | number | Number of grid units |
