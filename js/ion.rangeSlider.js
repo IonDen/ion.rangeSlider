@@ -803,7 +803,7 @@
             if ($.contains(this.$cache.cont[0], e.target) || this.dragging) {
                 this.callOnFinish();
             }
-            
+
             this.dragging = false;
         },
 
@@ -1806,7 +1806,7 @@
                 number = number / this.options.step;
                 number = number * this.options.step;
 
-                number = +number.toFixed(0);
+                number = +number.toFixed(avg_decimals);
             }
 
             if (abs) {
