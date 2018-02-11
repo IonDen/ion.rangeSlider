@@ -52,7 +52,7 @@
     cursor: pointer;
 }
 
-.irs-slider:hover {
+.irs-slider.state_hover, .irs-slider:hover {
     background: #f0f6ff;
 }
 
