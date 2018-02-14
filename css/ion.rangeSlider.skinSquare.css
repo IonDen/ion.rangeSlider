@@ -22,10 +22,13 @@
     background: #DEDEDE;
 }
 
-.irs-bar {
+.irs-bar, .irs-bar-edge {
     top: 31px;
     height: 4px;
     background: black;
+}
+.irs-bar-edge {
+  width: 8px;
 }
 
 .irs-shadow {
