@@ -23,10 +23,13 @@
     border-radius: 16px;
 }
 
-.irs-bar {
+.irs-bar, .irs-bar-edge {
     top: 36px;
     height: 4px;
     background: #006CFA;
+}
+.irs-bar-edge {
+    width: 12px;
 }
 
 .irs-shadow {
