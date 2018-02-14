@@ -57,7 +57,6 @@
     top: 0;
     padding: 2px 4px;
     background: rgba(0,0,0,0.1);
-    border-radius: 2px;
 }
 
 .irs-from, .irs-to, .irs-single {
@@ -66,7 +65,6 @@
     text-shadow: none;
     padding: 2px 4px;
     background: black;
-    border-radius: 2px;
 }
 
 .irs-grid {
