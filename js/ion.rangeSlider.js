@@ -1,5 +1,5 @@
 // Ion.RangeSlider
-// version 2.2.0 Build: 380
+// version 2.2.1 Build: 380
 // © Denis Ineshin, 2017
 // https://github.com/IonDen
 //
@@ -2181,15 +2181,8 @@
             this.calcGridMargin();
 
             if (o.grid_snap) {
-
-                if (total > 50) {
-                    big_num = 50 / o.step;
-                    big_p = this.toFixed(o.step / 0.5);
-                } else {
-                    big_num = total / o.step;
-                    big_p = this.toFixed(o.step / (total / 100));
-                }
-
+                big_num = total / o.step;
+                big_p = this.toFixed(o.step / (total / 100));
             } else {
                 big_p = this.toFixed(100 / big_num);
             }
@@ -2293,8 +2286,18 @@
             if (this.options.grid_scale.length > 0) {
                 for (i = 0; i < num; i++) {
                     label = this.$cache.grid_labels[i][0];
+                    var scale = $(label).html();
 
-                    if ($.inArray($(label).html(), this.options.grid_scale)) {
+                    var inArray = false;
+
+                    $.each(this.options.grid_scale, function () {
+                        if (this == scale) {
+                            inArray = true;
+                            return false;
+                        }
+                    });
+
+                    if (inArray) {
                         label.style.visibility = "visible";
                     } else {
                         label.style.visibility = "hidden";
