@@ -2134,8 +2134,12 @@
             return decorated;
         },
 
-        updateFrom: function () {
-            this.result.from = this.options.from;
+        updateFrom: function (from) {
+            if(from === undefined || from === null) {
+                from = this.options.from 
+            }
+
+            this.result.from = from;
             this.result.from_percent = this.convertToPercent(this.result.from);
             this.result.from_pretty = this._prettify(this.result.from);
             if (this.options.values) {
@@ -2143,8 +2147,12 @@
             }
         },
 
-        updateTo: function () {
-            this.result.to = this.options.to;
+        updateTo: function (to) {
+            if(to === undefined || to === null) {
+                to = this.options.to 
+            }
+
+            this.result.to = to;
             this.result.to_percent = this.convertToPercent(this.result.to);
             this.result.to_pretty = this._prettify(this.result.to);
             if (this.options.values) {
@@ -2378,6 +2386,26 @@
             this.toggleInput();
             this.remove();
             this.init(true);
+        },
+
+        /**
+         * Changes 'from' and 'to' plugin values, specified in options object.
+         * 
+         * @param options {Object} - New values fo from and to: {from: value, to: value}.
+         */
+        change: function(options) {
+            if (!this.input) {
+                return;
+            }
+
+            if(typeof options !== 'object'){
+                return;
+            }
+
+            if(options.from !== undefined) this.updateFrom(options.from);
+            if(options.to !== undefined) this.updateTo(options.to);
+
+            this.updateScene();
         },
 
         reset: function () {
