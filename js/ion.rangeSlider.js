@@ -2403,12 +2403,12 @@
             if(typeof options !== 'object'){
                 return;
             }
-            
+
             if(options.from !== undefined) this.updateFrom(options.from);
             if(options.to !== undefined) this.updateTo(options.to);
             this.is_change = true;
 
-            this.updateScene();
+            this.drawHandles();
         },
 
         reset: function () {
