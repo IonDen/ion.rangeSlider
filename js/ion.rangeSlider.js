@@ -177,6 +177,7 @@
         this.is_active = false;
         this.is_resize = false;
         this.is_click = false;
+        this.is_change = false;
 
         options = options || {};
 
@@ -1378,11 +1379,11 @@
                 return;
             }
 
-            if (!this.dragging && !this.force_redraw && !this.is_key) {
+            if (!this.dragging && !this.force_redraw && !this.is_key && !this.is_change) {
                 return;
             }
 
-            if (this.old_from !== this.result.from || this.old_to !== this.result.to || this.force_redraw || this.is_key) {
+            if (this.old_from !== this.result.from || this.old_to !== this.result.to || this.force_redraw || this.is_key || this.is_change) {
 
                 this.drawLabels();
 
@@ -1435,6 +1436,7 @@
             this.is_start = false;
             this.is_key = false;
             this.is_click = false;
+            this.is_change = false;
             this.force_redraw = false;
         },
 
@@ -2401,9 +2403,10 @@
             if(typeof options !== 'object'){
                 return;
             }
-
+            
             if(options.from !== undefined) this.updateFrom(options.from);
             if(options.to !== undefined) this.updateTo(options.to);
+            this.is_change = true;
 
             this.updateScene();
         },
