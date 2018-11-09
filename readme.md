@@ -246,10 +246,16 @@ var slider = $("#range").data("ionRangeSlider");
 slider.reset();
 ```
 
-There are 3 public methods:
+There are 4 public methods:
 ```javascript
 // UPDATE - updates slider to any new values
 slider.update({
+    from: 300,
+    to: 400
+});
+
+// CHANGE - changes slider current from and/or to values, without recreating slider instance unlike the update method.
+slider.change({
     from: 300,
     to: 400
 });
