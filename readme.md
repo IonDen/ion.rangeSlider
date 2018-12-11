@@ -1,14 +1,12 @@
 ![ion.rangeSlider](_tmp/logo-ion-range-slider.png)
 
-> English description | <a href="readme.ru.md">Описание на русском</a>
-
 Ion.RangeSlider. Is an easy, flexible and responsive range slider with tons of options.
 
 ***
 
 * Version: 2.3.0 | *Version 3.x is under development now*
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.3.0.zip">Download ZIP</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Project page and demos</a>
+* <a href="https://github.com/IonDen/ion.rangeSlider/archive/2.3.0.zip">Download ZIP</a>
 
 ## Description
 * Ion.RangeSlider — cool, comfortable, responsive and easily customizable range slider
@@ -82,12 +80,6 @@ To initialise the slider, call ionRangeSlider on the element:
 ```javascript
 $("#example_id").ionRangeSlider();
 ```
-
-
-## Demo for juniors
-
-If your are new in web development and you are not sure how to correctly install the plugin to your web-page, please download
-<a href="http://ionden.com/a/plugins/ion.rangeSlider/ionRangeSliderDemo.zip" class="button">this demo example</a>
 
 
 ## <a href="http://jsfiddle.net/IonDen/qv6yrjrv/" target="_blank">Experiments playground</a>
