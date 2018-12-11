@@ -6,9 +6,9 @@ Ion.RangeSlider. Is an easy, flexible and responsive range slider with tons of o
 
 ***
 
-* Version: 2.2.0 | *Version 3.x is under development now*
+* Version: 2.3.0 | *Version 3.x is under development now*
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/en.html">Project page and demos</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.2.0.zip">Download ZIP</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/ion.rangeSlider-2.3.0.zip">Download ZIP</a>
 
 ## Description
 * Ion.RangeSlider — cool, comfortable, responsive and easily customizable range slider
@@ -21,7 +21,7 @@ Ion.RangeSlider. Is an easy, flexible and responsive range slider with tons of o
 ![ion.rangeSlider](http://ionden.com/a/plugins/ion.rangeSlider/static/img/ion-range-slider.png)
 
 ## Key features
-* Skin support. (5 skins included and PSD for skin creation)
+* Skin support. (6 skins included)
 * Any number of sliders at one page without conflicts and big performance problems
 * Two slider types single (1 slider) and double (2 sliders)
 * Support of negative and fractional values
@@ -59,18 +59,7 @@ Add the following libraries to the page:
 * ion.rangeSlider.min.js
 
 Add the following stylesheets to the page:
-* <a href="http://necolas.github.io/normalize.css/" target="_blank">normalize.css</a> (optional)
-* ion.rangeSlider.css
-
-Plus, a skin for the slider. 5 skins are included. Choose one:
-* ion.rangeSlider.skinFlat.css + sprite-skin-flat.png
-* ion.rangeSlider.skinHTML5.css + no images
-* ion.rangeSlider.skinModern.css + sprite-skin-modern.png
-* ion.rangeSlider.skinNice.css + sprite-skin-nice.png
-* ion.rangeSlider.skinSimple.css + sprite-skin-simple.png
-
-Or use the included PSD file and design a custom skin.
-
+* ion.rangeSlider.min.css
 
 ## Install with bower
 
@@ -131,6 +120,7 @@ Here you can find bunch of advanced JSFIDDLE demos with different, non-standart 
 
 | Option | Data-Attr | Defaults | Type | Description |
 | --- | --- | --- | --- | --- |
+| `skin` | `data-skin` | `flat` | string | Choose UI skin to use |
 | `type` | `data-type` | `single` | string | Choose slider type, could be `single` - for one handle, or `double` for two handles |
 | `min` | `data-min` | `10` | number | Set slider minimum value |
 | `max` | `data-max` | `100` | number | Set slider maximum value |
@@ -202,6 +192,7 @@ Obj: {
 An example of a customised slider:
 ```javascript
 $("#example").ionRangeSlider({
+    skin: "big",
     min: 0,
     max: 10000,
     from: 1000,
@@ -277,8 +268,6 @@ All plugins options are covered in demos.
 
 #### Support Ion-series plugins development:
 
-* Donate through Pledgie service: [![](https://pledgie.com/campaigns/25694.png?skin_name=chrome)](https://pledgie.com/campaigns/25694)
+* [Support the plugin on Patreon](https://www.patreon.com/IonDen)
 
 * Donate direct to my Paypal account: https://www.paypal.me/IonDen
-
-* Donate direct to my Yandex.Money account: http://yasobe.ru/na/razrabotku
