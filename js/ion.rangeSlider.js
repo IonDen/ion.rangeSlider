@@ -11,11 +11,11 @@
 // =====================================================================================================================
 
 ;(function(factory) {
-    if (!jQuery && typeof define === "function" && define.amd) {
+    if ((typeof jQuery === 'undefined' || !jQuery) && typeof define === "function" && define.amd) {
         define(["jquery"], function (jQuery) {
             return factory(jQuery, document, window, navigator);
         });
-    } else if (!jQuery && typeof exports === "object") {
+    } else if ((typeof jQuery === 'undefined' || !jQuery) && typeof exports === "object") {
         factory(require("jquery"), document, window, navigator);
     } else {
         factory(jQuery, document, window, navigator);
@@ -806,7 +806,7 @@
             if ($.contains(this.$cache.cont[0], e.target) || this.dragging) {
                 this.callOnFinish();
             }
-            
+
             this.dragging = false;
         },
 
