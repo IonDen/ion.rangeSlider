@@ -141,7 +141,7 @@ Here you can find bunch of advanced JSFIDDLE demos with different, non-standard 
 
 | Option | Data-Attr | Defaults | Type | Description |
 | --- | --- | --- | --- | --- |
-| `skin` | `data-skin` | `flat` | string | Choose UI skin to use |
+| `skin` | `data-skin` | `flat` | string | Choose UI skin to use (flat, big, modern, round, sharp, square) |
 | `type` | `data-type` | `single` | string | Choose slider type, could be `single` - for one handle, or `double` for two handles |
 | `min` | `data-min` | `10` | number | Set slider minimum value |
 | `max` | `data-max` | `100` | number | Set slider maximum value |
