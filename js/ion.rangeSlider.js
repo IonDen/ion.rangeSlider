@@ -11,11 +11,11 @@
 // =====================================================================================================================
 
 ;(function(factory) {
-    if ((typeof jQuery === 'undefined' || !jQuery) && typeof define === "function" && define.amd) {
+    if (!jQuery && typeof define === "function" && define.amd) {
         define(["jquery"], function (jQuery) {
             return factory(jQuery, document, window, navigator);
         });
-    } else if ((typeof jQuery === 'undefined' || !jQuery) && typeof exports === "object") {
+    } else if (!jQuery && typeof exports === "object") {
         factory(require("jquery"), document, window, navigator);
     } else {
         factory(jQuery, document, window, navigator);
