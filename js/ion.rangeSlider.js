@@ -310,6 +310,7 @@
             grid_margin: true,
             grid_num: 4,
             grid_snap: false,
+            grid_scale: [],
 
             hide_min_max: false,
             hide_from_to: false,
@@ -379,6 +380,7 @@
             grid_margin: $inp.data("gridMargin"),
             grid_num: $inp.data("gridNum"),
             grid_snap: $inp.data("gridSnap"),
+            grid_scale: $inp.data("gridScale"),
 
             hide_min_max: $inp.data("hideMinMax"),
             hide_from_to: $inp.data("hideFromTo"),
@@ -806,7 +808,7 @@
             if ($.contains(this.$cache.cont[0], e.target) || this.dragging) {
                 this.callOnFinish();
             }
-            
+
             this.dragging = false;
         },
 
@@ -2297,8 +2299,30 @@
                 }
             }
 
-            this.calcGridCollision(2, start, finish);
-            this.calcGridCollision(4, start, finish);
+            if (this.options.grid_scale.length > 0) {
+                for (i = 0; i < num; i++) {
+                    label = this.$cache.grid_labels[i][0];
+                    var scale = $(label).html();
+
+                    var inArray = false;
+
+                    $.each(this.options.grid_scale, function () {
+                        if (this == scale) {
+                            inArray = true;
+                            return false;
+                        }
+                    });
+
+                    if (inArray) {
+                        label.style.visibility = "visible";
+                    } else {
+                        label.style.visibility = "hidden";
+                    }
+                }
+            } else {
+                this.calcGridCollision(2, start, finish);
+                this.calcGridCollision(4, start, finish);
+            }
 
             for (i = 0; i < num; i++) {
                 label = this.$cache.grid_labels[i][0];
