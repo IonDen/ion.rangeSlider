@@ -1,6 +1,6 @@
 // Ion.RangeSlider
-// version 2.2.1 Build: 380
-// © Denis Ineshin, 2017
+// version 2.3.0 Build: 381
+// © Denis Ineshin, 2018
 // https://github.com/IonDen
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/en.html
@@ -10,17 +10,17 @@
 // http://ionden.com/a/plugins/licence-en.html
 // =====================================================================================================================
 
-;(function (factory) {
-    if (typeof define === "function" && define.amd) {
+;(function(factory) {
+    if (!jQuery && typeof define === "function" && define.amd) {
         define(["jquery"], function (jQuery) {
             return factory(jQuery, document, window, navigator);
         });
-    } else if (typeof exports === "object") {
+    } else if (!jQuery && typeof exports === "object") {
         factory(require("jquery"), document, window, navigator);
     } else {
         factory(jQuery, document, window, navigator);
     }
-}(function ($, document, window, navigator, undefined) {
+} (function ($, document, window, navigator, undefined) {
     "use strict";
 
     // =================================================================================================================
@@ -42,7 +42,7 @@
             }
         }
         return false;
-    }());
+    } ());
     if (!Function.prototype.bind) {
         Function.prototype.bind = function bind(that) {
 
@@ -58,8 +58,7 @@
 
                     if (this instanceof bound) {
 
-                        var F = function () {
-                        };
+                        var F = function(){};
                         F.prototype = target.prototype;
                         var self = new F();
 
@@ -87,7 +86,7 @@
         };
     }
     if (!Array.prototype.indexOf) {
-        Array.prototype.indexOf = function (searchElement, fromIndex) {
+        Array.prototype.indexOf = function(searchElement, fromIndex) {
             var k;
             if (this == null) {
                 throw new TypeError('"this" is null or not defined');
@@ -116,31 +115,33 @@
     }
 
 
+
     // =================================================================================================================
     // Template
 
     var base_html =
         '<span class="irs">' +
-        '<span class="irs-line" tabindex="0"><span class="irs-line-left"></span><span class="irs-line-mid"></span><span class="irs-line-right"></span></span>' +
+        '<span class="irs-line" tabindex="0"></span>' +
         '<span class="irs-min">0</span><span class="irs-max">1</span>' +
         '<span class="irs-from">0</span><span class="irs-to">0</span><span class="irs-single">0</span>' +
         '</span>' +
-        '<span class="irs-grid"></span>' +
-        '<span class="irs-bar"></span>';
+        '<span class="irs-grid"></span>';
 
     var single_html =
-        '<span class="irs-bar-edge"></span>' +
+        '<span class="irs-bar irs-bar--single"></span>' +
         '<span class="irs-shadow shadow-single"></span>' +
-        '<span class="irs-slider single"></span>';
+        '<span class="irs-handle single"><i></i><i></i><i></i></span>';
 
     var double_html =
+        '<span class="irs-bar"></span>' +
         '<span class="irs-shadow shadow-from"></span>' +
         '<span class="irs-shadow shadow-to"></span>' +
-        '<span class="irs-slider from"></span>' +
-        '<span class="irs-slider to"></span>';
+        '<span class="irs-handle from"><i></i><i></i><i></i></span>' +
+        '<span class="irs-handle to"><i></i><i></i><i></i></span>';
 
     var disable_html =
         '<span class="irs-disable-mask"></span>';
+
 
 
     // =================================================================================================================
@@ -155,7 +156,7 @@
      * @constructor
      */
     var IonRangeSlider = function (input, options, plugin_count) {
-        this.VERSION = "2.2.0";
+        this.VERSION = "2.3.0";
         this.input = input;
         this.plugin_count = plugin_count;
         this.current_plugin = 0;
@@ -261,6 +262,7 @@
         };
 
 
+
         /**
          * get and validate config
          */
@@ -270,6 +272,7 @@
 
         // default config
         config = {
+            skin: "flat",
             type: "single",
 
             min: 10,
@@ -307,7 +310,6 @@
             grid_margin: true,
             grid_num: 4,
             grid_snap: false,
-            grid_scale: [],
 
             hide_min_max: false,
             hide_from_to: false,
@@ -341,6 +343,7 @@
 
         // config from data-attributes extends js config
         config_from_data = {
+            skin: $inp.data("skin"),
             type: $inp.data("type"),
 
             min: $inp.data("min"),
@@ -376,7 +379,6 @@
             grid_margin: $inp.data("gridMargin"),
             grid_num: $inp.data("gridNum"),
             grid_snap: $inp.data("gridSnap"),
-            grid_scale: $inp.data("gridScale"),
 
             hide_min_max: $inp.data("hideMinMax"),
             hide_from_to: $inp.data("hideFromTo"),
@@ -426,6 +428,7 @@
         }
 
 
+
         // js config extends default config
         $.extend(config, options);
 
@@ -435,9 +438,11 @@
         this.options = config;
 
 
+
         // validate config, to be sure that all data types are correct
         this.update_check = {};
         this.validate();
+
 
 
         // default result object, returned to callbacks
@@ -456,6 +461,7 @@
             to_percent: 0,
             to_value: null
         };
+
 
 
         this.init();
@@ -499,7 +505,7 @@
          * Appends slider template to a DOM
          */
         append: function () {
-            var container_html = '<span class="irs js-irs-' + this.plugin_count + ' ' + this.options.extra_classes + '"></span>';
+            var container_html = '<span class="irs irs--' + this.options.skin + ' js-irs-' + this.plugin_count + ' ' + this.options.extra_classes + '"></span>';
             this.$cache.input.before(container_html);
             this.$cache.input.prop("readonly", true);
             this.$cache.cont = this.$cache.input.prev();
@@ -512,12 +518,12 @@
             this.$cache.from = this.$cache.cont.find(".irs-from");
             this.$cache.to = this.$cache.cont.find(".irs-to");
             this.$cache.single = this.$cache.cont.find(".irs-single");
-            this.$cache.bar = this.$cache.cont.find(".irs-bar");
             this.$cache.line = this.$cache.cont.find(".irs-line");
             this.$cache.grid = this.$cache.cont.find(".irs-grid");
 
             if (this.options.type === "single") {
                 this.$cache.cont.append(single_html);
+                this.$cache.bar = this.$cache.cont.find(".irs-bar");
                 this.$cache.edge = this.$cache.cont.find(".irs-bar-edge");
                 this.$cache.s_single = this.$cache.cont.find(".single");
                 this.$cache.from[0].style.visibility = "hidden";
@@ -525,6 +531,7 @@
                 this.$cache.shad_single = this.$cache.cont.find(".shadow-single");
             } else {
                 this.$cache.cont.append(double_html);
+                this.$cache.bar = this.$cache.cont.find(".irs-bar");
                 this.$cache.s_from = this.$cache.cont.find(".from");
                 this.$cache.s_to = this.$cache.cont.find(".to");
                 this.$cache.shad_from = this.$cache.cont.find(".shadow-from");
@@ -746,10 +753,7 @@
                 x = $handle.offset().left;
                 x += ($handle.width() / 2) - 1;
 
-                this.pointerClick("single", {
-                    preventDefault: function () {
-                    }, pageX: x
-                });
+                this.pointerClick("single", {preventDefault: function () {}, pageX: x});
             }
         },
 
@@ -802,7 +806,7 @@
             if ($.contains(this.$cache.cont[0], e.target) || this.dragging) {
                 this.callOnFinish();
             }
-
+            
             this.dragging = false;
         },
 
@@ -986,6 +990,7 @@
                 this.old_min_interval = null;
             }
         },
+
 
 
         // =============================================================================================================
@@ -1202,7 +1207,7 @@
                 return;
             }
 
-            if (this.coords.x_pointer < 0 || isNaN(this.coords.x_pointer)) {
+            if (this.coords.x_pointer < 0 || isNaN(this.coords.x_pointer)  ) {
                 this.coords.x_pointer = 0;
             } else if (this.coords.x_pointer > this.coords.w_rs) {
                 this.coords.x_pointer = this.coords.w_rs;
@@ -1314,6 +1319,7 @@
         },
 
 
+
         // =============================================================================================================
         // Drawings
 
@@ -1387,6 +1393,9 @@
                 this.$cache.bar[0].style.width = this.coords.p_bar_w + "%";
 
                 if (this.options.type === "single") {
+                    this.$cache.bar[0].style.left = 0;
+                    this.$cache.bar[0].style.width = this.coords.p_bar_w + this.coords.p_bar_x + "%";
+
                     this.$cache.s_single[0].style.left = this.coords.p_single_fake + "%";
 
                     this.$cache.single[0].style.left = this.labels.p_single_left + "%";
@@ -1633,6 +1642,7 @@
         },
 
 
+
         /**
          * Write values to input element
          */
@@ -1654,6 +1664,7 @@
                 this.$cache.input.data("to", this.result.to);
             }
         },
+
 
 
         // =============================================================================================================
@@ -1703,6 +1714,8 @@
                 }
             }
         },
+
+
 
 
         // =============================================================================================================
@@ -2178,14 +2191,15 @@
                 html = '';
 
 
+
             this.calcGridMargin();
 
             if (o.grid_snap) {
                 big_num = total / o.step;
-                big_p = this.toFixed(o.step / (total / 100));
-            } else {
-                big_p = this.toFixed(100 / big_num);
             }
+
+            if (big_num > 50) big_num = 50;
+            big_p = this.toFixed(100 / big_num);
 
             if (big_num > 4) {
                 small_max = 3;
@@ -2236,6 +2250,7 @@
             this.coords.big_num = Math.ceil(big_num + 1);
 
 
+
             this.$cache.cont.addClass("irs-with-grid");
             this.$cache.grid.html(html);
             this.cacheGridLabels();
@@ -2282,31 +2297,8 @@
                 }
             }
 
-
-            if (this.options.grid_scale.length > 0) {
-                for (i = 0; i < num; i++) {
-                    label = this.$cache.grid_labels[i][0];
-                    var scale = $(label).html();
-
-                    var inArray = false;
-
-                    $.each(this.options.grid_scale, function () {
-                        if (this == scale) {
-                            inArray = true;
-                            return false;
-                        }
-                    });
-
-                    if (inArray) {
-                        label.style.visibility = "visible";
-                    } else {
-                        label.style.visibility = "hidden";
-                    }
-                }
-            } else {
-                this.calcGridCollision(2, start, finish);
-                this.calcGridCollision(4, start, finish);
-            }
+            this.calcGridCollision(2, start, finish);
+            this.calcGridCollision(4, start, finish);
 
             for (i = 0; i < num; i++) {
                 label = this.$cache.grid_labels[i][0];
@@ -2354,12 +2346,13 @@
             } else {
                 this.coords.w_handle = this.$cache.s_from.outerWidth(false);
             }
-            this.coords.p_handle = this.toFixed(this.coords.w_handle / this.coords.w_rs * 100);
+            this.coords.p_handle = this.toFixed(this.coords.w_handle  / this.coords.w_rs * 100);
             this.coords.grid_gap = this.toFixed((this.coords.p_handle / 2) - 0.1);
 
             this.$cache.grid[0].style.width = this.toFixed(100 - this.coords.p_handle) + "%";
             this.$cache.grid[0].style.left = this.coords.grid_gap + "%";
         },
+
 
 
         // =============================================================================================================
@@ -2411,12 +2404,13 @@
     };
 
     $.fn.ionRangeSlider = function (options) {
-        return this.each(function () {
+        return this.each(function() {
             if (!$.data(this, "ionRangeSlider")) {
                 $.data(this, "ionRangeSlider", new IonRangeSlider(this, options, plugin_count++));
             }
         });
     };
+
 
 
     // =================================================================================================================
@@ -2427,29 +2421,27 @@
 
     // MIT license
 
-    (function () {
+    (function() {
         var lastTime = 0;
         var vendors = ['ms', 'moz', 'webkit', 'o'];
-        for (var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
-            window.requestAnimationFrame = window[vendors[x] + 'RequestAnimationFrame'];
-            window.cancelAnimationFrame = window[vendors[x] + 'CancelAnimationFrame']
-                || window[vendors[x] + 'CancelRequestAnimationFrame'];
+        for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+            window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
+            window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame']
+                || window[vendors[x]+'CancelRequestAnimationFrame'];
         }
 
         if (!window.requestAnimationFrame)
-            window.requestAnimationFrame = function (callback, element) {
+            window.requestAnimationFrame = function(callback, element) {
                 var currTime = new Date().getTime();
                 var timeToCall = Math.max(0, 16 - (currTime - lastTime));
-                var id = window.setTimeout(function () {
-                        callback(currTime + timeToCall);
-                    },
+                var id = window.setTimeout(function() { callback(currTime + timeToCall); },
                     timeToCall);
                 lastTime = currTime + timeToCall;
                 return id;
             };
 
         if (!window.cancelAnimationFrame)
-            window.cancelAnimationFrame = function (id) {
+            window.cancelAnimationFrame = function(id) {
                 clearTimeout(id);
             };
     }());

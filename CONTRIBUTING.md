@@ -12,15 +12,15 @@
 1. Only 1 bugfix per Pull Request
 2. Should have bug description
 3. Should have bug screenshots (if possible)
-4. Should have working demo. Use JSFIDDLE: http://jsfiddle.net/IonDen/qv6yrjrv/
+4. Should have working demo. Use JSFIDDLE: https://jsfiddle.net/IonDen/b79q0vnm/
 
-### Guide for Pull Requests with new feaures
+### Guide for Pull Requests with new features
 
 1. Only 1 feature per Pull Request
 2. Should have statement, why feature is important and should be included in to plugin
 3. Should have feature description
 4. Should have feature screenshots (if possible)
-5. Should have working demo. Use JSFIDDLE: http://jsfiddle.net/IonDen/qv6yrjrv/
+5. Should have working demo. Use JSFIDDLE: https://jsfiddle.net/IonDen/b79q0vnm/
 
 ### Guide for Pull Requests with grammar fixes
 
