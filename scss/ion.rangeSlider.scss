@@ -773,11 +773,10 @@ $irs-square-line-color: #000;
       background-color: #dedede;
     }
 
-  }
+    &-text {
+      color: silver;
+      font-size: 11px;
+    }
 
-  .irs-grid,
-  .irs-grid-text {
-    color: silver;
-    font-size: 11px;
   }
 }
