@@ -1,7 +1,7 @@
 /**
-Ion.RangeSlider, 2.3.0
-© Denis Ineshin, 2010 - 2018, IonDen.com
-SCSS by djibe
+Ion.RangeSlider, 2.3.1
+© Denis Ineshin, 2010 - 2019, IonDen.com
+djibe SCSS + material skin
 */
 
 $irs-flat-border-radius: 4px;
@@ -14,6 +14,8 @@ $irs-sharp-line-color: #a804b2;
 $irs-round-border-radius: 4px;
 $irs-round-line-color: #006cfa;
 $irs-square-line-color: #000;
+$irs-material-border-radius: 3px;
+$irs-material-line-color: #6208E7;
 
 .irs {
   position: relative;
@@ -162,7 +164,6 @@ $irs-square-line-color: #000;
   }
 }
 
-
 .irs--flat {
   height: 40px;
 
@@ -239,7 +240,7 @@ $irs-square-line-color: #000;
     background-color: #ed5565;
     border-radius: $irs-flat-border-radius;
 
-    &:before {
+    &::before {
       position: absolute;
       display: block;
       content: "";
@@ -262,7 +263,6 @@ $irs-square-line-color: #000;
     color: #999;
   }
 }
-
 
 .irs--big {
   height: 55px;
@@ -469,7 +469,7 @@ $irs-square-line-color: #000;
     color: #fff;
     border-radius: $irs-modern-border-radius;
 
-    &:before {
+    &::before {
       position: absolute;
       display: block;
       content: "";
@@ -581,7 +581,7 @@ $irs-square-line-color: #000;
     color: #fff;
     border-radius: $irs-sharp-border-radius;
 
-    &:before {
+    &::before {
       position: absolute;
       display: block;
       content: "";
@@ -677,7 +677,7 @@ $irs-square-line-color: #000;
     color: #fff;
     border-radius: $irs-round-border-radius;
 
-    &:before {
+    &::before {
       position: absolute;
       display: block;
       content: "";
@@ -777,6 +777,158 @@ $irs-square-line-color: #000;
       color: silver;
       font-size: 11px;
     }
+  }
+}
 
+.irs--material {
+  height: 48px;
+
+  &.irs-with-grid {
+    height: 60px;
+  }
+
+  .irs-line {
+    top: 26px;
+    height: 2px;
+    background-color: var(--secondary, rgba($irs-material-line-color, .26));
+    border-radius: $irs-material-border-radius;
+
+    &:hover {
+      cursor: pointer;
+    }
+  }
+
+  .irs-bar {
+    top: 26px;
+    height: 2px;
+    background-color: var(--secondary, $irs-material-line-color);
+
+    &--single {
+      border-radius: $irs-material-border-radius 0 0 $irs-material-border-radius;
+    }
+
+    &:hover {
+      cursor: pointer;
+
+      // Increase touch area
+      &::after {
+        content: '';
+        position: absolute;
+        top: -20px;
+        bottom: -20px;
+        left: -20px;
+        right: -20px;
+      }
+    }
+  }
+
+  .irs-shadow {
+    height: 2px;
+    bottom: 26px;
+    background-color: rgba(0, 0, 0, .25);
+  }
+
+  .irs-handle {
+    top: 21px;
+    width: 12px;
+    height: 12px;
+    background-color: var(--secondary, $irs-material-line-color);
+    border-radius: 50%;
+    transition: box-shadow .1s ease-out;
+
+    &:hover {
+      box-shadow: 0px 0px 0px 10px rgba($irs-material-line-color, .1);
+      transition: box-shadow .1s;
+      cursor: pointer;
+    }
+
+    &.state_hover {
+      transition: box-shadow .1s ease-out;
+      box-shadow: 0px 0px 0px 18px rgba($irs-material-line-color, .2);
+    }
+  }
+
+  .irs-min,
+  .irs-max {
+    color: #999;
+    font-size: 10px;
+    line-height: 1.333;
+    text-shadow: none;
+    top: 0;
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+
+  .irs-from,
+  .irs-to,
+  .irs-single {
+    font-size: 10px;
+    line-height: 1.333;
+    text-shadow: none;
+    padding: 1px 5px;
+    background-color: var(--secondary, $irs-material-line-color);
+    color: #fff;
+    border-radius: $irs-material-border-radius;
+
+    &::before {
+      position: absolute;
+      display: block;
+      content: "";
+      bottom: -6px;
+      left: 50%;
+      width: 0;
+      height: 0;
+      margin-left: -3px;
+      overflow: hidden;
+      border: 3px solid transparent;
+      border-top-color: var(--secondary, $irs-material-line-color);
+    }
+  }
+
+  .irs-grid {
+    height: 25px;
+    transform: translateY(-9px);
+
+    &-pol {
+      background-color: rgba($irs-material-line-color, .4);
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+    }
+
+    &-text {
+      color: #999;
+      font-size: 10px;
+    }
+  }
+
+  &.irs-disabled {
+    opacity: 1;
+
+    .irs-line {
+      background-color: #d7d7d7;
+    }
+
+    .irs-bar {
+      background-color: #8c8c8c;
+    }
+
+    .irs-handle {
+      background-color: #8c8c8c;
+      box-shadow: 0 0 0 4px #fff;
+      height: 8px;
+      width: 8px;
+      top: 22px;
+    }
+
+    .irs-from,
+    .irs-to,
+    .irs-single {
+      background: #8c8c8c;
+
+      &::before {
+        display: none;
+      }
+    }
   }
 }
