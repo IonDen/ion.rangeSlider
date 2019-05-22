@@ -2,6 +2,10 @@
 
 # Update History
 
+### Version 2.3.1. May 25, 2019
+* SCSS source file
+* Material skin added by @djibe
+
 ### Version 2.3.0. December 11, 2018
 * Website update
 * Big skins update
