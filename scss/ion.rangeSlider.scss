@@ -1,5 +1,5 @@
 /**
-Ion.RangeSlider, 2.3.1
+Ion.RangeSlider, 2.3.2
 © Denis Ineshin, 2010 - 2019, IonDen.com
 djibe SCSS + material skin
 */
@@ -15,7 +15,10 @@ $irs-round-border-radius: 4px;
 $irs-round-line-color: #006cfa;
 $irs-square-line-color: #000;
 $irs-material-border-radius: 3px;
-$irs-material-line-color: #6208E7;
+$irs-material-line-color: #ff4081;
+$irs-material-transition: box-shadow .1s ease-out;
+$irs-material-handle-hover-box-shadow: 0 0 0 .75rem rgba($irs-material-line-color, .12);
+$irs-material-handle-active-box-shadow: 0 0 0 1.3334rem rgba($irs-material-line-color, .2);
 
 .irs {
   position: relative;
@@ -783,6 +786,11 @@ $irs-material-line-color: #6208E7;
 .irs--material {
   height: 48px;
 
+  &.irs {
+    font-family: 'Roboto', sans-serif !important;
+    font-weight: 500;
+  }
+
   &.irs-with-grid {
     height: 60px;
   }
@@ -790,7 +798,7 @@ $irs-material-line-color: #6208E7;
   .irs-line {
     top: 26px;
     height: 2px;
-    background-color: var(--secondary, rgba($irs-material-line-color, .26));
+    background-color: rgba($irs-material-line-color, .26);
     border-radius: $irs-material-border-radius;
 
     &:hover {
@@ -801,7 +809,7 @@ $irs-material-line-color: #6208E7;
   .irs-bar {
     top: 26px;
     height: 2px;
-    background-color: var(--secondary, $irs-material-line-color);
+    background-color: $irs-material-line-color;
 
     &--single {
       border-radius: $irs-material-border-radius 0 0 $irs-material-border-radius;
@@ -830,21 +838,21 @@ $irs-material-line-color: #6208E7;
 
   .irs-handle {
     top: 21px;
-    width: 12px;
-    height: 12px;
-    background-color: var(--secondary, $irs-material-line-color);
+    width: .75rem;
+    height: .75rem;
+    background-color: $irs-material-line-color;
     border-radius: 50%;
-    transition: box-shadow .1s ease-out;
+    transition: $irs-material-transition;
 
     &:hover {
-      box-shadow: 0px 0px 0px 10px rgba($irs-material-line-color, .1);
-      transition: box-shadow .1s;
+      box-shadow: $irs-material-handle-hover-box-shadow;
+      transition: $irs-material-transition;
       cursor: pointer;
     }
 
     &.state_hover {
-      transition: box-shadow .1s ease-out;
-      box-shadow: 0px 0px 0px 18px rgba($irs-material-line-color, .2);
+      transition: $irs-material-transition;
+      box-shadow: $irs-material-handle-active-box-shadow;
     }
   }
 
@@ -862,13 +870,14 @@ $irs-material-line-color: #6208E7;
   .irs-from,
   .irs-to,
   .irs-single {
-    font-size: 10px;
+    font-size: .75rem;
     line-height: 1.333;
     text-shadow: none;
     padding: 1px 5px;
-    background-color: var(--secondary, $irs-material-line-color);
+    background-color: $irs-material-line-color;
     color: #fff;
     border-radius: $irs-material-border-radius;
+    transform: translateY(-4px);
 
     &::before {
       position: absolute;
@@ -881,7 +890,7 @@ $irs-material-line-color: #6208E7;
       margin-left: -3px;
       overflow: hidden;
       border: 3px solid transparent;
-      border-top-color: var(--secondary, $irs-material-line-color);
+      border-top-color: $irs-material-line-color;
     }
   }
 
@@ -915,9 +924,9 @@ $irs-material-line-color: #6208E7;
 
     .irs-handle {
       background-color: #8c8c8c;
-      box-shadow: 0 0 0 4px #fff;
-      height: 8px;
-      width: 8px;
+      box-shadow: 0 0 0 .25rem #fff;
+      height: .5rem;
+      width: .5rem;
       top: 22px;
     }
 
