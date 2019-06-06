@@ -1,9 +1,9 @@
-@charset "UTF-8";
 /**
-Ion.RangeSlider, 2.3.1
+Ion.RangeSlider, 2.3.2
 © Denis Ineshin, 2010 - 2019, IonDen.com
 djibe SCSS + material skin
 */
+
 .irs {
   position: relative;
   display: block;
@@ -793,6 +793,11 @@ djibe SCSS + material skin
   height: 48px;
 }
 
+.irs--material.irs {
+  font-family: 'Roboto', sans-serif !important;
+  font-weight: 500;
+}
+
 .irs--material.irs-with-grid {
   height: 60px;
 }
@@ -800,7 +805,7 @@ djibe SCSS + material skin
 .irs--material .irs-line {
   top: 26px;
   height: 2px;
-  background-color: var(--secondary, rgba(98, 8, 231, 0.26));
+  background-color: rgba(255, 64, 129, 0.26);
   border-radius: 3px;
 }
 
@@ -811,7 +816,7 @@ djibe SCSS + material skin
 .irs--material .irs-bar {
   top: 26px;
   height: 2px;
-  background-color: var(--secondary, #6208E7);
+  background-color: #ff4081;
 }
 
 .irs--material .irs-bar--single {
@@ -839,33 +844,33 @@ djibe SCSS + material skin
 
 .irs--material .irs-handle {
   top: 21px;
-  width: 12px;
-  height: 12px;
-  background-color: var(--secondary, #6208E7);
+  width: .75rem;
+  height: .75rem;
+  background-color: #ff4081;
   border-radius: 50%;
-  -webkit-transition: -webkit-box-shadow .1s ease-out;
-  transition: -webkit-box-shadow .1s ease-out;
-  transition: box-shadow .1s ease-out;
-  transition: box-shadow .1s ease-out, -webkit-box-shadow .1s ease-out;
+  -webkit-transition: -webkit-box-shadow 0.1s ease-out;
+  transition: -webkit-box-shadow 0.1s ease-out;
+  transition: box-shadow 0.1s ease-out;
+  transition: box-shadow 0.1s ease-out, -webkit-box-shadow 0.1s ease-out;
 }
 
 .irs--material .irs-handle:hover {
-  -webkit-box-shadow: 0px 0px 0px 10px rgba(98, 8, 231, 0.1);
-          box-shadow: 0px 0px 0px 10px rgba(98, 8, 231, 0.1);
-  -webkit-transition: -webkit-box-shadow .1s;
-  transition: -webkit-box-shadow .1s;
-  transition: box-shadow .1s;
-  transition: box-shadow .1s, -webkit-box-shadow .1s;
+  -webkit-box-shadow: 0 0 0 0.75rem rgba(255, 64, 129, 0.12);
+          box-shadow: 0 0 0 0.75rem rgba(255, 64, 129, 0.12);
+  -webkit-transition: -webkit-box-shadow 0.1s ease-out;
+  transition: -webkit-box-shadow 0.1s ease-out;
+  transition: box-shadow 0.1s ease-out;
+  transition: box-shadow 0.1s ease-out, -webkit-box-shadow 0.1s ease-out;
   cursor: pointer;
 }
 
 .irs--material .irs-handle.state_hover {
-  -webkit-transition: -webkit-box-shadow .1s ease-out;
-  transition: -webkit-box-shadow .1s ease-out;
-  transition: box-shadow .1s ease-out;
-  transition: box-shadow .1s ease-out, -webkit-box-shadow .1s ease-out;
-  -webkit-box-shadow: 0px 0px 0px 18px rgba(98, 8, 231, 0.2);
-          box-shadow: 0px 0px 0px 18px rgba(98, 8, 231, 0.2);
+  -webkit-transition: -webkit-box-shadow 0.1s ease-out;
+  transition: -webkit-box-shadow 0.1s ease-out;
+  transition: box-shadow 0.1s ease-out;
+  transition: box-shadow 0.1s ease-out, -webkit-box-shadow 0.1s ease-out;
+  -webkit-box-shadow: 0 0 0 1.3334rem rgba(255, 64, 129, 0.2);
+          box-shadow: 0 0 0 1.3334rem rgba(255, 64, 129, 0.2);
 }
 
 .irs--material .irs-min,
@@ -882,13 +887,15 @@ djibe SCSS + material skin
 .irs--material .irs-from,
 .irs--material .irs-to,
 .irs--material .irs-single {
-  font-size: 10px;
+  font-size: .75rem;
   line-height: 1.333;
   text-shadow: none;
   padding: 1px 5px;
-  background-color: var(--secondary, #6208E7);
+  background-color: #ff4081;
   color: #fff;
   border-radius: 3px;
+  -webkit-transform: translateY(-4px);
+          transform: translateY(-4px);
 }
 
 .irs--material .irs-from::before,
@@ -904,7 +911,7 @@ djibe SCSS + material skin
   margin-left: -3px;
   overflow: hidden;
   border: 3px solid transparent;
-  border-top-color: var(--secondary, #6208E7);
+  border-top-color: #ff4081;
 }
 
 .irs--material .irs-grid {
@@ -914,7 +921,7 @@ djibe SCSS + material skin
 }
 
 .irs--material .irs-grid-pol {
-  background-color: rgba(98, 8, 231, 0.4);
+  background-color: rgba(255, 64, 129, 0.4);
   width: 2px;
   height: 2px;
   border-radius: 50%;
@@ -939,10 +946,10 @@ djibe SCSS + material skin
 
 .irs--material.irs-disabled .irs-handle {
   background-color: #8c8c8c;
-  -webkit-box-shadow: 0 0 0 4px #fff;
-          box-shadow: 0 0 0 4px #fff;
-  height: 8px;
-  width: 8px;
+  -webkit-box-shadow: 0 0 0 .25rem #fff;
+          box-shadow: 0 0 0 .25rem #fff;
+  height: .5rem;
+  width: .5rem;
   top: 22px;
 }
 
