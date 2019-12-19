@@ -4,9 +4,9 @@ Ion.RangeSlider. Is an easy, flexible and responsive range slider with tons of o
 
 ***
 
-* Version: 2.3.0 | *Version 3.x is under development now*
+* Version: 2.3.1 | *Version 3.x is under development now*
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Project page and demos</a>
-* <a href="https://github.com/IonDen/ion.rangeSlider/archive/2.3.0.zip">Download ZIP</a>
+* <a href="https://github.com/IonDen/ion.rangeSlider/archive/2.3.1.zip">Download ZIP</a>
 
 ## Description
 * Ion.RangeSlider — cool, comfortable, responsive and easily customizable range slider
@@ -66,13 +66,13 @@ Add the following stylesheets to the page:
 Use [CDNjs](https://cdnjs.com/libraries/ion-rangeslider) or [JSdelivr](https://www.jsdelivr.com/package/npm/ion-rangeslider) to get latest version of plugin and jQuery.
 ```html
 <!--Plugin CSS file with desired skin-->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.0/css/ion.rangeSlider.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/css/ion.rangeSlider.min.css"/>
 
 <!--jQuery-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
 <!--Plugin JavaScript file-->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.0/js/ion.rangeSlider.min.js"></script>   
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/js/ion.rangeSlider.min.js"></script>   
 ``` 
 
 
@@ -117,7 +117,6 @@ $("#example_id").ionRangeSlider();
 
 Here you can find bunch of advanced JSFIDDLE demos with different, non-standard use cases:
 * [Custom marks on slider](https://jsfiddle.net/IonDen/tdvxs3zL/)
-* [Reverse or RTL](https://jsfiddle.net/IonDen/65rq31a7/)
 * [1 handle bind to 1 input](https://jsfiddle.net/IonDen/khngpw3m/)
 * [2 handles bind to 2 inputs](https://jsfiddle.net/IonDen/avcm6wpj/)
 * [2 sliders connected to each other](https://jsfiddle.net/IonDen/1hnvxsg5/)

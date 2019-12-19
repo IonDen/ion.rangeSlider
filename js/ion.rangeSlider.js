@@ -1,6 +1,6 @@
 // Ion.RangeSlider
-// version 2.3.0 Build: 381
-// © Denis Ineshin, 2018
+// version 2.3.1 Build: 382
+// © Denis Ineshin, 2019
 // https://github.com/IonDen
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/en.html
@@ -156,7 +156,7 @@
      * @constructor
      */
     var IonRangeSlider = function (input, options, plugin_count) {
-        this.VERSION = "2.3.0";
+        this.VERSION = "2.3.1";
         this.input = input;
         this.plugin_count = plugin_count;
         this.current_plugin = 0;
