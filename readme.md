@@ -7,6 +7,7 @@ Ion.RangeSlider. Is an easy, flexible and responsive range slider with tons of o
 * Version: 2.3.1 | *Version 3.x is under development now*
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Project page and demos</a>
 * <a href="https://github.com/IonDen/ion.rangeSlider/archive/2.3.1.zip">Download ZIP</a>
+* [Support the plugin on GitHub sponsors](https://github.com/sponsors/IonDen)
 
 ## Description
 * Ion.RangeSlider — cool, comfortable, responsive and easily customizable range slider
