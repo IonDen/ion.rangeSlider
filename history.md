@@ -1,5 +1,7 @@
 ![ion.rangeSlider](_tmp/logo-ion-range-slider.png)
 
+[Support the plugin on GitHub sponsors](https://github.com/sponsors/IonDen)
+
 # Update History
 
 ### Version 2.3.1. December 19, 2019
@@ -164,4 +166,4 @@
 
 ***
 
-[Support the plugin on Patreon](https://www.patreon.com/IonDen)
+[Support the plugin on GitHub sponsors](https://github.com/sponsors/IonDen)
