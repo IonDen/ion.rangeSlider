@@ -288,6 +288,6 @@ All plugins options are covered in demos.
 
 #### Support Ion-series plugins development:
 
-* [Support the plugin on Patreon](https://www.patreon.com/IonDen)
+* [Support the plugin on GitHub sponsors](https://github.com/sponsors/IonDen)
 
 * Donate direct to my Paypal account: https://www.paypal.me/IonDen
