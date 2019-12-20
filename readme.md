@@ -16,7 +16,7 @@ Ion.RangeSlider. Is an easy, flexible and responsive range slider with tons of o
 * Ion.RangeSlider freely distributed under terms of <a href="http://ionden.com/a/plugins/licence.html" target="_blank">MIT licence</a>.
 * With this plugin you will be able to build beautiful range sliders, like this:
 
-![ion.rangeSlider](http://ionden.com/a/plugins/ion.rangeSlider/static/img/ion-range-slider.png)
+![ion.rangeSlider](_tmp/ion-range-slider.png)
 
 ## Key features
 * Skin support. (6 skins included)
