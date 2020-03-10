@@ -1253,7 +1253,7 @@
          * Find closest handle to pointer click
          *
          * @param real_x {Number}
-         * @returns {String}
+         * @returns {string}
          */
         chooseHandle: function (real_x) {
             if (this.options.type === "single") {
