@@ -1,6 +1,6 @@
 {
     "name": "ion-rangeslider",
-    "version": "2.3.1",
+    "version": "2.4.0",
     "description": "Cool, comfortable and easily customizable range slider with many options and skin support",
     "homepage": "http://ionden.com/a/plugins/ion.rangeSlider/",
     "author": {
@@ -43,5 +43,17 @@
         "_tmp",
         "PSD",
         "bower.json"
-    ]
+    ],
+    "devDependencies": {
+        "autoprefixer": "^9.7.5",
+        "less": "^3.11.1",
+        "ls-minifier": "^2.0.0",
+        "postcss-cli": "^7.1.0"
+    },
+    "scripts": {
+        "dist": "npm run css:compile && npm run css:prefix && npm run css:minify",
+        "css:compile": "lessc less/irs.less css/ion.rangeSlider.css",
+        "css:prefix": "postcss --use autoprefixer --replace --no-map css/ion.rangeSlider.css",
+        "css:minify": "ls-minifier --input=./css --css-compressor=yui"
+    }
 }

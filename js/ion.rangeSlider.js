@@ -1,6 +1,6 @@
 // Ion.RangeSlider
-// version 2.3.1 Build: 382
-// © Denis Ineshin, 2019
+// version 2.4.0
+// © Denis Ineshin, 2020
 // https://github.com/IonDen
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/en.html
