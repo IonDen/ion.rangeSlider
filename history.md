@@ -4,6 +4,10 @@
 
 # Update History
 
+### Version 2.4.0. March 28, 2020
+* Add material design skin
+* New NPM scripts for automated project compilation
+
 ### Version 2.3.1. December 19, 2019
 * Website update
 * Minor bugfixes

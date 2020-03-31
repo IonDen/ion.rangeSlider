@@ -4,12 +4,13 @@ Ion.RangeSlider. Is an easy, flexible and responsive range slider with tons of o
 
 ***
 
-* Version: 2.3.1 | *Version 3.x is under development now*
+* Version: 2.4.0 | *Version 3.x is under development now*
 * <a href="http://ionden.com/a/plugins/ion.rangeSlider/">Project page and demos</a>
 * <a href="https://github.com/IonDen/ion.rangeSlider/archive/2.3.1.zip">Download ZIP</a>
 * [Support the plugin on GitHub sponsors](https://github.com/sponsors/IonDen)
 
 ## Description
+
 * Ion.RangeSlider — cool, comfortable, responsive and easily customizable range slider
 * Supports events and public methods, has flexible settings, can be completely altered with CSS
 * Cross-browser: Google Chrome, Mozilla Firefox 3.6+, Opera 12+, Safari 5+, Internet Explorer 8+
@@ -20,7 +21,8 @@ Ion.RangeSlider. Is an easy, flexible and responsive range slider with tons of o
 ![ion.rangeSlider](_tmp/ion-range-slider.png)
 
 ## Key features
-* Skin support. (6 skins included)
+
+* Skin support. (7 skins included)
 * Any number of sliders at one page without conflicts and big performance problems
 * Two slider types single (1 slider) and double (2 sliders)
 * Support of negative and fractional values
@@ -38,29 +40,26 @@ Ion.RangeSlider. Is an easy, flexible and responsive range slider with tons of o
 * For advanced users slider has callbacks (onStart, onChange, onFinish, onUpdate). Slider pastes all its params to callback first argument as object
 * Slider supports date and time
 
-
 ## Demos
 
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo.html" class="switch__item">Basic demo</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo_advanced.html" class="switch__item">Advanced demo</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo_interactions.html" class="switch__item">Interactions demo</a>
-
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo.html" class="switch__item" target="_blank">Basic demo</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo_advanced.html" class="switch__item" target="_blank">Advanced demo</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo_interactions.html" class="switch__item" target="_blank">Interactions demo</a>
 
 ## Dependencies
 
 * <a href="http://jquery.com/" target="_blank">jQuery 1.8.x+</a>
 
-
 ## Usage
 
 Add the following libraries to the page:
+
 * jQuery
 * ion.rangeSlider.min.js
 
 Add the following stylesheets to the page:
+
 * ion.rangeSlider.min.css
-
-
 
 ## CDN
 
@@ -74,49 +73,48 @@ Use [CDNjs](https://cdnjs.com/libraries/ion-rangeslider) or [JSdelivr](https://w
 
 <!--Plugin JavaScript file-->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/js/ion.rangeSlider.min.js"></script>   
-``` 
-
-
+```
 
 ## Install with NPM
 
-Use [NPM](https://www.npmjs.com/package/ion-rangeslider) to download latest version of a plugin and install it directly in to your project. 
+Use [NPM](https://www.npmjs.com/package/ion-rangeslider) to download latest version of a plugin and install it directly in to your project.
 
-* npm install ion-rangeslider
-
-
+`npm install ion-rangeslider`
 
 ## Install with Bower
 
-Use [Bower](https://bower.io/) to download latest version of a plugin and install it directly in to your project. 
+Use [Bower](https://bower.io/) to download latest version of a plugin and install it directly in to your project.
 
-* bower install ion-rangeslider
-
-
+`bower install ion-rangeslider`
 
 ## Install with Yarn
 
-Use [Yarn](https://yarnpkg.com/en/package/ion-rangeslider) to download latest version of a plugin and install it directly in to your project. 
+Use [Yarn](https://yarnpkg.com/en/package/ion-rangeslider) to download latest version of a plugin and install it directly in to your project.
 
-* yarn add ion-rangeslider
+`yarn add ion-rangeslider`
 
+## Build CSS
+
+Edit less files to customize your skin or remove unwanted skins. Then run `npm run dist` for automatic less conversion to CSS.
 
 ## Initialisation
 
 The slider overrides a native text <code>input</code> element.
+
 ```html
 <input type="text" id="example_id" name="example_name" value="" />
 ```
 
 To initialise the slider, call ionRangeSlider on the element:
+
 ```javascript
 $("#example_id").ionRangeSlider();
 ```
 
-
 ## <a href="https://jsfiddle.net/IonDen/uqs7njp9/" target="_blank">Experiments playground</a>
 
 Here you can find bunch of advanced JSFIDDLE demos with different, non-standard use cases:
+
 * [Custom marks on slider](https://jsfiddle.net/IonDen/tdvxs3zL/)
 * [1 handle bind to 1 input](https://jsfiddle.net/IonDen/khngpw3m/)
 * [2 handles bind to 2 inputs](https://jsfiddle.net/IonDen/avcm6wpj/)
@@ -135,9 +133,7 @@ Here you can find bunch of advanced JSFIDDLE demos with different, non-standard 
 * [Skip some values](https://jsfiddle.net/IonDen/bqyw1e7k/)
 * [Values array + prettify](https://jsfiddle.net/IonDen/p9gu71sL/)
 
-
 ## Settings
-
 
 | Option | Data-Attr | Defaults | Type | Description |
 | --- | --- | --- | --- | --- |
@@ -186,10 +182,9 @@ Here you can find bunch of advanced JSFIDDLE demos with different, non-standard 
 | `onFinish` | `-` | `null` | function | Callback. Is called when user releases handle. Gets all slider data as a 1st attribute |
 | `onUpdate` | `-` | `null` | function | Callback. Is called when slider is modified by external methods `update` or `reset` |
 
-
-
 ## Description of data passed to callbacks (onChange and etc.)
 Result is object type and passed to callback as first argument:
+
 ```javascript
 Obj: {
     "input": object,            // jQuery-link to input
@@ -211,6 +206,7 @@ Obj: {
 
 ## Creating slider (all params)
 An example of a customised slider:
+
 ```javascript
 $("#example").ionRangeSlider({
     skin: "big",
@@ -226,6 +222,7 @@ $("#example").ionRangeSlider({
 ```
 
 You can also initialise slider with <code>data-*</code> attributes of input tag:
+
 ```html
 data-min="0"
 data-max="10000"
@@ -240,6 +237,7 @@ data-grid-num="10"
 ## Public methods
 
 To use public methods, at first you must save slider instance to variable:
+
 ```javascript
 // Launch plugin
 $("#range").ionRangeSlider({
@@ -259,6 +257,7 @@ slider.reset();
 ```
 
 There are 3 public methods:
+
 ```javascript
 // UPDATE - updates slider to any new values
 slider.update({
@@ -273,21 +272,19 @@ slider.reset();
 slider.destroy();
 ```
 
-
 ## One more look on demos
 
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo.html" class="switch__item">Basic demo</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo_advanced.html" class="switch__item">Advanced demo</a>
-* <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo_interactions.html" class="switch__item">Interactions demo</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo.html" class="switch__item" target="_blank">Basic demo</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo_advanced.html" class="switch__item" target="_blank">Advanced demo</a>
+* <a href="http://ionden.com/a/plugins/ion.rangeSlider/demo_interactions.html" class="switch__item" target="_blank">Interactions demo</a>
 
 All plugins options are covered in demos.
-
 
 ### <a href="history.md">Update history</a>
 
 ***
 
-#### Support Ion-series plugins development:
+#### Support Ion-series plugins development
 
 * [Support the plugin on GitHub sponsors](https://github.com/sponsors/IonDen)
 
