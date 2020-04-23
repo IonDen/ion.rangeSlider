@@ -22,7 +22,7 @@ Ion.RangeSlider. Is an easy, flexible and responsive range slider with tons of o
 
 ## Key features
 
-* Skin support. (7 skins included)
+* Skin support. (6 skins included)
 * Any number of sliders at one page without conflicts and big performance problems
 * Two slider types single (1 slider) and double (2 sliders)
 * Support of negative and fractional values
