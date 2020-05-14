@@ -330,6 +330,7 @@
             scope: null,
             onStart: null,
             onChange: null,
+            onBegin: null,
             onFinish: null,
             onUpdate: null
         };
@@ -849,6 +850,11 @@
             }
 
             this.$cache.line.trigger("focus");
+
+            // callbacks call
+            if ($.contains(this.$cache.cont[0], e.target) || !this.dragging) {
+              this.callOnBegin();
+            }
 
             this.updateScene();
         },
@@ -1692,16 +1698,27 @@
                 }
             }
         },
-        callOnFinish: function () {
-            this.writeToInput();
+        callOnBegin: function () {
+          this.writeToInput();
 
-            if (this.options.onFinish && typeof this.options.onFinish === "function") {
-                if (this.options.scope) {
-                    this.options.onFinish.call(this.options.scope, this.result);
-                } else {
-                    this.options.onFinish(this.result);
-                }
+          if (this.options.onBegin && typeof this.options.onBegin === "function") {
+            if (this.options.scope) {
+              this.options.onBegin.call(this.options.scope, this.result);
+            } else {
+              this.options.onBegin(this.result);
             }
+          }
+        },
+        callOnFinish: function () {
+          this.writeToInput();
+
+          if (this.options.onFinish && typeof this.options.onFinish === "function") {
+            if (this.options.scope) {
+              this.options.onFinish.call(this.options.scope, this.result);
+            } else {
+              this.options.onFinish(this.result);
+            }
+          }
         },
         callOnUpdate: function () {
             this.writeToInput();
