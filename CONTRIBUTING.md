@@ -2,8 +2,8 @@
 
 ### Code style
 
-1. Project is using 4 space indentation
-2. Function and metod names should be written in camelCase
+1. Project is using 4 spaces indentation
+2. Function and method names should be written in camelCase
 3. Variables name should be written in lower_case
 4. New methods should have JSDoc descriptions
 
