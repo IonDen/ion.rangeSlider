@@ -1,11 +1,14 @@
 @import (reference) "_mixins";
 
+@irs-font-size: 12px;
+@irs-font-family: Arial, sans-serif;
+
 .irs {
     .pos-r();
     -webkit-touch-callout: none;
     .no-click();
-    font-size: 12px;
-    font-family: Arial, sans-serif;
+    font-size: @irs-font-size;
+    font-family: @irs-font-family;
 
     &-line {
         .pos-r();
