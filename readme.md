@@ -291,4 +291,4 @@ All plugins options are covered in demos.
 
 * [Support the plugin on GitHub sponsors](https://github.com/sponsors/IonDen)
 
-* Donate direct to my Paypal account: https://www.paypal.me/IonDen
+* Buy me a coffee: https://www.buymeacoffee.com/ionden
