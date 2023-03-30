@@ -67,8 +67,8 @@
             position: absolute;
             display: block;
             top: -4px; left: 1px;
-            width: (@handle_width - 6px);
-            height: (@handle_width - 6px);
+            width: (@handle_width - 4px);
+            height: (@handle_width - 4px);
             border: 1px solid darken(@line_color, 15%);
             background: @handle_color_2;
             transform: rotate(45deg);
@@ -158,6 +158,7 @@
         }
 
         &-text {
+            bottom: 5px;
             color: @grid_color_2;
             font-size: 13px;
         }
