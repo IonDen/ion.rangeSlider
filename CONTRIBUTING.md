@@ -6,6 +6,7 @@
 2. Function and method names should be written in camelCase
 3. Variables name should be written in lower_case
 4. New methods should have JSDoc descriptions
+5. `js/ion.rangeSlider.js` must stay ECMAScript 3 so IE8 can parse it: no trailing commas in object or array literals, no ES5+ syntax, no ES5 built-ins (`forEach`, `Object.keys`, `trim`…) without the polyfills already in the file, and guard `console`. The build rejects ES5+ syntax and object-literal trailing commas; array trailing commas, reserved words after a dot (`o.class`) and ES5 built-ins are not caught automatically, so watch for them in review.
 
 ### Guide for Pull Requests with bug fixes
 

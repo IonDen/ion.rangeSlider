@@ -337,7 +337,9 @@
 
         // check if base element is input
         if ($inp[0].nodeName !== "INPUT") {
-            console && console.warn && console.warn("Base element should be <input>!", $inp[0]);
+            if (typeof console !== "undefined" && console.warn) {
+                console.warn("Base element should be <input>!", $inp[0]);
+            }
         }
 
 
@@ -394,7 +396,7 @@
             disable: $inp.data("disable"),
             block: $inp.data("block"),
 
-            extra_classes: $inp.data("extraClasses"),
+            extra_classes: $inp.data("extraClasses")
         };
         config_from_data.values = config_from_data.values && config_from_data.values.split(",");
 
