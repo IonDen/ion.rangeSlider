@@ -25,3 +25,7 @@
 ### Guide for Pull Requests with grammar fixes
 
 1. Just create a pull request :)
+
+### Where the work is tracked
+
+Open issues and PRs that fit the 2.x line are on the project board: https://github.com/users/IonDen/projects/1. Issues stay open until the fix is in a tagged release. Usage questions belong in Discussions → Q&A.
