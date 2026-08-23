@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Question — how do I…?
+    url: https://github.com/IonDen/ion.rangeSlider/discussions/categories/q-a
+    about: Usage questions go to Discussions → Q&A. Issues are for reproducible bugs and feature requests.
+  - name: Project board
+    url: https://github.com/users/IonDen/projects/1
+    about: See what is planned for the next 2.x releases.
