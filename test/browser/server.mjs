@@ -6,7 +6,7 @@ import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../../', import.meta.url));
-const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.map': 'application/json' };
+const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.map': 'application/json' };
 const port = Number(process.env.PORT || 4173);
 
 createServer(async (req, res) => {
@@ -19,4 +19,4 @@ createServer(async (req, res) => {
   } catch {
     res.writeHead(404); res.end(`not found: ${pathname}`);
   }
-}).listen(port, () => console.log(`fixtures at http://localhost:${port}/test/fixtures/slider.html`));
+}).listen(port, '127.0.0.1', () => console.log(`fixtures at http://127.0.0.1:${port}/test/fixtures/slider.html`));

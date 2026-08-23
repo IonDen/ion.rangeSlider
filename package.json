@@ -53,7 +53,7 @@
         "acorn": "^8.15.0",
         "clean-css": "5.3.3",
         "jquery": "3.7.1",
-        "jquery-3.7.1": "npm:jquery@^3.7.1",
+        "jquery-3.7.1": "npm:jquery@3.7.1",
         "jsdom": "^26.1.0",
         "less": "4.9.0",
         "uglify-js": "3.19.3"

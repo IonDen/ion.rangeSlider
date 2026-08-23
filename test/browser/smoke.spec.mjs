@@ -35,11 +35,13 @@ test.describe(`smoke (${LABEL})`, () => {
     await open(page, { min: 0, max: 100, from: 50, step: 5 });
     await page.locator('.irs-line').focus();
     await expect(page.locator('.irs-line')).toBeFocused();
+    const before = (await events(page)).length;   // focus alone already fires onChange+onFinish (#742), so count from here
     await page.keyboard.press('ArrowRight');
     await expect(input(page)).toHaveValue('55');
     await page.keyboard.press('ArrowLeft');
     await expect(input(page)).toHaveValue('50');
-    await expect.poll(() => eventTypes(page)).toContain('onFinish');
+    await expect.poll(async () => (await events(page)).length).toBeGreaterThan(before);
+    expect((await eventTypes(page)).at(-1)).toBe('onFinish');
   });
 
   test('double: two handles, the input holds "from;to", dragging "to" keeps from', async ({ page }) => {
@@ -47,6 +49,8 @@ test.describe(`smoke (${LABEL})`, () => {
     await expect(input(page)).toHaveValue('20;40');
     await drag(page, '.irs-handle.to', 0.4);
     await expect.poll(async () => (await input(page).inputValue()).split(';').map(Number)[1]).toBeGreaterThan(60);
+    const to = Number((await input(page).inputValue()).split(';')[1]);
+    expect(to).toBeLessThan(90);
     expect((await input(page).inputValue()).split(';')[0]).toBe('20');
   });
 
