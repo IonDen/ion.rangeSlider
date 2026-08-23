@@ -25,9 +25,10 @@ export function createSlider(t, html, options) {
   window.jQuery = window.$ = $;
   window.eval(PLUGIN);
   const $input = $('input').first();
-  $input.ionRangeSlider(options);
-  const slider = $.data($input[0], 'ionRangeSlider');
+  let slider;
   t.after(() => { if (slider && slider.input) slider.destroy(); window.close(); });
+  $input.ionRangeSlider(options);
+  slider = $.data($input[0], 'ionRangeSlider');
   return { window, $, $input, slider };
 }
 
