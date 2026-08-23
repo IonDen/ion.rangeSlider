@@ -1,0 +1,3 @@
+* text=auto eol=lf
+js/ion.rangeSlider.min.js -diff
+css/ion.rangeSlider.min.css -diff
