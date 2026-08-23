@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>ion.rangeSlider fixture</title>
+<style>body { margin: 40px; } #wrap { width: 600px; }</style>
+</head>
+<body>
+<div id="wrap"><input type="text" id="slider" name="slider"></div>
+<script>
+(function () {
+    var q = {};
+    var parts = location.search.slice(1).split('&');
+    for (var i = 0; i < parts.length; i++) {
+        if (!parts[i]) continue;
+        var kv = parts[i].split('=');
+        q[decodeURIComponent(kv[0])] = decodeURIComponent((kv[1] || '').replace(/\+/g, ' '));
+    }
+    var jq = q.jquery || 'jquery-3.7.1';
+    var jqSrc = jq.indexOf('vendor/') === 0
+        ? '/test/' + jq
+        : '/node_modules/' + jq + '/dist/' + (q.slim === '1' ? 'jquery.slim.js' : 'jquery.js');
+    var min = q.min === '1';
+    window.__irs = { ready: false, events: [], q: q, jquerySrc: jqSrc, min: min };
+    document.write('<link rel="stylesheet" href="/css/ion.rangeSlider' + (min ? '.min' : '') + '.css">');
+    document.write('<script src="' + jqSrc + '"><\/script>');
+    document.write('<script src="/js/ion.rangeSlider' + (min ? '.min' : '') + '.js"><\/script>');
+    window.onload = function () {
+        var config = q.config ? eval('(' + q.config + ')') : {};   // eval: IE8 has no JSON.parse
+        var names = ['onStart', 'onChange', 'onFinish', 'onUpdate'];
+        for (var n = 0; n < names.length; n++) {
+            (function (name) {
+                config[name] = function (data) {
+                    window.__irs.events.push({
+                        type: name, from: data.from, to: data.to, min: data.min, max: data.max,
+                        from_percent: data.from_percent, to_percent: data.to_percent,
+                        from_value: data.from_value, to_value: data.to_value
+                    });
+                };
+            })(names[n]);
+        }
+        jQuery('#slider').ionRangeSlider(config);
+        window.__irs.slider = jQuery.data(document.getElementById('slider'), 'ionRangeSlider');
+        window.__irs.jqueryVersion = jQuery.fn.jquery;
+        window.__irs.ready = true;
+    };
+})();
+</script>
+</body>
+</html>
