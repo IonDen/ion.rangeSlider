@@ -47,4 +47,5 @@ if (out.errors.length) throw new Error(out.errors.join('\n'));
 writeFileSync(at('css/ion.rangeSlider.min.css'), b.cssMin + out.styles);
 
 console.log(`built ${pkg.version} (build ${pkg.config.build}, ${pkg.config.buildDate}): ` +
-  `min.js ${min.code.length} B, css ${css.length} B, min.css ${out.styles.length} B`);
+  `min.js ${Buffer.byteLength(min.code, 'utf8')} B, css ${Buffer.byteLength(css, 'utf8')} B, ` +
+  `min.css ${Buffer.byteLength(out.styles, 'utf8')} B`);
