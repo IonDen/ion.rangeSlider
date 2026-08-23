@@ -24,9 +24,7 @@
         "skins"
     ],
     "main": "./js/ion.rangeSlider.js",
-    "directories": {
-        "lib": "js"
-    },
+    "files": ["js/", "css/", "less/", "readme.md", "history.md", "License.md"],
     "repository": {
         "type": "git",
         "url": "git://github.com/IonDen/ion.rangeSlider.git"
@@ -38,10 +36,19 @@
     "peerDependencies": {
         "jquery": ">=1.8"
     },
-    "ignore": [
-        ".idea",
-        "_tmp",
-        "PSD",
-        "bower.json"
-    ]
+    "config": {
+        "build": 382,
+        "buildDate": "2019-12-19 16:51:02"
+    },
+    "scripts": {
+        "build": "node scripts/build.mjs",
+        "test": "npm run test:build",
+        "test:build": "node --test test/build/*.test.mjs"
+    },
+    "devDependencies": {
+        "acorn": "^8.15.0",
+        "clean-css": "5.3.3",
+        "less": "4.9.0",
+        "uglify-js": "3.19.3"
+    }
 }

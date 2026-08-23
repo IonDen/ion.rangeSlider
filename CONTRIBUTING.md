@@ -30,3 +30,7 @@
 ### Where the work is tracked
 
 Open issues and PRs that fit the 2.x line are on the project board: https://github.com/users/IonDen/projects/1. Issues stay open until the fix is in a tagged release. Usage questions belong in Discussions → Q&A.
+
+### Building and testing
+
+Node 22 or newer is needed to build and test (consumers need nothing: `js/` and `css/` are committed). `npm install`, then `npm run build` regenerates the four shipped files from `less/` and `js/ion.rangeSlider.js`; `npm test` runs the unit tests. A pull request that touches `js/` or `less/` must include the rebuilt files (CI checks that they match). Resolve conflicts in the minified files by rebuilding, never by hand.
