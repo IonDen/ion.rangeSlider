@@ -1,0 +1,68 @@
+# Publishes ion-rangeslider to npm using trusted publishing (OIDC) - no
+# npm token or repo secret is used or referenced here. Provenance is
+# generated automatically by npm when publishing this way.
+#
+# One-time prerequisite (maintainer, on npmjs.com): package Settings ->
+# Trusted Publisher -> GitHub Actions, with owner "IonDen", repository
+# "ion.rangeSlider" and workflow filename "publish.yml". Until that is
+# configured, `npm publish` below will fail with an auth error.
+#
+# Normal release: pushing a release tag (bare number, e.g. "2.3.2") runs
+# this automatically. To publish a tag that was already pushed (for
+# example the first run after configuring trusted publishing), dispatch
+# this workflow manually with that tag:
+#   gh workflow run publish.yml -f tag=2.3.2
+name: Publish to npm
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to publish (e.g. 2.3.2)'
+        required: true
+        type: string
+
+jobs:
+  publish:
+    name: publish
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.RELEASE_TAG }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: 'https://registry.npmjs.org'
+
+      # Trusted publishing needs npm >= 11.5.1; the node-version above
+      # bundles an older npm, so upgrade it before anything else runs.
+      - run: npm install -g npm@latest
+      - run: npm --version
+
+      - run: npm ci
+
+      - name: Verify package.json version matches the release tag
+        run: |
+          node -e "
+            var v = require('./package.json').version;
+            var tag = process.env.RELEASE_TAG;
+            if (v !== tag) {
+              console.error('package.json version \"' + v + '\" does not match release tag \"' + tag + '\"');
+              process.exit(1);
+            }
+            console.log('package.json version matches tag ' + tag);
+          "
+
+      - run: npm test
+
+      - run: npm publish
