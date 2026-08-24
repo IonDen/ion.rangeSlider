@@ -47,7 +47,8 @@
         "test:vendor": "node scripts/verify-vendor.mjs",
         "test:unit": "node --test test/unit/*.test.mjs",
         "test:browser": "playwright test",
-        "test:all": "npm test && npm run test:browser"
+        "test:all": "npm test && npm run test:browser",
+        "release": "node scripts/release.mjs"
     },
     "devDependencies": {
         "@playwright/test": "^1.62.1",
