@@ -23,7 +23,8 @@ test('formatDate (UTC) and historyEntry', () => {
 });
 
 test('rewriteFiles touches every version site and nothing else', () => {
-  const { files: out } = rewriteFiles({ files: fixture(), from: '2.3.1', to: '2.3.2', build: 383, buildDate: '2026-09-03 14:05:09', entry: historyEntry('2.3.2', d) });
+  const { files: out, changed } = rewriteFiles({ files: fixture(), from: '2.3.1', to: '2.3.2', build: 383, buildDate: '2026-09-03 14:05:09', entry: historyEntry('2.3.2', d) });
+  assert.deepEqual(changed.slice().sort(), Object.keys(fixture()).sort());
   assert.match(out['package.json'], /"version": "2\.3\.2"/);
   assert.match(out['package.json'], /"build": 383/);
   assert.match(out['package.json'], /"buildDate": "2026-09-03 14:05:09"/);
@@ -40,4 +41,10 @@ test('rewriteFiles throws when a version site is missing', () => {
   const files = fixture();
   files['readme.md'] = 'no version line here\n';
   assert.throws(() => rewriteFiles({ files, from: '2.3.1', to: '2.3.2', build: 383, buildDate: '2026-09-03 14:05:09', entry: '' }), /readme\.md: "Version:" line not found/);
+});
+
+test('rewriteFiles throws when a version site appears more than once', () => {
+  const files = fixture();
+  files['readme.md'] += '* [Download ZIP](https://github.com/IonDen/ion.rangeSlider/archive/2.3.1.zip)\n';
+  assert.throws(() => rewriteFiles({ files, from: '2.3.1', to: '2.3.2', build: 383, buildDate: '2026-09-03 14:05:09', entry: '' }), /readme\.md: ZIP link not found \(expected 1 match, got 2\)/);
 });

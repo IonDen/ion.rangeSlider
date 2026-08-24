@@ -19,7 +19,11 @@ export function historyEntry(version, d) {
 
 /** Replace exactly `count` matches of `re` in `text`, or throw naming the site. */
 function must(text, re, replacement, site, count = 1) {
-  const n = (text.match(re) || []).length;
+  // String.match on a non-global regex reports at most 1 regardless of how many times the
+  // pattern occurs, so count with a forced-global copy while replacing with the original
+  // (a non-global re replaces only the first hit, which the count above guarantees is the only one).
+  const countRe = new RegExp(re.source, re.flags.includes('g') ? re.flags : re.flags + 'g');
+  const n = (text.match(countRe) || []).length;
   if (n !== count) throw new Error(`${site} not found (expected ${count} match, got ${n})`);
   return text.replace(re, replacement);
 }
