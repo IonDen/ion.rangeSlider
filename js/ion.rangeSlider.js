@@ -1,6 +1,6 @@
 // Ion.RangeSlider
-// version 2.3.1 Build: 382
-// © Denis Ineshin, 2019
+// version 2.3.2 Build: 383
+// © Denis Ineshin, 2026
 // https://github.com/IonDen
 //
 // Project page:    http://ionden.com/a/plugins/ion.rangeSlider/en.html
@@ -156,7 +156,7 @@
      * @constructor
      */
     var IonRangeSlider = function (input, options, plugin_count) {
-        this.VERSION = "2.3.1";
+        this.VERSION = "2.3.2";
         this.input = input;
         this.plugin_count = plugin_count;
         this.current_plugin = 0;
@@ -747,17 +747,20 @@
             if (!this.target) {
                 var x;
                 var $handle;
+                var target;
 
                 if (this.options.type === "single") {
                     $handle = this.$cache.single;
+                    target = "single";
                 } else {
                     $handle = this.$cache.from;
+                    target = "from";
                 }
 
                 x = $handle.offset().left;
                 x += ($handle.width() / 2) - 1;
 
-                this.pointerClick("single", {preventDefault: function () {}, pageX: x});
+                this.pointerClick(target, {preventDefault: function () {}, pageX: x});
             }
         },
 
@@ -920,20 +923,56 @@
         /**
          * Move by key
          *
+         * Steps the currently keyboard-active handle by exactly one step,
+         * working in real percent (the same space p_from_real/p_to_real/
+         * p_single_real and coords.p_step already live in) and only
+         * converting to a fake-percent pointer position at the very end.
+         * This keeps every press an exact one-step move regardless of
+         * p_handle or any p_gap left over from a previous mouse drag.
+         *
          * @param right {boolean} direction to move
          */
         moveByKey: function (right) {
-            var p = this.coords.p_pointer;
-            var p_step = (this.options.max - this.options.min) / 100;
-            p_step = this.options.step / p_step;
+            var p_real;
 
-            if (right) {
-                p += p_step;
-            } else {
-                p -= p_step;
+            switch (this.target) {
+                case "single":
+                    p_real = this.coords.p_single_real;
+                    break;
+                case "to":
+                    p_real = this.coords.p_to_real;
+                    break;
+                case "from":
+                    p_real = this.coords.p_from_real;
+                    break;
             }
 
-            this.coords.x_pointer = this.toFixed(this.coords.w_rs / 100 * p);
+            if (typeof p_real === "number") {
+                if (right) {
+                    p_real += this.coords.p_step;
+                } else {
+                    p_real -= this.coords.p_step;
+                }
+
+                var p_fake = this.convertToFakePercent(p_real) + this.coords.p_gap;
+                this.coords.x_pointer = this.toFixed(this.coords.w_rs / 100 * p_fake);
+            } else {
+                // target is something moveByKey does not resolve above
+                // (e.g. "both"/"both_one" from drag_interval) — fall back to
+                // moving the tracked pointer directly, as before.
+                var p = this.coords.p_pointer;
+                var p_step = (this.options.max - this.options.min) / 100;
+                p_step = this.options.step / p_step;
+
+                if (right) {
+                    p += p_step;
+                } else {
+                    p -= p_step;
+                }
+
+                this.coords.x_pointer = this.toFixed(this.coords.w_rs / 100 * p);
+            }
+
             this.is_key = true;
             this.calc();
         },

@@ -54,6 +54,82 @@ test.describe(`smoke (${LABEL})`, () => {
     expect((await input(page).inputValue()).split(';')[0]).toBe('20');
   });
 
+  // #759: keyboard controls in double mode. Focusing the line alone already fires
+  // onChange+onFinish (#742, not fixed here), so these assert on the input value
+  // rather than on callback counts/order.
+
+  test('double: with no handle touched, the keyboard moves "from" by default (#759)', async ({ page }) => {
+    await open(page, { type: 'double', min: 0, max: 100, from: 20, to: 40, step: 1 });
+    await page.locator('.irs-line').focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(input(page)).toHaveValue('21;40');
+    await page.keyboard.press('ArrowLeft');
+    await expect(input(page)).toHaveValue('20;40');
+  });
+
+  test('double: after clicking "to", the keyboard moves "to" and leaves "from" alone (#759)', async ({ page }) => {
+    await open(page, { type: 'double', min: 0, max: 100, from: 20, to: 40, step: 1 });
+    await drag(page, '.irs-handle.to', 0.05);
+    const [fromAfterDrag, toAfterDrag] = (await input(page).inputValue()).split(';').map(Number);
+    await page.keyboard.press('ArrowRight');
+    await expect(input(page)).toHaveValue(`${fromAfterDrag};${toAfterDrag + 1}`);
+    await page.keyboard.press('ArrowLeft');
+    await expect(input(page)).toHaveValue(`${fromAfterDrag};${toAfterDrag}`);
+  });
+
+  // #696: moveByKey() advanced the tracked pointer by a REAL-percent step size
+  // (options.step scaled by the value range) but added it straight to
+  // coords.p_pointer, which lives in FAKE-percent space (0 to 100 - p_handle,
+  // the compressed space handle "left" is drawn in). Every keyboard press
+  // therefore overshot the true one-step distance by a factor of
+  // 100 / (100 - p_handle); each press still snapped to the nearest step, so
+  // individual presses looked fine, but the overshoot compounded press over
+  // press until it crossed half a step, at which point exactly one press
+  // silently consumed two steps (a value got skipped). With this fixture
+  // (from=20, to=40, min=0, max=100, step=1) that crossing lands on the 5th
+  // press: from goes 21, 22, 23, 24, then jumps to 26 instead of 25.
+  test('double: five arrow-key presses move "from" by exactly one step each, no doubling (#696)', async ({ page }) => {
+    await open(page, { type: 'double', min: 0, max: 100, from: 20, to: 40, step: 1 });
+    await page.locator('.irs-line').focus();
+    const expected = ['21;40', '22;40', '23;40', '24;40', '25;40'];
+    for (const value of expected) {
+      await page.keyboard.press('ArrowRight');
+      await expect(input(page)).toHaveValue(value);
+    }
+  });
+
+  // General regression coverage for keyboard clamping (not a #696 pin —
+  // checkDiapason already clamped correctly pre-fix; this just guards that
+  // the #696 fix's real-percent-anchored moveByKey() keeps resolving through
+  // that same clamp exactly, with no drift past min after repeated presses).
+  // Mirrors the original reporter's repro direction (drag/move "from" toward
+  // the edge, then keep stepping past it).
+  test('double: ArrowLeft past the minimum stays clamped at min, no drift (#696)', async ({ page }) => {
+    await open(page, { type: 'double', min: 0, max: 100, from: 2, to: 40, step: 1 });
+    await page.locator('.irs-line').focus();
+    const expected = ['1;40', '0;40', '0;40', '0;40', '0;40'];
+    for (const value of expected) {
+      await page.keyboard.press('ArrowLeft');
+      await expect(input(page)).toHaveValue(value);
+    }
+  });
+
+  // #696 follow-up: coords.p_step (reused by the fix from calcWithStep's own
+  // grid) is derived from options.step, so a fractional step must keep
+  // landing exactly on the step grid too, not just integer steps. Runs
+  // through the 6th press deliberately: against the pre-#696 moveByKey()
+  // this exact fixture doubles there (5.5 -> 5.7, skipping 5.6), so stopping
+  // at 5.5 would not actually pin the regression.
+  test('single: fractional step (0.1) moves by exactly one step each press (#696)', async ({ page }) => {
+    await open(page, { min: 0, max: 10, from: 5, step: 0.1 });
+    await page.locator('.irs-line').focus();
+    const expected = ['5.1', '5.2', '5.3', '5.4', '5.5', '5.6', '5.7'];
+    for (const value of expected) {
+      await page.keyboard.press('ArrowRight');
+      await expect(input(page)).toHaveValue(value);
+    }
+  });
+
   test('values mode writes the label, not the index', async ({ page }) => {
     await open(page, { values: ['S', 'M', 'L', 'XL'], from: 2 });
     await expect(input(page)).toHaveValue('L');

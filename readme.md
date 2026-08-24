@@ -4,9 +4,9 @@ ion.RangeSlider — flexible and responsive range slider with skins, touch suppo
 
 ***
 
-* Version: 2.3.1
+* Version: 2.3.2
 * [Project page and demos](http://ionden.com/a/plugins/ion.rangeSlider/)
-* [Download ZIP](https://github.com/IonDen/ion.rangeSlider/archive/2.3.1.zip)
+* [Download ZIP](https://github.com/IonDen/ion.rangeSlider/archive/2.3.2.zip)
 * [Support on GitHub Sponsors](https://github.com/sponsors/IonDen)
 
 ## Features
@@ -60,13 +60,13 @@ Use [cdnjs](https://cdnjs.com/libraries/ion-rangeslider) or [jsDelivr](https://w
 
 ```html
 <!-- CSS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/css/ion.rangeSlider.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.2/css/ion.rangeSlider.min.css"/>
 
 <!-- jQuery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
 <!-- Plugin -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/js/ion.rangeSlider.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.2/js/ion.rangeSlider.min.js"></script>
 ```
 
 
@@ -146,7 +146,7 @@ Or use `data-*` attributes on the input:
 | `prettify_all_values` | `data-prettify-all-values` | `false` | boolean | In `values` mode, also run `prettify` on non-numeric entries. Default: `false` |
 | `force_edges` | `data-force-edges` | `false` | boolean | Keep handles and tooltips inside the container |
 | `keyboard` | `data-keyboard` | `true` | boolean | Keyboard controls. Left: ←, ↓, A, S. Right: →, ↑, W, D |
-| `grid` | `data-grid` | `true` | boolean | Show grid of values above the slider |
+| `grid` | `data-grid` | `false` | boolean | Show grid of values above the slider |
 | `grid_margin` | `data-grid-margin` | `true` | boolean | Add left and right grid gaps |
 | `grid_num` | `data-grid-num` | `4` | number | Number of grid units |
 | `grid_snap` | `data-grid-snap` | `false` | boolean | Snap grid to step. When active, grid_num is not used. Max 50 steps |
@@ -156,8 +156,8 @@ Or use `data-*` attributes on the input:
 | `postfix` | `data-postfix` | `` | string | Postfix for values: 100**k** |
 | `max_postfix` | `data-max-postfix` | `` | string | Postfix for the maximum value only: 0 — 100**+** |
 | `decorate_both` | `data-decorate-both` | `true` | boolean | How to format close values in double mode: **$10k — $100k** vs **$10 — 100k** |
-| `values_separator` | `data-values-separator` | ` - ` | string | Separator between from and to labels in double mode |
-| `input_values_separator` | `data-input-values-separator` | ` ; ` | string | Separator in the input value for double mode: `<input value="25;42">` |
+| `values_separator` | `data-values-separator` | ` — ` | string | Separator between from and to labels in double mode |
+| `input_values_separator` | `data-input-values-separator` | `;` | string | Separator in the input value for double mode: `<input value="25;42">` |
 | `disable` | `data-disable` | `false` | boolean | Disable the slider. Input is also disabled and invisible to forms |
 | `block` | `data-block` | `false` | boolean | Block the slider but keep the input enabled. Value is still submitted with the form |
 | `extra_classes` | `data-extra-classes` | `—` | string | Extra CSS classes for the slider container |
