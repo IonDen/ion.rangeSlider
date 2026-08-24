@@ -32,3 +32,28 @@ test('intervals larger than the range are clamped', (t) => {
   assert.equal(slider.options.min_interval, 10);
   assert.equal(slider.options.max_interval, 0);
 });
+
+test('does not mutate the caller-supplied values array (#506)', (t) => {
+  const values = ['12', '13', 'c'];
+  const original = values.slice();
+
+  const { slider } = createSlider(t, '<input>', { values: values });
+
+  // The reported bug: numeric-looking strings were coerced to numbers
+  // in place, so the caller's own array changed shape after init.
+  assert.deepEqual(values, original, 'caller array must be untouched');
+  // The plugin must still see coerced values internally (values mode works).
+  assert.deepEqual(plain(slider.options.values), [12, 13, 'c']);
+
+  const fresh_values = ['21', '22', 'c'];
+  const fresh_original = fresh_values.slice();
+
+  slider.update({ values: fresh_values });
+
+  // update() re-runs validate() against a brand-new caller array; it must
+  // not reach back into that array either.
+  assert.deepEqual(fresh_values, fresh_original, 'fresh caller array must stay untouched after update()');
+  // Prove update() actually took the new values, so the assertion above
+  // can't pass merely because update() ignored the values key.
+  assert.deepEqual(plain(slider.options.values), [21, 22, 'c']);
+});
