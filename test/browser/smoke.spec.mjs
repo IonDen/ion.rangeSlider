@@ -92,9 +92,38 @@ test.describe(`smoke (${LABEL})`, () => {
     await open(page, { type: 'double', min: 0, max: 100, from: 20, to: 40, step: 1 });
     await page.locator('.irs-line').focus();
     const expected = ['21;40', '22;40', '23;40', '24;40', '25;40'];
-    for (var i = 0; i < expected.length; i++) {
+    for (const value of expected) {
       await page.keyboard.press('ArrowRight');
-      await expect(input(page)).toHaveValue(expected[i]);
+      await expect(input(page)).toHaveValue(value);
+    }
+  });
+
+  // #696 follow-up: the fix anchors each keyboard step on the handle's own
+  // current real percent, converting to a fake-percent pointer only at the
+  // end — so ArrowLeft past the minimum must still resolve through the
+  // existing checkDiapason clamp instead of drifting past it. Mirrors the
+  // original reporter's repro direction (drag/move "from" toward the edge,
+  // then keep stepping past it).
+  test('double: ArrowLeft past the minimum stays clamped at min, no drift (#696)', async ({ page }) => {
+    await open(page, { type: 'double', min: 0, max: 100, from: 2, to: 40, step: 1 });
+    await page.locator('.irs-line').focus();
+    const expected = ['1;40', '0;40', '0;40', '0;40', '0;40'];
+    for (const value of expected) {
+      await page.keyboard.press('ArrowLeft');
+      await expect(input(page)).toHaveValue(value);
+    }
+  });
+
+  // #696 follow-up: coords.p_step (reused by the fix from calcWithStep's own
+  // grid) is derived from options.step, so a fractional step must keep
+  // landing exactly on the step grid too, not just integer steps.
+  test('single: fractional step (0.1) moves by exactly one step each press (#696)', async ({ page }) => {
+    await open(page, { min: 0, max: 10, from: 5, step: 0.1 });
+    await page.locator('.irs-line').focus();
+    const expected = ['5.1', '5.2', '5.3', '5.4', '5.5'];
+    for (const value of expected) {
+      await page.keyboard.press('ArrowRight');
+      await expect(input(page)).toHaveValue(value);
     }
   });
 
