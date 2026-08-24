@@ -4,6 +4,14 @@
 
 # Update History
 
+### Version 2.3.2. August 24, 2026
+* Fixed keyboard controls in double mode: they now work on handle focus and each arrow key press steps exactly once
+* Fixed the caller's `values` array being mutated by the plugin
+* Corrected the readme defaults table
+* Removed Bower support
+* Added build/test/release tooling and CI (npm run build/test, GitHub Actions)
+* Issues: #818, #799, #798, #797, #759, #696, #506
+
 ### Version 2.3.1. December 19, 2019
 * Website update
 * Minor bugfixes
