@@ -29,6 +29,7 @@ jobs:
       matrix:
         include:
           - { id: '3.7.1', jquery: 'jquery-3.7.1', slim: '0', projects: '' }
+          - { id: '3.7.1-min', jquery: 'jquery-3.7.1', slim: '0', projects: '--project=chromium', min: '1' }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -47,8 +48,22 @@ jobs:
         env:
           IRS_JQUERY: ${{ matrix.jquery }}
           IRS_SLIM: ${{ matrix.slim }}
+          IRS_MIN: ${{ matrix.min || '0' }}
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: playwright-report-${{ matrix.id }}
           path: playwright-report
+
+  dist:
+    name: committed dist is up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: git diff --exit-code -- js css
