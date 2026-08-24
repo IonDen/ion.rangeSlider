@@ -37,7 +37,6 @@ export function rewriteFiles({ files, from, to, build, buildDate, entry }) {
   t = must(t, /"build": \d+/, `"build": ${build}`, 'package.json: config.build');
   t = must(t, /"buildDate": "[^"]+"/, `"buildDate": "${buildDate}"`, 'package.json: config.buildDate');
   out['package.json'] = t;
-  out['bower.json'] = must(out['bower.json'], /"version": "[^"]+"/, `"version": "${to}"`, 'bower.json: version');
   t = out['js/ion.rangeSlider.js'];
   t = must(t, /^\/\/ version [^\n]+$/m, `// version ${to} Build: ${build}`, 'js/ion.rangeSlider.js: header');
   t = must(t, /^\/\/ © Denis Ineshin, \d{4}$/m, `// © Denis Ineshin, ${buildDate.slice(0, 4)}`, 'js/ion.rangeSlider.js: copyright line');
