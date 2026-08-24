@@ -301,6 +301,7 @@
             prettify_enabled: true,
             prettify_separator: " ",
             prettify: null,
+            prettify_all_values: false,
 
             force_edges: false,
 
@@ -372,6 +373,7 @@
 
             prettify_enabled: $inp.data("prettifyEnabled"),
             prettify_separator: $inp.data("prettifySeparator"),
+            prettify_all_values: $inp.data("prettifyAllValues"),
 
             force_edges: $inp.data("forceEdges"),
 
@@ -2050,6 +2052,11 @@
                     if (!isNaN(value)) {
                         v[i] = value;
                         value = this._prettify(value);
+                    } else if (o.prettify_all_values) {
+                        // non-numeric entries are only prettified when explicitly
+                        // opted in (#276), so a numeric-only custom prettify never
+                        // starts receiving strings on an existing setup
+                        value = this._prettify(v[i]);
                     } else {
                         value = v[i];
                     }

@@ -27,6 +27,27 @@ test('values mode rewrites min/max/step and prettifies numeric entries', (t) => 
   assert.deepEqual(plain(o.p_values), ['a', '1 000', 'c']);
 });
 
+test('prettify_all_values defaults to off: a numeric-only custom prettify never sees a non-numeric entry (#276)', (t) => {
+  const seen = [];
+  const { slider } = createSlider(t, '<input>', {
+    values: ['a', 1000, 'c'],
+    prettify: (n) => { seen.push(n); return n.toFixed(2); }
+  });
+  const o = slider.options;
+  assert.equal(o.prettify_all_values, false);
+  assert.deepEqual(plain(o.p_values), ['a', '1000.00', 'c']);
+  assert.deepEqual(seen, [1000], 'the custom prettify must only ever be called with the numeric entry');
+});
+
+test('prettify_all_values: true runs prettify on non-numeric values entries too (#276)', (t) => {
+  const { slider } = createSlider(t, '<input>', {
+    values: ['a', 1000, 'c'],
+    prettify_all_values: true,
+    prettify: (n) => `<${n}>`
+  });
+  assert.deepEqual(plain(slider.options.p_values), ['<a>', '<1000>', '<c>']);
+});
+
 test('intervals larger than the range are clamped', (t) => {
   const { slider } = createSlider(t, '<input>', { type: 'double', min: 0, max: 10, min_interval: 50, max_interval: -3 });
   assert.equal(slider.options.min_interval, 10);
