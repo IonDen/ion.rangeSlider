@@ -58,18 +58,20 @@ test('onStart receives the four diapason limit fields (#503)', (t) => {
   assert.equal(seen.to_max, 90);
 });
 
-test('onUpdate receives the four diapason limit fields (#503)', (t) => {
+test('onUpdate receives the refreshed diapason limit fields (#503)', (t) => {
   let seen;
   const { slider } = createSlider(t, '<input>', {
     type: 'double', min: 0, max: 100, from_min: 10, from_max: 40, to_min: 60, to_max: 90,
     onUpdate: (data) => { seen = data; }
   });
-  slider.update({});
+  // Changed values, not a no-op update: an update() that left the refresh
+  // lines out entirely would still pass this test if the limits didn't move.
+  slider.update({ from_min: 25, from_max: 45, to_min: 65, to_max: 95 });
   assert.ok(seen, 'onUpdate must have fired');
-  assert.equal(seen.from_min, 10);
-  assert.equal(seen.from_max, 40);
-  assert.equal(seen.to_min, 60);
-  assert.equal(seen.to_max, 90);
+  assert.equal(seen.from_min, 25);
+  assert.equal(seen.from_max, 45);
+  assert.equal(seen.to_min, 65);
+  assert.equal(seen.to_max, 95);
 });
 
 test('onChange/onFinish receive the four diapason limit fields (#503)', (t) => {
