@@ -4,7 +4,7 @@ Bugfix or docs only: patch (2.3.2). Additive feature: minor (2.4.0). Never 3.0. 
 
 1. `git fetch origin`, then `git switch -c release/2.3.2 origin/master` on a clean tree.
 2. `npm run release -- patch` (or `minor`). It bumps every version string, the build counter and the build date (UTC), adds a `history.md` entry and rebuilds `js/` and `css/`. If it errors partway through (for example, the rebuild step fails), run `git checkout -- .` and investigate; the tree is not rolled back automatically.
-3. Replace `#TODO` in `history.md` with the issue numbers the release closes (`gh issue list --milestone 2.3.2 --state all --json number -q '[.[].number] | map("#"+tostring) | join(", ")'`).
+3. Replace `#TODO` in `history.md` with the issue numbers the release closes (`gh issue list --milestone 2.3.2 --state all --json number -q '[.[].number] | sort | map("#"+tostring) | join(", ")'`).
 4. `npm run test:all`, then read `git diff`.
 5. Commit `Release 2.3.2`, push, open the PR, wait for CI. The maintainer merges it, not whoever prepared it.
 6. `git switch master && git pull`, then `git tag 2.3.2 && git push origin 2.3.2` (bare number, no `v`).
