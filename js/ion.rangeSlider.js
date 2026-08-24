@@ -460,10 +460,14 @@
             from: this.options.from,
             from_percent: 0,
             from_value: null,
+            from_min: this.options.from_min,
+            from_max: this.options.from_max,
 
             to: this.options.to,
             to_percent: 0,
-            to_value: null
+            to_value: null,
+            to_min: this.options.to_min,
+            to_max: this.options.to_max
         };
 
 
@@ -2192,6 +2196,8 @@
             this.result.from = this.options.from;
             this.result.from_percent = this.convertToPercent(this.result.from);
             this.result.from_pretty = this._prettify(this.result.from);
+            this.result.from_min = this.options.from_min;
+            this.result.from_max = this.options.from_max;
             if (this.options.values) {
                 this.result.from_value = this.options.values[this.result.from];
             }
@@ -2201,6 +2207,8 @@
             this.result.to = this.options.to;
             this.result.to_percent = this.convertToPercent(this.result.to);
             this.result.to_pretty = this._prettify(this.result.to);
+            this.result.to_min = this.options.to_min;
+            this.result.to_max = this.options.to_max;
             if (this.options.values) {
                 this.result.to_value = this.options.values[this.result.to];
             }
