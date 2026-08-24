@@ -77,6 +77,27 @@ test.describe(`smoke (${LABEL})`, () => {
     await expect(input(page)).toHaveValue(`${fromAfterDrag};${toAfterDrag}`);
   });
 
+  // #696: moveByKey() advanced the tracked pointer by a REAL-percent step size
+  // (options.step scaled by the value range) but added it straight to
+  // coords.p_pointer, which lives in FAKE-percent space (0 to 100 - p_handle,
+  // the compressed space handle "left" is drawn in). Every keyboard press
+  // therefore overshot the true one-step distance by a factor of
+  // 100 / (100 - p_handle); each press still snapped to the nearest step, so
+  // individual presses looked fine, but the overshoot compounded press over
+  // press until it crossed half a step, at which point exactly one press
+  // silently consumed two steps (a value got skipped). With this fixture
+  // (from=20, to=40, min=0, max=100, step=1) that crossing lands on the 5th
+  // press: from goes 21, 22, 23, 24, then jumps to 26 instead of 25.
+  test('double: five arrow-key presses move "from" by exactly one step each, no doubling (#696)', async ({ page }) => {
+    await open(page, { type: 'double', min: 0, max: 100, from: 20, to: 40, step: 1 });
+    await page.locator('.irs-line').focus();
+    const expected = ['21;40', '22;40', '23;40', '24;40', '25;40'];
+    for (var i = 0; i < expected.length; i++) {
+      await page.keyboard.press('ArrowRight');
+      await expect(input(page)).toHaveValue(expected[i]);
+    }
+  });
+
   test('values mode writes the label, not the index', async ({ page }) => {
     await open(page, { values: ['S', 'M', 'L', 'XL'], from: 2 });
     await expect(input(page)).toHaveValue('L');
