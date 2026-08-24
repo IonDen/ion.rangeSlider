@@ -54,6 +54,29 @@ test.describe(`smoke (${LABEL})`, () => {
     expect((await input(page).inputValue()).split(';')[0]).toBe('20');
   });
 
+  // #759: keyboard controls in double mode. Focusing the line alone already fires
+  // onChange+onFinish (#742, not fixed here), so these assert on the input value
+  // rather than on callback counts/order.
+
+  test('double: with no handle touched, the keyboard moves "from" by default (#759)', async ({ page }) => {
+    await open(page, { type: 'double', min: 0, max: 100, from: 20, to: 40, step: 1 });
+    await page.locator('.irs-line').focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(input(page)).toHaveValue('21;40');
+    await page.keyboard.press('ArrowLeft');
+    await expect(input(page)).toHaveValue('20;40');
+  });
+
+  test('double: after clicking "to", the keyboard moves "to" and leaves "from" alone (#759)', async ({ page }) => {
+    await open(page, { type: 'double', min: 0, max: 100, from: 20, to: 40, step: 1 });
+    await drag(page, '.irs-handle.to', 0.05);
+    const [fromAfterDrag, toAfterDrag] = (await input(page).inputValue()).split(';').map(Number);
+    await page.keyboard.press('ArrowRight');
+    await expect(input(page)).toHaveValue(`${fromAfterDrag};${toAfterDrag + 1}`);
+    await page.keyboard.press('ArrowLeft');
+    await expect(input(page)).toHaveValue(`${fromAfterDrag};${toAfterDrag}`);
+  });
+
   test('values mode writes the label, not the index', async ({ page }) => {
     await open(page, { values: ['S', 'M', 'L', 'XL'], from: 2 });
     await expect(input(page)).toHaveValue('L');
