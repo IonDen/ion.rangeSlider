@@ -38,7 +38,7 @@ ion.RangeSlider — flexible and responsive range slider with skins, touch suppo
 
 ## Dependencies
 
-* [jQuery 1.8+](http://jquery.com/). The browser test suite runs against jQuery 1.8.3, 3.7.1 (including the minified build) and 4.0.0 (including the slim build); the full list in test/browser/matrix.mjs runs weekly.
+* [jQuery 1.8+](http://jquery.com/). The browser suite has been run against every version in test/browser/matrix.mjs, from 1.8.3 to 4.0.0 including the 3.x and 4.x slim builds; the boundary versions run on every pull request and the full matrix runs weekly. The plugin's minified files are tested under jQuery 3.7.1 on every pull request.
 
 
 ## Install
