@@ -1975,7 +1975,7 @@
         validate: function () {
             var o = this.options,
                 r = this.result,
-                v = o.values,
+                v = (o.values = o.values.slice()), // clone so validate never mutates the caller's array (#506)
                 vl = v.length,
                 value,
                 i;
