@@ -254,3 +254,7 @@ slider.destroy();
 
 * [GitHub Sponsors](https://github.com/sponsors/IonDen)
 * [Buy me a coffee](https://www.buymeacoffee.com/ionden)
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for vulnerability reporting.
