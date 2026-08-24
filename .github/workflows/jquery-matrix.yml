@@ -1,0 +1,58 @@
+name: jQuery version matrix
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 6 * * 1'
+
+jobs:
+  browser:
+    name: browser (${{ matrix.id }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { id: '1.8.3', jquery: 'vendor/jquery-1.8.3.js', slim: '0' }
+          - { id: '1.9.1', jquery: 'vendor/jquery-1.9.1.js', slim: '0' }
+          - { id: '1.10.2', jquery: 'vendor/jquery-1.10.2.js', slim: '0' }
+          - { id: '1.11.3', jquery: 'jquery-1.11.3', slim: '0' }
+          - { id: '1.12.4', jquery: 'jquery-1.12.4', slim: '0' }
+          - { id: '2.0.3', jquery: 'vendor/jquery-2.0.3.js', slim: '0' }
+          - { id: '2.1.4', jquery: 'jquery-2.1.4', slim: '0' }
+          - { id: '2.2.4', jquery: 'jquery-2.2.4', slim: '0' }
+          - { id: '3.0.0', jquery: 'jquery-3.0.0', slim: '0' }
+          - { id: '3.1.1', jquery: 'jquery-3.1.1', slim: '0' }
+          - { id: '3.2.1', jquery: 'jquery-3.2.1', slim: '0' }
+          - { id: '3.3.1', jquery: 'jquery-3.3.1', slim: '0' }
+          - { id: '3.4.1', jquery: 'jquery-3.4.1', slim: '0' }
+          - { id: '3.5.1', jquery: 'jquery-3.5.1', slim: '0' }
+          - { id: '3.6.4', jquery: 'jquery-3.6.4', slim: '0' }
+          - { id: '3.7.1', jquery: 'jquery-3.7.1', slim: '0' }
+          - { id: '3.7.1-slim', jquery: 'jquery-3.7.1', slim: '1' }
+          - { id: '4.0.0', jquery: 'jquery-4.0.0', slim: '0' }
+          - { id: '4.0.0-slim', jquery: 'jquery-4.0.0', slim: '1' }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - id: pw
+        run: echo "version=$(node -e 'console.log(require("@playwright/test/package.json").version)')" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
+      - run: npx playwright install --with-deps
+      - run: npx playwright test ${{ matrix.projects }}
+        env:
+          IRS_JQUERY: ${{ matrix.jquery }}
+          IRS_SLIM: ${{ matrix.slim }}
+          IRS_MIN: ${{ matrix.min || '0' }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report-${{ matrix.id }}
+          path: playwright-report

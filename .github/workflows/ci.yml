@@ -30,6 +30,8 @@ jobs:
         include:
           - { id: '3.7.1', jquery: 'jquery-3.7.1', slim: '0', projects: '' }
           - { id: '3.7.1-min', jquery: 'jquery-3.7.1', slim: '0', projects: '--project=chromium', min: '1' }
+          - { id: '1.8.3', jquery: 'vendor/jquery-1.8.3.js', slim: '0', projects: '--project=chromium' }
+          - { id: '4.0.0-slim', jquery: 'jquery-4.0.0', slim: '1', projects: '--project=chromium' }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
