@@ -27,7 +27,7 @@
     "files": ["js/", "css/", "less/", "readme.md", "history.md", "License.md"],
     "repository": {
         "type": "git",
-        "url": "git://github.com/IonDen/ion.rangeSlider.git"
+        "url": "git+https://github.com/IonDen/ion.rangeSlider.git"
     },
     "bugs": {
         "url": "https://github.com/IonDen/ion.rangeSlider/issues"
