@@ -5,12 +5,14 @@
 # Update History
 
 ### Version 2.3.2. August 24, 2026
-* Fixed keyboard controls in double mode: they now work on handle focus and each arrow key press steps exactly once
+* Keyboard controls in double mode now work on focus, without needing a mouse click first
+* Arrow-key step no longer doubles on the single, `from` and `to` handles. `drag_interval` whole-interval stepping is unchanged, tracked in #825
 * Fixed the caller's `values` array being mutated by the plugin
+* Fixed IE8 syntax hazards in the unminified source (trailing comma, `console` guard)
 * Corrected the readme defaults table
 * Removed Bower support
-* Added build/test/release tooling and CI (npm run build/test, GitHub Actions)
-* Issues: #818, #799, #798, #797, #759, #696, #506
+* Added build/test/release tooling and CI (npm run build/test, GitHub Actions), with CI covering jQuery 1.8.3 through 4.0.0, full and slim builds
+* Issues: #506, #696, #759, #797, #798, #799, #818
 
 ### Version 2.3.1. December 19, 2019
 * Website update
