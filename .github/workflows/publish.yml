@@ -1,0 +1,98 @@
+# Publishes ion-rangeslider to npm using trusted publishing (OIDC) - no
+# npm token or repo secret is used or referenced here. Provenance is
+# generated automatically by npm when publishing this way.
+#
+# One-time prerequisite (maintainer, on npmjs.com): package Settings ->
+# Trusted Publisher -> GitHub Actions, with owner "IonDen", repository
+# "ion.rangeSlider", workflow filename "publish.yml", Allowed actions
+# "npm publish", and the Environment field left empty (this workflow
+# does not declare a GitHub Actions environment; setting one here makes
+# npm reject the publish). Until that is configured, `npm publish`
+# below will fail with an auth error.
+#
+# actions/checkout and actions/setup-node are pinned to a commit SHA
+# (not just the v4 tag ci.yml/jquery-matrix.yml use) because this job
+# carries id-token: write, which can mint short-lived OIDC credentials -
+# only the publish path needs that extra supply-chain hardening.
+#
+# Normal release: pushing a release tag (bare number, e.g. "2.3.2") runs
+# this automatically. To publish a tag that was already pushed (for
+# example the first run after configuring trusted publishing), dispatch
+# this workflow manually with that tag:
+#   gh workflow run publish.yml -f tag=2.3.2
+name: Publish to npm
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to publish (e.g. 2.3.2)'
+        required: true
+        type: string
+
+jobs:
+  publish:
+    name: publish
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      RELEASE_TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - name: Validate the release tag
+        run: |
+          if [ -z "$RELEASE_TAG" ]; then
+            echo "RELEASE_TAG is empty (no tag on the triggering push and no dispatch input)." >&2
+            exit 1
+          fi
+          if ! echo "$RELEASE_TAG" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "RELEASE_TAG '$RELEASE_TAG' is not a bare release number (expected e.g. 2.3.2)." >&2
+            exit 1
+          fi
+
+      # Tag-qualified: an unqualified ref resolves branch-before-tag, so
+      # a branch that happened to share a release's name would silently
+      # get checked out (and published) instead of the tag.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          ref: refs/tags/${{ env.RELEASE_TAG }}
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          registry-url: 'https://registry.npmjs.org'
+
+      # Trusted publishing needs npm >= 11.5.1; the node-version above
+      # bundles an older npm, so upgrade it before anything else runs.
+      # Major-pinned, not @latest: no floating code in the job that
+      # holds id-token: write.
+      - run: npm install -g npm@11
+      - run: npm --version
+
+      - run: npm ci
+
+      - name: Verify package.json version matches the release tag
+        run: |
+          node -e "
+            var v = require('./package.json').version;
+            var tag = process.env.RELEASE_TAG;
+            if (v !== tag) {
+              console.error('package.json version \"' + v + '\" does not match release tag \"' + tag + '\"');
+              process.exit(1);
+            }
+            console.log('package.json version matches tag ' + tag);
+          "
+
+      # ci.yml's "committed dist is up to date" job does not run on tag
+      # pushes, so this is the last check before a stale dist reaches
+      # the registry.
+      - run: npm run build
+      - run: git diff --exit-code -- js css
+
+      - run: npm test
+
+      - run: npm publish
