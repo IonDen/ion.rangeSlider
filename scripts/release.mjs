@@ -17,7 +17,7 @@ if (!['patch', 'minor'].includes(kind)) {
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const dirty = execFileSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' }).trim();
 if (dirty) { console.error(`working tree is not clean:\n${dirty}`); process.exit(1); }
-const paths = ['package.json', 'bower.json', 'js/ion.rangeSlider.js', 'readme.md', 'history.md'];
+const paths = ['package.json', 'js/ion.rangeSlider.js', 'readme.md', 'history.md'];
 const files = Object.fromEntries(paths.map((p) => [p, readFileSync(resolve(root, p), 'utf8')]));
 if (files['history.md'].includes('#TODO')) { console.error('history.md still has a #TODO entry from an unfinished release'); process.exit(1); }
 const pkg = JSON.parse(files['package.json']);
