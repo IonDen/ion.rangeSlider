@@ -15,6 +15,11 @@ test('data-values is split on commas; an input value is looked up in the JS valu
   assert.equal(slider.options.from, 0);     // 'b' is not in ['x'] → index -1 → clamped to min
 });
 
+test('data-prettify-all-values maps to prettify_all_values (#276)', (t) => {
+  const { slider } = createSlider(t, '<input data-values="a,b,c" data-prettify-all-values="true">', {});
+  assert.equal(slider.options.prettify_all_values, true);
+});
+
 test('the input is written on init and the instance handle is stored', (t) => {
   const { slider, $input, $ } = createSlider(t, '<input>', { min: 0, max: 10, from: 3 });
   assert.equal($input.val(), '3');

@@ -142,8 +142,8 @@ Or use `data-*` attributes on the input:
 | `to_shadow` | `data-to-shadow` | `false` | boolean | Highlight the limits for right handle |
 | `prettify_enabled` | `data-prettify-enabled` | `true` | boolean | Format long numbers: 10000000 → 10 000 000 |
 | `prettify_separator` | `data-prettify-separator` | ` ` | string | Separator for long numbers: 10000000 → 10,000,000 |
-| `prettify` | `-` | `null` | function | Custom formatting function. Receives a number, returns a string |
-| `prettify_all_values` | `data-prettify-all-values` | `false` | boolean | In `values` mode, also run prettify on non-numeric entries (default only prettifies numeric ones, so a numeric-only custom `prettify` keeps working unchanged) |
+| `prettify` | `-` | `null` | function | Custom formatting function. Receives a number, returns a string (with `prettify_all_values`, non-numeric `values` entries are passed too) |
+| `prettify_all_values` | `data-prettify-all-values` | `false` | boolean | In `values` mode, also run `prettify` on non-numeric entries. Default: `false` |
 | `force_edges` | `data-force-edges` | `false` | boolean | Keep handles and tooltips inside the container |
 | `keyboard` | `data-keyboard` | `true` | boolean | Keyboard controls. Left: ←, ↓, A, S. Right: →, ↑, W, D |
 | `grid` | `data-grid` | `true` | boolean | Show grid of values above the slider |
