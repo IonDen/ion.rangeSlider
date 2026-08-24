@@ -41,13 +41,19 @@ test('does not mutate the caller-supplied values array (#506)', (t) => {
 
   // The reported bug: numeric-looking strings were coerced to numbers
   // in place, so the caller's own array changed shape after init.
-  assert.deepEqual(plain(values), original, 'caller array must be untouched');
+  assert.deepEqual(values, original, 'caller array must be untouched');
   // The plugin must still see coerced values internally (values mode works).
   assert.deepEqual(plain(slider.options.values), [12, 13, 'c']);
 
-  slider.update({ from: 1 });
+  const fresh_values = ['21', '22', 'c'];
+  const fresh_original = fresh_values.slice();
 
-  // A later update() re-runs validate(); it must not reach back into the
-  // array the caller originally passed either.
-  assert.deepEqual(plain(values), original, 'caller array must stay untouched after update()');
+  slider.update({ values: fresh_values });
+
+  // update() re-runs validate() against a brand-new caller array; it must
+  // not reach back into that array either.
+  assert.deepEqual(fresh_values, fresh_original, 'fresh caller array must stay untouched after update()');
+  // Prove update() actually took the new values, so the assertion above
+  // can't pass merely because update() ignored the values key.
+  assert.deepEqual(plain(slider.options.values), [21, 22, 'c']);
 });
