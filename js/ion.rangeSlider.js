@@ -2169,36 +2169,14 @@
             var decorated = "",
                 o = this.options;
 
+            if (o.min_prefix && (o.values.length ? num === o.p_values[o.min] : original === o.min)) {
+                decorated += o.min_prefix;
+            } else if (o.max_prefix && (o.values.length ? num === o.p_values[o.max] : original === o.max)) {
+                decorated += o.max_prefix;
+            }
+
             if (o.prefix) {
                 decorated += o.prefix;
-            }
-
-            if (o.min_prefix) {
-                if (o.values.length && num === o.p_values[o.min]) {
-                    if (o.prefix) {
-                        decorated += " ";
-                    }
-                    decorated += o.min_prefix;
-                } else if (original === o.min) {
-                    if (o.prefix) {
-                        decorated += " ";
-                    }
-                    decorated += o.min_prefix;
-                }
-            }
-
-            if (o.max_prefix) {
-                if (o.values.length && num === o.p_values[o.max]) {
-                    if (o.prefix) {
-                        decorated += " ";
-                    }
-                    decorated += o.max_prefix;
-                } else if (original === o.max) {
-                    if (o.prefix) {
-                        decorated += " ";
-                    }
-                    decorated += o.max_prefix;
-                }
             }
 
             decorated += num;

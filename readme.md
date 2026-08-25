@@ -153,8 +153,8 @@ Or use `data-*` attributes on the input:
 | `hide_min_max` | `data-hide-min-max` | `false` | boolean | Hide min and max labels |
 | `hide_from_to` | `data-hide-from-to` | `false` | boolean | Hide from and to labels |
 | `prefix` | `data-prefix` | `` | string | Prefix for values: **$**100 |
-| `min_prefix` | `data-min-prefix` | `` | string | Prefix for the minimum value only: **From: **0 — 100 |
-| `max_prefix` | `data-max-prefix` | `` | string | Prefix for the maximum value only: 0 — **Up to: **100 |
+| `min_prefix` | `data-min-prefix` | `` | string | Prefix for the minimum value only: **From:** 0 — 100 |
+| `max_prefix` | `data-max-prefix` | `` | string | Prefix for the maximum value only: 0 — **Up to:** 100 |
 | `postfix` | `data-postfix` | `` | string | Postfix for values: 100**k** |
 | `max_postfix` | `data-max-postfix` | `` | string | Postfix for the maximum value only: 0 — 100**+** |
 | `decorate_both` | `data-decorate-both` | `true` | boolean | How to format close values in double mode: **$10k — $100k** vs **$10 — 100k** |
