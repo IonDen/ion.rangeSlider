@@ -181,9 +181,13 @@ All callbacks receive an object as the first argument:
     "from": 10000,              // FROM value
     "from_percent": 10,         // FROM value in percent
     "from_value": 0,            // FROM index in values array (if used)
+    "from_min": null,           // FROM minimum limit (null if unset)
+    "from_max": null,           // FROM maximum limit (null if unset)
     "to": 90000,                // TO value
     "to_percent": 90,           // TO value in percent
     "to_value": 0,              // TO index in values array (if used)
+    "to_min": null,             // TO minimum limit (null if unset)
+    "to_max": null,             // TO maximum limit (null if unset)
     "min_pretty": "1 000",      // MIN formatted (if prettify is on)
     "max_pretty": "100 000",    // MAX formatted
     "from_pretty": "10 000",    // FROM formatted
