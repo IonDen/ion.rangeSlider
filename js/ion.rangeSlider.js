@@ -316,6 +316,8 @@
             hide_from_to: false,
 
             prefix: "",
+            min_prefix: "",
+            max_prefix: "",
             postfix: "",
             max_postfix: "",
             decorate_both: true,
@@ -388,6 +390,8 @@
             hide_from_to: $inp.data("hideFromTo"),
 
             prefix: $inp.data("prefix"),
+            min_prefix: $inp.data("minPrefix"),
+            max_prefix: $inp.data("maxPrefix"),
             postfix: $inp.data("postfix"),
             max_postfix: $inp.data("maxPostfix"),
             decorate_both: $inp.data("decorateBoth"),
@@ -2167,6 +2171,34 @@
 
             if (o.prefix) {
                 decorated += o.prefix;
+            }
+
+            if (o.min_prefix) {
+                if (o.values.length && num === o.p_values[o.min]) {
+                    if (o.prefix) {
+                        decorated += " ";
+                    }
+                    decorated += o.min_prefix;
+                } else if (original === o.min) {
+                    if (o.prefix) {
+                        decorated += " ";
+                    }
+                    decorated += o.min_prefix;
+                }
+            }
+
+            if (o.max_prefix) {
+                if (o.values.length && num === o.p_values[o.max]) {
+                    if (o.prefix) {
+                        decorated += " ";
+                    }
+                    decorated += o.max_prefix;
+                } else if (original === o.max) {
+                    if (o.prefix) {
+                        decorated += " ";
+                    }
+                    decorated += o.max_prefix;
+                }
             }
 
             decorated += num;
