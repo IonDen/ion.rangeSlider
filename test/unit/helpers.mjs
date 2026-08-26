@@ -15,7 +15,7 @@ const PLUGIN = readFileSync(new URL('../../js/ion.rangeSlider.js', import.meta.u
  * so result.*_percent, labels, grid, onChange and resize are never computed here.
  * Test the pure methods and the validated options; geometry belongs to Playwright.
  */
-export function createSlider(t, html, options) {
+export function createSlider(t, html, options, setup) {
   const dom = new JSDOM(`<!doctype html><html><body>${html}</body></html>`, {
     runScripts: 'outside-only',   // without this window.eval is Node's eval and `jQuery` is undefined inside the plugin
     pretendToBeVisual: true,      // provides requestAnimationFrame
@@ -27,6 +27,9 @@ export function createSlider(t, html, options) {
   const $input = $('input').first();
   let slider;
   t.after(() => { if (slider && slider.input) slider.destroy(); window.close(); });
+  // Runs before the plugin initialises, e.g. to define a real global function
+  // on the jsdom window for a string-name `prettify` option (#535) to resolve.
+  if (setup) setup(window, $);
   $input.ionRangeSlider(options);
   slider = $.data($input[0], 'ionRangeSlider');
   return { window, $, $input, slider };

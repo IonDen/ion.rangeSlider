@@ -375,6 +375,7 @@
 
             prettify_enabled: $inp.data("prettifyEnabled"),
             prettify_separator: $inp.data("prettifySeparator"),
+            prettify: $inp.data("prettify"),
             prettify_all_values: $inp.data("prettifyAllValues"),
 
             force_edges: $inp.data("forceEdges"),
@@ -2041,6 +2042,20 @@
             if (typeof o.to_max === "string") o.to_max = +o.to_max;
 
             if (typeof o.grid_num === "string") o.grid_num = +o.grid_num;
+
+            // prettify may be given as the name of a global function instead of a
+            // function reference (#535), e.g. for data-* / JSON-only config where a
+            // function value can't be expressed. Resolved once here, against window
+            // (bracket access only, no eval), so it stays picked up on update(); an
+            // unresolved name is left as-is and _prettify() below falls back to the
+            // default formatter, same as any other non-function value.
+            if (typeof o.prettify === "string" && o.prettify !== "") {
+                if (typeof window[o.prettify] === "function") {
+                    o.prettify = window[o.prettify];
+                } else if (typeof console !== "undefined" && console.warn) {
+                    console.warn("prettify: \"" + o.prettify + "\" is not a function on window, falling back to default number formatting");
+                }
+            }
 
             if (o.max < o.min) {
                 o.max = o.min;
