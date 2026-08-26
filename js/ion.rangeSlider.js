@@ -316,6 +316,8 @@
             hide_from_to: false,
 
             prefix: "",
+            min_prefix: "",
+            max_prefix: "",
             postfix: "",
             max_postfix: "",
             decorate_both: true,
@@ -388,6 +390,8 @@
             hide_from_to: $inp.data("hideFromTo"),
 
             prefix: $inp.data("prefix"),
+            min_prefix: $inp.data("minPrefix"),
+            max_prefix: $inp.data("maxPrefix"),
             postfix: $inp.data("postfix"),
             max_postfix: $inp.data("maxPostfix"),
             decorate_both: $inp.data("decorateBoth"),
@@ -2164,6 +2168,12 @@
         decorate: function (num, original) {
             var decorated = "",
                 o = this.options;
+
+            if (o.min_prefix && (o.values.length ? num === o.p_values[o.min] : original === o.min)) {
+                decorated += o.min_prefix;
+            } else if (o.max_prefix && (o.values.length ? num === o.p_values[o.max] : original === o.max)) {
+                decorated += o.max_prefix;
+            }
 
             if (o.prefix) {
                 decorated += o.prefix;
