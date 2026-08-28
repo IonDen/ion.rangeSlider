@@ -3,8 +3,16 @@ export const SLIM = process.env.IRS_SLIM === '1';
 export const MIN = process.env.IRS_MIN === '1';
 export const LABEL = `${JQUERY}${SLIM ? ' slim' : ''}${MIN ? ' minified' : ''}`;
 
-export async function open(page, config = {}) {
-  const params = new URLSearchParams({ jquery: JQUERY, config: JSON.stringify(config) });
+export async function open(page, config = {}, extra = {}) {
+  // config is normally JSON-serialized, but the fixture evals the query param
+  // as a JS object literal (not JSON.parse), so a raw string is also accepted
+  // for the rare case a test needs to carry a function expression through
+  // (JSON.stringify silently drops function-valued properties).
+  const configStr = typeof config === 'string' ? config : JSON.stringify(config);
+  // extra carries fixture-specific query params (e.g. hidden, attrs) a test
+  // needs beyond jquery/config -- routed through here, not built ad hoc per
+  // test, so every caller still gets the env-derived slim/min selection below.
+  const params = new URLSearchParams({ jquery: JQUERY, config: configStr, ...extra });
   if (SLIM) params.set('slim', '1');
   if (MIN) params.set('min', '1');
   await page.goto(`/test/fixtures/slider.html?${params}`);

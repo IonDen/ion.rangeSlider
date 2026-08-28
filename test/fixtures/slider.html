@@ -34,10 +34,32 @@
                     window.__irs.events.push({
                         type: name, from: data.from, to: data.to, min: data.min, max: data.max,
                         from_percent: data.from_percent, to_percent: data.to_percent,
-                        from_value: data.from_value, to_value: data.to_value
+                        from_value: data.from_value, to_value: data.to_value,
+                        from_min: data.from_min, from_max: data.from_max,
+                        to_min: data.to_min, to_max: data.to_max
                     });
                 };
             })(names[n]);
+        }
+        if (q.hidden === '1') {
+            // #831 hidden-at-init coverage: the diapason clamp lives in
+            // validate(), which runs before any layout, so it must produce
+            // the correct clamped value even when the container has zero
+            // width/height at init time.
+            document.getElementById('wrap').style.display = 'none';
+        }
+        if (q.attrs) {
+            // #535 data-* route coverage: apply attributes to the input
+            // before init, the same server-markup channel config_from_data
+            // reads (e.g. data-prettify), separate from passing the same
+            // option through the JS config object above.
+            var attrs = eval('(' + q.attrs + ')'); // eval: IE8 has no JSON.parse
+            var el = document.getElementById('slider');
+            for (var an in attrs) {
+                if (attrs.hasOwnProperty(an)) {
+                    el.setAttribute(an, attrs[an]);
+                }
+            }
         }
         jQuery('#slider').ionRangeSlider(config);
         window.__irs.slider = jQuery.data(document.getElementById('slider'), 'ionRangeSlider');
