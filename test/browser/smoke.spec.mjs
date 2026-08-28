@@ -123,9 +123,13 @@ test.describe(`smoke (${LABEL})`, () => {
     await page.keyboard.press('ArrowLeft');
     await expect(input(page)).toHaveValue('50');
     // Each press fires onChange then onFinish exactly once (#742): if focus
-    // no longer arms this.target/this.current_plugin the way pointerFocus
-    // must, the keyboard press moves nothing and this never reaches
-    // ['onStart', 'onChange', 'onFinish', 'onChange', 'onFinish'].
+    // no longer arms this.target the way pointerFocus must, the keyboard
+    // press moves nothing and this never reaches ['onStart', 'onChange',
+    // 'onFinish', 'onChange', 'onFinish']. This pins the target half only --
+    // this.current_plugin already equals this.plugin_count from construction
+    // (both init to/at 0) for this fixture's one slider, so pointerFocus's
+    // current_plugin assignment is unexercised here; it matters once a
+    // second slider is on the page, which this suite does not cover.
     await expect.poll(() => eventTypes(page)).toEqual(['onStart', 'onChange', 'onFinish', 'onChange', 'onFinish']);
   });
 

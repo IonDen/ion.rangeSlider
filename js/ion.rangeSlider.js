@@ -759,10 +759,10 @@
          *
          * Only arms keyboard control (current_plugin/target) so key() and
          * moveByKey() have a handle to act on -- it must not simulate a
-         * click. A synthesized click here previously made focus alone (a
-         * bare Tab, or a programmatic .focus(), including the one every
-         * drag already triggers) fire onChange/onFinish for a value that
-         * never moved (#742).
+         * click. A synthesized click here previously fired onChange/onFinish
+         * for a value that never moved whenever focus arrived with no target
+         * already set -- a bare Tab, a programmatic .focus(), or a focus
+         * after a relayout had nulled this.target (#742).
          *
          * @param e {Object} event object
          */
