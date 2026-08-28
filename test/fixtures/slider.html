@@ -34,10 +34,19 @@
                     window.__irs.events.push({
                         type: name, from: data.from, to: data.to, min: data.min, max: data.max,
                         from_percent: data.from_percent, to_percent: data.to_percent,
-                        from_value: data.from_value, to_value: data.to_value
+                        from_value: data.from_value, to_value: data.to_value,
+                        from_min: data.from_min, from_max: data.from_max,
+                        to_min: data.to_min, to_max: data.to_max
                     });
                 };
             })(names[n]);
+        }
+        if (q.hidden === '1') {
+            // #831 hidden-at-init coverage: the diapason clamp lives in
+            // validate(), which runs before any layout, so it must produce
+            // the correct clamped value even when the container has zero
+            // width/height at init time.
+            document.getElementById('wrap').style.display = 'none';
         }
         jQuery('#slider').ionRangeSlider(config);
         window.__irs.slider = jQuery.data(document.getElementById('slider'), 'ionRangeSlider');

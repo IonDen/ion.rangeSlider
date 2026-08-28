@@ -4,7 +4,12 @@ export const MIN = process.env.IRS_MIN === '1';
 export const LABEL = `${JQUERY}${SLIM ? ' slim' : ''}${MIN ? ' minified' : ''}`;
 
 export async function open(page, config = {}) {
-  const params = new URLSearchParams({ jquery: JQUERY, config: JSON.stringify(config) });
+  // config is normally JSON-serialized, but the fixture evals the query param
+  // as a JS object literal (not JSON.parse), so a raw string is also accepted
+  // for the rare case a test needs to carry a function expression through
+  // (JSON.stringify silently drops function-valued properties).
+  const configStr = typeof config === 'string' ? config : JSON.stringify(config);
+  const params = new URLSearchParams({ jquery: JQUERY, config: configStr });
   if (SLIM) params.set('slim', '1');
   if (MIN) params.set('min', '1');
   await page.goto(`/test/fixtures/slider.html?${params}`);
