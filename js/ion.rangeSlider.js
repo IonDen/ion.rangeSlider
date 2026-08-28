@@ -2157,7 +2157,7 @@
                 o.to = o.to_min;
             }
 
-            if (typeof o.to_max === "number" && o.from > o.to_max) {
+            if (typeof o.to_max === "number" && o.to > o.to_max) {
                 o.to = o.to_max;
             }
 
