@@ -1024,6 +1024,10 @@
          *   move right, -coords.p_step to move left)
          */
         moveIntervalByKey: function (step) {
+            if (this.options.from_fixed || this.options.to_fixed) {
+                return;
+            }
+
             var from_bound_min = this.convertToPercent(typeof this.options.from_min === "number" ? this.options.from_min : this.options.min),
                 from_bound_max = this.convertToPercent(typeof this.options.from_max === "number" ? this.options.from_max : this.options.max),
                 to_bound_min = this.convertToPercent(typeof this.options.to_min === "number" ? this.options.to_min : this.options.min),

@@ -150,6 +150,45 @@ test.describe(`smoke (${LABEL})`, () => {
     await expect(input(page)).toHaveValue('31;51');
   });
 
+  test('drag_interval: after dragging the bar, one ArrowLeft press moves the whole interval by exactly one step, width preserved (#825)', async ({ page }) => {
+    await open(page, { type: 'double', min: 0, max: 100, from: 20, to: 40, step: 1, drag_interval: true });
+    await drag(page, '.irs-bar', 0.1);
+    await expect(input(page)).toHaveValue('30;50');
+    // Mutation this catches: a left-direction-only regression in
+    // moveIntervalByKey() (e.g. a `step < 0` early return, or a sign error
+    // that only breaks the negative direction) -- the whole #825 suite
+    // otherwise presses ArrowRight exclusively, so a bug confined to
+    // leftward stepping would slip through untested.
+    await page.keyboard.press('ArrowLeft');
+    await expect(input(page)).toHaveValue('29;49');
+  });
+
+  // #825 fix-round regression: moveIntervalByKey() must honor from_fixed/
+  // to_fixed the same way calc()'s own "both" branch does (the guard right
+  // above the "both" case, js/ion.rangeSlider.js). Mutation this catches:
+  // dropping the `if (this.options.from_fixed || this.options.to_fixed) {
+  // return; }` guard at the top of moveIntervalByKey() -- a bar drag
+  // correctly leaves a from_fixed interval pinned at 20;40 (calc()'s own
+  // guard still applies to the mouse path), but the keyboard press that
+  // follows would then move it anyway, to 21;41 -- unlike every other
+  // interaction (mouse drag, and the pre-#825 code) which leaves fixed
+  // handles unmoved.
+  test('drag_interval: a from_fixed interval stays pinned after a bar drag and a keyboard press (#825)', async ({ page }) => {
+    await open(page, { type: 'double', min: 0, max: 100, from: 20, to: 40, step: 1, drag_interval: true, from_fixed: true });
+    await drag(page, '.irs-bar', 0.1);
+    await expect(input(page)).toHaveValue('20;40');
+    await page.keyboard.press('ArrowRight');
+    // The input is only rewritten by the idle render loop's 300ms
+    // setTimeout (not synchronously on keydown), and the pre-press value
+    // already equals the expected "unchanged" value -- toHaveValue()'s
+    // polling stops at its first (immediate, stale) match, so asserting
+    // right away would pass trivially whether or not the guard exists.
+    // Wait out the render cycle first so the assertion observes the
+    // settled state.
+    await page.waitForTimeout(400);
+    await expect(input(page)).toHaveValue('20;40');
+  });
+
   test('drag_interval: after clicking the line, one ArrowRight press moves the whole interval by exactly one step, width preserved (#825)', async ({ page }) => {
     // A wider range than the bar-drag case: with min=0, max=100 the
     // "both_one" doubling this pins does not land until well past the
@@ -187,6 +226,20 @@ test.describe(`smoke (${LABEL})`, () => {
     }
   });
 
+  // Mirrors the ArrowRight repeat-press test above, in the untested
+  // direction. Mutation this catches: a left-direction-only regression
+  // (e.g. a `step < 0` early return, or a sign error confined to negative
+  // steps) that a suite pressing only ArrowRight would never see.
+  test('drag_interval: repeated ArrowLeft presses on a dragged interval never drift or double-step (#825)', async ({ page }) => {
+    await open(page, { type: 'double', min: 0, max: 100, from: 20, to: 40, step: 1, drag_interval: true });
+    await drag(page, '.irs-bar', 0.1);
+    await expect(input(page)).toHaveValue('30;50');
+    for (let i = 1; i <= 20; i++) {
+      await page.keyboard.press('ArrowLeft');
+      await expect(input(page)).toHaveValue(`${30 - i};${50 - i}`);
+    }
+  });
+
   // Edge clamp: a real bar-drag past the max edge is width-preserving only
   // because pointerDown holds min_interval at the pre-drag width for the
   // whole gesture (setTempMinInterval()); a keyboard step has no such
@@ -219,6 +272,41 @@ test.describe(`smoke (${LABEL})`, () => {
     await page2.mouse.move(x + l.width * 2, y, { steps: 12 });
     await page2.mouse.up();
     await expect(input(page2)).toHaveValue('80;100');
+  });
+
+  // Mirrors the max-edge test above, in the untested direction, and
+  // specifically exercises moveIntervalByKey()'s "from" shortfall branch
+  // (the max-edge test above only exercises the "to" overflow branch).
+  // Mutation this catches: dropping or breaking the
+  // `if (new_from < from_bound_min) { ... }` shift -- the interval would
+  // land at 0;11 (from clamped flush at 0, to independently clamped by
+  // checkDiapason with the gap-based reconstruction, shrinking width to
+  // 11) instead of flush against the edge at 0;20 (width 20), matching
+  // what the bar-drag reference produces.
+  test('drag_interval: driving the interval to the min edge by keyboard clamps the same way a bar-drag to the min edge does (#825)', async ({ page }) => {
+    const config = { type: 'double', min: 0, max: 100, from: 20, to: 40, step: 1, drag_interval: true };
+
+    await open(page, config);
+    await drag(page, '.irs-bar', 0.1);
+    await expect(input(page)).toHaveValue('30;50');
+    for (let i = 0; i < 40; i++) {
+      await page.keyboard.press('ArrowLeft');
+    }
+    await expect(input(page)).toHaveValue('0;20');
+
+    // Reference: the same starting drag, continued in one motion past the
+    // min edge instead of being released and stepped by keyboard.
+    const page2 = await page.context().newPage();
+    await open(page2, config);
+    const h = await page2.locator('.irs-bar').boundingBox();
+    const l = await page2.locator('.irs-line').boundingBox();
+    const x = h.x + h.width / 2, y = h.y + h.height / 2;
+    await page2.mouse.move(x, y);
+    await page2.mouse.down();
+    await page2.mouse.move(x + l.width * 0.1, y, { steps: 12 });
+    await page2.mouse.move(x - l.width * 2, y, { steps: 12 });
+    await page2.mouse.up();
+    await expect(input(page2)).toHaveValue('0;20');
   });
 
   test('values mode writes the label, not the index', async ({ page }) => {
