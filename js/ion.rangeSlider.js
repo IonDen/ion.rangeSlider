@@ -757,26 +757,19 @@
         /**
          * Focus with tabIndex
          *
+         * Only arms keyboard control (current_plugin/target) so key() and
+         * moveByKey() have a handle to act on -- it must not simulate a
+         * click. A synthesized click here previously made focus alone (a
+         * bare Tab, or a programmatic .focus(), including the one every
+         * drag already triggers) fire onChange/onFinish for a value that
+         * never moved (#742).
+         *
          * @param e {Object} event object
          */
         pointerFocus: function (e) {
             if (!this.target) {
-                var x;
-                var $handle;
-                var target;
-
-                if (this.options.type === "single") {
-                    $handle = this.$cache.single;
-                    target = "single";
-                } else {
-                    $handle = this.$cache.from;
-                    target = "from";
-                }
-
-                x = $handle.offset().left;
-                x += ($handle.width() / 2) - 1;
-
-                this.pointerClick(target, {preventDefault: function () {}, pageX: x});
+                this.current_plugin = this.plugin_count;
+                this.target = this.options.type === "single" ? "single" : "from";
             }
         },
 
