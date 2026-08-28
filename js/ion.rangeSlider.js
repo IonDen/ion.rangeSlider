@@ -28,6 +28,13 @@
 
     var plugin_count = 0;
 
+    // Globals that execute their argument instead of formatting it (#535 security
+    // fix). prettify's string-name resolution must never bind one of these: in
+    // values mode with prettify_all_values, prettify is called with raw entries
+    // from `values`, so resolving e.g. "eval" would turn slider config into an
+    // arbitrary-code-execution sink. execScript is legacy IE's global-eval.
+    var prettify_denylist = ["eval", "Function", "setTimeout", "setInterval", "execScript"];
+
     // IE8 fix
     var is_old_ie = (function () {
         var n = navigator.userAgent,
@@ -375,6 +382,7 @@
 
             prettify_enabled: $inp.data("prettifyEnabled"),
             prettify_separator: $inp.data("prettifySeparator"),
+            prettify: $inp.data("prettify"),
             prettify_all_values: $inp.data("prettifyAllValues"),
 
             force_edges: $inp.data("forceEdges"),
@@ -2041,6 +2049,29 @@
             if (typeof o.to_max === "string") o.to_max = +o.to_max;
 
             if (typeof o.grid_num === "string") o.grid_num = +o.grid_num;
+
+            // prettify may be given as the name of a global function instead of a
+            // function reference (#535), e.g. for data-* / JSON-only config where a
+            // function value can't be expressed. Resolved once here, against window
+            // (bracket access only, no eval) -- the binding is captured now, so
+            // redefining window[name] later is only picked up by a later update()
+            // that re-passes the string. Because update() re-runs validate(), this
+            // still stays current across update({ prettify: "name" }) calls. Must run
+            // before the values-mode loop below, which calls _prettify() per entry.
+            // An unresolved (or denylisted, see prettify_denylist above) name is left
+            // as-is and _prettify() falls back to the default formatter, same as any
+            // other non-function value -- no throw either way.
+            if (typeof o.prettify === "string" && o.prettify !== "") {
+                if (prettify_denylist.indexOf(o.prettify) !== -1) {
+                    if (typeof console !== "undefined" && console.warn) {
+                        console.warn("prettify: \"" + o.prettify + "\" is not allowed, falling back to default number formatting");
+                    }
+                } else if (typeof window[o.prettify] === "function") {
+                    o.prettify = window[o.prettify];
+                } else if (typeof console !== "undefined" && console.warn) {
+                    console.warn("prettify: \"" + o.prettify + "\" is not a function on window, falling back to default number formatting");
+                }
+            }
 
             if (o.max < o.min) {
                 o.max = o.min;
