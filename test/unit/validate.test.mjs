@@ -55,7 +55,7 @@ test('intervals larger than the range are clamped', (t) => {
 });
 
 test('to_max clamps to on init even when from is below to_max (#831)', (t) => {
-  // Bug: the to_max clamp at line 2160 tested `o.from > o.to_max` instead of
+  // Bug: the to_max clamp compared `o.from > o.to_max` instead of
   // `o.to > o.to_max`, so a `to` above its own limit sailed through init
   // whenever `from` happened to sit under to_max. from=10 is below to_max=50,
   // so the old (buggy) condition never fired and `to` stayed at 80.
@@ -67,11 +67,25 @@ test('to_max clamps to on init even when from is below to_max (#831)', (t) => {
 
 test('to_max still clamps to on init when from also exceeds it (#831 characterization)', (t) => {
   // Characterization: from=60 > to_max=50, so the pre-fix condition
-  // (`o.from > o.to_max`) already happened to clamp `to` here too. This
-  // passed before the fix and must keep passing after it, proving the fix
-  // widens the clamp without dropping the cases it already covered.
+  // (comparing `o.from` against `o.to_max`) already happened to clamp `to`
+  // here too. This passed before the fix and must keep passing after it,
+  // proving the fix widens the clamp without dropping the cases it already
+  // covered.
   const { slider } = createSlider(t, '<input>', {
     type: 'double', from: 60, to: 80, to_max: 50
+  });
+  assert.equal(slider.options.to, 50);
+});
+
+test('to_max clamps to on init in single mode too (#831)', (t) => {
+  // Pins that the clamp applies unconditionally, matching the to_min clamp
+  // two lines up (which has always run regardless of type). The one-line bug
+  // this catches: a later change gating the clamp behind
+  // `o.type === "double" &&`, which single mode would silently skip. `to` is
+  // not used by single-mode rendering, so this is only observable on
+  // options/result state, never on screen.
+  const { slider } = createSlider(t, '<input>', {
+    type: 'single', from: 30, to_max: 50
   });
   assert.equal(slider.options.to, 50);
 });
