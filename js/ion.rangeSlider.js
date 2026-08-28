@@ -946,51 +946,121 @@
          * This keeps every press an exact one-step move regardless of
          * p_handle or any p_gap left over from a previous mouse drag.
          *
+         * The drag_interval target "both_one" (line click) moves the whole
+         * interval by one step the same way: the target real position is
+         * the interval's midpoint shifted by one step, converted back
+         * through calc()'s own "both_one" math so calc() itself needs no
+         * change for the mouse path. "both" (bar drag) is handled
+         * separately by moveIntervalByKey() -- see there for why.
+         *
          * @param right {boolean} direction to move
          */
         moveByKey: function (right) {
-            var p_real;
+            var p_real, p_fake,
+                step = right ? this.coords.p_step : -this.coords.p_step;
+
+            if (this.target === "both") {
+                this.moveIntervalByKey(step);
+                return;
+            }
 
             switch (this.target) {
                 case "single":
-                    p_real = this.coords.p_single_real;
+                    p_real = this.coords.p_single_real + step;
+                    p_fake = this.convertToFakePercent(p_real) + this.coords.p_gap;
                     break;
+
                 case "to":
-                    p_real = this.coords.p_to_real;
+                    p_real = this.coords.p_to_real + step;
+                    p_fake = this.convertToFakePercent(p_real) + this.coords.p_gap;
                     break;
+
                 case "from":
-                    p_real = this.coords.p_from_real;
+                    p_real = this.coords.p_from_real + step;
+                    p_fake = this.convertToFakePercent(p_real) + this.coords.p_gap;
+                    break;
+
+                case "both_one":
+                    // calc()'s "both_one" case centers the interval on the
+                    // pointer's real percent. Move that midpoint by one
+                    // step and keep the click-time coords.p_gap (p_handle /
+                    // 2) so the interval width is unaffected.
+                    p_real = this.result.from_percent + ((this.result.to_percent - this.result.from_percent) / 2) + step;
+                    p_fake = this.convertToFakePercent(p_real) + this.coords.p_gap;
                     break;
             }
 
-            if (typeof p_real === "number") {
-                if (right) {
-                    p_real += this.coords.p_step;
-                } else {
-                    p_real -= this.coords.p_step;
-                }
-
-                var p_fake = this.convertToFakePercent(p_real) + this.coords.p_gap;
+            if (typeof p_fake === "number") {
                 this.coords.x_pointer = this.toFixed(this.coords.w_rs / 100 * p_fake);
-            } else {
-                // target is something moveByKey does not resolve above
-                // (e.g. "both"/"both_one" from drag_interval) — fall back to
-                // moving the tracked pointer directly, as before.
-                var p = this.coords.p_pointer;
-                var p_step = (this.options.max - this.options.min) / 100;
-                p_step = this.options.step / p_step;
 
-                if (right) {
-                    p += p_step;
-                } else {
-                    p -= p_step;
-                }
+                this.is_key = true;
+                this.calc();
+            }
+        },
 
-                this.coords.x_pointer = this.toFixed(this.coords.w_rs / 100 * p);
+        /**
+         * Move the whole drag_interval "both" (bar drag) interval by one
+         * step, keeping its width.
+         *
+         * calc()'s "both" case derives p_from_real/p_to_real from a single
+         * synthesized pointer position offset by p_gap_left/p_gap_right
+         * captured at drag start, then clamps each side independently
+         * through checkDiapason -- so no single pointer position can be
+         * relied on to land both handles on their exact one-step target
+         * once an edge clamp is involved (p_gap_left + p_gap_right only
+         * approximates the interval's fake-percent width, since the fake
+         * and real percent spaces get mixed in that branch). A live mouse
+         * drag never shows that because pointerDown holds min_interval at
+         * the pre-drag width for the whole gesture (setTempMinInterval());
+         * a single keyboard step has no equivalent window. This computes
+         * and clamps p_from_real/p_to_real directly instead -- the same
+         * width-preserving edge shift calc()'s own "both_one" case already
+         * uses -- then feeds them straight into calc()'s shared
+         * post-switch rendering by bypassing its target-driven derivation
+         * for this one call. calc() itself is not touched, so the mouse
+         * path is unaffected.
+         *
+         * @param step {Number} signed real-percent step (+coords.p_step to
+         *   move right, -coords.p_step to move left)
+         */
+        moveIntervalByKey: function (step) {
+            var from_bound_min = this.convertToPercent(typeof this.options.from_min === "number" ? this.options.from_min : this.options.min),
+                from_bound_max = this.convertToPercent(typeof this.options.from_max === "number" ? this.options.from_max : this.options.max),
+                to_bound_min = this.convertToPercent(typeof this.options.to_min === "number" ? this.options.to_min : this.options.min),
+                to_bound_max = this.convertToPercent(typeof this.options.to_max === "number" ? this.options.to_max : this.options.max),
+                new_from = this.coords.p_from_real + step,
+                new_to = this.coords.p_to_real + step,
+                overflow, shortfall,
+                target = this.target;
+
+            if (new_to > to_bound_max) {
+                overflow = new_to - to_bound_max;
+                new_to -= overflow;
+                new_from -= overflow;
             }
 
+            if (new_from < from_bound_min) {
+                shortfall = from_bound_min - new_from;
+                new_from += shortfall;
+                new_to += shortfall;
+            }
+
+            new_from = this.checkDiapason(new_from, this.options.from_min, this.options.from_max);
+            new_to = this.checkDiapason(new_to, this.options.to_min, this.options.to_max);
+
+            this.coords.p_from_real = new_from;
+            this.coords.p_from_fake = this.convertToFakePercent(new_from);
+            this.coords.p_to_real = new_to;
+            this.coords.p_to_fake = this.convertToFakePercent(new_to);
+
+            // Keep calc()'s "both" branch (the mouse path) from re-deriving
+            // from/to from the pointer and overwriting the values just set;
+            // its switch matches none of the other targets, so it falls
+            // through to the shared post-switch rendering untouched.
+            this.target = null;
             this.is_key = true;
             this.calc();
+            this.target = target;
         },
 
         /**
