@@ -189,6 +189,24 @@ test.describe(`smoke (${LABEL})`, () => {
     await expect(input(page)).toHaveValue('20;40');
   });
 
+  // #825 fix-round regression: the from_fixed test above only proves the
+  // guard fires for from_fixed; a mutation that narrows it to
+  // `if (this.options.from_fixed) { return; }` (dropping the `|| this.options.to_fixed`
+  // half) would still pass that test while leaving a to_fixed-only interval
+  // free to move on a keyboard press. Mutation this catches: guard narrowed
+  // to from_fixed-only.
+  test('drag_interval: a to_fixed interval stays pinned after a bar drag and a keyboard press (#825)', async ({ page }) => {
+    await open(page, { type: 'double', min: 0, max: 100, from: 20, to: 40, step: 1, drag_interval: true, to_fixed: true });
+    await drag(page, '.irs-bar', 0.1);
+    await expect(input(page)).toHaveValue('20;40');
+    await page.keyboard.press('ArrowRight');
+    // See the from_fixed test above: the input is only rewritten by the
+    // idle render loop's 300ms setTimeout, so the assertion must wait out
+    // the render cycle before observing the settled state.
+    await page.waitForTimeout(400);
+    await expect(input(page)).toHaveValue('20;40');
+  });
+
   test('drag_interval: after clicking the line, one ArrowRight press moves the whole interval by exactly one step, width preserved (#825)', async ({ page }) => {
     // A wider range than the bar-drag case: with min=0, max=100 the
     // "both_one" doubling this pins does not land until well past the
