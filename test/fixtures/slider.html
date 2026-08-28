@@ -48,6 +48,19 @@
             // width/height at init time.
             document.getElementById('wrap').style.display = 'none';
         }
+        if (q.attrs) {
+            // #535 data-* route coverage: apply attributes to the input
+            // before init, the same server-markup channel config_from_data
+            // reads (e.g. data-prettify), separate from passing the same
+            // option through the JS config object above.
+            var attrs = eval('(' + q.attrs + ')'); // eval: IE8 has no JSON.parse
+            var el = document.getElementById('slider');
+            for (var an in attrs) {
+                if (attrs.hasOwnProperty(an)) {
+                    el.setAttribute(an, attrs[an]);
+                }
+            }
+        }
         jQuery('#slider').ionRangeSlider(config);
         window.__irs.slider = jQuery.data(document.getElementById('slider'), 'ionRangeSlider');
         window.__irs.jqueryVersion = jQuery.fn.jquery;

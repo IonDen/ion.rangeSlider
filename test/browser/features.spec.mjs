@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { open, events, eventTypes, input, drag, JQUERY, LABEL } from './helpers.mjs';
+import { open, events, eventTypes, input, drag, LABEL } from './helpers.mjs';
 
 // Real-browser coverage for the five changes shipped so far in 2.4.0. Each of
 // these already has jsdom unit coverage; these tests exercise the same fixes
@@ -72,6 +72,26 @@ test.describe(`2.4.0 feature coverage (${LABEL})`, () => {
       await expect(page.locator('.irs-single')).toHaveText('X50');
     });
 
+    // #535 data-* route: the string-resolution also needs to reach
+    // options.prettify via a data-prettify HTML attribute, not just the JS
+    // config object exercised above -- the server-markup channel the
+    // feature was built for (vue-form-generator-style config has no way to
+    // express a function value). Mutation this catches: dropping the
+    // `prettify: $inp.data("prettify"),` line from config_from_data
+    // (js/ion.rangeSlider.js) -- the attribute would never reach
+    // options.prettify, so it stays unset and the label falls back to
+    // default formatting ("50" instead of "X50"). The resolution-gate
+    // mutation on the test above also reds this one (both routes end at the
+    // same window[name] lookup), but only the config_from_data mapping
+    // mutation pins the data-attribute merge specifically.
+    test('data-prettify resolves a global function set as an HTML attribute (#535)', async ({ page }) => {
+      await page.addInitScript(() => {
+        window.myFormatter = function (n) { return 'X' + n; };
+      });
+      await open(page, { min: 0, max: 100, from: 50 }, { attrs: JSON.stringify({ 'data-prettify': 'myFormatter' }) });
+      await expect(page.locator('.irs-single')).toHaveText('X50');
+    });
+
     // Mutation this catches: dropping (or emptying) prettify_denylist's
     // check in validate() -- "eval" would then resolve via the same
     // window[name] lookup as any other name, and with prettify_all_values
@@ -81,7 +101,10 @@ test.describe(`2.4.0 feature coverage (${LABEL})`, () => {
       const configStr = "{ values: ['a', 'window.__pwned = true', 'c'], from: 1, prettify_all_values: true, prettify: 'eval' }";
       await open(page, configStr);
       expect(await page.evaluate(() => window.__pwned)).toBeUndefined();
-      expect(await page.evaluate(() => window.__irs.slider.options.p_values[1])).toBe('window.__pwned = true');
+      // Page-observable fallback check: the rendered label, not slider
+      // internals -- the payload string passed through default formatting
+      // unchanged (no digits to group), instead of being executed.
+      await expect(page.locator('.irs-single')).toHaveText('window.__pwned = true');
     });
   });
 
@@ -119,13 +142,12 @@ test.describe(`2.4.0 feature coverage (${LABEL})`, () => {
     // idle 300ms timer) must redraw the handle at that same already-clamped
     // value.
     test('to_max clamps onStart even with the container hidden at init, and the handle settles there once revealed', async ({ page }) => {
-      const params = new URLSearchParams({
-        jquery: JQUERY,
-        config: JSON.stringify({ type: 'double', min: 0, max: 100, from: 10, to: 80, to_max: 50 }),
-        hidden: '1'
-      });
-      await page.goto(`/test/fixtures/slider.html?${params}`);
-      await page.waitForFunction(() => window.__irs && window.__irs.ready);
+      // Routed through open()'s extra-params argument (not a hand-built URL)
+      // so this test still honors the IRS_SLIM/IRS_MIN env selection like
+      // every other test -- otherwise the one test that independently pins
+      // the #831 validate() clamp would silently run against the wrong
+      // jQuery/plugin build in the CI matrix cells that set those env vars.
+      await open(page, { type: 'double', min: 0, max: 100, from: 10, to: 80, to_max: 50 }, { hidden: '1' });
 
       const ev = await events(page);
       expect(ev[0]).toMatchObject({ type: 'onStart', to: 50 });
