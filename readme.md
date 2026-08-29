@@ -131,6 +131,7 @@ Or use `data-*` attributes on the input:
 | `min_interval` | `data-min-interval` | `-` | number | Minimum range between handles. Double type only |
 | `max_interval` | `data-max-interval` | `-` | number | Maximum range between handles. Double type only |
 | `drag_interval` | `data-drag-interval` | `false` | boolean | Allow dragging the whole range. Double type only |
+| `drag_over_limit` | `data-drag-over-limit` | `false` | boolean | Let a dragged handle push the other handle instead of stopping at it. Mouse/touch drag only, respects min_interval, max_interval, from_fixed and to_fixed. Double type only |
 | `values` | `data-values` | `[]` | array | Custom array of possible values (numbers or strings). When set, min, max and step are ignored |
 | `from_fixed` | `data-from-fixed` | `false` | boolean | Fix position of left (or single) handle |
 | `from_min` | `data-from-min` | `min` | number | Minimum limit for left (or single) handle |

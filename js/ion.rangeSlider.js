@@ -298,6 +298,7 @@
             min_interval: 0,
             max_interval: 0,
             drag_interval: false,
+            drag_over_limit: false,
 
             values: [],
             p_values: [],
@@ -376,6 +377,7 @@
             min_interval: $inp.data("minInterval"),
             max_interval: $inp.data("maxInterval"),
             drag_interval: $inp.data("dragInterval"),
+            drag_over_limit: $inp.data("dragOverLimit"),
 
             values: $inp.data("values"),
 
@@ -1218,12 +1220,25 @@
 
                     this.coords.p_from_real = this.convertToRealPercent(handle_x);
                     this.coords.p_from_real = this.calcWithStep(this.coords.p_from_real);
-                    if (this.coords.p_from_real > this.coords.p_to_real) {
-                        this.coords.p_from_real = this.coords.p_to_real;
+
+                    if (this.options.drag_over_limit && !this.is_key) {
+                        var from_pushed = this.pushHandle(this.coords.p_from_real, this.coords.p_to_real, this.options.to_min, this.options.to_max, this.options.to_fixed, "from");
+
+                        this.coords.p_from_real = from_pushed.current;
+                        this.coords.p_to_real = from_pushed.next;
+
+                        this.coords.p_from_real = this.checkDiapason(this.coords.p_from_real, this.options.from_min, this.options.from_max);
+                        this.coords.p_from_real = this.checkMaxInterval(this.coords.p_from_real, this.coords.p_to_real, "from");
+
+                        this.coords.p_to_fake = this.convertToFakePercent(this.coords.p_to_real);
+                    } else {
+                        if (this.coords.p_from_real > this.coords.p_to_real) {
+                            this.coords.p_from_real = this.coords.p_to_real;
+                        }
+                        this.coords.p_from_real = this.checkDiapason(this.coords.p_from_real, this.options.from_min, this.options.from_max);
+                        this.coords.p_from_real = this.checkMinInterval(this.coords.p_from_real, this.coords.p_to_real, "from");
+                        this.coords.p_from_real = this.checkMaxInterval(this.coords.p_from_real, this.coords.p_to_real, "from");
                     }
-                    this.coords.p_from_real = this.checkDiapason(this.coords.p_from_real, this.options.from_min, this.options.from_max);
-                    this.coords.p_from_real = this.checkMinInterval(this.coords.p_from_real, this.coords.p_to_real, "from");
-                    this.coords.p_from_real = this.checkMaxInterval(this.coords.p_from_real, this.coords.p_to_real, "from");
 
                     this.coords.p_from_fake = this.convertToFakePercent(this.coords.p_from_real);
 
@@ -1236,12 +1251,25 @@
 
                     this.coords.p_to_real = this.convertToRealPercent(handle_x);
                     this.coords.p_to_real = this.calcWithStep(this.coords.p_to_real);
-                    if (this.coords.p_to_real < this.coords.p_from_real) {
-                        this.coords.p_to_real = this.coords.p_from_real;
+
+                    if (this.options.drag_over_limit && !this.is_key) {
+                        var to_pushed = this.pushHandle(this.coords.p_to_real, this.coords.p_from_real, this.options.from_min, this.options.from_max, this.options.from_fixed, "to");
+
+                        this.coords.p_to_real = to_pushed.current;
+                        this.coords.p_from_real = to_pushed.next;
+
+                        this.coords.p_to_real = this.checkDiapason(this.coords.p_to_real, this.options.to_min, this.options.to_max);
+                        this.coords.p_to_real = this.checkMaxInterval(this.coords.p_to_real, this.coords.p_from_real, "to");
+
+                        this.coords.p_from_fake = this.convertToFakePercent(this.coords.p_from_real);
+                    } else {
+                        if (this.coords.p_to_real < this.coords.p_from_real) {
+                            this.coords.p_to_real = this.coords.p_from_real;
+                        }
+                        this.coords.p_to_real = this.checkDiapason(this.coords.p_to_real, this.options.to_min, this.options.to_max);
+                        this.coords.p_to_real = this.checkMinInterval(this.coords.p_to_real, this.coords.p_from_real, "to");
+                        this.coords.p_to_real = this.checkMaxInterval(this.coords.p_to_real, this.coords.p_from_real, "to");
                     }
-                    this.coords.p_to_real = this.checkDiapason(this.coords.p_to_real, this.options.to_min, this.options.to_max);
-                    this.coords.p_to_real = this.checkMinInterval(this.coords.p_to_real, this.coords.p_from_real, "to");
-                    this.coords.p_to_real = this.checkMaxInterval(this.coords.p_to_real, this.coords.p_from_real, "to");
 
                     this.coords.p_to_fake = this.convertToFakePercent(this.coords.p_to_real);
 
@@ -1988,6 +2016,59 @@
             }
 
             return this.toFixed(rounded);
+        },
+
+        /**
+         * #302: with drag_over_limit enabled, the dragged handle pushes the
+         * other handle along instead of clamping against it. The pushed
+         * handle still obeys its own diapason (checkDiapason) and its own
+         * from_fixed/to_fixed; min_interval is a mandatory gap preserved
+         * while pushing -- once the pushed handle can't move far enough to
+         * keep that gap open (own limit reached, or fixed), the dragged
+         * handle clamps back so the gap is never violated. Mouse/touch drag
+         * only -- calc()'s "from"/"to" cases guard this on !this.is_key so
+         * keyboard keeps the old clamp (v1 scope).
+         *
+         * @param p_current {Number} dragged handle's real percent, already step-snapped
+         * @param p_next {Number} other (pushed) handle's current real percent
+         * @param next_min {Number|null} pushed handle's diapason min (from_min/to_min)
+         * @param next_max {Number|null} pushed handle's diapason max (from_max/to_max)
+         * @param next_fixed {Boolean} pushed handle's from_fixed/to_fixed
+         * @param type {String} "from" or "to" -- which handle is being dragged
+         * @returns {Object} { current: Number, next: Number } final real percents for both handles
+         */
+        pushHandle: function (p_current, p_next, next_min, next_max, next_fixed, type) {
+            var min_gap = this.options.min_interval || 0,
+                current = this.convertToValue(p_current),
+                next = this.convertToValue(p_next),
+                required;
+
+            if (type === "from") {
+                required = current + min_gap;
+
+                if (!next_fixed && next < required) {
+                    next = this.convertToValue(this.checkDiapason(this.convertToPercent(required), next_min, next_max));
+                }
+
+                if (next - current < min_gap) {
+                    current = next - min_gap;
+                }
+            } else {
+                required = current - min_gap;
+
+                if (!next_fixed && next > required) {
+                    next = this.convertToValue(this.checkDiapason(this.convertToPercent(required), next_min, next_max));
+                }
+
+                if (current - next < min_gap) {
+                    current = next + min_gap;
+                }
+            }
+
+            return {
+                current: this.convertToPercent(current),
+                next: this.convertToPercent(next)
+            };
         },
 
         checkMinInterval: function (p_current, p_next, type) {
