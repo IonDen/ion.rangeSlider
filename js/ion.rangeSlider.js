@@ -532,11 +532,12 @@
                 this.callOnStart();
             }
 
-            this.updateScene();
-
             if (!is_update) {
+                this.drawHandles();
                 this.callOnInit();
             }
+
+            this.updateScene();
         },
 
         /**
@@ -1909,12 +1910,21 @@
          * Fires onInit callback
          *
          * Fires exactly once per construction, right after the initial
-         * render pass (init() -> updateScene() -> drawHandles()) has run --
-         * unlike onStart, which fires before that pass. DOM edits made
-         * inside onInit therefore stick, where the same edit made inside
-         * onStart would be overwritten by that first render.
+         * render pass (init() calls this.drawHandles() directly, then
+         * this.callOnInit(), before arming the idle render loop) -- unlike
+         * onStart, which fires before that pass. DOM edits made inside
+         * onInit therefore stick, where the same edit made inside onStart
+         * would be overwritten by that first render. Exception: a
+         * container hidden (zero width) at construction has no real render
+         * yet at this point (drawHandles() bails out early when the
+         * container has no width), so an edit made here does not survive
+         * the later render that runs once the container becomes visible.
          */
         callOnInit: function () {
+            if (!this.options) {
+                return;
+            }
+
             this.writeToInput();
 
             if (this.options.onInit && typeof this.options.onInit === "function") {
