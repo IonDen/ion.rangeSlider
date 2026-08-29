@@ -143,6 +143,8 @@ Or use `data-*` attributes on the input:
 | `prettify_enabled` | `data-prettify-enabled` | `true` | boolean | Format long numbers: 10000000 → 10 000 000 |
 | `prettify_separator` | `data-prettify-separator` | ` ` | string | Separator for long numbers: 10000000 → 10,000,000 |
 | `prettify` | `data-prettify` | `null` | function, string | Custom formatting function. Receives a number, returns a string (with `prettify_all_values`, non-numeric `values` entries are passed too). A string names a global function instead (`window[name]`); an unresolved name falls back to default formatting. Use trusted config, as with any option |
+| `prettify_grid` | `data-prettify-grid` | `null` | function, string | Formatting function for the grid tick labels only. Falls back to `prettify`, then to default number formatting, when unset. Same string-name resolution and trust rules as `prettify`. Does not apply in `values` mode |
+| `prettify_min_max` | `data-prettify-min-max` | `null` | function, string | Formatting function for the min and max labels only. Falls back to `prettify`, then to default number formatting, when unset. Same string-name resolution and trust rules as `prettify`. Does not apply in `values` mode |
 | `prettify_all_values` | `data-prettify-all-values` | `false` | boolean | In `values` mode, also run `prettify` on non-numeric entries. Default: `false` |
 | `force_edges` | `data-force-edges` | `false` | boolean | Keep handles and tooltips inside the container |
 | `keyboard` | `data-keyboard` | `true` | boolean | Keyboard controls. Left: ←, ↓, A, S. Right: →, ↑, W, D |
@@ -190,7 +192,7 @@ All callbacks receive an object as the first argument:
     "to_value": 0,              // TO index in values array (if used)
     "to_min": null,             // TO minimum limit (null if unset)
     "to_max": null,             // TO maximum limit (null if unset)
-    "min_pretty": "1 000",      // MIN formatted (if prettify is on)
+    "min_pretty": "1 000",      // MIN formatted (if prettify_min_max or prettify is on)
     "max_pretty": "100 000",    // MAX formatted
     "from_pretty": "10 000",    // FROM formatted
     "to_pretty": "90 000"       // TO formatted

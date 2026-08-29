@@ -20,6 +20,16 @@ test('data-prettify-all-values maps to prettify_all_values (#276)', (t) => {
   assert.equal(slider.options.prettify_all_values, true);
 });
 
+test('data-prettify-grid and data-prettify-min-max override the JS prettify_grid/prettify_min_max options (#306)', (t) => {
+  const { slider } = createSlider(t, '<input data-prettify-grid="fromData" data-prettify-min-max="fromData">', {
+    min: 0, max: 100,
+    prettify_grid: 'fromJs',
+    prettify_min_max: 'fromJs',
+  });
+  assert.equal(slider.options.prettify_grid, 'fromData');
+  assert.equal(slider.options.prettify_min_max, 'fromData');
+});
+
 test('the input is written on init and the instance handle is stored', (t) => {
   const { slider, $input, $ } = createSlider(t, '<input>', { min: 0, max: 10, from: 3 });
   assert.equal($input.val(), '3');

@@ -75,3 +75,72 @@ test('decorate adds prefix, postfix and max_postfix only on the max value', (t) 
   assert.equal(slider.decorate('50', 50), '$50k');
   assert.equal(slider.decorate('100', 100), '$100+ k');
 });
+
+test('prettify_grid and prettify_min_max fall back to prettify when unset, and use their own function when set (#306)', (t) => {
+  const { slider: shared } = createSlider(t, '<input>', { min: 0, max: 10000000, prettify: (n) => `P:${n}` });
+  assert.equal(shared._prettifyGrid(1000), 'P:1000');      // no prettify_grid -> falls back to prettify
+  assert.equal(shared._prettifyMinMax(1000), 'P:1000');    // no prettify_min_max -> falls back to prettify
+
+  const { slider: perSurface } = createSlider(t, '<input>', {
+    min: 0, max: 10000000,
+    prettify: (n) => `P:${n}`,
+    prettify_grid: (n) => `G:${n}`,
+    prettify_min_max: (n) => `M:${n}`,
+  });
+  assert.equal(perSurface._prettifyGrid(1000), 'G:1000');
+  assert.equal(perSurface._prettifyMinMax(1000), 'M:1000');
+  assert.equal(perSurface._prettify(1000), 'P:1000');      // handle labels still use the shared prettify, untouched
+});
+
+test('prettify_enabled: false disables prettify_grid and prettify_min_max exactly like prettify (#306)', (t) => {
+  const { slider } = createSlider(t, '<input>', {
+    min: 0, max: 10000000,
+    prettify_enabled: false,
+    prettify_grid: (n) => `G:${n}`,
+    prettify_min_max: (n) => `M:${n}`,
+  });
+  assert.equal(slider._prettifyGrid(1000), 1000);
+  assert.equal(slider._prettifyMinMax(1000), 1000);
+});
+
+test('prettify_grid and prettify_min_max given as global function names resolve them (#306)', (t) => {
+  const { slider } = createSlider(t, '<input>', {
+    min: 0, max: 100,
+    prettify_grid: 'my_grid_prettify',
+    prettify_min_max: 'my_minmax_prettify',
+  }, (window) => {
+    window.my_grid_prettify = function (n) { return 'G#' + n; };
+    window.my_minmax_prettify = function (n) { return 'M#' + n; };
+  });
+  assert.equal(slider._prettifyGrid(42), 'G#42');
+  assert.equal(slider._prettifyMinMax(42), 'M#42');
+});
+
+test('an unresolvable prettify_grid/prettify_min_max name falls back to default formatting, no throw (#306)', (t) => {
+  const { slider } = createSlider(t, '<input>', {
+    min: 0, max: 10000000,
+    prettify_grid: 'does_not_exist_grid_fn',
+    prettify_min_max: 'does_not_exist_minmax_fn',
+  });
+  assert.equal(slider._prettifyGrid(10000000), '10 000 000');
+  assert.equal(slider._prettifyMinMax(10000000), '10 000 000');
+});
+
+test('the prettify_grid and prettify_min_max denylist refusal mirrors prettify -- eval is never bound (#306 security)', (t) => {
+  const { slider } = createSlider(t, '<input>', {
+    min: 0, max: 10000000,
+    prettify_grid: 'eval',
+    prettify_min_max: 'eval',
+  });
+  assert.equal(slider._prettifyGrid(10000000), '10 000 000');   // default formatting, not window.eval bound as prettify_grid
+  assert.equal(slider._prettifyMinMax(10000000), '10 000 000'); // default formatting, not window.eval bound as prettify_min_max
+});
+
+test('data-prettify-grid and data-prettify-min-max resolve global functions set as HTML attributes (#306)', (t) => {
+  const { slider } = createSlider(t, '<input data-prettify-grid="my_grid_fn" data-prettify-min-max="my_minmax_fn">', { min: 0, max: 100 }, (window) => {
+    window.my_grid_fn = function (n) { return 'g~' + n; };
+    window.my_minmax_fn = function (n) { return 'm~' + n; };
+  });
+  assert.equal(slider._prettifyGrid(7), 'g~7');
+  assert.equal(slider._prettifyMinMax(7), 'm~7');
+});

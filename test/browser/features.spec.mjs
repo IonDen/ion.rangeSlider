@@ -166,4 +166,60 @@ test.describe(`2.4.0 feature coverage (${LABEL})`, () => {
       expect(await fraction()).toBeLessThan(0.6);
     });
   });
+
+  test.describe('#306 per-surface prettify (prettify_grid / prettify_min_max)', () => {
+    // Mutation this catches: routing appendGrid()'s numeric-mode tick text
+    // and/or setMinMax()'s min/max labels through the shared _prettify()
+    // instead of the new _prettifyGrid()/_prettifyMinMax() fallback helpers
+    // (js/ion.rangeSlider.js) -- the grid and min/max labels would then
+    // render the handle bubble's "L" formatting instead of their own "G"/"M"
+    // formatting. grid_num: 1 keeps the grid to exactly two ticks (min, max)
+    // so js-grid-text-0/1 are unambiguous.
+    test('one slider, three formatters: grid, min/max and the handle bubble each use their own (#306)', async ({ page }) => {
+      const configStr = "{ min: 0, max: 100, from: 50, grid: true, grid_num: 1, "
+        + "prettify: function (n) { return 'L' + n; }, "
+        + "prettify_grid: function (n) { return 'G' + n; }, "
+        + "prettify_min_max: function (n) { return 'M' + n; } }";
+      await open(page, configStr);
+      await expect(page.locator('.js-grid-text-0')).toHaveText('G0');
+      await expect(page.locator('.js-grid-text-1')).toHaveText('G100');
+      await expect(page.locator('.irs-min')).toHaveText('M0');
+      await expect(page.locator('.irs-max')).toHaveText('M100');
+      await expect(page.locator('.irs-single')).toHaveText('L50');
+    });
+
+    // Characterization test: green both before and after the feature (#306
+    // is purely additive -- an existing single-`prettify` setup must keep
+    // behaving exactly as it does today). Mutation this catches: making the
+    // fallback in _prettifyGrid()/_prettifyMinMax() skip the shared
+    // `prettify` option when the surface option is unset (e.g. falling
+    // straight to the built-in thousands-separator formatter instead of
+    // this._prettify()) -- the grid/min/max labels would then read plain
+    // "0"/"50"/"100" instead of "L0"/"L50"/"L100".
+    test('fallback: only prettify set -- grid and min/max both use it, same as before #306 (#306)', async ({ page }) => {
+      const configStr = "{ min: 0, max: 100, from: 50, grid: true, grid_num: 1, "
+        + "prettify: function (n) { return 'L' + n; } }";
+      await open(page, configStr);
+      await expect(page.locator('.js-grid-text-0')).toHaveText('L0');
+      await expect(page.locator('.js-grid-text-1')).toHaveText('L100');
+      await expect(page.locator('.irs-min')).toHaveText('L0');
+      await expect(page.locator('.irs-max')).toHaveText('L100');
+      await expect(page.locator('.irs-single')).toHaveText('L50');
+    });
+
+    // #306 data-* route: mirrors the #535 data-prettify coverage above, this
+    // time for one of the two new options. Mutation this catches: dropping
+    // the `prettify_grid: $inp.data("prettifyGrid"),` line from
+    // config_from_data (js/ion.rangeSlider.js) -- the attribute would never
+    // reach options.prettify_grid, so it stays unset and the grid ticks fall
+    // back to default number formatting ("0"/"100" instead of "X0"/"X100").
+    test('data-prettify-grid resolves a global function set as an HTML attribute (#306)', async ({ page }) => {
+      await page.addInitScript(() => {
+        window.myGridFormatter = function (n) { return 'X' + n; };
+      });
+      await open(page, { min: 0, max: 100, grid: true, grid_num: 1 }, { attrs: JSON.stringify({ 'data-prettify-grid': 'myGridFormatter' }) });
+      await expect(page.locator('.js-grid-text-0')).toHaveText('X0');
+      await expect(page.locator('.js-grid-text-1')).toHaveText('X100');
+    });
+  });
 });
