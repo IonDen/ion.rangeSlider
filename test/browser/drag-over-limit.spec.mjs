@@ -107,4 +107,58 @@ test.describe(`drag_over_limit (${LABEL})`, () => {
     expect(to).toBeGreaterThan(40);
     expect(to - from).toBe(10);
   });
+
+  // Probe-confirmed fix-round regression: the push target was computed from
+  // the dragged handle's RAW pointer position, before checkDiapason clamped
+  // it to from_max. Dragging "from" past both "to" and from_max pushed "to"
+  // all the way to the raw (unclamped) drag position, then clamped "from"
+  // back to from_max afterward -- leaving "to" stranded ahead of "from" with
+  // a stale gap that should never have opened, instead of both handles
+  // settling together at the limit "from" actually reaches. Mutation this
+  // catches: computing the push target from p_from_real before the
+  // checkDiapason(from_min, from_max) clamp (i.e. reverting the fix-round
+  // reordering) -- "to" would land near the raw drag position (well past
+  // 50) instead of also settling at 50.
+  test('drag_over_limit: true with from_max -- pushing past the limit settles both handles there, no stale gap (#302 fix)', async ({ page }) => {
+    await open(page, { type: 'double', min: 0, max: 100, from: 20, to: 40, step: 1, drag_over_limit: true, from_max: 50 });
+    await drag(page, '.irs-handle.from', 0.5);
+    await expect(input(page)).toHaveValue('50;50');
+  });
+
+  // Mirror of the from_max test above, dragging "to" down past "from" and
+  // to_min. Kept as the one representative "to"-side mirror since pushHandle
+  // is shared by both calc() cases (per the fix-round brief).
+  test('drag_over_limit: true with to_min -- pushing past the limit settles both handles there, no stale gap (#302 fix)', async ({ page }) => {
+    await open(page, { type: 'double', min: 0, max: 100, from: 60, to: 80, step: 1, drag_over_limit: true, to_min: 50 });
+    await drag(page, '.irs-handle.to', -0.5);
+    await expect(input(page)).toHaveValue('50;50');
+  });
+
+  // Same stale-gap bug, compounded with max_interval: because the pre-fix
+  // stale gap (21) exceeded max_interval (5), checkMaxInterval pulled "from"
+  // back OUT toward the stranded "to" -- past from_max a second time, worse
+  // than leaving it at the from_max clamp alone. Mutation this catches: same
+  // as above (push target computed from the raw, unclamped drag position) --
+  // "from" would settle above 50 (checkMaxInterval dragging it toward the
+  // stranded "to") instead of exactly at from_max.
+  test('drag_over_limit: true with from_max and max_interval -- the dragged handle never exceeds its own limit (#302 fix)', async ({ page }) => {
+    await open(page, { type: 'double', min: 0, max: 100, from: 20, to: 40, step: 1, drag_over_limit: true, from_max: 50, max_interval: 5 });
+    await drag(page, '.irs-handle.from', 0.5);
+    await expect(input(page)).toHaveValue('50;50');
+  });
+
+  // Pins pushHandle's gap-preserving reclamp branch specifically (the "push
+  // got stuck against the other handle's own limit" path), which the
+  // min_interval test above never reaches -- there, the push always
+  // succeeds, so the reclamp branch (`current = next - min_gap`) never runs.
+  // Here to_max stops the push short, forcing the reclamp to fire. Mutation
+  // this catches: replacing the gap-preserving `current = next - min_gap;`
+  // with a flush `current = next;` -- "from" would land at 45 (flush with
+  // the stuck "to"), collapsing the mandatory min_interval gap to 0 instead
+  // of holding it at 10.
+  test('drag_over_limit: true with min_interval and a stuck push -- the gap stays exactly min_interval wide (#302)', async ({ page }) => {
+    await open(page, { type: 'double', min: 0, max: 100, from: 20, to: 40, step: 1, drag_over_limit: true, min_interval: 10, to_max: 45 });
+    await drag(page, '.irs-handle.from', 0.5);
+    await expect(input(page)).toHaveValue('35;45');
+  });
 });

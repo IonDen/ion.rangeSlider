@@ -1222,6 +1222,15 @@
                     this.coords.p_from_real = this.calcWithStep(this.coords.p_from_real);
 
                     if (this.options.drag_over_limit && !this.is_key) {
+                        // #302 fix: clamp the dragged handle to its own diapason
+                        // BEFORE computing the push target. Pushing from the raw,
+                        // unclamped pointer position would push "to" further than
+                        // "from" can actually travel, leaving a stale gap once
+                        // "from" gets clamped back afterward (and, compounded with
+                        // max_interval, could pull "from" back out past its own
+                        // from_max/from_min).
+                        this.coords.p_from_real = this.checkDiapason(this.coords.p_from_real, this.options.from_min, this.options.from_max);
+
                         var from_pushed = this.pushHandle(this.coords.p_from_real, this.coords.p_to_real, this.options.to_min, this.options.to_max, this.options.to_fixed, "from");
 
                         this.coords.p_from_real = from_pushed.current;
@@ -1253,6 +1262,11 @@
                     this.coords.p_to_real = this.calcWithStep(this.coords.p_to_real);
 
                     if (this.options.drag_over_limit && !this.is_key) {
+                        // #302 fix: mirror of the "from" case above -- clamp the
+                        // dragged "to" handle to its own diapason before the push
+                        // target is computed from it.
+                        this.coords.p_to_real = this.checkDiapason(this.coords.p_to_real, this.options.to_min, this.options.to_max);
+
                         var to_pushed = this.pushHandle(this.coords.p_to_real, this.coords.p_from_real, this.options.from_min, this.options.from_max, this.options.from_fixed, "to");
 
                         this.coords.p_to_real = to_pushed.current;
@@ -2029,7 +2043,7 @@
          * only -- calc()'s "from"/"to" cases guard this on !this.is_key so
          * keyboard keeps the old clamp (v1 scope).
          *
-         * @param p_current {Number} dragged handle's real percent, already step-snapped
+         * @param p_current {Number} dragged handle's real percent, already step-snapped AND already clamped to its own diapason (checkDiapason) -- the push target is computed from where the dragged handle actually ends up, not its raw pointer position
          * @param p_next {Number} other (pushed) handle's current real percent
          * @param next_min {Number|null} pushed handle's diapason min (from_min/to_min)
          * @param next_max {Number|null} pushed handle's diapason max (from_max/to_max)
