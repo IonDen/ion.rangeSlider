@@ -351,7 +351,8 @@
             onStart: null,
             onChange: null,
             onFinish: null,
-            onUpdate: null
+            onUpdate: null,
+            onInit: null
         };
 
 
@@ -532,6 +533,10 @@
             }
 
             this.updateScene();
+
+            if (!is_update) {
+                this.callOnInit();
+            }
         },
 
         /**
@@ -1897,6 +1902,26 @@
                     this.options.onUpdate.call(this.options.scope, this.result);
                 } else {
                     this.options.onUpdate(this.result);
+                }
+            }
+        },
+        /**
+         * Fires onInit callback
+         *
+         * Fires exactly once per construction, right after the initial
+         * render pass (init() -> updateScene() -> drawHandles()) has run --
+         * unlike onStart, which fires before that pass. DOM edits made
+         * inside onInit therefore stick, where the same edit made inside
+         * onStart would be overwritten by that first render.
+         */
+        callOnInit: function () {
+            this.writeToInput();
+
+            if (this.options.onInit && typeof this.options.onInit === "function") {
+                if (this.options.scope) {
+                    this.options.onInit.call(this.options.scope, this.result);
+                } else {
+                    this.options.onInit(this.result);
                 }
             }
         },

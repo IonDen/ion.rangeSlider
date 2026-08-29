@@ -21,7 +21,7 @@ ion.RangeSlider — flexible and responsive range slider with skins, touch suppo
 * Reads from and writes to a native `<input>` element — works in any HTML form
 * Initialization via JavaScript or `data-*` attributes
 * Public methods: update, reset, destroy
-* Callbacks: onStart, onChange, onFinish, onUpdate
+* Callbacks: onStart, onChange, onFinish, onUpdate, onInit
 * Keyboard navigation
 * Touch device support
 * Works in Internet Explorer 8+ and all modern browsers
@@ -171,6 +171,7 @@ Or use `data-*` attributes on the input:
 | `onChange` | `-` | `null` | function | Called on each value change |
 | `onFinish` | `-` | `null` | function | Called when the user releases a handle |
 | `onUpdate` | `-` | `null` | function | Called when slider is modified by `update` or `reset` |
+| `onInit` | `-` | `null` | function | Called once when the slider is created and its first render is done |
 
 
 ## Callback data
