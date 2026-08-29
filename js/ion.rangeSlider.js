@@ -35,6 +35,13 @@
     // arbitrary-code-execution sink. execScript is legacy IE's global-eval.
     var prettify_denylist = ["eval", "Function", "setTimeout", "setInterval", "execScript"];
 
+    // The option names that carry a prettify function (or the name of a
+    // global one, #535) and share the string-name resolution block in
+    // validate() -- prettify_grid and prettify_min_max (#306) are new sinks
+    // added alongside the original prettify, so they run through the exact
+    // same denylist/resolve/fallback rules rather than a duplicated block.
+    var prettify_option_names = ["prettify", "prettify_grid", "prettify_min_max"];
+
     // IE8 fix
     var is_old_ie = (function () {
         var n = navigator.userAgent,
@@ -308,6 +315,8 @@
             prettify_enabled: true,
             prettify_separator: " ",
             prettify: null,
+            prettify_grid: null,
+            prettify_min_max: null,
             prettify_all_values: false,
 
             force_edges: false,
@@ -383,6 +392,8 @@
             prettify_enabled: $inp.data("prettifyEnabled"),
             prettify_separator: $inp.data("prettifySeparator"),
             prettify: $inp.data("prettify"),
+            prettify_grid: $inp.data("prettifyGrid"),
+            prettify_min_max: $inp.data("prettifyMinMax"),
             prettify_all_values: $inp.data("prettifyAllValues"),
 
             force_edges: $inp.data("forceEdges"),
@@ -1079,8 +1090,8 @@
                 this.$cache.min.html(this.decorate(this.options.p_values[this.options.min]));
                 this.$cache.max.html(this.decorate(this.options.p_values[this.options.max]));
             } else {
-                var min_pretty = this._prettify(this.options.min);
-                var max_pretty = this._prettify(this.options.max);
+                var min_pretty = this._prettifyMinMax(this.options.min);
+                var max_pretty = this._prettifyMinMax(this.options.max);
 
                 this.result.min_pretty = min_pretty;
                 this.result.max_pretty = max_pretty;
@@ -2082,6 +2093,48 @@
             return n.replace(/(\d{1,3}(?=(?:\d\d\d)+(?!\d)))/g, "$1" + this.options.prettify_separator);
         },
 
+        /**
+         * Shared fallback chain for the per-surface prettify options (#306):
+         * the surface's own option function if set, else the shared
+         * `prettify` option (and, through it, the built-in thousands-
+         * separator formatting) via _prettify(). prettify_enabled: false
+         * disables this surface too, same as the default prettify.
+         * @param {string} option_name "prettify_grid" or "prettify_min_max"
+         * @param {number} num
+         * @returns {string|number}
+         */
+        _prettifySurface: function (option_name, num) {
+            if (!this.options.prettify_enabled) {
+                return num;
+            }
+
+            if (this.options[option_name] && typeof this.options[option_name] === "function") {
+                return this.options[option_name](num);
+            }
+
+            return this._prettify(num);
+        },
+
+        /**
+         * Format a number for the grid tick labels, falling back to the
+         * shared `prettify` option when prettify_grid is unset (#306).
+         * @param {number} num
+         * @returns {string|number}
+         */
+        _prettifyGrid: function (num) {
+            return this._prettifySurface("prettify_grid", num);
+        },
+
+        /**
+         * Format a number for the min/max labels, falling back to the
+         * shared `prettify` option when prettify_min_max is unset (#306).
+         * @param {number} num
+         * @returns {string|number}
+         */
+        _prettifyMinMax: function (num) {
+            return this._prettifySurface("prettify_min_max", num);
+        },
+
         checkEdges: function (left, width) {
             if (!this.options.force_edges) {
                 return this.toFixed(left);
@@ -2102,6 +2155,7 @@
                 v = (o.values = o.values.slice()), // clone so validate never mutates the caller's array (#506)
                 vl = v.length,
                 value,
+                prettify_option_name,
                 i;
 
             if (typeof o.min === "string") o.min = +o.min;
@@ -2117,26 +2171,31 @@
 
             if (typeof o.grid_num === "string") o.grid_num = +o.grid_num;
 
-            // prettify may be given as the name of a global function instead of a
-            // function reference (#535), e.g. for data-* / JSON-only config where a
-            // function value can't be expressed. Resolved once here, against window
+            // prettify, prettify_grid and prettify_min_max (#306) may each be given
+            // as the name of a global function instead of a function reference
+            // (#535), e.g. for data-* / JSON-only config where a function value
+            // can't be expressed. Resolved once here per option, against window
             // (bracket access only, no eval) -- the binding is captured now, so
             // redefining window[name] later is only picked up by a later update()
             // that re-passes the string. Because update() re-runs validate(), this
             // still stays current across update({ prettify: "name" }) calls. Must run
             // before the values-mode loop below, which calls _prettify() per entry.
             // An unresolved (or denylisted, see prettify_denylist above) name is left
-            // as-is and _prettify() falls back to the default formatter, same as any
+            // as-is and the surface falls back to the default formatter, same as any
             // other non-function value -- no throw either way.
-            if (typeof o.prettify === "string" && o.prettify !== "") {
-                if (prettify_denylist.indexOf(o.prettify) !== -1) {
-                    if (typeof console !== "undefined" && console.warn) {
-                        console.warn("prettify: \"" + o.prettify + "\" is not allowed, falling back to default number formatting");
+            for (i = 0; i < prettify_option_names.length; i++) {
+                prettify_option_name = prettify_option_names[i];
+
+                if (typeof o[prettify_option_name] === "string" && o[prettify_option_name] !== "") {
+                    if (prettify_denylist.indexOf(o[prettify_option_name]) !== -1) {
+                        if (typeof console !== "undefined" && console.warn) {
+                            console.warn(prettify_option_name + ": \"" + o[prettify_option_name] + "\" is not allowed, falling back to default number formatting");
+                        }
+                    } else if (typeof window[o[prettify_option_name]] === "function") {
+                        o[prettify_option_name] = window[o[prettify_option_name]];
+                    } else if (typeof console !== "undefined" && console.warn) {
+                        console.warn(prettify_option_name + ": \"" + o[prettify_option_name] + "\" is not a function on window, falling back to default number formatting");
                     }
-                } else if (typeof window[o.prettify] === "function") {
-                    o.prettify = window[o.prettify];
-                } else if (typeof console !== "undefined" && console.warn) {
-                    console.warn("prettify: \"" + o.prettify + "\" is not a function on window, falling back to default number formatting");
                 }
             }
 
@@ -2406,7 +2465,7 @@
                 if (o.values.length) {
                     result = o.p_values[result];
                 } else {
-                    result = this._prettify(result);
+                    result = this._prettifyGrid(result);
                 }
 
                 html += '<span class="irs-grid-text js-grid-text-' + i + '" style="left: ' + big_w + '%">' + result + '</span>';
