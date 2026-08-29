@@ -1221,7 +1221,14 @@
                     this.coords.p_from_real = this.convertToRealPercent(handle_x);
                     this.coords.p_from_real = this.calcWithStep(this.coords.p_from_real);
 
-                    if (this.options.drag_over_limit && !this.is_key) {
+                    // #302 scope: push only applies to a genuine drag. A click on
+                    // the line resolves to this same "from"/"to" case (target
+                    // "click" -> chooseHandle(), calc()'s own pre-switch step) with
+                    // is_click already set by pointerClick() before calc() runs --
+                    // without the !this.is_click guard, a click landing inside a
+                    // min_interval-wide gap would push the far handle even though
+                    // the option (and its docs) describe drag-only behavior.
+                    if (this.options.drag_over_limit && !this.is_key && !this.is_click) {
                         // #302 fix: clamp the dragged handle to its own diapason
                         // BEFORE computing the push target. Pushing from the raw,
                         // unclamped pointer position would push "to" further than
@@ -1261,7 +1268,7 @@
                     this.coords.p_to_real = this.convertToRealPercent(handle_x);
                     this.coords.p_to_real = this.calcWithStep(this.coords.p_to_real);
 
-                    if (this.options.drag_over_limit && !this.is_key) {
+                    if (this.options.drag_over_limit && !this.is_key && !this.is_click) {
                         // #302 fix: mirror of the "from" case above -- clamp the
                         // dragged "to" handle to its own diapason before the push
                         // target is computed from it.

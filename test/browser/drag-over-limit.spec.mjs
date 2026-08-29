@@ -161,4 +161,24 @@ test.describe(`drag_over_limit (${LABEL})`, () => {
     await drag(page, '.irs-handle.from', 0.5);
     await expect(input(page)).toHaveValue('35;45');
   });
+
+  // #302 scope fix round 2: a click on the line reaches this same "from"/"to"
+  // case (target "click" resolves through chooseHandle() before the switch),
+  // with is_click already set -- so without the !this.is_click guard, a
+  // click landing inside a min_interval-wide gap pushed the far handle even
+  // though the option and its docs describe drag-only behavior. Landing
+  // anywhere between value 25 and 30 exercises the same bug/fix identically:
+  // chooseHandle's midpoint is 30, so the click resolves to "from", and
+  // checkMinInterval's pull-back (25 = to - min_interval) is the same
+  // regardless of exactly where in that range the click lands. RED on the
+  // pre-guard head: "to" gets pushed away from 40 (its own min_interval
+  // requirement pulls it forward) instead of staying put. Mutation this
+  // catches: dropping the `!this.is_click` guard, reverting to the fix-round
+  // 2 bug -- the click would push "to" instead of leaving it at 40.
+  test('drag_over_limit: true with min_interval -- a click inside the gap behaves exactly like the option off, far handle unmoved (#302)', async ({ page }) => {
+    await open(page, { type: 'double', min: 0, max: 100, from: 20, to: 40, step: 1, drag_over_limit: true, min_interval: 15 });
+    const l = await page.locator('.irs-line').boundingBox();
+    await page.mouse.click(l.x + l.width * 0.29, l.y + l.height / 2);
+    await expect(input(page)).toHaveValue('25;40');
+  });
 });
