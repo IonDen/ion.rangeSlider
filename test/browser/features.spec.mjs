@@ -222,4 +222,83 @@ test.describe(`2.4.0 feature coverage (${LABEL})`, () => {
       await expect(page.locator('.js-grid-text-1')).toHaveText('X100');
     });
   });
+
+  test.describe('#359 onInit callback', () => {
+    // #359: onInit fires once, after the initial render pass (init() calls
+    // this.callOnInit() right after this.updateScene(), which runs
+    // drawHandles() synchronously) -- unlike onStart, which fires earlier in
+    // init(), before that render pass ever runs. Registered directly on the
+    // config object rather than through the fixture's generic recorder
+    // (slider.html's names loop only wires onStart/onChange/onFinish/
+    // onUpdate) so the handler can read page-observable render state at the
+    // exact synchronous moment it is called, then push its own entry onto
+    // the same shared events array the generic recorder uses -- which also
+    // preserves call order relative to the recorded onStart entry.
+    test('onInit fires once, after the handle and labels are actually rendered, in order after onStart (#359)', async ({ page }) => {
+      const configStr = "{ min: 0, max: 100, from: 30, "
+        + "onInit: function (data) { "
+        + "  var handle = document.querySelector('.irs-handle'); "
+        + "  var minEl = document.querySelector('.irs-min'); "
+        + "  window.__irs.events.push({ "
+        + "    type: 'onInit', from: data.from, to: data.to, "
+        + "    handle_left: handle ? handle.style.left : '', "
+        + "    min_text: minEl ? minEl.textContent : '' "
+        + "  }); "
+        + "} }";
+      await open(page, configStr);
+
+      const ev = await events(page);
+      const initEv = ev.filter((e) => e.type === 'onInit');
+      expect(initEv.length).toBe(1);
+      // Mutation this catches: firing onInit before this.updateScene() in
+      // init() -- the handle span never gets an inline "left" written until
+      // drawHandles() runs (see js/ion.rangeSlider.js, the s_single/s_from/
+      // s_to assignments), so reading it any earlier would see "" instead of
+      // a percentage.
+      expect(initEv[0].handle_left).not.toBe('');
+      expect(initEv[0].min_text).not.toBe('');
+      expect(ev.map((e) => e.type)).toEqual(['onStart', 'onInit']);
+    });
+
+    // #359's own motivating scenario: a DOM edit made inside onStart (e.g.
+    // rewriting the .irs-min label) gets overwritten, because onStart fires
+    // in init() before the render pass that follows it (drawHandles(), whose
+    // first call is forced by force_redraw and re-runs setMinMax()); onInit
+    // fires after that pass, so the same edit made there survives, including
+    // past the idle 300ms render tick. Needs slider.html's onStart chaining
+    // (added for #359) to let a real onStart body run at all -- normally the
+    // fixture's recorder owns onStart/onChange/onFinish/onUpdate entirely.
+    test('a DOM edit made in onInit survives the idle render tick; the same edit made in onStart does not (#359)', async ({ page }) => {
+      const configStr = "{ min: 0, max: 100, from: 30, "
+        + "onStart: function () { "
+        + "  window.__onStartRan = true; "
+        + "  var el = document.querySelector('.irs-min'); "
+        + "  if (el) { el.textContent = 'START-EDIT'; } "
+        + "}, "
+        + "onInit: function () { "
+        + "  var el = document.querySelector('.irs-min'); "
+        + "  if (el) { el.textContent = 'INIT-EDIT'; } "
+        + "} }";
+      await open(page, configStr);
+
+      // Proves onStart's handler actually ran (and so really attempted its
+      // edit) -- without this, "the label reads INIT-EDIT" alone would not
+      // distinguish "onStart's edit got clobbered" from "onStart's body
+      // never ran at all".
+      expect(await page.evaluate(() => window.__onStartRan)).toBe(true);
+
+      // Mutation this catches: firing onInit before the render pass (moving
+      // the callOnInit() call ahead of this.updateScene() in init(), or
+      // dropping it) -- setMinMax() would then run after onInit's edit (or
+      // the edit would never happen), leaving the plain "0" label, not
+      // "INIT-EDIT".
+      await expect(page.locator('.irs-min')).toHaveText('INIT-EDIT');
+
+      // Outlast the 300ms idle render poll (see the testing reference) --
+      // proves this is settled state, not a value about to be clobbered on
+      // the next tick.
+      await page.waitForTimeout(400);
+      await expect(page.locator('.irs-min')).toHaveText('INIT-EDIT');
+    });
+  });
 });

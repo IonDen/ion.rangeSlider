@@ -30,7 +30,18 @@
         var names = ['onStart', 'onChange', 'onFinish', 'onUpdate'];
         for (var n = 0; n < names.length; n++) {
             (function (name) {
+                // #359: chain through to a test-supplied handler for this
+                // name, if the config already set one, before recording --
+                // additive only. Every test before #359 leaves these four
+                // unset in its config, so `original` is always null there
+                // and this is byte-identical to before. Lets a test attach a
+                // real onStart body (e.g. a DOM edit, to contrast against
+                // onInit) while this recorder still captures the event.
+                var original = typeof config[name] === 'function' ? config[name] : null;
                 config[name] = function (data) {
+                    if (original) {
+                        original.call(this, data);
+                    }
                     window.__irs.events.push({
                         type: name, from: data.from, to: data.to, min: data.min, max: data.max,
                         from_percent: data.from_percent, to_percent: data.to_percent,
