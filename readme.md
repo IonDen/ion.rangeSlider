@@ -192,7 +192,7 @@ All callbacks receive an object as the first argument:
     "to_value": 0,              // TO index in values array (if used)
     "to_min": null,             // TO minimum limit (null if unset)
     "to_max": null,             // TO maximum limit (null if unset)
-    "min_pretty": "1 000",      // MIN formatted (if prettify is on)
+    "min_pretty": "1 000",      // MIN formatted (if prettify_min_max or prettify is on)
     "max_pretty": "100 000",    // MAX formatted
     "from_pretty": "10 000",    // FROM formatted
     "to_pretty": "90 000"       // TO formatted
