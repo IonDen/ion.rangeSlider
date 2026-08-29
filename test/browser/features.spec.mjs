@@ -225,24 +225,23 @@ test.describe(`2.4.0 feature coverage (${LABEL})`, () => {
 
   test.describe('#359 onInit callback', () => {
     // #359: onInit fires once, after the initial render pass (init() calls
-    // this.callOnInit() right after this.updateScene(), which runs
-    // drawHandles() synchronously) -- unlike onStart, which fires earlier in
-    // init(), before that render pass ever runs. Registered directly on the
-    // config object rather than through the fixture's generic recorder
-    // (slider.html's names loop only wires onStart/onChange/onFinish/
-    // onUpdate) so the handler can read page-observable render state at the
-    // exact synchronous moment it is called, then push its own entry onto
-    // the same shared events array the generic recorder uses -- which also
-    // preserves call order relative to the recorded onStart entry.
+    // this.drawHandles() directly, then this.callOnInit(), before arming the
+    // idle render loop via this.updateScene()) -- unlike onStart, which
+    // fires earlier in init(), before that render pass ever runs. Registered
+    // directly on the config object rather than through the fixture's
+    // generic recorder (slider.html's names loop only wires onStart/
+    // onChange/onFinish/onUpdate) so the handler can read page-observable
+    // render state at the exact synchronous moment it is called, then push
+    // its own entry onto the same shared events array the generic recorder
+    // uses -- which also preserves call order relative to the recorded
+    // onStart entry.
     test('onInit fires once, after the handle and labels are actually rendered, in order after onStart (#359)', async ({ page }) => {
       const configStr = "{ min: 0, max: 100, from: 30, "
         + "onInit: function (data) { "
         + "  var handle = document.querySelector('.irs-handle'); "
-        + "  var minEl = document.querySelector('.irs-min'); "
         + "  window.__irs.events.push({ "
         + "    type: 'onInit', from: data.from, to: data.to, "
-        + "    handle_left: handle ? handle.style.left : '', "
-        + "    min_text: minEl ? minEl.textContent : '' "
+        + "    handle_left: handle ? handle.style.left : '' "
         + "  }); "
         + "} }";
       await open(page, configStr);
@@ -250,13 +249,15 @@ test.describe(`2.4.0 feature coverage (${LABEL})`, () => {
       const ev = await events(page);
       const initEv = ev.filter((e) => e.type === 'onInit');
       expect(initEv.length).toBe(1);
-      // Mutation this catches: firing onInit before this.updateScene() in
-      // init() -- the handle span never gets an inline "left" written until
-      // drawHandles() runs (see js/ion.rangeSlider.js, the s_single/s_from/
-      // s_to assignments), so reading it any earlier would see "" instead of
-      // a percentage.
+      // Mutation this catches: firing onInit before this.drawHandles() runs
+      // in init() -- the handle span never gets an inline "left" written
+      // until drawHandles() runs (see js/ion.rangeSlider.js, the
+      // s_single/s_from/s_to assignments), so reading it any earlier would
+      // see "" instead of a percentage. (.irs-min's text is not checked
+      // here: the base template pre-seeds it with "0" at append(), and
+      // setMinMax() writes it before either callback runs, so that
+      // assertion could never catch a mis-ordering -- only handle_left can.)
       expect(initEv[0].handle_left).not.toBe('');
-      expect(initEv[0].min_text).not.toBe('');
       expect(ev.map((e) => e.type)).toEqual(['onStart', 'onInit']);
     });
 
