@@ -31,17 +31,106 @@ test.describe(`smoke (${LABEL})`, () => {
     await expect.poll(() => eventTypes(page)).toContain('onFinish');
   });
 
+  // #742: a deliberate click that lands on the current value (no move) must
+  // still fire onFinish -- that is intentional (force_redraw in
+  // pointerClick/drawHandles), not the #742 bug. The bug was focus alone
+  // synthesizing that same click with no user interaction at all. step: 50
+  // widens the "still resolves to from: 50" bucket to roughly 25%..75% of
+  // the line (calcWithStep's nearest-step rounding), so the click can land
+  // well clear of the handle's own 16px hit box -- which intercepts
+  // mousedown at its own position and never reaches pointerClick -- while
+  // still characterizing "click at the current value". Must stay green
+  // both before and after the #742 fix.
+  test('clicking the line near the current value still fires onFinish, value unchanged (#742)', async ({ page }) => {
+    await open(page, { min: 0, max: 100, from: 50, step: 50 });
+    const before = (await events(page)).length;
+    const l = await page.locator('.irs-line').boundingBox();
+    await page.mouse.click(l.x + l.width * 0.5 + 20, l.y + l.height / 2);
+    await expect.poll(() => eventTypes(page)).toContain('onFinish');
+    await expect(input(page)).toHaveValue('50');
+    expect((await events(page)).length).toBeGreaterThan(before);
+  });
+
+  // #742: focusing the slider with no interaction (a bare Tab, or a
+  // programmatic .focus()) must not report any change. Before the fix,
+  // pointerFocus() synthesized a click at the current handle's own position
+  // whenever this.target was null, and force_redraw made drawHandles()
+  // treat that as a real interaction -- firing onChange and onFinish for a
+  // value that never moved. Mutation this catches: reinstating that
+  // synthetic click.
+  test('focusing the line with no interaction fires no callbacks beyond onStart (#742)', async ({ page }) => {
+    await open(page, { min: 0, max: 100, from: 30 });
+    await page.locator('.irs-line').focus();
+    await expect(page.locator('.irs-line')).toBeFocused();
+    // The idle render loop (updateScene's 300ms setTimeout) is where a
+    // focus-triggered force_redraw would actually reach drawHandles() and
+    // fire its callbacks, so give it a full cycle before asserting nothing
+    // arrived.
+    await page.waitForTimeout(400);
+    expect(await eventTypes(page)).toEqual(['onStart']);
+  });
+
+  // #742's own repro chain (issue reporter: change a value, rotate the
+  // phone, tap elsewhere -- onFinish fires with nothing changed). A resize
+  // is what re-arms the bug: drawHandles() detects the width change, sets
+  // target to "base" for one calc() pass, and that pass nulls this.target
+  // back to null (the same state a fresh page load starts in) -- so the
+  // very next focus hits the same synthesized-click path a bare initial
+  // focus would.
+  test('a resize after a drag does not make the next line focus fire spurious callbacks (#742)', async ({ page }) => {
+    await open(page, { min: 0, max: 100, from: 0 });
+    await drag(page, '.irs-handle.single', 0.5);
+    await expect.poll(() => eventTypes(page)).toContain('onFinish');
+    const before = (await events(page)).length;
+
+    await page.evaluate(() => {
+      document.getElementById('wrap').style.width = '400px';
+    });
+    // Resize is only detected on the idle render loop's 300ms poll.
+    await page.waitForTimeout(400);
+
+    // The drag above already left the line focused -- pointerDown() itself
+    // calls .trigger("focus") at the end of a drag -- so refocusing it
+    // without first moving focus away would be a no-op on an
+    // already-focused element and fire no "focus" event at all. Blur first
+    // so the refocus below is a genuine DOM focus transition.
+    await page.evaluate(() => {
+      if (document.activeElement) {
+        document.activeElement.blur();
+      }
+    });
+    await page.locator('.irs-line').focus();
+    await expect(page.locator('.irs-line')).toBeFocused();
+    await page.waitForTimeout(400);
+
+    expect((await events(page)).length).toBe(before);
+  });
+
   test('keyboard moves by one step and fires onFinish', async ({ page }) => {
     await open(page, { min: 0, max: 100, from: 50, step: 5 });
     await page.locator('.irs-line').focus();
     await expect(page.locator('.irs-line')).toBeFocused();
-    const before = (await events(page)).length;   // focus alone already fires onChange+onFinish (#742), so count from here
+    // The idle render loop is where a focus-triggered force_redraw would
+    // actually fire its callbacks (#742) -- wait out a full cycle so a
+    // still-buggy pointerFocus() cannot hide inside the same idle pass the
+    // upcoming key press consumes (a pending is_click and a pending is_key
+    // reaching drawHandles() together only fire one onChange/onFinish
+    // pair, not two, which would otherwise mask the bug here).
+    await page.waitForTimeout(400);
+    expect(await eventTypes(page)).toEqual(['onStart']);
     await page.keyboard.press('ArrowRight');
     await expect(input(page)).toHaveValue('55');
     await page.keyboard.press('ArrowLeft');
     await expect(input(page)).toHaveValue('50');
-    await expect.poll(async () => (await events(page)).length).toBeGreaterThan(before);
-    expect((await eventTypes(page)).at(-1)).toBe('onFinish');
+    // Each press fires onChange then onFinish exactly once (#742): if focus
+    // no longer arms this.target the way pointerFocus must, the keyboard
+    // press moves nothing and this never reaches ['onStart', 'onChange',
+    // 'onFinish', 'onChange', 'onFinish']. This pins the target half only --
+    // this.current_plugin already equals this.plugin_count from construction
+    // (both init to/at 0) for this fixture's one slider, so pointerFocus's
+    // current_plugin assignment is unexercised here; it matters once a
+    // second slider is on the page, which this suite does not cover.
+    await expect.poll(() => eventTypes(page)).toEqual(['onStart', 'onChange', 'onFinish', 'onChange', 'onFinish']);
   });
 
   test('double: two handles, the input holds "from;to", dragging "to" keeps from', async ({ page }) => {
@@ -54,9 +143,10 @@ test.describe(`smoke (${LABEL})`, () => {
     expect((await input(page).inputValue()).split(';')[0]).toBe('20');
   });
 
-  // #759: keyboard controls in double mode. Focusing the line alone already fires
-  // onChange+onFinish (#742, not fixed here), so these assert on the input value
-  // rather than on callback counts/order.
+  // #759: keyboard controls in double mode. These assert on the input value
+  // rather than on callback counts/order, since that is #759's actual
+  // concern -- #742's focus-alone spurious onChange/onFinish pair is
+  // covered separately by the dedicated focus tests above.
 
   test('double: with no handle touched, the keyboard moves "from" by default (#759)', async ({ page }) => {
     await open(page, { type: 'double', min: 0, max: 100, from: 20, to: 40, step: 1 });
