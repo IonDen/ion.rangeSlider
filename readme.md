@@ -4,9 +4,9 @@ ion.RangeSlider — flexible and responsive range slider with skins, touch suppo
 
 ***
 
-* Version: 2.3.2
+* Version: 2.4.0
 * [Project page and demos](http://ionden.com/a/plugins/ion.rangeSlider/)
-* [Download ZIP](https://github.com/IonDen/ion.rangeSlider/archive/2.3.2.zip)
+* [Download ZIP](https://github.com/IonDen/ion.rangeSlider/archive/2.4.0.zip)
 * [Support on GitHub Sponsors](https://github.com/sponsors/IonDen)
 
 ## Features
@@ -60,13 +60,13 @@ Use [cdnjs](https://cdnjs.com/libraries/ion-rangeslider) or [jsDelivr](https://w
 
 ```html
 <!-- CSS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.2/css/ion.rangeSlider.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.4.0/css/ion.rangeSlider.min.css"/>
 
 <!-- jQuery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
 <!-- Plugin -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.2/js/ion.rangeSlider.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.4.0/js/ion.rangeSlider.min.js"></script>
 ```
 
 
@@ -171,7 +171,7 @@ Or use `data-*` attributes on the input:
 | `onChange` | `-` | `null` | function | Called on each value change |
 | `onFinish` | `-` | `null` | function | Called when the user releases a handle |
 | `onUpdate` | `-` | `null` | function | Called when slider is modified by `update` or `reset` |
-| `onInit` | `-` | `null` | function | Called once when the slider is created and its first render is done |
+| `onInit` | `-` | `null` | function | Called once when the slider is created and its first render is done; for a slider that starts hidden, edit its DOM only after it first becomes visible |
 
 
 ## Callback data
