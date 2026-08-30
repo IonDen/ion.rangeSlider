@@ -4,6 +4,22 @@
 
 # Update History
 
+### Version 2.4.0. August 30, 2026
+* New `onInit` callback fires once when the slider is created and its first render is done
+* New `drag_over_limit` option lets a dragged handle push the other handle instead of stopping at it (mouse/touch drag only)
+* New `min_prefix`/`max_prefix` options add a prefix wherever the minimum or maximum value appears, including a from/to bubble that lands on it
+* New `prettify_grid`/`prettify_min_max` options format the grid and the min/max labels separately from `prettify`
+* New `prettify_all_values` option runs `prettify` on non-numeric `values` entries too
+* `prettify` now also accepts the name of a window-global function as a string, checked against a denylist to block arbitrary code execution
+* `result` now also mirrors `from_min`, `from_max`, `to_min` and `to_max`
+* `to_max` is now applied at initial render, not only afterward
+* Arrow-key step no longer doubles when moving the whole interval in `drag_interval` mode, completing the fix started in 2.3.2
+* Focusing the slider with keyboard navigation no longer fires callbacks on its own; only real interaction does
+* Backfilled browser (Playwright) test coverage for existing behavior
+* RELEASING.md now includes a GitHub Release creation step
+* npm releases are now published from CI via trusted publishing, with provenance
+* Issues: #276, #302, #306, #359, #503, #535, #679, #742, #825, #827, #830, #831, #836
+
 ### Version 2.3.2. August 24, 2026
 * Keyboard controls in double mode now work on focus, without needing a mouse click first
 * Arrow-key step no longer doubles on the single, `from` and `to` handles. `drag_interval` whole-interval stepping is unchanged, tracked in #825
