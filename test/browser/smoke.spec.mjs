@@ -188,8 +188,12 @@ test.describe(`smoke (${LABEL})`, () => {
     // cover. `.irs` is the exact element the plugin measures for all
     // pixel<->value conversion (this.$cache.rs / coords.w_rs), so pinning
     // its rendered width here ties the guard to the mechanism the rest of
-    // the test depends on.
-    const box = await page.locator('.irs').boundingBox();
+    // the test depends on. The outer container span also carries the
+    // "irs" class (js/ion.rangeSlider.js `append()`), so a bare `.irs`
+    // locator matches two elements and hits a strict-mode violation;
+    // scope to the inner descendant that $cache.rs actually is -- the
+    // fixture renders a single slider, always instance 0.
+    const box = await page.locator('.js-irs-0 .irs').boundingBox();
     expect(box.width).toBe(300);
     await tabToLine(page);
     await expect(page.locator('.irs-line')).toBeFocused();
