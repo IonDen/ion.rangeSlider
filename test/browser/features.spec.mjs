@@ -1,14 +1,14 @@
 import { test, expect } from '@playwright/test';
 import { open, events, eventTypes, input, drag, LABEL } from './helpers.mjs';
 
-// Real-browser coverage for the five changes shipped so far in 2.4.0. Each of
+// Real-browser coverage for ion.rangeSlider features and bugfixes. Each of
 // these already has jsdom unit coverage; these tests exercise the same fixes
 // through actual layout, a real pointer drag and the render loop, which the
 // unit suite (zero layout, see test/unit/helpers.mjs) cannot reach. Every
 // test names, in its own comment, the one-line source mutation that would
 // make it fail.
 
-test.describe(`2.4.0 feature coverage (${LABEL})`, () => {
+test.describe(`feature and bugfix coverage (${LABEL})`, () => {
   // #276: prettify_all_values opts non-numeric values-mode entries into the
   // custom prettify. Mutation this catches: gating `o.prettify_all_values`
   // off in validate()'s values loop (js/ion.rangeSlider.js, the values-mode
