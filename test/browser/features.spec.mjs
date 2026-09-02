@@ -343,4 +343,92 @@ test.describe(`feature and bugfix coverage (${LABEL})`, () => {
       await expect(page.locator('.irs-min')).toHaveText('INIT-EDIT');
     });
   });
+
+  test.describe('#661 values mode: prettify receives the value, not the index', () => {
+    // #661: calc()'s single branch (js/ion.rangeSlider.js) called
+    // this._prettify(this.result.from) unconditionally. In values mode
+    // result.from is the INDEX into options.values, not the value, so the
+    // custom prettify above got the index instead of the real entry -- and,
+    // at load, an extra 0-index call from init()'s calc(true) plus
+    // drawHandles()'s force_redraw re-calc(true) (the "two 0s at init" half
+    // of the bug report). Mutation this catches: reverting calc()'s
+    // `if (this.options.values.length) {...} else {...}` split back to the
+    // unconditional this._prettify(this.result.from) -- from_pretty would
+    // then read index-shaped text ("V2" instead of "V20"), and the drag
+    // that settles on index 2 (value 20) would push the bare index 2 into
+    // window.__pretty instead of 20, which is what assertion (b) below
+    // catches.
+    test('a real drag: from_pretty matches the rendered bubble, and the custom prettify only ever sees real entry values (#661)', async ({ page }) => {
+      await page.addInitScript(() => { window.__pretty = []; });
+      const configStr = "{ values: [1, 5, 20, 100, 1000], "
+        + "prettify: function (n) { window.__pretty.push(n); return 'V' + n; } }";
+      await open(page, configStr);
+
+      // Drag to the middle of the line: 5 entries (indices 0-4) snap to the
+      // middle index, 2 -- value 20. Chosen deliberately unequal to its own
+      // index so a bugged (index-prettified) result is unambiguous ("V2").
+      await drag(page, '.irs-handle.single', 0.5);
+      await expect.poll(() => eventTypes(page)).toContain('onFinish');
+
+      // (a) the rendered bubble and the last recorded event's from_pretty agree.
+      const label = await page.locator('.irs-single').textContent();
+      const ev = await events(page);
+      const last = ev.filter((e) => e.type === 'onChange' || e.type === 'onFinish').at(-1);
+      expect(last.from_pretty).toBe(label);
+      expect(label).toBe('V20');
+
+      // (b) the custom prettify function was only ever handed real entry
+      // values -- never a bare index (0-4, only coincidentally overlapping
+      // with the real value 1) and never the spurious 0 the pre-fix double
+      // calc(true) at init produced.
+      const pretty = await page.evaluate(() => window.__pretty);
+      expect(pretty.every((n) => [1, 5, 20, 100, 1000].includes(n))).toBe(true);
+    });
+
+    // One-line bug: calc()'s double branch prettified result.from/to (the
+    // index). This is a separate site from the single-branch test above --
+    // double mode has its own from/to writes in calc() (js/ion.rangeSlider.js)
+    // -- and needs its own coverage: reverting only this site left 71/71 unit
+    // and the single-mode browser test above green, since the double-mode
+    // unit test only reaches update()/updateFrom()/updateTo() (jsdom has no
+    // width, so calc() bails before this branch ever runs there) and the
+    // single-mode browser test never creates a double-type slider.
+    test('a real drag of each handle in double mode: from_pretty/to_pretty match their bubbles, and prettify only ever sees real entry values (#661)', async ({ page }) => {
+      await page.addInitScript(() => { window.__pretty = []; });
+      const configStr = "{ type: 'double', values: [1, 5, 20, 100, 1000], from: 1, to: 3, "
+        + "prettify: function (n) { window.__pretty.push(n); return 'V' + n; } }";
+      await open(page, configStr);
+
+      // from: 1 (value 5) and to: 3 (value 100) start two entries apart (50%
+      // of the line, 5 entries over min 0/max 4 -> 25% per entry). Each drag
+      // below moves its own handle by exactly one entry and the two handles
+      // are never closer than one entry apart, so their bubbles never
+      // collide and merge into .irs-single (see drawLabels()'s collision
+      // check) -- .irs-from and .irs-to stay independently readable
+      // throughout, and are read directly below rather than via .irs-single.
+      await drag(page, '.irs-handle.from', 0.25);
+      // Waiting for the rendered bubble (drawLabels(), unaffected by this
+      // bug -- it already reads options.p_values) also guarantees the
+      // synchronous calc() -> drawHandles() -> callback pass that produced
+      // it has already pushed its event, so reading events(page) right after
+      // is race-free.
+      await expect(page.locator('.irs-from')).toHaveText('V20');
+
+      let ev = await events(page);
+      let last = ev.filter((e) => e.type === 'onChange' || e.type === 'onFinish').at(-1);
+      expect(last.from_pretty).toBe('V20');
+
+      await drag(page, '.irs-handle.to', 0.25);
+      await expect(page.locator('.irs-to')).toHaveText('V1000');
+
+      ev = await events(page);
+      last = ev.filter((e) => e.type === 'onChange' || e.type === 'onFinish').at(-1);
+      expect(last.to_pretty).toBe('V1000');
+
+      // The custom prettify function was only ever handed real entry values
+      // across both drags -- never a bare index and never a stray 0.
+      const pretty = await page.evaluate(() => window.__pretty);
+      expect(pretty.every((n) => [1, 5, 20, 100, 1000].includes(n))).toBe(true);
+    });
+  });
 });
