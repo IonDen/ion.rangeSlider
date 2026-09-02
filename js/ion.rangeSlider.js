@@ -652,7 +652,7 @@
                     this.$cache.s_from.removeClass("type_last");
                     break;
                 case "both":
-                    // #319 fix-round: captured in REAL percent (matching
+                    // #319: captured in REAL percent (matching
                     // p_from_real/p_to_real, the space calc()'s "both" case
                     // adds them into), not fake percent (p_from_fake/
                     // p_to_fake use the handle-width-compressed space). With
@@ -1033,8 +1033,8 @@
          * that because pointerDown pins min_interval to the pre-drag width
          * for the whole gesture (setTempMinInterval()), so calc()'s own
          * checkMinInterval keeps re-widening the gap back open on every
-         * frame of that same drag; a single keyboard step has no equivalent
-         * pinned window to fall back on. This computes
+         * pointer-move tick of that same drag; a single keyboard step has no
+         * equivalent pinned window to fall back on. This computes
          * and clamps p_from_real/p_to_real directly instead -- the same
          * width-preserving edge shift calc()'s own "both_one" case already
          * uses -- then feeds them straight into calc()'s shared
@@ -1344,9 +1344,11 @@
 
                     // checkMinInterval can push a handle past its OWN
                     // diapason to hold the pinned gap open (e.g. dragging
-                    // past from_min keeps widening the gap on to's side,
-                    // which pulls from down with it) -- each handle's value
-                    // must be re-clamped to its own diapason right after its
+                    // left past from_min: from is held by its clamp while
+                    // to's candidate keeps falling, so checkMinInterval(
+                    // "from") restores the pinned width by pulling from
+                    // below from_min) -- each handle's value must be
+                    // re-clamped to its own diapason right after its
                     // checkMinInterval call, before the other handle's check
                     // reads it, or the pushed-past-the-floor/ceiling value
                     // gets treated as valid and never corrected.

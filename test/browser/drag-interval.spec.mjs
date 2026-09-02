@@ -125,9 +125,9 @@ test.describe(`drag_interval both-handle drag (${LABEL})`, () => {
     // Click at 40% of the line -- the interval spans 30%-80%, so this is
     // off-center inside the bar (not its 55% midpoint), matching how a real
     // drag actually grabs it off its own center. It is also close enough to
-    // the "from" handle (small p_gap_left) that the fix-round-2 real/fake
-    // percent mismatch below (a separate test) is big enough to cross a
-    // step boundary.
+    // the "from" handle (small p_gap_left) that the real/fake percent
+    // mismatch below (a separate test) is big enough to cross a step
+    // boundary.
     await fineDrag(page, '.irs-bar', 0.40, 1, 60);
 
     const changes = (await events(page)).filter((e) => e.type === 'onChange');
@@ -142,17 +142,17 @@ test.describe(`drag_interval both-handle drag (${LABEL})`, () => {
     expect(countSplitChanges(changes)).toBe(0);
   });
 
-  // #319 fix-round regression: the first onChange must not resolve behind
-  // (from < 300) the drag's actual start, and from must advance
-  // monotonically throughout a monotonic rightward drag. RED on 9dc3ea0
-  // (fix round 1) in a real browser: changeLevel's "both" case captured
-  // p_gap_left/p_gap_right in fake percent but calc()'s "both" case adds
-  // them onto real percent, so the very first tick resolved several steps
-  // backward before catching up. Uses fineDragUncoalesced (see its
-  // comment) rather than fineDrag: this assertion needs every 1px move to
-  // survive as its own event, which WebKit does not guarantee for
-  // tightly-spaced moves the way Chromium/Firefox do.
-  test('dragging the bar right never resolves a tick behind where the drag started (#319 fix-round regression)', async ({ page }) => {
+  // #319: the first onChange must not resolve behind (from < 300) the
+  // drag's actual start, and from must advance monotonically throughout a
+  // monotonic rightward drag. Red on the reorder-only version of this fix
+  // in a real browser: changeLevel's "both" case captured p_gap_left/
+  // p_gap_right in fake percent but calc()'s "both" case adds them onto
+  // real percent, so the very first tick resolved several steps backward
+  // before catching up. Uses fineDragUncoalesced (see its comment) rather
+  // than fineDrag: this assertion needs every 1px move to survive as its
+  // own event, which WebKit does not guarantee for tightly-spaced moves
+  // the way Chromium/Firefox do.
+  test('dragging the bar right never resolves a tick behind where the drag started (#319)', async ({ page }) => {
     await open(page, CONFIG);
     await fineDragUncoalesced(page, '.irs-bar', 0.40, 1, 20);
 
@@ -173,12 +173,12 @@ test.describe(`drag_interval both-handle drag (${LABEL})`, () => {
     }
   });
 
-  // Leftward mirror of the against-the-drag regression above -- fix-round
-  // regression, not the original #319 double-fire. "from <= 300" alone
-  // would not catch the mismatch leftward (a 2-step overshoot still
-  // satisfies "<= 300"), so the within-one-step check is what actually
-  // reds on 9dc3ea0 (fix round 1) here.
-  test('dragging the bar left never resolves a tick ahead of where the drag started (#319 fix-round regression)', async ({ page }) => {
+  // Leftward mirror of the against-the-drag regression above, not the
+  // original #319 double-fire. "from <= 300" alone would not catch the
+  // mismatch leftward (a 2-step overshoot still satisfies "<= 300"), so
+  // the within-one-step check is what actually reds on the reorder-only
+  // version of this fix here.
+  test('dragging the bar left never resolves a tick ahead of where the drag started (#319)', async ({ page }) => {
     await open(page, CONFIG);
     await fineDragUncoalesced(page, '.irs-bar', 0.40, -1, 20);
 
@@ -226,20 +226,20 @@ test.describe(`drag_interval both-handle drag (${LABEL})`, () => {
     }
   });
 
-  // #319 fix-round regression: the reorder above lets checkMinInterval push
-  // "from" past its own from_min floor with no re-clamp, once the drag has
-  // gone well past the point where "from" first hits from_min -- see
-  // test/unit/drag-interval-both.test.mjs for the full analysis (that file
-  // also covers the analogous default-floor and to_max cases, which don't
-  // need a browser to observe). Page-observable proxy for the handle's real
+  // #319: the reorder above lets checkMinInterval push "from" past its own
+  // from_min floor with no re-clamp, once the drag has gone well past the
+  // point where "from" first hits from_min -- see test/unit/
+  // drag-interval-both.test.mjs for the full analysis (that file also
+  // covers the analogous default-floor and to_max cases, which don't need
+  // a browser to observe). Page-observable proxy for the handle's real
   // percent, since jsdom never renders layout: the from handle's own inline
   // `left` CSS (set by drawHandles()), sampled periodically during the
-  // drag, must never go negative. RED on 9dc3ea0 (fix round 1): every
-  // recorded onChange's `from` eventually drops well under 100, and the
-  // `.irs-handle.from` element's `left` goes negative. Mutation this
-  // catches: dropping the checkDiapason(from_min, from_max) re-clamp that
-  // runs right after checkMinInterval("from").
-  test('dragging the bar left past from_min keeps from pinned at the floor, no negative handle position (#319 fix-round regression)', async ({ page }) => {
+  // drag, must never go negative. Red on the reorder-only version of this
+  // fix: every recorded onChange's `from` eventually drops well under 100,
+  // and the `.irs-handle.from` element's `left` goes negative. Mutation
+  // this catches: dropping the checkDiapason(from_min, from_max) re-clamp
+  // that runs right after checkMinInterval("from").
+  test('dragging the bar left past from_min keeps from pinned at the floor, no negative handle position (#319)', async ({ page }) => {
     await open(page, { ...CONFIG, from_min: 100 });
 
     const samples = await fineDragSamplingLeft(page, '.irs-bar', 0.40, -1, 350, 10, '.irs-handle.from');

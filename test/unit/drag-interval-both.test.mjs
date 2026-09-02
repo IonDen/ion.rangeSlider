@@ -131,9 +131,9 @@ test('drag_interval moving right never moves only one handle in a tick -- no spl
 // stale reference (never narrows it), so checkMinInterval's "< min_interval"
 // guard can never trip leftward here, on master or after the fix. Kept as a
 // same-branch regression guard for the reordered "both" case, not as
-// red-first evidence of a leftward bug in this configuration -- see the PR
-// evidence for a config (a non-step-aligned width) where a genuine, but
-// separate and out-of-scope, leftward defect does reproduce.
+// red-first evidence of a leftward bug in this configuration -- a
+// non-step-aligned width does show a genuine, separate leftward defect,
+// out of scope here and tracked in a separate issue.
 //
 // Catching mutation (verified): make "to"'s checkMinInterval compare
 // against a stale, pre-tick "from" (the value coords.p_from_real held
@@ -157,7 +157,7 @@ test('drag_interval moving left keeps the interval exactly 500 wide on every tic
   assert.equal(countSplitFrames(ticks), 0);
 });
 
-// #319 fix-round regression: the reorder above computes both fresh
+// #319 regression: the reorder above computes both fresh
 // candidates and runs both checkMinInterval calls, but checkMinInterval can
 // itself push a handle's value past its OWN diapason bound to hold the
 // pinned min_interval gap open (it only knows about the gap, not about
@@ -170,7 +170,7 @@ test('drag_interval moving left keeps the interval exactly 500 wide on every tic
 // edge (to/to_max) was not exposed the same way, because "to" is checked
 // SECOND, against an already-diapason-valid "from" -- see U7 below.
 
-test('drag_interval moving left past from_min keeps from pinned at the floor, width preserved (#319 fix-round regression)', (t) => {
+test('drag_interval moving left past from_min keeps from pinned at the floor, width preserved (#319)', (t) => {
   const { slider } = createSlider(t, '<input>', {
     type: 'double', min: 0, max: 1000, from: 300, to: 800, step: 5, drag_interval: true, from_min: 100
   });
@@ -197,7 +197,7 @@ test('drag_interval moving left past from_min keeps from pinned at the floor, wi
   assert.equal(last.to, 600, 'to must settle at from + width (100 + 500)');
 });
 
-test('drag_interval moving left past the default floor never reports a negative handle position (#319 fix-round regression)', (t) => {
+test('drag_interval moving left past the default floor never reports a negative handle position (#319)', (t) => {
   const { slider } = createSlider(t, '<input>', {
     type: 'double', min: 0, max: 1000, from: 300, to: 800, step: 5, drag_interval: true
   });
@@ -214,10 +214,11 @@ test('drag_interval moving left past the default floor never reports a negative 
   for (const tick of ticks) {
     // result.from alone cannot catch this: convertToValue() independently
     // clamps to options.min (0) regardless of what coords.p_from_real holds,
-    // so result.from reads 0 on 9dc3ea0 even while the handle's own real
-    // percent has gone negative underneath it. coords.p_from_real IS the
-    // handle's CSS `left` percentage (see drawHandles()/convertToFakePercent)
-    // -- reading it here is the only way to observe the visible detach a
+    // so result.from reads 0 on the reorder-only version of this fix even
+    // while the handle's own real percent has gone negative underneath it.
+    // coords.p_from_real is the real percent the handle's CSS `left` is
+    // derived from (see drawHandles()/convertToFakePercent) -- reading it
+    // here is the only way to observe the visible detach a
     // page-observable proxy (the input value, from_percent on a callback)
     // can't reveal in jsdom, since jsdom never renders layout (see
     // helpers.mjs). The browser test (drag-interval.spec.mjs) asserts the
@@ -232,8 +233,9 @@ test('drag_interval moving left past the default floor never reports a negative 
 
 // Right-edge mirror, characterization: "to" was never exposed to the same
 // unclamped-overwrite bug as "from" (it is checked SECOND, against an
-// already from_min/from_max-valid "from"), so this is green both on
-// 9dc3ea0 and after the from_min fix above. Kept as a regression guard.
+// already from_min/from_max-valid "from"), so this is green both on the
+// reorder-only version of this fix and after the from_min fix above. Kept
+// as a regression guard.
 // Catching mutation (verified): drop the checkDiapason(to_min, to_max)
 // call that runs on "to"'s fresh candidate BEFORE either checkMinInterval
 // call -- width drops to 400 (from=500, to=900) instead of staying pinned
@@ -256,7 +258,7 @@ test('drag_interval moving right past to_max keeps to pinned at the ceiling, wid
   assert.equal(last.from, 400, 'from must settle at to - width (900 - 500)');
 });
 
-// #319 fix-round regression, second half: changeLevel's "both" case
+// #319 regression, second half: changeLevel's "both" case
 // captured p_gap_left/p_gap_right in FAKE percent (p_pointer - p_from_fake),
 // but calc()'s "both" case adds them onto convertToRealPercent(handle_x) --
 // REAL percent. With p_handle 0 (an earlier version of this file) those two
@@ -274,7 +276,7 @@ test('drag_interval moving right past to_max keeps to pinned at the ceiling, wid
 // masked mismatch became directly observable. Fixed by capturing the gaps
 // in real percent in changeLevel's "both" case instead.
 
-test('drag_interval moving right never resolves a tick behind where the drag started (#319 fix-round regression)', (t) => {
+test('drag_interval moving right never resolves a tick behind where the drag started (#319)', (t) => {
   const { slider } = createSlider(t, '<input>', {
     type: 'double', min: 0, max: 1000, from: 300, to: 800, step: 5, drag_interval: true
   });
@@ -284,8 +286,8 @@ test('drag_interval moving right never resolves a tick behind where the drag sta
   // p_gap_left, large p_gap_right) that the mismatch's constant offset
   // (see the comment above) is big enough to cross a step boundary --
   // 240/600 (40%) is; 400/600 (~67%, used by the other tests in this file)
-  // is not, since it puts the click on the OTHER side of the interval's
-  // midpoint and the offset shrinks with p_gap_left.
+  // is not: the offset shrinks as the grab point moves right, and at
+  // 400/600 it is under half a step.
   const ticks = fineDrag(slider, 240, 1, 60);
 
   // One-line bug this catches: capturing p_gap_left/p_gap_right in FAKE
@@ -318,7 +320,7 @@ test('drag_interval moving right never resolves a tick behind where the drag sta
   );
 });
 
-test('drag_interval moving left never resolves a tick ahead of where the drag started (#319 fix-round regression)', (t) => {
+test('drag_interval moving left never resolves a tick ahead of where the drag started (#319)', (t) => {
   const { slider } = createSlider(t, '<input>', {
     type: 'double', min: 0, max: 1000, from: 300, to: 800, step: 5, drag_interval: true
   });
@@ -331,7 +333,8 @@ test('drag_interval moving left never resolves a tick ahead of where the drag st
   // instead of landing within one step of the 300 start. "from <= 300"
   // alone would not catch this (290 still satisfies it for a leftward
   // drag), which is why the geometrically-ideal-within-one-step check
-  // below is the one that actually reds on 9dc3ea0 (fix round 1).
+  // below is the one that actually reds on the reorder-only version of
+  // this fix.
   assert.ok(ticks[0].from <= 300, 'the first tick must not move from ahead of the drag, got from=' + ticks[0].from);
   assert.ok(
     Math.abs(ticks[0].from - 300) <= 5,
