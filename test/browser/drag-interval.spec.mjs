@@ -41,6 +41,31 @@ async function fineDrag(page, selector, startFraction, stepPx, count) {
 }
 
 /**
+ * Same as `fineDrag`, but waits a tick between each mouse.move so WebKit
+ * (which coalesces closely-spaced synthetic mousemove events more
+ * aggressively than Chromium/Firefox, observed here as several 1px moves
+ * landing as a single, coarser DOM event) cannot merge moves together --
+ * needed only by the two "does the very first tick move too far" checks
+ * below, which care about the granularity of the FIRST recorded onChange.
+ * The width/split-frame tests don't need this: they only care about the
+ * eventual, settled values, not which specific tick first reports them.
+ */
+async function fineDragUncoalesced(page, selector, startFraction, stepPx, count) {
+  const bar = await page.locator(selector).boundingBox();
+  const line = await page.locator('.irs-line').boundingBox();
+  const y = bar.y + bar.height / 2;
+  let x = line.x + line.width * startFraction;
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  for (let i = 0; i < count; i++) {
+    x += stepPx;
+    await page.mouse.move(x, y);
+    await page.waitForTimeout(5);
+  }
+  await page.mouse.up();
+}
+
+/**
  * Same fine-drag loop as `fineDrag`, but also samples a selector's inline
  * CSS `left` (as a percent) every `sampleEvery` ticks during the drag --
  * the page-observable proxy for a handle's real-percent position, which
@@ -101,7 +126,8 @@ test.describe(`drag_interval both-handle drag (${LABEL})`, () => {
     // off-center inside the bar (not its 55% midpoint), matching how a real
     // drag actually grabs it off its own center. It is also close enough to
     // the "from" handle (small p_gap_left) that the fix-round-2 real/fake
-    // percent mismatch below is big enough to cross a step boundary.
+    // percent mismatch below (a separate test) is big enough to cross a
+    // step boundary.
     await fineDrag(page, '.irs-bar', 0.40, 1, 60);
 
     const changes = (await events(page)).filter((e) => e.type === 'onChange');
@@ -114,14 +140,25 @@ test.describe(`drag_interval both-handle drag (${LABEL})`, () => {
     // No split onChange (one handle moving alone while the other lags a
     // frame behind) -- the doubled-onChange half of #319.
     expect(countSplitChanges(changes)).toBe(0);
+  });
 
-    // #319 fix-round regression: the first onChange must not resolve
-    // behind (from < 300) the drag's actual start, and from must advance
-    // monotonically throughout a monotonic rightward drag. RED on 9dc3ea0
-    // (fix round 1) in a real browser: changeLevel's "both" case captured
-    // p_gap_left/p_gap_right in fake percent but calc()'s "both" case adds
-    // them onto real percent, so the very first tick resolved several
-    // steps backward before catching up.
+  // #319 fix-round regression: the first onChange must not resolve behind
+  // (from < 300) the drag's actual start, and from must advance
+  // monotonically throughout a monotonic rightward drag. RED on 9dc3ea0
+  // (fix round 1) in a real browser: changeLevel's "both" case captured
+  // p_gap_left/p_gap_right in fake percent but calc()'s "both" case adds
+  // them onto real percent, so the very first tick resolved several steps
+  // backward before catching up. Uses fineDragUncoalesced (see its
+  // comment) rather than fineDrag: this assertion needs every 1px move to
+  // survive as its own event, which WebKit does not guarantee for
+  // tightly-spaced moves the way Chromium/Firefox do.
+  test('dragging the bar right never resolves a tick behind where the drag started (#319 fix-round regression)', async ({ page }) => {
+    await open(page, CONFIG);
+    await fineDragUncoalesced(page, '.irs-bar', 0.40, 1, 20);
+
+    const changes = (await events(page)).filter((e) => e.type === 'onChange');
+    expect(changes.length).toBeGreaterThan(0);
+
     const first = changes[0];
     expect(first.from, `first onChange from=${first.from}`).toBeGreaterThanOrEqual(300);
     expect(
@@ -143,7 +180,7 @@ test.describe(`drag_interval both-handle drag (${LABEL})`, () => {
   // reds on 9dc3ea0 (fix round 1) here.
   test('dragging the bar left never resolves a tick ahead of where the drag started (#319 fix-round regression)', async ({ page }) => {
     await open(page, CONFIG);
-    await fineDrag(page, '.irs-bar', 0.40, -1, 60);
+    await fineDragUncoalesced(page, '.irs-bar', 0.40, -1, 20);
 
     const changes = (await events(page)).filter((e) => e.type === 'onChange');
     expect(changes.length).toBeGreaterThan(0);
