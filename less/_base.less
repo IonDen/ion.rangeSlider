@@ -4,6 +4,11 @@
     .pos-r();
     -webkit-touch-callout: none;
     .no-click();
+    // #776: keep. A block fills its parent anyway, but as a flex item (flex-basis: auto,
+    // no width) .irs is sized by its content, and every child is position: absolute, so
+    // it collapsed to 0. Only 100% is safe here: this rule hits both nested .irs spans
+    // (container and inner), so any other percent would be applied twice.
+    width: 100%;
     font-size: 12px;
     font-family: Arial, sans-serif;
 

@@ -47,7 +47,11 @@
                         from_percent: data.from_percent, to_percent: data.to_percent,
                         from_value: data.from_value, to_value: data.to_value,
                         from_min: data.from_min, from_max: data.from_max,
-                        to_min: data.to_min, to_max: data.to_max
+                        to_min: data.to_min, to_max: data.to_max,
+                        // #639: appended, additive only -- existing assertions
+                        // elsewhere compare event `type` sequences or specific
+                        // fields via toMatchObject(), never the whole object.
+                        min_pretty: data.min_pretty, max_pretty: data.max_pretty
                     });
                 };
             })(names[n]);
@@ -58,6 +62,17 @@
             // the correct clamped value even when the container has zero
             // width/height at init time.
             document.getElementById('wrap').style.display = 'none';
+        }
+        if (q.width) {
+            // #577 narrow-width coverage: lets a test render the slider
+            // narrower than this fixture's default 600px. Needed because
+            // the pre-#742 focus handler read the handle's on-screen
+            // position through the pixel<->value conversion, and that
+            // introduced a small positional bias which grows as the
+            // slider narrows -- a fine-step value only crosses into the
+            // next step once the slider is narrow enough (see the #577
+            // test in smoke.spec.mjs for the measured widths).
+            document.getElementById('wrap').style.width = parseInt(q.width, 10) + 'px';
         }
         if (q.attrs) {
             // #535 data-* route coverage: apply attributes to the input
@@ -71,6 +86,14 @@
                     el.setAttribute(an, attrs[an]);
                 }
             }
+        }
+        if (q.wrap === 'flex' || q.wrap === 'inline-flex') {
+            // #776: flex/inline-flex parent coverage. `.irs` declares no
+            // width; as a block it fills #wrap, but as a flex item
+            // with `flex-basis: auto` it falls back to content-based sizing,
+            // and every meaningful descendant is position:absolute (0
+            // intrinsic content size), so the slider collapsed to 0 width.
+            document.getElementById('wrap').style.display = q.wrap;
         }
         jQuery('#slider').ionRangeSlider(config);
         window.__irs.slider = jQuery.data(document.getElementById('slider'), 'ionRangeSlider');
