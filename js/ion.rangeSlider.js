@@ -1309,16 +1309,26 @@
 
                     handle_x = this.toFixed(handle_x + (this.coords.p_handle * 0.001));
 
-                    this.coords.p_from_real = this.convertToRealPercent(handle_x) - this.coords.p_gap_left;
-                    this.coords.p_from_real = this.calcWithStep(this.coords.p_from_real);
-                    this.coords.p_from_real = this.checkDiapason(this.coords.p_from_real, this.options.from_min, this.options.from_max);
-                    this.coords.p_from_real = this.checkMinInterval(this.coords.p_from_real, this.coords.p_to_real, "from");
-                    this.coords.p_from_fake = this.convertToFakePercent(this.coords.p_from_real);
+                    // #319: both candidates must be resolved BEFORE either
+                    // checkMinInterval call. Resolving "from" (including its
+                    // checkMinInterval) all the way before "to" was ever
+                    // recomputed meant "from" got checked against the
+                    // PREVIOUS tick's this.coords.p_to_real -- stale by one
+                    // frame -- instead of this tick's fresh "to" candidate,
+                    // causing a spurious clamp (and a doubled onChange) on
+                    // every step boundary while dragging right.
+                    var p_from_real = this.convertToRealPercent(handle_x) - this.coords.p_gap_left;
+                    p_from_real = this.calcWithStep(p_from_real);
+                    p_from_real = this.checkDiapason(p_from_real, this.options.from_min, this.options.from_max);
 
-                    this.coords.p_to_real = this.convertToRealPercent(handle_x) + this.coords.p_gap_right;
-                    this.coords.p_to_real = this.calcWithStep(this.coords.p_to_real);
-                    this.coords.p_to_real = this.checkDiapason(this.coords.p_to_real, this.options.to_min, this.options.to_max);
-                    this.coords.p_to_real = this.checkMinInterval(this.coords.p_to_real, this.coords.p_from_real, "to");
+                    var p_to_real = this.convertToRealPercent(handle_x) + this.coords.p_gap_right;
+                    p_to_real = this.calcWithStep(p_to_real);
+                    p_to_real = this.checkDiapason(p_to_real, this.options.to_min, this.options.to_max);
+
+                    this.coords.p_from_real = this.checkMinInterval(p_from_real, p_to_real, "from");
+                    this.coords.p_to_real = this.checkMinInterval(p_to_real, this.coords.p_from_real, "to");
+
+                    this.coords.p_from_fake = this.convertToFakePercent(this.coords.p_from_real);
                     this.coords.p_to_fake = this.convertToFakePercent(this.coords.p_to_real);
 
                     break;

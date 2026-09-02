@@ -40,6 +40,25 @@ async function fineDrag(page, selector, startFraction, stepPx, count) {
   await page.mouse.up();
 }
 
+/**
+ * A "split" onChange is one where exactly one of from/to differs from the
+ * previous onChange -- both should always move together (or neither) in a
+ * translate drag. This is distinct from an exact repeat (neither changed),
+ * which pointerUp's own final force-redraw pass can legitimately produce
+ * and which is unrelated to #319.
+ */
+function countSplitChanges(changes) {
+  let splits = 0;
+  for (let i = 1; i < changes.length; i++) {
+    const fromChanged = changes[i - 1].from !== changes[i].from;
+    const toChanged = changes[i - 1].to !== changes[i].to;
+    if (fromChanged !== toChanged) {
+      splits++;
+    }
+  }
+  return splits;
+}
+
 const CONFIG = { type: 'double', min: 0, max: 1000, from: 300, to: 800, step: 5, drag_interval: true };
 
 test.describe(`drag_interval both-handle drag (${LABEL})`, () => {
@@ -64,9 +83,9 @@ test.describe(`drag_interval both-handle drag (${LABEL})`, () => {
       expect(e.to - e.from, `onChange from=${e.from} to=${e.to}`).toBe(500);
     }
 
-    // No duplicate/split onChange for the same logical position.
-    const positions = changes.map((e) => `${e.from}:${e.to}`);
-    expect(new Set(positions).size).toBe(positions.length);
+    // No split onChange (one handle moving alone while the other lags a
+    // frame behind) -- the doubled-onChange half of #319.
+    expect(countSplitChanges(changes)).toBe(0);
   });
 
   // Leftward mirror, same off-center click and same exactly-500-wide,
