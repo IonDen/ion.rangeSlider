@@ -4,6 +4,13 @@
 
 # Update History
 
+### Version 2.4.1. September 02, 2026
+* Values mode: the callback data object now has `min_pretty` and `max_pretty` (they were undefined); the handle bubble and the labels already showed the right values
+* The slider renders correctly inside `display: flex` and `inline-flex` containers: `.irs` now declares `width: 100%`. Block layouts are unaffected
+* README: the "Callback data" section now says which fields hold the index and which hold the value in values mode
+* Tests: pinned that a Tab-key focus never changes the value (the fix itself shipped in 2.4.0)
+* Issues: #557, #577, #639, #776
+
 ### Version 2.4.0. August 30, 2026
 * New `onInit` callback fires once when the slider is created and its first render is done
 * New `drag_over_limit` option lets a dragged handle push the other handle instead of stopping at it (mouse/touch drag only)
