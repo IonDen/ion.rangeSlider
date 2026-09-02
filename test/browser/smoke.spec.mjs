@@ -106,6 +106,126 @@ test.describe(`smoke (${LABEL})`, () => {
     expect((await events(page)).length).toBe(before);
   });
 
+  // #557 / #577: the two #742 focus tests above pin CALLBACKS only, on an
+  // ON-GRID value (from: 30, step not set) -- they never exercise the
+  // actual #557/#577 symptom, which is the pre-#742 pointerFocus() also
+  // mutating the VALUE (the third #742 test, "clicking the line near the
+  // current value", does assert a value, but that is a deliberate click,
+  // not focus alone). Before #742, pointerFocus() synthesized a click that
+  // read the handle's own on-screen position back through the pixel<->value
+  // conversion, and that introduced a small positional bias -- one that
+  // grows as the slider gets narrower. The synthesized click always fired
+  // onChange/onFinish, but whether the reported VALUE visibly moved
+  // depended on the step size relative to that bias: an off-grid value on a
+  // coarse step snapped straight onto the grid regardless of width (33 ->
+  // 30 at step 10), while a value already sitting on a fine step only moved
+  // once the slider was narrow enough for the bias to cross half a step
+  // (2.9 -> "3" at step 0.1 -- see the measured width sweep on the #577
+  // test below). #742 (commit ee29de2) reduced pointerFocus() to arming
+  // keyboard state only, so all three tests below are green both before and
+  // after that fix (characterization pins), proven by the mutation-evidence
+  // protocol -- reinstating the 2.3.2-era focus handler (any commit before
+  // ee29de2; copied here from 40b1ceb) -- rather than red-first, since the
+  // fix already shipped in 2.4.0.
+
+  /**
+   * Real keyboard Tab from document.body to the slider's `.irs-line`,
+   * mirroring #557's actual repro (tabbing out of a preceding field, or
+   * into the slider from nothing) rather than a programmatic .focus() call.
+   * The fixture page has no other tabbable element -- toggleInput() forces
+   * the real (hidden) input's tabindex to -1 on init -- so a single press
+   * normally reaches it; loop defensively in case that ever changes.
+   */
+  async function tabToLine(page) {
+    for (let i = 0; i < 5; i++) {
+      await page.keyboard.press('Tab');
+      if (await page.locator('.irs-line').evaluate((el) => el === document.activeElement)) {
+        return;
+      }
+    }
+  }
+
+  // #557: an off-grid initial value (from: 33, step: 10 -- validate() never
+  // step-snaps from/to at init) must stay exactly as given after a real Tab
+  // lands focus on the slider, with no onChange/onFinish. Mutation this
+  // catches: reinstating the pre-#742 pointerFocus() synthesized click,
+  // which step-snaps 33 to the nearest multiple of 10 (30) and fires
+  // onChange then onFinish for a value the user never touched.
+  test('tabbing onto the slider does not snap an off-grid value or fire onChange (#557)', async ({ page }) => {
+    await open(page, { min: 0, max: 100, from: 33, step: 10 });
+    await tabToLine(page);
+    await expect(page.locator('.irs-line')).toBeFocused();
+    // Outlast the 300ms idle render poll -- the only place a
+    // focus-triggered force_redraw would actually reach drawHandles() and
+    // fire callbacks.
+    await page.waitForTimeout(400);
+    await expect(page.locator('.irs-single')).toHaveText('33');
+    await expect(input(page)).toHaveValue('33');
+    expect(await eventTypes(page)).toEqual(['onStart']);
+  });
+
+  // #577: mirrors the report's step (0.1) and from (2.9) at a width inside
+  // its stated "<= 325px" range -- the report's own fiddle used min 1..10,
+  // this fixture keeps min 0..10, so this is the report's step and a width
+  // inside its stated range, not a byte-for-byte reproduction. Measured
+  // against the mutation below across a width sweep: the synthesized
+  // click's positional bias (see the header comment above) is too small to
+  // move 2.9 off its own step at 600px or 400px; from 326px down to 200px
+  // it crosses half a step and the value becomes "3" (the fixture renders
+  // "3", not "3.0" -- same numeric value as the report, and roughly
+  // matching its own "<= 325px" threshold); at 100px it overshoots further,
+  // to 3.1. 300px lands inside the "becomes 3" band. The width param is
+  // additive (test/fixtures/slider.html, #577) and load-bearing here -- the
+  // boundingBox() check right after open() guards against a broken or
+  // misspelled width param passing silently.
+  test('tabbing onto a narrow slider does not round a fractional value or fire onChange (#577)', async ({ page }) => {
+    await open(page, { min: 0, max: 10, from: 2.9, step: 0.1 }, { width: '300' });
+    // parseInt('abc', 10) is NaN, so a typo'd width would leave #wrap's CSS
+    // width unset -- the slider would then render at this fixture's
+    // default 600px, at which 2.9 never moves even under the mutation (see
+    // the width sweep above), so every assertion below would still pass
+    // without ever exercising the narrow-width path this test exists to
+    // cover. `.irs` is the exact element the plugin measures for all
+    // pixel<->value conversion (this.$cache.rs / coords.w_rs), so pinning
+    // its rendered width here ties the guard to the mechanism the rest of
+    // the test depends on. The outer container span also carries the
+    // "irs" class (js/ion.rangeSlider.js `append()`), so a bare `.irs`
+    // locator matches two elements and hits a strict-mode violation;
+    // scope to the inner descendant that $cache.rs actually is -- the
+    // fixture renders a single slider, always instance 0.
+    const box = await page.locator('.js-irs-0 .irs').boundingBox();
+    expect(box.width).toBe(300);
+    await tabToLine(page);
+    await expect(page.locator('.irs-line')).toBeFocused();
+    await page.waitForTimeout(400);
+    await expect(page.locator('.irs-single')).toHaveText('2.9');
+    await expect(input(page)).toHaveValue('2.9');
+    expect(await eventTypes(page)).toEqual(['onStart']);
+  });
+
+  // #557 in double mode, via a programmatic .focus() rather than a real
+  // Tab -- the other half of the focus contract (arriving by .focus()
+  // alone must be exactly as inert as arriving by Tab), the same path the
+  // #742 focus tests above already use, and the cheapest way to exercise
+  // double mode here without stringing together a real Tab sequence. Pins
+  // that BOTH handles stay exactly as given and no onChange/onFinish
+  // fires. Mutation this catches: reinstating the 2.3.2-era focus handler,
+  // which always targeted "from" whenever type !== "single" ($handle =
+  // this.$cache.from) -- its synthesized click only ever snapped "from"
+  // (to 30 here), leaving "to" untouched at 67. That asymmetry is an
+  // artifact of the old handler's own hardcoded target, not a claim this
+  // test otherwise makes.
+  test('double: programmatic focus leaves both handles untouched and fires no onChange (#557)', async ({ page }) => {
+    await open(page, { type: 'double', min: 0, max: 100, from: 33, to: 67, step: 10 });
+    await page.locator('.irs-line').focus();
+    await expect(page.locator('.irs-line')).toBeFocused();
+    await page.waitForTimeout(400);
+    await expect(page.locator('.irs-from')).toHaveText('33');
+    await expect(page.locator('.irs-to')).toHaveText('67');
+    await expect(input(page)).toHaveValue('33;67');
+    expect(await eventTypes(page)).toEqual(['onStart']);
+  });
+
   test('keyboard moves by one step and fires onFinish', async ({ page }) => {
     await open(page, { min: 0, max: 100, from: 50, step: 5 });
     await page.locator('.irs-line').focus();

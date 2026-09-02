@@ -59,6 +59,17 @@
             // width/height at init time.
             document.getElementById('wrap').style.display = 'none';
         }
+        if (q.width) {
+            // #577 narrow-width coverage: lets a test render the slider
+            // narrower than this fixture's default 600px. Needed because
+            // the pre-#742 focus handler read the handle's on-screen
+            // position through the pixel<->value conversion, and that
+            // introduced a small positional bias which grows as the
+            // slider narrows -- a fine-step value only crosses into the
+            // next step once the slider is narrow enough (see the #577
+            // test in smoke.spec.mjs for the measured widths).
+            document.getElementById('wrap').style.width = parseInt(q.width, 10) + 'px';
+        }
         if (q.attrs) {
             // #535 data-* route coverage: apply attributes to the input
             // before init, the same server-markup channel config_from_data
