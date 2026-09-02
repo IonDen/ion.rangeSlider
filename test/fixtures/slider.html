@@ -59,6 +59,12 @@
             // width/height at init time.
             document.getElementById('wrap').style.display = 'none';
         }
+        if (q.width) {
+            // #577 narrow-width coverage: a fractional value can round
+            // differently through the pixel<->value conversion at narrow
+            // slider widths than at this fixture's default 600px.
+            document.getElementById('wrap').style.width = parseInt(q.width, 10) + 'px';
+        }
         if (q.attrs) {
             // #535 data-* route coverage: apply attributes to the input
             // before init, the same server-markup channel config_from_data

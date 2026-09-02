@@ -106,6 +106,90 @@ test.describe(`smoke (${LABEL})`, () => {
     expect((await events(page)).length).toBe(before);
   });
 
+  // #557 / #577: the #742 tests above pin CALLBACKS only, starting from an
+  // ON-GRID value (from: 30, step not set / divides cleanly) -- they never
+  // exercise the actual #557/#577 symptom, which is the pre-#742
+  // pointerFocus() also mutating the VALUE. Before #742, pointerFocus()
+  // synthesized a click at the handle's own on-screen position whenever
+  // this.target was null, and that click ran calc()/calcWithStep(): an
+  // off-grid initial value got step-snapped, and at narrow slider widths a
+  // fractional value could round differently through the click's
+  // pixel<->value round trip. #742 (commit ee29de2) reduced pointerFocus()
+  // to arming keyboard state only, so all three tests below are green both
+  // before and after that fix (characterization pins), proven by the
+  // mutation-evidence protocol (reinstating the pre-#742 body from commit
+  // 40b1ceb) rather than red-first, since the fix already shipped in 2.4.0.
+
+  /**
+   * Real keyboard Tab from document.body to the slider's `.irs-line`,
+   * mirroring #557's actual repro (tabbing out of a preceding field, or
+   * into the slider from nothing) rather than a programmatic .focus() call.
+   * The fixture page has no other tabbable element -- toggleInput() forces
+   * the real (hidden) input's tabindex to -1 on init -- so a single press
+   * normally reaches it; loop defensively in case that ever changes.
+   */
+  async function tabToLine(page) {
+    for (let i = 0; i < 5; i++) {
+      await page.keyboard.press('Tab');
+      if (await page.locator('.irs-line').evaluate((el) => el === document.activeElement)) {
+        return;
+      }
+    }
+  }
+
+  // #557: an off-grid initial value (from: 33, step: 10 -- validate() never
+  // step-snaps from/to at init) must stay exactly as given after a real Tab
+  // lands focus on the slider, with no onChange/onFinish. Mutation this
+  // catches: reinstating the pre-#742 pointerFocus() synthesized click,
+  // which step-snaps 33 to the nearest multiple of 10 (30) and fires
+  // onChange then onFinish for a value the user never touched.
+  test('tabbing onto the slider does not snap an off-grid value or fire onChange (#557)', async ({ page }) => {
+    await open(page, { min: 0, max: 100, from: 33, step: 10 });
+    await tabToLine(page);
+    await expect(page.locator('.irs-line')).toBeFocused();
+    // Outlast the 300ms idle render poll -- the only place a
+    // focus-triggered force_redraw would actually reach drawHandles() and
+    // fire callbacks.
+    await page.waitForTimeout(400);
+    await expect(page.locator('.irs-single')).toHaveText('33');
+    await expect(input(page)).toHaveValue('33');
+    expect(await eventTypes(page)).toEqual(['onStart']);
+  });
+
+  // #577's exact report: step: 0.1, from: 2.9, slider width <= 325px --
+  // tabbing to the slider rounded the value to 3.0. Same pointerFocus()
+  // root cause as #557, but this is the narrow-width / fractional-step
+  // shape: calcWithStep()'s pixel<->value round trip on the synthesized
+  // click's screen position rounds more coarsely at a narrow width than at
+  // this fixture's 600px default. The width param is additive (test/
+  // fixtures/slider.html, #577).
+  test('tabbing onto a narrow slider does not round a fractional value or fire onChange (#577)', async ({ page }) => {
+    await open(page, { min: 0, max: 10, from: 2.9, step: 0.1 }, { width: '300' });
+    await tabToLine(page);
+    await expect(page.locator('.irs-line')).toBeFocused();
+    await page.waitForTimeout(400);
+    await expect(page.locator('.irs-single')).toHaveText('2.9');
+    await expect(input(page)).toHaveValue('2.9');
+    expect(await eventTypes(page)).toEqual(['onStart']);
+  });
+
+  // #557 in double mode: the pre-#742 pointerFocus() always targeted "from"
+  // ($handle = this.$cache.from whenever type !== "single"), so its
+  // synthesized click only ever snapped "from"; "to" was untouched. Pin
+  // exactly that asymmetric shape -- it documents the old default target,
+  // not a full double-mode #557 repro -- with a programmatic .focus() (the
+  // #557 report itself also names programmatic focus, not just Tab).
+  test('double: programmatic focus does not snap "from" or fire onChange (#557)', async ({ page }) => {
+    await open(page, { type: 'double', min: 0, max: 100, from: 33, to: 67, step: 10 });
+    await page.locator('.irs-line').focus();
+    await expect(page.locator('.irs-line')).toBeFocused();
+    await page.waitForTimeout(400);
+    await expect(page.locator('.irs-from')).toHaveText('33');
+    await expect(page.locator('.irs-to')).toHaveText('67');
+    await expect(input(page)).toHaveValue('33;67');
+    expect(await eventTypes(page)).toEqual(['onStart']);
+  });
+
   test('keyboard moves by one step and fires onFinish', async ({ page }) => {
     await open(page, { min: 0, max: 100, from: 50, step: 5 });
     await page.locator('.irs-line').focus();
