@@ -343,5 +343,51 @@ test.describe(`2.4.0 feature coverage (${LABEL})`, () => {
       const pretty = await page.evaluate(() => window.__pretty);
       expect(pretty.every((n) => [1, 5, 20, 100, 1000].includes(n))).toBe(true);
     });
+
+    // One-line bug: calc()'s double branch prettified result.from/to (the
+    // index). This is a separate site from the single-branch test above --
+    // double mode has its own from/to writes in calc() (js/ion.rangeSlider.js)
+    // -- and needs its own coverage: reverting only this site left 71/71 unit
+    // and the single-mode browser test above green, since the double-mode
+    // unit test only reaches update()/updateFrom()/updateTo() (jsdom has no
+    // width, so calc() bails before this branch ever runs there) and the
+    // single-mode browser test never creates a double-type slider.
+    test('a real drag of each handle in double mode: from_pretty/to_pretty match their bubbles, and prettify only ever sees real entry values (#661)', async ({ page }) => {
+      await page.addInitScript(() => { window.__pretty = []; });
+      const configStr = "{ type: 'double', values: [1, 5, 20, 100, 1000], from: 1, to: 3, "
+        + "prettify: function (n) { window.__pretty.push(n); return 'V' + n; } }";
+      await open(page, configStr);
+
+      // from: 1 (value 5) and to: 3 (value 100) start two entries apart (50%
+      // of the line, 5 entries over min 0/max 4 -> 25% per entry). Each drag
+      // below moves its own handle by exactly one entry and the two handles
+      // are never closer than one entry apart, so their bubbles never
+      // collide and merge into .irs-single (see drawLabels()'s collision
+      // check) -- .irs-from and .irs-to stay independently readable
+      // throughout, and are read directly below rather than via .irs-single.
+      await drag(page, '.irs-handle.from', 0.25);
+      // Waiting for the rendered bubble (drawLabels(), unaffected by this
+      // bug -- it already reads options.p_values) also guarantees the
+      // synchronous calc() -> drawHandles() -> callback pass that produced
+      // it has already pushed its event, so reading events(page) right after
+      // is race-free.
+      await expect(page.locator('.irs-from')).toHaveText('V20');
+
+      let ev = await events(page);
+      let last = ev.filter((e) => e.type === 'onChange' || e.type === 'onFinish').at(-1);
+      expect(last.from_pretty).toBe('V20');
+
+      await drag(page, '.irs-handle.to', 0.25);
+      await expect(page.locator('.irs-to')).toHaveText('V1000');
+
+      ev = await events(page);
+      last = ev.filter((e) => e.type === 'onChange' || e.type === 'onFinish').at(-1);
+      expect(last.to_pretty).toBe('V1000');
+
+      // The custom prettify function was only ever handed real entry values
+      // across both drags -- never a bare index and never a stray 0.
+      const pretty = await page.evaluate(() => window.__pretty);
+      expect(pretty.every((n) => [1, 5, 20, 100, 1000].includes(n))).toBe(true);
+    });
   });
 });
