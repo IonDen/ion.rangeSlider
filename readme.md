@@ -186,12 +186,12 @@ All callbacks receive an object as the first argument:
     "max": 100000,              // MAX value
     "from": 10000,              // FROM value
     "from_percent": 10,         // FROM value in percent
-    "from_value": 0,            // FROM index in values array (if used)
+    "from_value": 0,            // FROM value from the values array (if used)
     "from_min": null,           // FROM minimum limit (null if unset)
     "from_max": null,           // FROM maximum limit (null if unset)
     "to": 90000,                // TO value
     "to_percent": 90,           // TO value in percent
-    "to_value": 0,              // TO index in values array (if used)
+    "to_value": 0,              // TO value from the values array (if used)
     "to_min": null,             // TO minimum limit (null if unset)
     "to_max": null,             // TO maximum limit (null if unset)
     "min_pretty": "1 000",      // MIN formatted (if prettify_min_max or prettify is on)
@@ -200,6 +200,10 @@ All callbacks receive an object as the first argument:
     "to_pretty": "90 000"       // TO formatted
 }
 ```
+
+When the `values` option is used, `from` and `to` hold the index of the selected
+entry in the `values` array, not the entry itself. `from_value` and `to_value`
+hold the actual entry at that index.
 
 
 ## Public methods
