@@ -7,10 +7,11 @@ import { open, LABEL } from './helpers.mjs';
 // own, it fell back to content-based sizing -- and every meaningful
 // descendant (.irs-line, .irs-bar, handles, labels) is position:absolute,
 // so the content size was 0. The result: the handle pinned to the left
-// edge and the single label showed the minimum instead of the configured
-// value. Fixed by giving `.irs` width: 100% in less/_base.less (CSS only,
-// no JS change) -- restoring, on a flex item, the same 100%-of-parent
-// sizing a block element already got for free.
+// edge, and drawHandles() returned before it ever wrote the label, so the
+// bubble kept base_html's template placeholder `0` instead of the
+// configured value. Fixed by giving `.irs` width: 100% in less/_base.less
+// (CSS only, no JS change) -- restoring, on a flex item, the same
+// 100%-of-parent sizing a block element already got for free.
 
 async function lineFraction(page, handleSelector) {
   const h = await page.locator(handleSelector).boundingBox();
