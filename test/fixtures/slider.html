@@ -47,7 +47,11 @@
                         from_percent: data.from_percent, to_percent: data.to_percent,
                         from_value: data.from_value, to_value: data.to_value,
                         from_min: data.from_min, from_max: data.from_max,
-                        to_min: data.to_min, to_max: data.to_max
+                        to_min: data.to_min, to_max: data.to_max,
+                        // #639: appended, additive only -- existing assertions
+                        // elsewhere compare event `type` sequences or specific
+                        // fields via toMatchObject(), never the whole object.
+                        min_pretty: data.min_pretty, max_pretty: data.max_pretty
                     });
                 };
             })(names[n]);

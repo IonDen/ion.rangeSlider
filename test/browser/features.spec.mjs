@@ -25,6 +25,26 @@ test.describe(`2.4.0 feature coverage (${LABEL})`, () => {
     await expect(page.locator('.irs-single')).toHaveText('[a]');
   });
 
+  // #639: setMinMax()'s values-mode branch wrote the DOM min/max labels from
+  // p_values but never mirrored that text onto result.min_pretty/max_pretty,
+  // so callback consumers saw undefined while the labels showed the real
+  // entry. Mutation this catches: dropping the `this.result.min_pretty =
+  // this.options.p_values[this.options.min]` (and the max_pretty line) from
+  // setMinMax()'s values branch (js/ion.rangeSlider.js) -- min_pretty/
+  // max_pretty would read undefined on the onStart payload while the DOM
+  // labels kept showing "apple"/"cherry".
+  test('values mode reports min_pretty/max_pretty on the onStart payload, matching the rendered min/max labels (#639)', async ({ page }) => {
+    await open(page, { values: ['apple', 'banana', 'cherry'], from: 1 });
+
+    const ev = await events(page);
+    const startEv = ev.find((e) => e.type === 'onStart');
+    expect(startEv, 'onStart must have fired').toBeTruthy();
+    expect(startEv).toMatchObject({ min_pretty: 'apple', max_pretty: 'cherry' });
+
+    await expect(page.locator('.irs-min')).toHaveText('apple');
+    await expect(page.locator('.irs-max')).toHaveText('cherry');
+  });
+
   // #503: from_min/from_max/to_min/to_max are mirrored onto the result
   // object handed to every callback. Mutation this catches: dropping the
   // mirroring in the constructor's initial result object (the `from_min:
