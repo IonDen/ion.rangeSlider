@@ -1365,10 +1365,11 @@
                 this.result.from = this.convertToValue(this.coords.p_single_real);
 
                 if (this.options.values.length) {
-                    // #661: result.from is the INDEX into options.values here, not
-                    // the value -- prettify the real value (options.p_values was
-                    // already prettified once per entry in validate()), never the
-                    // index itself.
+                    // #661: values mode reads the entry's prettified text from
+                    // options.p_values (validate() ran prettify once per entry
+                    // with the real value); calling _prettify(this.result.from)
+                    // here would hand the user's prettify function the index
+                    // instead of the value.
                     this.result.from_pretty = this.options.p_values[this.result.from];
                     this.result.from_value = this.options.values[this.result.from];
                 } else {
@@ -1384,10 +1385,7 @@
                 this.result.to = this.convertToValue(this.coords.p_to_real);
 
                 if (this.options.values.length) {
-                    // #661: result.from/to are indexes into options.values here,
-                    // not values -- prettify the real values (options.p_values was
-                    // already prettified once per entry in validate()), never the
-                    // indexes themselves.
+                    // #661: values mode -- see the single branch's comment above.
                     this.result.from_pretty = this.options.p_values[this.result.from];
                     this.result.from_value = this.options.values[this.result.from];
                     this.result.to_pretty = this.options.p_values[this.result.to];
@@ -2514,9 +2512,7 @@
             this.result.from_percent = this.convertToPercent(this.result.from);
 
             if (this.options.values.length) {
-                // #661: result.from is the INDEX into options.values here, not the
-                // value -- prettify the real value (options.p_values was already
-                // prettified once per entry in validate()), never the index itself.
+                // #661: values mode -- see calc()'s single-branch comment above.
                 this.result.from_pretty = this.options.p_values[this.result.from];
             } else {
                 this.result.from_pretty = this._prettify(this.result.from);
@@ -2534,9 +2530,7 @@
             this.result.to_percent = this.convertToPercent(this.result.to);
 
             if (this.options.values.length) {
-                // #661: result.to is the INDEX into options.values here, not the
-                // value -- prettify the real value (options.p_values was already
-                // prettified once per entry in validate()), never the index itself.
+                // #661: values mode -- see calc()'s single-branch comment above.
                 this.result.to_pretty = this.options.p_values[this.result.to];
             } else {
                 this.result.to_pretty = this._prettify(this.result.to);

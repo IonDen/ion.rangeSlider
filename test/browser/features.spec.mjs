@@ -313,10 +313,10 @@ test.describe(`2.4.0 feature coverage (${LABEL})`, () => {
     // of the bug report). Mutation this catches: reverting calc()'s
     // `if (this.options.values.length) {...} else {...}` split back to the
     // unconditional this._prettify(this.result.from) -- from_pretty would
-    // then read index-shaped text ("V2" instead of "V20") and the settled
-    // handle position would land at a real value (1000) not present in
-    // window.__pretty, since prettify would have been fed the index (4)
-    // there instead.
+    // then read index-shaped text ("V2" instead of "V20"), and the drag
+    // that settles on index 2 (value 20) would push the bare index 2 into
+    // window.__pretty instead of 20, which is what assertion (b) below
+    // catches.
     test('a real drag: from_pretty matches the rendered bubble, and the custom prettify only ever sees real entry values (#661)', async ({ page }) => {
       await page.addInitScript(() => { window.__pretty = []; });
       const configStr = "{ values: [1, 5, 20, 100, 1000], "
