@@ -74,7 +74,7 @@
         }
         if (q.wrap === 'flex' || q.wrap === 'inline-flex') {
             // #776: flex/inline-flex parent coverage. `.irs` declares no
-            // width; as a block it fills #wrap for free, but as a flex item
+            // width; as a block it fills #wrap, but as a flex item
             // with `flex-basis: auto` it falls back to content-based sizing,
             // and every meaningful descendant is position:absolute (0
             // intrinsic content size), so the slider collapsed to 0 width.

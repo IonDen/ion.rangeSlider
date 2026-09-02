@@ -3,7 +3,7 @@ import { open, LABEL } from './helpers.mjs';
 
 // #776: with the slider's input inside a display:flex (or inline-flex)
 // wrapper, `.irs` declared no width. As a block element it filled its
-// parent for free; as a flex item with flex-basis:auto and no width of its
+// parent; as a flex item with flex-basis:auto and no width of its
 // own, it fell back to content-based sizing -- and every meaningful
 // descendant (.irs-line, .irs-bar, handles, labels) is position:absolute,
 // so the content size was 0. The result: the handle pinned to the left
@@ -11,7 +11,7 @@ import { open, LABEL } from './helpers.mjs';
 // bubble kept base_html's template placeholder `0` instead of the
 // configured value. Fixed by giving `.irs` width: 100% in less/_base.less
 // (CSS only, no JS change) -- restoring, on a flex item, the same
-// 100%-of-parent sizing a block element already got for free.
+// 100%-of-parent sizing a block element already received.
 
 async function lineFraction(page, handleSelector) {
   const h = await page.locator(handleSelector).boundingBox();
