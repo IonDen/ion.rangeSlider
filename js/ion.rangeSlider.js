@@ -1082,6 +1082,7 @@
         /**
          * Set visibility and content
          * of Min and Max labels
+         * and mirror the undecorated text onto result.min_pretty/max_pretty
          */
         setMinMax: function () {
             if (!this.options) {
@@ -1095,8 +1096,15 @@
             }
 
             if (this.options.values.length) {
-                this.$cache.min.html(this.decorate(this.options.p_values[this.options.min]));
-                this.$cache.max.html(this.decorate(this.options.p_values[this.options.max]));
+                var min_pretty = this.options.p_values[this.options.min];
+                var max_pretty = this.options.p_values[this.options.max];
+
+                // result carries the prettified entry; decorate() (prefix/postfix) is DOM-only, same as the numeric branch below
+                this.result.min_pretty = min_pretty;
+                this.result.max_pretty = max_pretty;
+
+                this.$cache.min.html(this.decorate(min_pretty));
+                this.$cache.max.html(this.decorate(max_pretty));
             } else {
                 var min_pretty = this._prettifyMinMax(this.options.min);
                 var max_pretty = this._prettifyMinMax(this.options.max);

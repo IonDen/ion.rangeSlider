@@ -1,14 +1,14 @@
 import { test, expect } from '@playwright/test';
 import { open, events, eventTypes, input, drag, LABEL } from './helpers.mjs';
 
-// Real-browser coverage for the five changes shipped so far in 2.4.0. Each of
+// Real-browser coverage for ion.rangeSlider features and bugfixes. Each of
 // these already has jsdom unit coverage; these tests exercise the same fixes
 // through actual layout, a real pointer drag and the render loop, which the
 // unit suite (zero layout, see test/unit/helpers.mjs) cannot reach. Every
 // test names, in its own comment, the one-line source mutation that would
 // make it fail.
 
-test.describe(`2.4.0 feature coverage (${LABEL})`, () => {
+test.describe(`feature and bugfix coverage (${LABEL})`, () => {
   // #276: prettify_all_values opts non-numeric values-mode entries into the
   // custom prettify. Mutation this catches: gating `o.prettify_all_values`
   // off in validate()'s values loop (js/ion.rangeSlider.js, the values-mode
@@ -23,6 +23,47 @@ test.describe(`2.4.0 feature coverage (${LABEL})`, () => {
     const configStr = "{ values: ['a', 10, 20], from: 0, prettify_all_values: true, prettify: function (n) { return '[' + n + ']'; } }";
     await open(page, configStr);
     await expect(page.locator('.irs-single')).toHaveText('[a]');
+  });
+
+  // #639: setMinMax()'s values-mode branch wrote the DOM min/max labels from
+  // p_values but never mirrored that text onto result.min_pretty/max_pretty,
+  // so callback consumers saw undefined while the labels showed the real
+  // entry. Mutation this catches: dropping the `this.result.min_pretty =
+  // this.options.p_values[this.options.min]` (and the max_pretty line) from
+  // setMinMax()'s values branch (js/ion.rangeSlider.js) -- min_pretty/
+  // max_pretty would read undefined on the onStart payload while the DOM
+  // labels kept showing "apple"/"cherry".
+  test('values mode reports min_pretty/max_pretty on the onStart payload, matching the rendered min/max labels (#639)', async ({ page }) => {
+    await open(page, { values: ['apple', 'banana', 'cherry'], from: 1 });
+
+    const ev = await events(page);
+    const startEv = ev.find((e) => e.type === 'onStart');
+    expect(startEv, 'onStart must have fired').toBeTruthy();
+    expect(startEv).toMatchObject({ min_pretty: 'apple', max_pretty: 'cherry' });
+
+    await expect(page.locator('.irs-min')).toHaveText('apple');
+    await expect(page.locator('.irs-max')).toHaveText('cherry');
+  });
+
+  // #639 (max_pretty / options.to gap): the test above leaves `to` at its
+  // default of `max`, so a max_pretty read from options.to instead of
+  // options.max would still pass it. This test pins a double slider whose
+  // `to` sits short of `max`, so the two diverge. Mutation this catches:
+  // reading `this.options.p_values[this.options.to]` instead of
+  // `...options.max]` for max_pretty in setMinMax()'s values branch --
+  // max_pretty would report "banana" (p_values[to=1]) on both the onStart
+  // payload and the rendered .irs-max label, instead of the correct
+  // "cherry" (p_values[max=2]).
+  test('values mode max_pretty is read from options.max, not options.to, on a double slider whose to sits short of max (#639)', async ({ page }) => {
+    await open(page, { type: 'double', values: ['apple', 'banana', 'cherry'], from: 0, to: 1 });
+
+    const ev = await events(page);
+    const startEv = ev.find((e) => e.type === 'onStart');
+    expect(startEv, 'onStart must have fired').toBeTruthy();
+    expect(startEv).toMatchObject({ min_pretty: 'apple', max_pretty: 'cherry' });
+
+    await expect(page.locator('.irs-min')).toHaveText('apple');
+    await expect(page.locator('.irs-max')).toHaveText('cherry');
   });
 
   // #503: from_min/from_max/to_min/to_max are mirrored onto the result
