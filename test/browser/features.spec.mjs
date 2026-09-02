@@ -302,4 +302,46 @@ test.describe(`2.4.0 feature coverage (${LABEL})`, () => {
       await expect(page.locator('.irs-min')).toHaveText('INIT-EDIT');
     });
   });
+
+  test.describe('#661 values mode: prettify receives the value, not the index', () => {
+    // #661: calc()'s single branch (js/ion.rangeSlider.js) called
+    // this._prettify(this.result.from) unconditionally. In values mode
+    // result.from is the INDEX into options.values, not the value, so the
+    // custom prettify above got the index instead of the real entry -- and,
+    // at load, an extra 0-index call from init()'s calc(true) plus
+    // drawHandles()'s force_redraw re-calc(true) (the "two 0s at init" half
+    // of the bug report). Mutation this catches: reverting calc()'s
+    // `if (this.options.values.length) {...} else {...}` split back to the
+    // unconditional this._prettify(this.result.from) -- from_pretty would
+    // then read index-shaped text ("V2" instead of "V20") and the settled
+    // handle position would land at a real value (1000) not present in
+    // window.__pretty, since prettify would have been fed the index (4)
+    // there instead.
+    test('a real drag: from_pretty matches the rendered bubble, and the custom prettify only ever sees real entry values (#661)', async ({ page }) => {
+      await page.addInitScript(() => { window.__pretty = []; });
+      const configStr = "{ values: [1, 5, 20, 100, 1000], "
+        + "prettify: function (n) { window.__pretty.push(n); return 'V' + n; } }";
+      await open(page, configStr);
+
+      // Drag to the middle of the line: 5 entries (indices 0-4) snap to the
+      // middle index, 2 -- value 20. Chosen deliberately unequal to its own
+      // index so a bugged (index-prettified) result is unambiguous ("V2").
+      await drag(page, '.irs-handle.single', 0.5);
+      await expect.poll(() => eventTypes(page)).toContain('onFinish');
+
+      // (a) the rendered bubble and the last recorded event's from_pretty agree.
+      const label = await page.locator('.irs-single').textContent();
+      const ev = await events(page);
+      const last = ev.filter((e) => e.type === 'onChange' || e.type === 'onFinish').at(-1);
+      expect(last.from_pretty).toBe(label);
+      expect(label).toBe('V20');
+
+      // (b) the custom prettify function was only ever handed real entry
+      // values -- never a bare index (0-4, only coincidentally overlapping
+      // with the real value 1) and never the spurious 0 the pre-fix double
+      // calc(true) at init produced.
+      const pretty = await page.evaluate(() => window.__pretty);
+      expect(pretty.every((n) => [1, 5, 20, 100, 1000].includes(n))).toBe(true);
+    });
+  });
 });
