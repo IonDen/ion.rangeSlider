@@ -42,8 +42,9 @@ test.describe(`flex container width (${LABEL})`, () => {
       expect(fraction).toBeGreaterThan(0.25);
       expect(fraction).toBeLessThan(0.35);
 
-      // RED on 0a91f1c css: with the handle pinned left, the rendered
-      // label shows the minimum (0) instead of the configured from (30).
+      // RED on 0a91f1c css: with zero width, drawHandles() returns before
+      // it ever writes the label, so the bubble keeps the template
+      // placeholder `0` instead of the configured from (30).
       await expect(page.locator('.irs-single')).toHaveText('30');
     });
   }
