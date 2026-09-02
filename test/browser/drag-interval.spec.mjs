@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { open, events, LABEL } from './helpers.mjs';
+import { open, events, input, LABEL } from './helpers.mjs';
 
 // #319: with drag_interval, dragging the whole interval (the ".irs-bar")
 // fired onChange TWICE per logical step moving right -- once with only "to"
@@ -41,6 +41,32 @@ async function fineDrag(page, selector, startFraction, stepPx, count) {
 }
 
 /**
+ * Same fine-drag loop as `fineDrag`, but also samples a selector's inline
+ * CSS `left` (as a percent) every `sampleEvery` ticks during the drag --
+ * the page-observable proxy for a handle's real-percent position, which
+ * jsdom (test/unit/drag-interval-both.test.mjs) has no layout to render.
+ */
+async function fineDragSamplingLeft(page, selector, startFraction, stepPx, count, sampleEvery, sampleSelector) {
+  const bar = await page.locator(selector).boundingBox();
+  const line = await page.locator('.irs-line').boundingBox();
+  const y = bar.y + bar.height / 2;
+  let x = line.x + line.width * startFraction;
+  const samples = [];
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  for (let i = 0; i < count; i++) {
+    x += stepPx;
+    await page.mouse.move(x, y);
+    if (i % sampleEvery === 0) {
+      const left = await page.locator(sampleSelector).evaluate((el) => parseFloat(el.style.left));
+      samples.push(left);
+    }
+  }
+  await page.mouse.up();
+  return samples;
+}
+
+/**
  * A "split" onChange is one where exactly one of from/to differs from the
  * previous onChange -- both should always move together (or neither) in a
  * translate drag. This is distinct from an exact repeat (neither changed),
@@ -73,7 +99,9 @@ test.describe(`drag_interval both-handle drag (${LABEL})`, () => {
     await open(page, CONFIG);
     // Click at 40% of the line -- the interval spans 30%-80%, so this is
     // off-center inside the bar (not its 55% midpoint), matching how a real
-    // drag actually grabs it off its own center.
+    // drag actually grabs it off its own center. It is also close enough to
+    // the "from" handle (small p_gap_left) that the fix-round-2 real/fake
+    // percent mismatch below is big enough to cross a step boundary.
     await fineDrag(page, '.irs-bar', 0.40, 1, 60);
 
     const changes = (await events(page)).filter((e) => e.type === 'onChange');
@@ -86,6 +114,52 @@ test.describe(`drag_interval both-handle drag (${LABEL})`, () => {
     // No split onChange (one handle moving alone while the other lags a
     // frame behind) -- the doubled-onChange half of #319.
     expect(countSplitChanges(changes)).toBe(0);
+
+    // #319 fix-round regression: the first onChange must not resolve
+    // behind (from < 300) the drag's actual start, and from must advance
+    // monotonically throughout a monotonic rightward drag. RED on 9dc3ea0
+    // (fix round 1) in a real browser: changeLevel's "both" case captured
+    // p_gap_left/p_gap_right in fake percent but calc()'s "both" case adds
+    // them onto real percent, so the very first tick resolved several
+    // steps backward before catching up.
+    const first = changes[0];
+    expect(first.from, `first onChange from=${first.from}`).toBeGreaterThanOrEqual(300);
+    expect(
+      Math.abs(first.from - 300),
+      `first onChange must land within one step of the drag start, from=${first.from}`
+    ).toBeLessThanOrEqual(5);
+
+    let prevFrom = 300;
+    for (const e of changes) {
+      expect(e.from, `from=${e.from} after prevFrom=${prevFrom}`).toBeGreaterThanOrEqual(prevFrom);
+      prevFrom = e.from;
+    }
+  });
+
+  // Leftward mirror of the against-the-drag regression above -- fix-round
+  // regression, not the original #319 double-fire. "from <= 300" alone
+  // would not catch the mismatch leftward (a 2-step overshoot still
+  // satisfies "<= 300"), so the within-one-step check is what actually
+  // reds on 9dc3ea0 (fix round 1) here.
+  test('dragging the bar left never resolves a tick ahead of where the drag started (#319 fix-round regression)', async ({ page }) => {
+    await open(page, CONFIG);
+    await fineDrag(page, '.irs-bar', 0.40, -1, 60);
+
+    const changes = (await events(page)).filter((e) => e.type === 'onChange');
+    expect(changes.length).toBeGreaterThan(0);
+
+    const first = changes[0];
+    expect(first.from, `first onChange from=${first.from}`).toBeLessThanOrEqual(300);
+    expect(
+      Math.abs(first.from - 300),
+      `first onChange must land within one step of the drag start, from=${first.from}`
+    ).toBeLessThanOrEqual(5);
+
+    let prevFrom = 300;
+    for (const e of changes) {
+      expect(e.from, `from=${e.from} after prevFrom=${prevFrom}`).toBeLessThanOrEqual(prevFrom);
+      prevFrom = e.from;
+    }
   });
 
   // Leftward mirror, same off-center click and same exactly-500-wide,
@@ -98,6 +172,11 @@ test.describe(`drag_interval both-handle drag (${LABEL})`, () => {
   // narrows the gap against the stale reference, which for this ordering is
   // rightward only. Kept here so a future edit to the "both" case that
   // breaks left-drag symmetry still gets caught.
+  //
+  // Catching mutation (verified in the unit test file): make "to"'s
+  // checkMinInterval compare against a stale, pre-tick "from" instead of
+  // the fresh, same-tick one -- the mirror of the original bug applied to
+  // the other handle. That reds this exact scenario leftward.
   test('dragging the bar left keeps the interval exactly 500 wide on every onChange (#319, characterization)', async ({ page }) => {
     await open(page, CONFIG);
     await fineDrag(page, '.irs-bar', 0.40, -1, 60);
@@ -108,5 +187,42 @@ test.describe(`drag_interval both-handle drag (${LABEL})`, () => {
     for (const e of changes) {
       expect(e.to - e.from, `onChange from=${e.from} to=${e.to}`).toBe(500);
     }
+  });
+
+  // #319 fix-round regression: the reorder above lets checkMinInterval push
+  // "from" past its own from_min floor with no re-clamp, once the drag has
+  // gone well past the point where "from" first hits from_min -- see
+  // test/unit/drag-interval-both.test.mjs for the full analysis (that file
+  // also covers the analogous default-floor and to_max cases, which don't
+  // need a browser to observe). Page-observable proxy for the handle's real
+  // percent, since jsdom never renders layout: the from handle's own inline
+  // `left` CSS (set by drawHandles()), sampled periodically during the
+  // drag, must never go negative. RED on 9dc3ea0 (fix round 1): every
+  // recorded onChange's `from` eventually drops well under 100, and the
+  // `.irs-handle.from` element's `left` goes negative. Mutation this
+  // catches: dropping the checkDiapason(from_min, from_max) re-clamp that
+  // runs right after checkMinInterval("from").
+  test('dragging the bar left past from_min keeps from pinned at the floor, no negative handle position (#319 fix-round regression)', async ({ page }) => {
+    await open(page, { ...CONFIG, from_min: 100 });
+
+    const samples = await fineDragSamplingLeft(page, '.irs-bar', 0.40, -1, 350, 10, '.irs-handle.from');
+    for (const left of samples) {
+      expect(left, 'the from handle\'s CSS left% must never go negative').toBeGreaterThanOrEqual(0);
+    }
+
+    const changes = (await events(page)).filter((e) => e.type === 'onChange');
+    expect(changes.length).toBeGreaterThan(0);
+    for (const e of changes) {
+      expect(e.from, `onChange from=${e.from}`).toBeGreaterThanOrEqual(100);
+    }
+
+    const [from] = (await input(page).inputValue()).split(';').map(Number);
+    expect(from).toBeGreaterThanOrEqual(100);
+
+    // Secondary page-observable check on the "from" value label (a
+    // different element than the handle: .irs-from is the number bubble,
+    // .irs-handle.from is the draggable handle) after the drag settles.
+    const labelLeft = await page.locator('.irs-from').evaluate((el) => parseFloat(el.style.left));
+    expect(labelLeft, 'the from label\'s CSS left% must never go negative after the drag settles').toBeGreaterThanOrEqual(0);
   });
 });
