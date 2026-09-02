@@ -45,6 +45,27 @@ test.describe(`2.4.0 feature coverage (${LABEL})`, () => {
     await expect(page.locator('.irs-max')).toHaveText('cherry');
   });
 
+  // #639 (max_pretty / options.to gap): the test above leaves `to` at its
+  // default of `max`, so a max_pretty read from options.to instead of
+  // options.max would still pass it. This test pins a double slider whose
+  // `to` sits short of `max`, so the two diverge. Mutation this catches:
+  // reading `this.options.p_values[this.options.to]` instead of
+  // `...options.max]` for max_pretty in setMinMax()'s values branch --
+  // max_pretty would report "banana" (p_values[to=1]) on both the onStart
+  // payload and the rendered .irs-max label, instead of the correct
+  // "cherry" (p_values[max=2]).
+  test('values mode max_pretty is read from options.max, not options.to, on a double slider whose to sits short of max (#639)', async ({ page }) => {
+    await open(page, { type: 'double', values: ['apple', 'banana', 'cherry'], from: 0, to: 1 });
+
+    const ev = await events(page);
+    const startEv = ev.find((e) => e.type === 'onStart');
+    expect(startEv, 'onStart must have fired').toBeTruthy();
+    expect(startEv).toMatchObject({ min_pretty: 'apple', max_pretty: 'cherry' });
+
+    await expect(page.locator('.irs-min')).toHaveText('apple');
+    await expect(page.locator('.irs-max')).toHaveText('cherry');
+  });
+
   // #503: from_min/from_max/to_min/to_max are mirrored onto the result
   // object handed to every callback. Mutation this catches: dropping the
   // mirroring in the constructor's initial result object (the `from_min:

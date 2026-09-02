@@ -39,3 +39,17 @@ test('update({ values }) refreshes result.min_pretty/max_pretty for the new arra
   assert.equal(slider.result.min_pretty, 'fig');
   assert.equal(slider.result.max_pretty, 'honeydew');
 });
+
+test('values mode max_pretty is read from options.max, not options.to -- every other case in this file leaves to at its default (max), so a max_pretty read from options.to would still pass them all (#639)', (t) => {
+  const { slider } = createSlider(t, '<input>', { type: 'double', values: ['apple', 'banana', 'cherry'], from: 0, to: 1 });
+  // Guard: validate() must resolve min=0/max=2 (values.length-1) and leave
+  // `to` at 1 -- if either drifted, the divergence this test relies on
+  // (to !== max) would silently disappear and the assertions below would
+  // stop proving anything.
+  assert.equal(slider.options.min, 0);
+  assert.equal(slider.options.max, 2);
+  assert.equal(slider.options.to, 1);
+
+  assert.equal(slider.result.min_pretty, 'apple');
+  assert.equal(slider.result.max_pretty, 'cherry');
+});
