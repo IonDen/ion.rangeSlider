@@ -238,7 +238,7 @@ test('drag_interval moving left past the default floor never reports a negative 
 // as a regression guard.
 // Catching mutation (verified): drop the checkDiapason(to_min, to_max)
 // call that runs on "to"'s fresh candidate BEFORE either checkMinInterval
-// call -- width drops to 400 (from=500, to=900) instead of staying pinned
+// call -- width drops to 495 (from=405, to=900) instead of staying pinned
 // at 500 once the drag has gone well past to_max.
 test('drag_interval moving right past to_max keeps to pinned at the ceiling, width preserved (#319, characterization)', (t) => {
   const { slider } = createSlider(t, '<input>', {
