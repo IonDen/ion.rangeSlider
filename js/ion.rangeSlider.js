@@ -1095,6 +1095,9 @@
             }
 
             if (this.options.values.length) {
+                this.result.min_pretty = this.options.p_values[this.options.min];
+                this.result.max_pretty = this.options.p_values[this.options.max];
+
                 this.$cache.min.html(this.decorate(this.options.p_values[this.options.min]));
                 this.$cache.max.html(this.decorate(this.options.p_values[this.options.max]));
             } else {
