@@ -1371,10 +1371,17 @@
 
                 this.result.from_percent = this.coords.p_single_real;
                 this.result.from = this.convertToValue(this.coords.p_single_real);
-                this.result.from_pretty = this._prettify(this.result.from);
 
                 if (this.options.values.length) {
+                    // #661: values mode reads the entry's prettified text from
+                    // options.p_values (validate() ran prettify once per entry
+                    // with the real value); calling _prettify(this.result.from)
+                    // here would hand the user's prettify function the index
+                    // instead of the value.
+                    this.result.from_pretty = this.options.p_values[this.result.from];
                     this.result.from_value = this.options.values[this.result.from];
+                } else {
+                    this.result.from_pretty = this._prettify(this.result.from);
                 }
             } else {
                 this.coords.p_bar_x = this.toFixed(this.coords.p_from_fake + (this.coords.p_handle / 2));
@@ -1382,14 +1389,18 @@
 
                 this.result.from_percent = this.coords.p_from_real;
                 this.result.from = this.convertToValue(this.coords.p_from_real);
-                this.result.from_pretty = this._prettify(this.result.from);
                 this.result.to_percent = this.coords.p_to_real;
                 this.result.to = this.convertToValue(this.coords.p_to_real);
-                this.result.to_pretty = this._prettify(this.result.to);
 
                 if (this.options.values.length) {
+                    // #661: values mode -- see the single branch's comment above.
+                    this.result.from_pretty = this.options.p_values[this.result.from];
                     this.result.from_value = this.options.values[this.result.from];
+                    this.result.to_pretty = this.options.p_values[this.result.to];
                     this.result.to_value = this.options.values[this.result.to];
+                } else {
+                    this.result.from_pretty = this._prettify(this.result.from);
+                    this.result.to_pretty = this._prettify(this.result.to);
                 }
             }
 
@@ -2507,7 +2518,14 @@
         updateFrom: function () {
             this.result.from = this.options.from;
             this.result.from_percent = this.convertToPercent(this.result.from);
-            this.result.from_pretty = this._prettify(this.result.from);
+
+            if (this.options.values.length) {
+                // #661: values mode -- see calc()'s single-branch comment above.
+                this.result.from_pretty = this.options.p_values[this.result.from];
+            } else {
+                this.result.from_pretty = this._prettify(this.result.from);
+            }
+
             this.result.from_min = this.options.from_min;
             this.result.from_max = this.options.from_max;
             if (this.options.values) {
@@ -2518,7 +2536,14 @@
         updateTo: function () {
             this.result.to = this.options.to;
             this.result.to_percent = this.convertToPercent(this.result.to);
-            this.result.to_pretty = this._prettify(this.result.to);
+
+            if (this.options.values.length) {
+                // #661: values mode -- see calc()'s single-branch comment above.
+                this.result.to_pretty = this.options.p_values[this.result.to];
+            } else {
+                this.result.to_pretty = this._prettify(this.result.to);
+            }
+
             this.result.to_min = this.options.to_min;
             this.result.to_max = this.options.to_max;
             if (this.options.values) {

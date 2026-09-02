@@ -196,8 +196,8 @@ All callbacks receive an object as the first argument:
     "to_max": null,             // TO maximum limit (null if unset)
     "min_pretty": "1 000",      // MIN formatted
     "max_pretty": "100 000",    // MAX formatted
-    "from_pretty": "10 000",    // FROM formatted
-    "to_pretty": "90 000"       // TO formatted
+    "from_pretty": "10 000",    // FROM formatted (values mode: the prettified entry, not the index)
+    "to_pretty": "90 000"       // TO formatted (values mode: the prettified entry, not the index)
 }
 ```
 

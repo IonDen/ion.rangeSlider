@@ -48,6 +48,10 @@
                         from_value: data.from_value, to_value: data.to_value,
                         from_min: data.from_min, from_max: data.from_max,
                         to_min: data.to_min, to_max: data.to_max,
+                        // #661: carries the prettified from/to text -- in values
+                        // mode this must be the prettified VALUE (matching the
+                        // rendered bubble), not the prettified index.
+                        from_pretty: data.from_pretty, to_pretty: data.to_pretty,
                         // #639: appended, additive only -- existing assertions
                         // elsewhere compare event `type` sequences or specific
                         // fields via toMatchObject(), never the whole object.
