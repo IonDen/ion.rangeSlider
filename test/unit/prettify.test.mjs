@@ -144,3 +144,84 @@ test('data-prettify-grid and data-prettify-min-max resolve global functions set 
   assert.equal(slider._prettifyGrid(7), 'g~7');
   assert.equal(slider._prettifyMinMax(7), 'm~7');
 });
+
+// #661: in values mode, result.from/to hold the INDEX into options.values, not the
+// value itself. calc()'s single/double branches and updateFrom()/updateTo() (the
+// update()/reset() path) called `this._prettify(this.result.from)` -- prettifying
+// the index -- while the rendered bubble (drawLabels()) and options.p_values (built
+// once in validate()) always used the real value. calc()'s branches never run in
+// jsdom (w_rs is 0 -- see helpers.mjs), so these tests drive the same defect through
+// update()/updateFrom()/updateTo() instead; the calc() sites get their red evidence
+// from the browser test.
+
+test('values mode: update() computes from_pretty from the real value, not the index (#661)', (t) => {
+  const calls = [];
+  const prettify = (n) => { calls.push(n); return 'V' + n; };
+  const { slider } = createSlider(t, '<input>', { values: [1, 5, 20, 100, 1000], prettify });
+
+  slider.update({ from: 2 });
+
+  assert.equal(slider.result.from, 2);
+  assert.equal(slider.result.from_value, 20);
+  // One-line bug: updateFrom() does `this._prettify(this.result.from)`, prettifying
+  // the index (2) instead of options.values[2] (20). RED on master: 'V2'.
+  assert.equal(slider.result.from_pretty, 'V20');
+  // prettify is only ever handed real entry values (1, 5, 20, 100, 1000, possibly
+  // repeated across validate() runs) -- never a bare index like the 2 above.
+  assert.ok(
+    calls.every((n) => [1, 5, 20, 100, 1000].includes(n)),
+    'prettify saw a bare index, not just real entry values: ' + JSON.stringify(calls)
+  );
+});
+
+test('values mode double: update() computes to_pretty from the real value, not the index (#661)', (t) => {
+  const prettify = (n) => 'V' + n;
+  const { slider } = createSlider(t, '<input>', { values: [1, 5, 20, 100, 1000], type: 'double', prettify });
+
+  slider.update({ from: 1, to: 3 });
+
+  assert.equal(slider.result.to, 3);
+  assert.equal(slider.result.to_value, 100);
+  // One-line bug: updateTo() does `this._prettify(this.result.to)`, prettifying the
+  // index (3) instead of options.values[3] (100). RED on master: 'V3'.
+  assert.equal(slider.result.to_pretty, 'V100');
+});
+
+test('values mode with string entries: from_pretty is the real entry text, not the index (#661)', (t) => {
+  const { slider } = createSlider(t, '<input>', { values: ['apple', 'banana', 'cherry'] });
+
+  slider.update({ from: 1 });
+
+  assert.equal(slider.result.from, 1);
+  // One-line bug: updateFrom() prettifies the index (1) through the default number
+  // formatter instead of reading options.p_values[1] ('banana'). RED on master: '1'.
+  assert.equal(slider.result.from_pretty, 'banana');
+});
+
+test('values mode with string entries and prettify_all_values: from_pretty runs the custom prettify on the real value, never an index (#661)', (t) => {
+  const calls = [];
+  const prettify = (n) => { calls.push(n); return '<' + n + '>'; };
+  const { slider } = createSlider(t, '<input>', { values: ['apple', 'banana', 'cherry'], prettify_all_values: true, prettify });
+
+  slider.update({ from: 1 });
+
+  // One-line bug: updateFrom() calls _prettify(1) -- the bare numeric index -- instead
+  // of routing through options.p_values[1] (already prettified from 'banana' in
+  // validate()). RED on master: '<1>'.
+  assert.equal(slider.result.from_pretty, '<banana>');
+  assert.ok(!calls.includes(1), 'prettify must never see the bare numeric index 1: ' + JSON.stringify(calls));
+});
+
+test('numeric mode: from_pretty via update() is unchanged by the values-mode fix (#661 characterization)', (t) => {
+  const prettify = (n) => 'P:' + n;
+  const { slider } = createSlider(t, '<input>', { min: 0, max: 100, prettify });
+
+  slider.update({ from: 42 });
+
+  // Green before AND after the fix -- pins that numeric mode keeps calling
+  // _prettify(this.result.from) directly (no values.length branch applies).
+  // Catching mutation: swap the branches of the values.length if/else added for
+  // #661 (or delete the else) in updateFrom() -- this goes red (from_pretty becomes
+  // undefined or index-shaped instead of 'P:42').
+  assert.equal(slider.result.from_pretty, 'P:42');
+});
