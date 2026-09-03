@@ -652,8 +652,18 @@
                     this.$cache.s_from.removeClass("type_last");
                     break;
                 case "both":
-                    this.coords.p_gap_left = this.toFixed(this.coords.p_pointer - this.coords.p_from_fake);
-                    this.coords.p_gap_right = this.toFixed(this.coords.p_to_fake - this.coords.p_pointer);
+                    // #319: captured in REAL percent (matching
+                    // p_from_real/p_to_real, the space calc()'s "both" case
+                    // adds them into), not fake percent (p_from_fake/
+                    // p_to_fake use the handle-width-compressed space). With
+                    // a non-zero handle width the two spaces differ, so a
+                    // fake-percent gap added onto a real-percent pointer
+                    // position doesn't reproduce the actual gap -- it makes
+                    // the resolved pair drift below the true position by
+                    // roughly (p_handle / 100) * (to - from), most visibly
+                    // as a step backward on the very first tick of a drag.
+                    this.coords.p_gap_left = this.toFixed(this.convertToRealPercent(this.coords.p_pointer) - this.coords.p_from_real);
+                    this.coords.p_gap_right = this.toFixed(this.coords.p_to_real - this.convertToRealPercent(this.coords.p_pointer));
                     this.$cache.s_to.removeClass("type_last");
                     this.$cache.s_from.removeClass("type_last");
                     break;
@@ -1019,12 +1029,12 @@
          * captured at drag start, then clamps each side independently
          * through checkDiapason -- so no single pointer position can be
          * relied on to land both handles on their exact one-step target
-         * once an edge clamp is involved (p_gap_left + p_gap_right only
-         * approximates the interval's fake-percent width, since the fake
-         * and real percent spaces get mixed in that branch). A live mouse
-         * drag never shows that because pointerDown holds min_interval at
-         * the pre-drag width for the whole gesture (setTempMinInterval());
-         * a single keyboard step has no equivalent window. This computes
+         * once an edge clamp is involved. A live mouse drag never shows
+         * that because pointerDown pins min_interval to the pre-drag width
+         * for the whole gesture (setTempMinInterval()), so calc()'s own
+         * checkMinInterval keeps re-widening the gap back open on every
+         * pointer-move tick of that same drag; a single keyboard step has no
+         * equivalent pinned window to fall back on. This computes
          * and clamps p_from_real/p_to_real directly instead -- the same
          * width-preserving edge shift calc()'s own "both_one" case already
          * uses -- then feeds them straight into calc()'s shared
@@ -1317,16 +1327,48 @@
 
                     handle_x = this.toFixed(handle_x + (this.coords.p_handle * 0.001));
 
-                    this.coords.p_from_real = this.convertToRealPercent(handle_x) - this.coords.p_gap_left;
-                    this.coords.p_from_real = this.calcWithStep(this.coords.p_from_real);
-                    this.coords.p_from_real = this.checkDiapason(this.coords.p_from_real, this.options.from_min, this.options.from_max);
-                    this.coords.p_from_real = this.checkMinInterval(this.coords.p_from_real, this.coords.p_to_real, "from");
-                    this.coords.p_from_fake = this.convertToFakePercent(this.coords.p_from_real);
+                    // #319: both candidates must be resolved BEFORE either
+                    // checkMinInterval call. Resolving "from" (including its
+                    // checkMinInterval) all the way before "to" was ever
+                    // recomputed meant "from" got checked against the
+                    // PREVIOUS tick's this.coords.p_to_real -- stale by one
+                    // pointer-move tick (several calc() calls can land per
+                    // animation frame) -- instead of this tick's fresh "to"
+                    // candidate, causing a spurious clamp (and a doubled
+                    // onChange) on every step boundary while dragging right.
+                    //
+                    // p_gap_left/p_gap_right (captured in changeLevel's
+                    // "both" case) are REAL-percent offsets of the pointer
+                    // from from/to at drag start, so adding/subtracting them
+                    // from convertToRealPercent(handle_x) here stays in one
+                    // consistent percent space throughout.
+                    var p_from_real = this.convertToRealPercent(handle_x) - this.coords.p_gap_left;
+                    p_from_real = this.calcWithStep(p_from_real);
+                    p_from_real = this.checkDiapason(p_from_real, this.options.from_min, this.options.from_max);
 
-                    this.coords.p_to_real = this.convertToRealPercent(handle_x) + this.coords.p_gap_right;
-                    this.coords.p_to_real = this.calcWithStep(this.coords.p_to_real);
-                    this.coords.p_to_real = this.checkDiapason(this.coords.p_to_real, this.options.to_min, this.options.to_max);
-                    this.coords.p_to_real = this.checkMinInterval(this.coords.p_to_real, this.coords.p_from_real, "to");
+                    var p_to_real = this.convertToRealPercent(handle_x) + this.coords.p_gap_right;
+                    p_to_real = this.calcWithStep(p_to_real);
+                    p_to_real = this.checkDiapason(p_to_real, this.options.to_min, this.options.to_max);
+
+                    // checkMinInterval can push a handle past its OWN
+                    // diapason to hold the pinned gap open (e.g. dragging
+                    // left past from_min: from is held by its clamp while
+                    // to's candidate keeps falling, so checkMinInterval(
+                    // "from") restores the pinned width by pulling from
+                    // below from_min) -- each handle's value must be
+                    // re-clamped to its own diapason right after its
+                    // checkMinInterval call, before the other handle's check
+                    // reads it, or the pushed-past-the-floor/ceiling value
+                    // gets treated as valid and never corrected.
+                    p_from_real = this.checkMinInterval(p_from_real, p_to_real, "from");
+                    p_from_real = this.checkDiapason(p_from_real, this.options.from_min, this.options.from_max);
+                    this.coords.p_from_real = p_from_real;
+
+                    p_to_real = this.checkMinInterval(p_to_real, this.coords.p_from_real, "to");
+                    p_to_real = this.checkDiapason(p_to_real, this.options.to_min, this.options.to_max);
+                    this.coords.p_to_real = p_to_real;
+
+                    this.coords.p_from_fake = this.convertToFakePercent(this.coords.p_from_real);
                     this.coords.p_to_fake = this.convertToFakePercent(this.coords.p_to_real);
 
                     break;
