@@ -4,9 +4,9 @@ ion.RangeSlider — flexible and responsive range slider with skins, touch suppo
 
 ***
 
-* Version: 2.4.0
+* Version: 2.4.1
 * [Project page and demos](http://ionden.com/a/plugins/ion.rangeSlider/)
-* [Download ZIP](https://github.com/IonDen/ion.rangeSlider/archive/2.4.0.zip)
+* [Download ZIP](https://github.com/IonDen/ion.rangeSlider/archive/2.4.1.zip)
 * [Support on GitHub Sponsors](https://github.com/sponsors/IonDen)
 
 ## Features
@@ -60,13 +60,13 @@ Use [cdnjs](https://cdnjs.com/libraries/ion-rangeslider) or [jsDelivr](https://w
 
 ```html
 <!-- CSS -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.4.0/css/ion.rangeSlider.min.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.4.1/css/ion.rangeSlider.min.css"/>
 
 <!-- jQuery -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
 <!-- Plugin -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.4.0/js/ion.rangeSlider.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.4.1/js/ion.rangeSlider.min.js"></script>
 ```
 
 

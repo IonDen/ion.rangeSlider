@@ -4,6 +4,14 @@
 
 # Update History
 
+### Version 2.4.1. September 02, 2026
+* `drag_interval`: dragging the whole interval by its bar fires one `onChange` per step instead of two, and the event no longer reports the interval one step wider than it is. On sliders with a visible handle the first leftward step now fires after one step of mouse travel, where it used to need more. Dragging the bar past the left limit keeps the left edge pinned at `from_min` (or `min`)
+* Values mode: the callback data object now has `min_pretty` and `max_pretty` (they were undefined), and `from_pretty`/`to_pretty` hold the prettified entry the handle bubble shows rather than the prettified index. A custom `prettify` function is called with real entries only, once per entry when the slider is built or updated. The index-based calls and the stray `0` calls are gone
+* The slider renders correctly inside `display: flex` and `inline-flex` containers: `.irs` now declares `width: 100%`. Block layouts are unaffected
+* README: the "Callback data" section now says which fields hold the index and which hold the value in values mode
+* Tests: pinned that a Tab-key focus never changes the value (the fix itself shipped in 2.4.0)
+* Issues: #319, #557, #577, #639, #661, #776
+
 ### Version 2.4.0. August 30, 2026
 * New `onInit` callback fires once when the slider is created and its first render is done
 * New `drag_over_limit` option lets a dragged handle push the other handle instead of stopping at it (mouse/touch drag only)

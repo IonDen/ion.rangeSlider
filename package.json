@@ -1,6 +1,6 @@
 {
     "name": "ion-rangeslider",
-    "version": "2.4.0",
+    "version": "2.4.1",
     "description": "Cool, comfortable and easily customizable range slider with many options and skin support",
     "homepage": "http://ionden.com/a/plugins/ion.rangeSlider/",
     "author": {
@@ -37,8 +37,8 @@
         "jquery": ">=1.8"
     },
     "config": {
-        "build": 384,
-        "buildDate": "2026-08-30 08:20:16"
+        "build": 385,
+        "buildDate": "2026-09-02 11:13:32"
     },
     "scripts": {
         "build": "node scripts/build.mjs",
