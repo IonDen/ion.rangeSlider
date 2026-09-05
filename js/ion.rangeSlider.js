@@ -2064,6 +2064,41 @@
         },
 
         /**
+         * Count the number of decimal places in a number.
+         *
+         * #684: Number#toString() switches to exponent notation for
+         * |x| < 1e-6 (e.g. "1e-8") and |x| >= 1e21 (e.g. "2.5e+21"), so a
+         * plain split on "." either finds nothing or a "." that belongs to
+         * the mantissa, not the whole number. Split the mantissa and
+         * exponent apart first in that case and derive the decimal count
+         * from both.
+         *
+         * @param num {Number}
+         * @returns {Number} number of decimal places (0 when there are none)
+         */
+        getDecimalPlaces: function (num) {
+            var num_str = num.toString(),
+                e_index = num_str.indexOf("e"),
+                mantissa, exponent, mantissa_decimals, decimals;
+
+            // Number#toString() emits a lowercase "e" only; validate() has
+            // already coerced every option this sees to a Number.
+            if (e_index === -1) {
+                decimals = num_str.split(".")[1] ? num_str.split(".")[1].length : 0;
+            } else {
+                mantissa = num_str.slice(0, e_index);
+                exponent = parseInt(num_str.slice(e_index + 1), 10);
+                mantissa_decimals = mantissa.split(".")[1] ? mantissa.split(".")[1].length : 0;
+                decimals = Math.max(0, mantissa_decimals - exponent);
+            }
+
+            // Number#toFixed() throws above 20 digits on the ES3/ES5 engines
+            // this file targets (the toFixed helper below relies on the same
+            // ceiling), so never hand back more than that.
+            return Math.min(20, decimals);
+        },
+
+        /**
          * Convert percent to real values
          *
          * @param percent {Number} X in percent
@@ -2072,8 +2107,8 @@
         convertToValue: function (percent) {
             var min = this.options.min,
                 max = this.options.max,
-                min_decimals = min.toString().split(".")[1],
-                max_decimals = max.toString().split(".")[1],
+                min_decimals = this.getDecimalPlaces(min),
+                max_decimals = this.getDecimalPlaces(max),
                 min_length, max_length,
                 avg_decimals = 0,
                 abs = 0;
@@ -2087,11 +2122,11 @@
 
 
             if (min_decimals) {
-                min_length = min_decimals.length;
+                min_length = min_decimals;
                 avg_decimals = min_length;
             }
             if (max_decimals) {
-                max_length = max_decimals.length;
+                max_length = max_decimals;
                 avg_decimals = max_length;
             }
             if (min_length && max_length) {
@@ -2105,11 +2140,11 @@
             }
 
             var number = ((max - min) / 100 * percent) + min,
-                string = this.options.step.toString().split(".")[1],
+                string = this.getDecimalPlaces(this.options.step),
                 result;
 
             if (string) {
-                number = +number.toFixed(string.length);
+                number = +number.toFixed(string);
             } else {
                 number = number / this.options.step;
                 number = number * this.options.step;
@@ -2122,7 +2157,7 @@
             }
 
             if (string) {
-                result = +number.toFixed(string.length);
+                result = +number.toFixed(string);
             } else {
                 result = this.toFixed(number);
             }
