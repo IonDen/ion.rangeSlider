@@ -431,4 +431,57 @@ test.describe(`feature and bugfix coverage (${LABEL})`, () => {
       expect(pretty.every((n) => [1, 5, 20, 100, 1000].includes(n))).toBe(true);
     });
   });
+
+  test.describe('#684 exponent-notation decimals', () => {
+    // #684: with a fractional step small enough to stringify in exponent
+    // notation (e.g. step: 1e-8), convertToValue()'s decimal-place detector
+    // missed the decimals entirely and every interior position rounded down
+    // to 0. Mutation this catches: reverting the step site in
+    // convertToValue() (js/ion.rangeSlider.js) to
+    // `this.options.step.toString().split(".")[1]` -- from would report 0 on
+    // this drag instead of a real interior value.
+    test('dragging the from handle over a sub-microscopic range with a 1e-8 step lands on a real interior value, not 0 (#684)', async ({ page }) => {
+      // These are the reporter's exact numbers. from (5.62e-6) and to
+      // (5.66e-6) sit only 0.64% of the range apart -- under 4px on this
+      // fixture's 600px track, well inside the handle's own width -- so their
+      // handles visually overlap at these exact values, both before and
+      // after the fix. A plain page.mouse.down() at that shared pixel hits
+      // whichever handle wins the browser's paint order (.to, added later in
+      // the DOM with the same z-index), not .from. dispatchEvent fires the
+      // mousedown on the .from element directly -- matching how the plugin's
+      // own mousedown listener is bound per handle -- so the rest of the drag
+      // is real page.mouse input, exactly like a user dragging.
+      const configStr = "{ type: 'double', min: 0, max: 6.226e-6, step: 1e-8, from: 5.62e-6, to: 5.66e-6 }";
+      await open(page, configStr);
+
+      const fromHandle = page.locator('.irs-handle.from');
+      const fromBox = await fromHandle.boundingBox();
+      const lineBox = await page.locator('.irs-line').boundingBox();
+      const y = fromBox.y + fromBox.height / 2;
+
+      await fromHandle.dispatchEvent('mousedown', {
+        clientX: fromBox.x + fromBox.width / 2, clientY: y, button: 0, bubbles: true, cancelable: true,
+      });
+      await page.mouse.move(fromBox.x + fromBox.width / 2, y);
+      // The middle of the track: 50% of the 6.226e-6 range is 3.113e-6,
+      // inside the expected 1e-6..5e-6 neighborhood regardless of where the
+      // buggy pre-fix render initially placed the handle.
+      await page.mouse.move(lineBox.x + lineBox.width * 0.5, y, { steps: 12 });
+      await page.mouse.up();
+      await page.waitForTimeout(400);
+
+      const ev = await events(page);
+      const last = ev.filter((e) => e.type === 'onChange' || e.type === 'onFinish').at(-1);
+      expect(last, 'the drag must record at least one onChange/onFinish event').toBeTruthy();
+      expect(last.from).toBeGreaterThan(1e-6);
+      expect(last.from).toBeLessThan(5e-6);
+
+      // "data-from" here means the jQuery .data("from") cache writeToInput()
+      // sets on the input -- not a literal data-from DOM attribute, which
+      // jQuery's .data(key, value) never reflects back onto the element.
+      const dataFrom = await page.evaluate(() => window.jQuery('#slider').data('from'));
+      expect(dataFrom).toBeGreaterThan(1e-6);
+      expect(dataFrom).toBeLessThan(5e-6);
+    });
+  });
 });
