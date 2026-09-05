@@ -116,9 +116,9 @@ test('values mode keeps duplicate entry labels, the dedup pass does not apply (#
 // assertable here without a browser.
 //
 // Reporter's config: {min: -39.9, max: 111, step: 1, grid: true,
-// grid_num: 4}. convertToValue() rounds its final result to the decimals
-// of options.step only, so the shift-back from the negative-min offset
-// leaks noise into one grid tick: "-1.8999999999999986" (then chopped
+// grid_num: 4}. Before #760 convertToValue() rounded its final result to
+// the decimals of options.step only, so the shift-back from the negative-min
+// offset leaked noise into one grid tick: "-1.8999999999999986" (then chopped
 // into "-1.8 999 999 999 999 986" by the default thousands-separator
 // prettifier). Mutation: drop min_decimals/max_decimals from the final
 // rounding precision (use the step's own decimals alone).

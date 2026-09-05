@@ -2287,8 +2287,9 @@
             // above moves the origin to exactly 0 (x + (-x) is +0 in IEEE
             // 754), so the lattice here is k * step; rounding to the
             // ORIGINAL min's decimals instead would land BETWEEN lattice
-            // points -- for the reporter's {min: -39.9, max: 111, step: 1},
-            // -2.2 / 35.6 / 73.3 instead of -1.9 / 35.1 / 73.1. min's own
+            // points -- for the reporter's {min: -39.9, max: 111, step: 1}
+            // the 25/50/75 % grid ticks would read -2.2 / 35.6 / 73.3
+            // instead of -1.9 / 35.1 / 73.1. min's own
             // decimals come back through the subtraction below and are
             // handled by the final rounding. For min >= 0 there is no
             // shift, so this rounding is left unwidened on purpose:
@@ -2315,11 +2316,15 @@
 
             // #760: shifting back by `abs` can reintroduce binary float
             // noise (e.g. 38 - 39.9 = -1.8999999999999986) even though the
-            // lattice point itself is correct. Round the final result to
-            // the largest decimal count among step, min and max -- not the
-            // step's alone -- so that noise is cleaned up instead of
-            // round-tripped untouched through toFixed(20).
-            precision = Math.max(string, min_decimals, max_decimals);
+            // lattice point itself is correct. With a whole-number step the
+            // final rounding therefore uses the decimals of min and max, so
+            // the noise is cleaned up instead of round-tripped untouched
+            // through toFixed(20). A fractional step keeps 2.4.1's rounding
+            // to its own decimals: they already bound the result there (no
+            // noise), and widening would move values, not just clean them
+            // ({min: -198.53, step: 0.5}: -197.7 would become -197.73), a
+            // change kept for a minor release.
+            precision = string ? string : Math.max(min_decimals, max_decimals);
 
             if (precision) {
                 result = +number.toFixed(precision);
