@@ -95,6 +95,31 @@ test('getDecimalPlaces counts decimals through exponent notation (#684)', (t) =>
   assert.equal(slider.getDecimalPlaces(0.01), 2);
   assert.equal(slider.getDecimalPlaces(5), 0);
   assert.equal(slider.getDecimalPlaces(-0.001), 3);
+  // Fractional mantissa with a negative exponent: mutation `Math.max(0,
+  // -exponent)` (dropping the mantissa term) gives 8 and 7 here instead of
+  // 9 and 8, and every other exponent-form fixture in this file has a
+  // whole-number mantissa, so these two are the only ones that catch it.
+  assert.equal(slider.getDecimalPlaces(2.5e-8), 9);
+  assert.equal(slider.getDecimalPlaces(-1.5e-7), 8);
+  // Ceiling: toFixed() throws above 20 digits on ES3/ES5 engines (IE8-11).
+  // Mutation: drop the Math.min(20, ...) clamp -> 21 and 101.
+  assert.equal(slider.getDecimalPlaces(1e-21), 20);
+  assert.equal(slider.getDecimalPlaces(1e-101), 20);
+});
+
+test('convertToValue handles a negative exponent-notation min symmetrically (#684)', (t) => {
+  // The min/max decimal counts size the offset that lifts a negative min to
+  // zero before rounding. Old detector: "-1e-7".split(".")[1] is undefined
+  // (0 decimals), so the offset was rounded to a whole number and every
+  // value pinned at min. Mutation that reproduces it: revert the min and max
+  // sites in convertToValue() to `.toString().split(".")[1]`.
+  const { slider } = createSlider(t, '<input>', { min: -1e-7, max: 1e-7, step: 1e-8 });
+  assert.equal(slider.convertToValue(0), -1e-7);
+  assert.equal(slider.convertToValue(100), 1e-7);
+  const mid = slider.convertToValue(50);
+  const q3 = slider.convertToValue(75);
+  assert.ok(Math.abs(mid) <= 1e-8, `convertToValue(50) = ${mid}, expected within one step of 0`);
+  assert.ok(Math.abs(q3 - 5e-8) <= 1e-8, `convertToValue(75) = ${q3}, expected within one step of 5e-8`);
 });
 
 test('calcWithStep snaps a percent to the step grid and clamps at 100', (t) => {

@@ -2059,21 +2059,23 @@
         getDecimalPlaces: function (num) {
             var num_str = num.toString(),
                 e_index = num_str.indexOf("e"),
-                mantissa, exponent, mantissa_decimals;
+                mantissa, exponent, mantissa_decimals, decimals;
 
+            // Number#toString() emits a lowercase "e" only; validate() has
+            // already coerced every option this sees to a Number.
             if (e_index === -1) {
-                e_index = num_str.indexOf("E");
+                decimals = num_str.split(".")[1] ? num_str.split(".")[1].length : 0;
+            } else {
+                mantissa = num_str.slice(0, e_index);
+                exponent = parseInt(num_str.slice(e_index + 1), 10);
+                mantissa_decimals = mantissa.split(".")[1] ? mantissa.split(".")[1].length : 0;
+                decimals = Math.max(0, mantissa_decimals - exponent);
             }
 
-            if (e_index === -1) {
-                return num_str.split(".")[1] ? num_str.split(".")[1].length : 0;
-            }
-
-            mantissa = num_str.slice(0, e_index);
-            exponent = parseInt(num_str.slice(e_index + 1), 10);
-            mantissa_decimals = mantissa.split(".")[1] ? mantissa.split(".")[1].length : 0;
-
-            return Math.max(0, mantissa_decimals - exponent);
+            // Number#toFixed() throws above 20 digits on the ES3/ES5 engines
+            // this file targets (the toFixed helper below relies on the same
+            // ceiling), so never hand back more than that.
+            return Math.min(20, decimals);
         },
 
         /**
