@@ -458,3 +458,25 @@ test('keyboard resolution at a coincident pair never picks a fixed handle (#507)
   assert.equal(slider.result.from, 49, 'the decrease key must move "from"');
   assert.equal(slider.result.to, 50, 'the fixed "to" must still not move');
 });
+
+// #507 fix round: when the first move resolves onto the OTHER handle, the
+// handle that was actually hit must lose the state_hover that pointerDown()
+// gave it, so only the moving handle looks active mid-drag. One-line bug this
+// catches: dropping the removeClass("state_hover") on the hit-but-unpicked
+// handle in pointerMove().
+test('resolving onto the other handle removes state_hover from the handle that was hit (#507)', (t) => {
+  const { slider } = createSlider(t, '<input>', {
+    type: 'double', min: 0, max: 100, from: 50, to: 50, step: 1
+  });
+  primeWidth(slider);
+
+  slider.pointerDown('to', { pageX: 300, preventDefault: function () {} });
+  assert.equal(slider.$cache.s_to.hasClass('state_hover'), true, 'setup: the press must hover the hit handle');
+  for (let i = 1; i <= 5; i++) {
+    slider.pointerMove({ pageX: 300 - i });
+  }
+  assert.equal(slider.target, 'from', 'setup: the leftward move must resolve onto "from"');
+  assert.equal(slider.$cache.s_to.hasClass('state_hover'), false, 'the hit "to" must lose state_hover mid-drag');
+  assert.equal(slider.$cache.s_from.hasClass('state_hover'), true, 'the moving "from" must carry state_hover');
+  slider.pointerUp({});
+});

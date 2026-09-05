@@ -201,7 +201,8 @@
         // #507: like coincident_pending above, but for the keyboard path --
         // true only when pointerFocus() just armed its DEFAULT target (no
         // explicit prior click) onto a pair that is coincident right then;
-        // resolved by the first key press after that, see moveByKey().
+        // re-resolved on every key press while the pair stays coincident
+        // and cleared once a press moves a value, see moveByKey().
         this.coincident_key_pending = false;
 
         options = options || {};
@@ -827,11 +828,10 @@
                 // never actually reach with it. Let the key presses that
                 // follow resolve that, mirroring the mouse path's own
                 // coincident_pending (see moveByKey()). An assignment, not
-                // just a conditional "= true", so a focus that does NOT
-                // qualify (single mode, or a non-coincident pair) explicitly
-                // clears any flag a stale $.data-shared instance might carry
-                // instead of silently leaving it as it was. Scoped to THIS
-                // moment only (not re-checked on every later key press) so a
+                // just a conditional "= true": defensive, so a focus that
+                // does NOT qualify (single mode, or a non-coincident pair)
+                // never leaves an older value in place. The ARMING check runs
+                // only here (the resolution in moveByKey() is per press), so a
                 // pair that only becomes coincident through legitimate,
                 // already-armed keyboard movement -- e.g. stepping "from" up
                 // until it meets "to" -- keeps clamping there exactly as
@@ -1101,7 +1101,11 @@
             // handle is never the one picked; when the direction's own
             // handle is fixed, this.target is left as it already is (calc()'s
             // own from_fixed/to_fixed guard turns that press into a no-op,
-            // same as it would for a fixed handle hit directly).
+            // same as it would for a fixed handle hit directly). The switch
+            // toggles .type_last directly rather than through changeLevel():
+            // that would add state_hover (which only pointerUp() removes) and,
+            // with no pointer position yet, set a p_gap that clamps this very
+            // press to 0, killing the step.
             if (this.coincident_key_pending && this.result.from === this.result.to) {
                 if (right && !this.options.to_fixed) {
                     this.target = "to";
