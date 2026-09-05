@@ -460,6 +460,14 @@ test.describe(`feature and bugfix coverage (${LABEL})`, () => {
     });
 
     test('mouse: dragging the coincident handle right moves "to" up while "from" stays put (#507)', async ({ page }) => {
+      // Already green on 2.4.1: a real click lands on "to" (the top
+      // handle, per setTopHandler() above), and "to" moving right, away
+      // from the coincident "from", was never blocked by the reported bug
+      // -- this is a characterization test, not red-first evidence.
+      // Catcher: a mutation that always resolves the direction switch to
+      // "from" regardless of movement direction -- "from" cannot move right
+      // past the coincident "to" either, so this drag would leave both
+      // values pinned at 50 instead of raising "to".
       await open(page, { type: 'double', min: 0, max: 100, from: 50, to: 50, step: 1 });
       await drag(page, '.irs-handle.to', 0.2);
 

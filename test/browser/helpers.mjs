@@ -39,9 +39,7 @@ export async function drag(page, handleSelector, fraction) {
  * (touchstart/touchmove/touchend), not the mouse path. Playwright's own
  * `page.touchscreen` only offers a single-point tap (no move step), so this
  * goes through the same CDP session `browserContext.newCDPSession()` uses --
- * chromium-only, which is why every caller must itself be chromium-only (the
- * context still needs `hasTouch: true` so the page treats the dispatched
- * events as real touch input, matching a touch-capable device).
+ * chromium-only, which is why every caller must itself be chromium-only.
  */
 export async function touchDrag(page, handleSelector, fraction) {
   const h = await page.locator(handleSelector).boundingBox();
