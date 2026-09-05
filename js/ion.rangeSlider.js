@@ -1678,7 +1678,17 @@
 
                 this.writeToInput();
 
-                if ((this.old_from !== this.result.from || this.old_to !== this.result.to) && !this.is_start) {
+                // #851: pointerUp()'s forced redraw re-enters this block
+                // even when the last pointer-move tick already drew this
+                // exact value (the normal way most mouse/touch drags end),
+                // so onChange must be gated on an actual value delta, not
+                // just on force_redraw/is_key. Computed once here, before
+                // old_from/old_to are overwritten below, and reused for the
+                // change/input DOM-event trigger, which already made the
+                // same comparison.
+                var changed = this.old_from !== this.result.from || this.old_to !== this.result.to;
+
+                if (changed && !this.is_start) {
                     this.$cache.input.trigger("change");
                     this.$cache.input.trigger("input");
                 }
@@ -1687,7 +1697,7 @@
                 this.old_to = this.result.to;
 
                 // callbacks call
-                if (!this.is_resize && !this.is_update && !this.is_start && !this.is_finish) {
+                if (changed && !this.is_resize && !this.is_update && !this.is_start && !this.is_finish) {
                     this.callOnChange();
                 }
                 if (this.is_key || this.is_click) {
