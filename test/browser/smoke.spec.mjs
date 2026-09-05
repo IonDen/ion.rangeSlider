@@ -31,6 +31,8 @@ test.describe(`smoke (${LABEL})`, () => {
   // held), fired onChange a second time with the exact value already
   // reported. Holding the button for a while before releasing, below, gives
   // the page a real animation frame to render the last move before mouseup.
+  // The pre-fix red therefore depends on that frame landing during the hold;
+  // on the fixed code the assertions below hold regardless of frame timing.
   test('releasing a drag that has already rendered does not repeat the last onChange (#851)', async ({ page }) => {
     await open(page, { min: 0, max: 100, from: 0 });
     const h = await page.locator('.irs-handle.single').boundingBox();
@@ -47,7 +49,7 @@ test.describe(`smoke (${LABEL})`, () => {
     expect(types.at(-1)).toBe('onFinish');
 
     // One-line bug this catches: dropping the "did from/to actually change"
-    // check from drawHandles()'s onChange condition -- the release below
+    // check from drawHandles()'s onChange condition -- the release above
     // adds one more onChange carrying the exact same from/to as the one
     // right before it.
     for (let i = 1; i < ev.length; i++) {

@@ -190,3 +190,29 @@ test('an arrow key press at the range edge (no movement) fires onFinish only, no
     { type: 'onFinish', from: 0, to: 100 }
   ]);
 });
+
+// The commonest real-world trigger of pointerUp's forced redraw: a press and
+// release on a handle with no movement at all (a tap on a touch screen).
+// pointerDown() never runs calc(), so pointerUp's redraw is the first pass
+// through the callback block since the press.
+test('pressing and releasing a handle without moving it fires onFinish only (#851)', (t) => {
+  var rec = recorder();
+  var { slider } = createSlider(t, '<input>', {
+    type: 'single', min: 0, max: 100, from: 30, step: 1,
+    onChange: rec.onChange, onFinish: rec.onFinish
+  });
+  primeSingle(slider);
+
+  var startX = slider.coords.p_single_fake / 100 * 600; // exactly on the handle
+  slider.pointerDown('single', { pageX: startX, preventDefault: function () {} });
+  slider.pointerUp({});
+
+  assert.equal(slider.result.from, 30, 'setup: the value must not move');
+
+  // One-line bug this catches: dropping `changed &&` from the onChange
+  // condition -- 2.4.1 reported onChange(30) for a value that never moved,
+  // then onFinish.
+  assert.deepEqual(rec.events, [
+    { type: 'onFinish', from: 30, to: 100 }
+  ]);
+});
