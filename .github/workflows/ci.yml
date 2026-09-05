@@ -39,6 +39,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run build
       - id: pw
         run: echo "version=$(node -e 'console.log(require("@playwright/test/package.json").version)')" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v4
@@ -57,15 +58,20 @@ jobs:
           name: playwright-report-${{ matrix.id }}
           path: playwright-report
 
-  dist:
-    name: committed dist is up to date
+  built-files:
+    name: built files
     runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run build
-      - run: git diff --exit-code -- js css
+      - run: node scripts/check-dist.mjs --base "$BASE_REF" --head "$HEAD_REF"
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}

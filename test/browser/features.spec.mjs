@@ -529,4 +529,112 @@ test.describe(`feature and bugfix coverage (${LABEL})`, () => {
       await expect(input(page)).toHaveValue('50;51');
     });
   });
+
+  test.describe('#772 grid label deduplication', () => {
+    // Reporter's config (min: 1, max: 4, grid_num left at its default of 4):
+    // the four evenly-spaced tick percentages snap two neighbouring ticks to
+    // the same value, so on 2.4.1 the grid renders "1", "2", "3", "3", "4" --
+    // the third tick's label repeats onto the fourth. Mutation this catches:
+    // dropping appendGrid()'s "equals previous label" guard
+    // (js/ion.rangeSlider.js) -- the repeated tick would render "3" again
+    // instead of going blank, failing both the visible-label-order and the
+    // no-repeated-neighbour assertions below.
+    test('a range with fewer steps than grid_num shows the repeated tick once, not twice (#772)', async ({ page }) => {
+      await open(page, {
+        min: 1, max: 4, from: 1, to: 4, hide_min_max: true, grid: true
+      });
+
+      const texts = await page.locator('.irs-grid-text').allTextContents();
+      expect(texts.length).toBe(5);
+
+      for (let i = 1; i < texts.length; i++) {
+        if (texts[i] === '' || texts[i - 1] === '') continue;
+        expect(texts[i]).not.toBe(texts[i - 1]);
+      }
+
+      expect(texts.filter((t) => t !== '')).toEqual(['1', '2', '3', '4']);
+    });
+
+    // Pin: min: 1, max: 3 repeats twice, with the second repeat landing on
+    // the last tick -- the fix keeps that tick's label ("3") over its
+    // earlier twin instead of blanking it. Mutation this catches: dropping
+    // the last-tick branch in appendGrid()'s dedup pass (js/ion.rangeSlider.js)
+    // -- the last tick would blank instead, leaving the range's right edge
+    // unlabeled.
+    test('a repeat landing on the last tick keeps that tick label, not its earlier twin (#772)', async ({ page }) => {
+      await open(page, { min: 1, max: 3, grid: true });
+
+      const texts = await page.locator('.irs-grid-text').allTextContents();
+      expect(texts.length).toBe(5);
+      expect(texts[texts.length - 1]).toBe('3');
+      expect(texts[texts.length - 2]).toBe('');
+    });
+  });
+
+  test.describe('#684 exponent-notation decimals', () => {
+    // #684: with a fractional step small enough to stringify in exponent
+    // notation (e.g. step: 1e-8), convertToValue()'s decimal-place detector
+    // missed the decimals entirely and every interior position rounded down
+    // to 0. Mutation this catches: reverting the step site in
+    // convertToValue() (js/ion.rangeSlider.js) to
+    // `this.options.step.toString().split(".")[1]` -- from would report 0 on
+    // this drag instead of a real interior value.
+    test('dragging the from handle over a sub-microscopic range with a 1e-8 step lands on a real interior value, not 0 (#684)', async ({ page }) => {
+      // These are the reporter's exact numbers. from (5.62e-6) and to
+      // (5.66e-6) sit only 0.64% of the range apart -- under 4px on this
+      // fixture's 600px track, well inside the handle's own width -- so their
+      // handles visually overlap at these exact values, both before and
+      // after the fix. A plain page.mouse.down() at that shared pixel hits
+      // whichever handle wins the browser's paint order (.to, added later in
+      // the DOM with the same z-index), not .from. dispatchEvent fires the
+      // mousedown on the .from element directly -- matching how the plugin's
+      // own mousedown listener is bound per handle -- so the rest of the drag
+      // is real page.mouse input, exactly like a user dragging.
+      const configStr = "{ type: 'double', min: 0, max: 6.226e-6, step: 1e-8, from: 5.62e-6, to: 5.66e-6 }";
+      await open(page, configStr);
+
+      const fromHandle = page.locator('.irs-handle.from');
+      const fromBox = await fromHandle.boundingBox();
+      const lineBox = await page.locator('.irs-line').boundingBox();
+      const y = fromBox.y + fromBox.height / 2;
+
+      await fromHandle.dispatchEvent('mousedown', {
+        clientX: fromBox.x + fromBox.width / 2, clientY: y, button: 0, bubbles: true, cancelable: true,
+      });
+      await page.mouse.move(fromBox.x + fromBox.width / 2, y);
+      // The middle of the track: 50% of the 6.226e-6 range is 3.113e-6,
+      // inside the expected 1e-6..5e-6 neighborhood regardless of where the
+      // buggy pre-fix render initially placed the handle.
+      await page.mouse.move(lineBox.x + lineBox.width * 0.5, y, { steps: 12 });
+      await page.mouse.up();
+      await page.waitForTimeout(400);
+
+      const ev = await events(page);
+      const last = ev.filter((e) => e.type === 'onChange' || e.type === 'onFinish').at(-1);
+      expect(last, 'the drag must record at least one onChange/onFinish event').toBeTruthy();
+      expect(last.from).toBeGreaterThan(1e-6);
+      expect(last.from).toBeLessThan(5e-6);
+
+      // "data-from" here means the jQuery .data("from") cache writeToInput()
+      // sets on the input -- not a literal data-from DOM attribute, which
+      // jQuery's .data(key, value) never reflects back onto the element.
+      const dataFrom = await page.evaluate(() => window.jQuery('#slider').data('from'));
+      expect(dataFrom).toBeGreaterThan(1e-6);
+      expect(dataFrom).toBeLessThan(5e-6);
+    });
+  });
+
+  // #681: for every other option an empty data-* attribute means "not set",
+  // but prettify_separator's empty string is itself a meaningful value (it
+  // disables the thousands separator). The unit suite (test/unit/
+  // config-precedence.test.mjs) covers this at the options/_prettify level;
+  // jsdom has no layout, so this is the only place the rendered bubble text
+  // itself is checked. Mutation this catches: removing the `prop !==
+  // "prettify_separator"` exception from the data-* strip loop in
+  // js/ion.rangeSlider.js -- the bubble would read "1 234 567" instead of
+  // "1234567".
+  test('data-prettify-separator="" renders the handle bubble with no separator (#681)', async ({ page }) => {
+    await open(page, { min: 0, max: 10000000, from: 1234567 }, { attrs: JSON.stringify({ 'data-prettify-separator': '' }) });
+    await expect(page.locator('.irs-single')).toHaveText('1234567');
+  });
 });
