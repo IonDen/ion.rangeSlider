@@ -143,16 +143,41 @@ test('convertToValue rounds a fractional-min config to the min-anchored lattice 
   assert.equal(near16, -15.9, `convertToValue(${near16Percent}) = ${near16}, expected the clean lattice point -15.9 (-39.9 + 24)`);
 });
 
-test('convertToValue keeps a fractional-min lattice with an integer step instead of snapping to whole numbers (#760)', (t) => {
-  // {min: 0.5, step: 1} is a documented-quirk report: convertToValue() takes
-  // the "integer step" branch (divide/multiply by step, then toFixed(0)),
-  // which discards min's 0.5 offset and always lands on a whole number
-  // instead of the min-anchored lattice 0.5, 1.5, 2.5, ... Mutation: drop
-  // `this.getDecimalPlaces(min)` from the Math.max() that sizes the
-  // early-rounding precision (i.e. size it from the step's decimals alone).
+test('convertToValue keeps a fractional-min config with an integer step snapping to whole numbers, unchanged from 2.4.1 (#760)', (t) => {
+  // {min: 0.5, step: 1} is a documented quirk, deferred on purpose:
+  // convertToValue() takes the "integer step" branch (divide/multiply by
+  // step, then toFixed(0)), which discards min's 0.5 offset and always
+  // lands on a whole number instead of the min-anchored lattice 0.5, 1.5,
+  // 2.5, ... Widening this to the min-anchored lattice is a behavior
+  // change and stays out of scope for a patch release -- #760 only removes
+  // binary float noise for a negative min whose decimals exceed the
+  // step's. Values pinned straight from the 2.4.1 source (git show
+  // 4db8b18:js/ion.rangeSlider.js). Mutation this catches: widening
+  // early_precision with `Math.max(string, this.getDecimalPlaces(min))` --
+  // convertToValue(10)/(20) would then return 1.5 / 2.5.
   const { slider } = createSlider(t, '<input>', { min: 0.5, max: 10.5, step: 1 });
-  assert.equal(slider.convertToValue(10), 1.5);
-  assert.equal(slider.convertToValue(20), 2.5);
+  assert.equal(slider.convertToValue(10), 2);
+  assert.equal(slider.convertToValue(20), 3);
+});
+
+test('convertToValue lands on the min-anchored lattice above a 2-decimal min with a 1-decimal step, not the half-step-off 2.4.1 value (#760)', (t) => {
+  // {min: -39.95, max: 111, step: 0.1}: the min has more decimals (2) than
+  // the step (1). On 2.4.1 the final rounding sized itself from the step's
+  // decimals alone, so it printed -39.9 and -39.8 for the first two lattice
+  // points above min -- half a step off the true min-anchored lattice
+  // (-39.95 + 0.1 = -39.85, -39.95 + 0.2 = -39.75). Sizing the final
+  // rounding from the largest of step/min/max decimals lands on the
+  // correct points with no float noise. Mutation: revert the final
+  // `precision` to the step's own decimals alone (i.e. drop
+  // min_decimals/max_decimals from its Math.max()) -- convertToValue would
+  // then return -39.9 / -39.8 for these same percents.
+  const { slider } = createSlider(t, '<input>', { type: 'double', min: -39.95, max: 111, step: 0.1 });
+
+  const p1 = slider.convertToPercent(-39.85);
+  assert.equal(slider.convertToValue(p1), -39.85, `convertToValue(${p1}) expected the lattice point -39.85 (-39.95 + 0.1)`);
+
+  const p2 = slider.convertToPercent(-39.75);
+  assert.equal(slider.convertToValue(p2), -39.75, `convertToValue(${p2}) expected the lattice point -39.75 (-39.95 + 0.2)`);
 });
 
 test('calcWithStep snaps a percent to the step grid and clamps at 100', (t) => {

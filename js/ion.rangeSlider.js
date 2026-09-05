@@ -2282,21 +2282,26 @@
                 max = +(max + abs).toFixed(avg_decimals);
             }
 
-            // #760: rounding the pre-shift number to the step's own decimals
-            // (ignoring min) keeps it on the min-anchored step lattice --
-            // when min < 0 the shift above already absorbed min's decimals
-            // into an (almost exactly) whole-number offset, so re-reading
-            // the CURRENT (possibly shifted) min's decimals here still
-            // targets the right lattice granularity, both with and without
-            // the shift.
+            // #760: the pre-shift rounding uses the step's own decimals
+            // only, unchanged from 2.4.1. For a negative min the shift
+            // above moves the origin to exactly 0 (x + (-x) is +0 in IEEE
+            // 754), so the lattice here is k * step; rounding to the
+            // ORIGINAL min's decimals instead would land BETWEEN lattice
+            // points -- for the reporter's {min: -39.9, max: 111, step: 1},
+            // -2.2 / 35.6 / 73.3 instead of -1.9 / 35.1 / 73.1. min's own
+            // decimals come back through the subtraction below and are
+            // handled by the final rounding. For min >= 0 there is no
+            // shift, so this rounding is left unwidened on purpose:
+            // widening it would move {min: 0.01, step: 1}'s values such as
+            // 1, 2, 3 to 1.01, 2.01, 3.01 -- a behavior change kept out of
+            // a patch release.
             var number = ((max - min) / 100 * percent) + min,
                 string = this.getDecimalPlaces(this.options.step),
-                early_precision = Math.max(string, this.getDecimalPlaces(min)),
                 precision,
                 result;
 
-            if (early_precision) {
-                number = +number.toFixed(early_precision);
+            if (string) {
+                number = +number.toFixed(string);
             } else {
                 number = number / this.options.step;
                 number = number * this.options.step;

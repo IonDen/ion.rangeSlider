@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { open, eventTypes, drag, LABEL } from './helpers.mjs';
+import { open, eventTypes, events, drag, LABEL } from './helpers.mjs';
 
 // Real-browser coverage for issue #760: convertToValue() rounded its final
 // result to the decimals of options.step only, so a fractional min/max with
@@ -21,9 +21,6 @@ test.describe(`value precision coverage (${LABEL})`, () => {
       await open(page, { type: 'double', min: -39.9, max: 111, step: 1, grid: true, grid_num: 4 });
 
       const texts = await page.locator('.irs-grid-text').allTextContents();
-      for (const text of texts) {
-        expect(text, `grid label "${text}" must not carry a long decimal tail`).not.toMatch(/\d\.\d{4,}/);
-      }
       expect(texts).toEqual(['-39.9', '-1.9', '35.1', '73.1', '111']);
     });
 
@@ -36,7 +33,7 @@ test.describe(`value precision coverage (${LABEL})`, () => {
       await open(page, { type: 'double', min: -39.9, max: 111, step: 1 });
 
       // 20% of the line lands on a value whose shift-back subtraction
-      // (38 - 39.9, in the pre-fix shifted-then-unshifted arithmetic) is
+      // (31 - 39.9, in the pre-fix shifted-then-unshifted arithmetic) is
       // exactly where the bug leaks noise -- verified against the unfixed
       // source, which renders "-8.899 999 999 999 999" (the default
       // thousands separator grouping "-8.899999999999999") here.
@@ -44,7 +41,17 @@ test.describe(`value precision coverage (${LABEL})`, () => {
       await expect.poll(() => eventTypes(page)).toContain('onFinish');
 
       const label = await page.locator('.irs-from').textContent();
+      // Moved guard: min ("-39.9") also satisfies the format regex below, so
+      // without this a drag that silently failed to move the handle would
+      // still pass the assertion without proving the noise fix at all.
+      expect(label).not.toBe('-39.9');
       expect(label).toMatch(/^-?\d+(\.\d)?$/);
+
+      // -16 to 16 is the window (in this config) where 2.4.1's shift-back
+      // subtraction reintroduced binary float noise.
+      const finish = (await events(page)).find((e) => e.type === 'onFinish');
+      expect(finish.from).toBeGreaterThan(-16);
+      expect(finish.from).toBeLessThan(16);
 
       // writeToInput() stores "from" through jQuery's .data() cache, not a
       // reflected data-from DOM attribute -- read it back the same way (the
