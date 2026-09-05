@@ -66,6 +66,26 @@ test.describe(`feature and bugfix coverage (${LABEL})`, () => {
     await expect(page.locator('.irs-max')).toHaveText('cherry');
   });
 
+  // #852: setMinMax() returned early on hide_min_max, right after hiding the
+  // .irs-min/.irs-max nodes and BEFORE either branch wrote
+  // result.min_pretty/max_pretty, so a slider built with hide_min_max: true
+  // handed every callback a result object missing those two fields even
+  // though the on-screen labels were correctly hidden. Mutation this
+  // catches: restoring the early return above the numeric branch's result
+  // writes in setMinMax() (js/ion.rangeSlider.js) -- min_pretty/max_pretty
+  // would read undefined on the onStart payload instead of "0"/"100".
+  test('hide_min_max: true still reports min_pretty/max_pretty on the onStart payload, with the labels hidden (#852)', async ({ page }) => {
+    await open(page, { min: 0, max: 100, from: 30, hide_min_max: true });
+
+    const ev = await events(page);
+    const startEv = ev.find((e) => e.type === 'onStart');
+    expect(startEv, 'onStart must have fired').toBeTruthy();
+    expect(startEv).toMatchObject({ min_pretty: '0', max_pretty: '100' });
+
+    await expect(page.locator('.irs-min')).toBeHidden();
+    await expect(page.locator('.irs-max')).toBeHidden();
+  });
+
   // #503: from_min/from_max/to_min/to_max are mirrored onto the result
   // object handed to every callback. Mutation this catches: dropping the
   // mirroring in the constructor's initial result object (the `from_min:
