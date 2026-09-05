@@ -430,7 +430,11 @@
 
         for (prop in config_from_data) {
             if (config_from_data.hasOwnProperty(prop)) {
-                if (config_from_data[prop] === undefined || config_from_data[prop] === "") {
+                // #681: for every other option "" means "not set", but for
+                // prettify_separator an empty string is itself a meaningful
+                // value (it disables the thousands separator), so it is the
+                // one key excepted from the empty-string strip below.
+                if (config_from_data[prop] === undefined || (config_from_data[prop] === "" && prop !== "prettify_separator")) {
                     delete config_from_data[prop];
                 }
             }
