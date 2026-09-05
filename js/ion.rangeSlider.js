@@ -2692,8 +2692,10 @@
 
             // #772: a range holding fewer steps than grid_num can snap two
             // neighbouring ticks to the same value; equal neighbouring
-            // labels are shown once, the first and the last tick keep
-            // theirs. Compared as strings so a custom prettify_grid that
+            // labels are shown once. The first tick always keeps its label,
+            // and the last tick (exactly max) keeps its own rather than an
+            // earlier twin, unless every label is equal (min === max), where
+            // only the first stays. Compared as strings so a custom prettify_grid that
             // maps two values to one text is deduplicated the same way.
             // Values mode is exempt: each tick is a real values entry, so a
             // duplicate entry or a merging prettify is the user's own data.

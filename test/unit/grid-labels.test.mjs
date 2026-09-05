@@ -8,8 +8,10 @@ import { createSlider } from './helpers.mjs';
 // neighbouring ticks snap to the same value and the same label text is
 // emitted twice (min: 1, max: 4, grid_num left at its default of 4 renders
 // ["1","2","3","3","4"]). The fix keeps every `.irs-grid-pol` mark and
-// `.irs-grid-text` span (so tick count and position are unchanged) but
-// blanks the text of a tick whose label repeats the previous tick's label.
+// `.irs-grid-text` span (so tick count and position are unchanged) and, in a
+// pass after the tick loop, blanks the text of a label that repeats the last
+// kept one; a repeat landing on the last tick (exactly max) keeps that tick's
+// label and blanks the earlier twin instead. Values mode is left untouched.
 
 function gridTexts(slider) {
   return slider.$cache.grid.find('.irs-grid-text').map(function () { return this.textContent; }).get();
