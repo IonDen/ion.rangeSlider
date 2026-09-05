@@ -1242,6 +1242,25 @@
                 return;
             }
 
+            var min_pretty, max_pretty;
+
+            if (this.options.values.length) {
+                min_pretty = this.options.p_values[this.options.min];
+                max_pretty = this.options.p_values[this.options.max];
+            } else {
+                min_pretty = this._prettifyMinMax(this.options.min);
+                max_pretty = this._prettifyMinMax(this.options.max);
+            }
+
+            // result carries the prettified entry regardless of hide_min_max, so
+            // callback consumers always get current data; decorate() (prefix/
+            // postfix), the DOM writes and the width measurement below are
+            // display-only, so they stay below the hide_min_max check (and
+            // labels.w_min/w_max stay 0 for hidden labels, as before) while the
+            // result writes sit above it (#852)
+            this.result.min_pretty = min_pretty;
+            this.result.max_pretty = max_pretty;
+
             if (this.options.hide_min_max) {
                 this.$cache.min[0].style.display = "none";
                 this.$cache.max[0].style.display = "none";
@@ -1249,22 +1268,9 @@
             }
 
             if (this.options.values.length) {
-                var min_pretty = this.options.p_values[this.options.min];
-                var max_pretty = this.options.p_values[this.options.max];
-
-                // result carries the prettified entry; decorate() (prefix/postfix) is DOM-only, same as the numeric branch below
-                this.result.min_pretty = min_pretty;
-                this.result.max_pretty = max_pretty;
-
                 this.$cache.min.html(this.decorate(min_pretty));
                 this.$cache.max.html(this.decorate(max_pretty));
             } else {
-                var min_pretty = this._prettifyMinMax(this.options.min);
-                var max_pretty = this._prettifyMinMax(this.options.max);
-
-                this.result.min_pretty = min_pretty;
-                this.result.max_pretty = max_pretty;
-
                 this.$cache.min.html(this.decorate(min_pretty, this.options.min));
                 this.$cache.max.html(this.decorate(max_pretty, this.options.max));
             }
