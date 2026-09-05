@@ -23,16 +23,34 @@ test('release branch with drift fails, naming the stale file', () => {
 });
 
 test('release branch without drift passes', () => {
-  // One-line bug that reds this: flip the release regex (e.g. anchor it to
-  // `^releases/` or drop the trailing slash), so this release branch would
-  // stop being recognised as one and fall through to the feature-branch path.
+  // One-line bug that reds this: narrow the release regex (e.g. require a
+  // `release/v` prefix) so `release/` no longer matches this head branch and
+  // decide() falls through to the feature-branch path. changedBuiltFiles is
+  // empty here specifically so that fallthrough hits the "no built-file
+  // changes" skip branch (skipped: true), which reds the skipped === false
+  // assertion below; the message assertion then pins the release-branch
+  // wording itself.
   const result = decide({
     headRef: 'release/2.4.2',
-    changedBuiltFiles: ['js/ion.rangeSlider.min.js'],
+    changedBuiltFiles: [],
     driftedBuiltFiles: [],
   });
   assert.equal(result.ok, true);
   assert.equal(result.skipped, false);
+  assert.match(result.message, /^release branch/);
+});
+
+test('a release-looking segment that is not the branch prefix is still a feature branch', () => {
+  // One-line bug that reds this: drop the `^` anchor from the release regex
+  // (`/release\//` instead of `/^release\//`), so a branch that merely
+  // contains "release/" anywhere in its name would be treated as a release
+  // branch and judged strictly against driftedBuiltFiles instead of skipped.
+  const result = decide({
+    headRef: 'fix/853-release/notes',
+    changedBuiltFiles: [],
+    driftedBuiltFiles: ['css/ion.rangeSlider.css'],
+  });
+  assert.equal(result.skipped, true);
 });
 
 test('feature branch with no built-file changes skips', () => {
@@ -86,4 +104,19 @@ test('a drifted file the PR did not touch does not fail a feature branch', () =>
   });
   assert.equal(result.ok, true);
   assert.equal(result.skipped, false);
+});
+
+test('feature branch with two changed built files, only one drifted: message names only that one', () => {
+  // One-line bug that reds this: report the full changedBuiltFiles list
+  // instead of the changed-and-drifted intersection (`offending`), so the
+  // message would also name js/ion.rangeSlider.min.js even though that file
+  // never drifted.
+  const result = decide({
+    headRef: 'fix/845-slug',
+    changedBuiltFiles: ['js/ion.rangeSlider.min.js', 'css/ion.rangeSlider.min.css'],
+    driftedBuiltFiles: ['css/ion.rangeSlider.min.css'],
+  });
+  assert.equal(result.ok, false);
+  assert.match(result.message, /css\/ion\.rangeSlider\.min\.css/);
+  assert.doesNotMatch(result.message, /js\/ion\.rangeSlider\.min\.js/);
 });

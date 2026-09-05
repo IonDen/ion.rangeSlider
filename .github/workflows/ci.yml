@@ -71,4 +71,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: node scripts/check-dist.mjs --base "${{ github.base_ref }}" --head "${{ github.head_ref }}"
+      - run: node scripts/check-dist.mjs --base "$BASE_REF" --head "$HEAD_REF"
+        env:
+          BASE_REF: ${{ github.base_ref }}
+          HEAD_REF: ${{ github.head_ref }}

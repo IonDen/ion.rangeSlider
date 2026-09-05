@@ -16,21 +16,35 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 function arg(name) {
   const i = process.argv.indexOf(`--${name}`);
-  if (i === -1 || i + 1 >= process.argv.length) {
+  const value = i === -1 ? undefined : process.argv[i + 1];
+  if (!value) {
     console.error(`usage: node scripts/check-dist.mjs --base <base-branch> --head <head-branch>`);
     process.exit(2);
   }
-  return process.argv[i + 1];
+  return value;
+}
+
+function fail(err) {
+  console.error(err.stderr || err.message);
+  process.exit(1);
 }
 
 function git(args) {
-  return execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
+  try {
+    return execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
+  } catch (err) {
+    return fail(err);
+  }
 }
 
 const base = arg('base');
 const head = arg('head');
 
-execFileSync('node', [resolve(root, 'scripts/build.mjs')], { stdio: 'inherit' });
+try {
+  execFileSync('node', [resolve(root, 'scripts/build.mjs')], { stdio: 'inherit' });
+} catch (err) {
+  fail(err);
+}
 
 const changedRaw = git(['diff', '--name-only', `origin/${base}...HEAD`, '--', ...BUILT_FILES]);
 const changedBuiltFiles = changedRaw ? changedRaw.split('\n') : [];

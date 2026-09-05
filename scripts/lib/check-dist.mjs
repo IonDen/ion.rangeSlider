@@ -46,7 +46,7 @@ export function decide({ headRef, changedBuiltFiles, driftedBuiltFiles }) {
     return {
       ok: false,
       skipped: false,
-      message: `built file(s) do not match the build output, rebuild with npm run build: ${offending.join(', ')}`,
+      message: `built file(s) in this pull request do not match a fresh build; remove them from the pull request, built files are regenerated at release (see CONTRIBUTING.md): ${offending.join(', ')}`,
     };
   }
   return { ok: true, skipped: false, message: 'built files this pull request changed match the build output.' };
