@@ -22,6 +22,49 @@ test.describe(`smoke (${LABEL})`, () => {
     expect(types.at(-1)).toBe('onFinish');
   });
 
+  // #851: pointerUp() redraws through drawHandles() with a forced redraw,
+  // and the onChange guard there never checked whether from/to actually
+  // changed -- only whether is_resize/is_update/is_start/is_finish was set.
+  // Releasing the button motionless, after the last pointer-move tick has
+  // already been drawn (which is how most real mouse/touch drags end -- the
+  // browser's own animation-frame loop renders while the button is still
+  // held), fired onChange a second time with the exact value already
+  // reported. Holding the button for a while before releasing, below, gives
+  // the page a real animation frame to render the last move before mouseup.
+  // The pre-fix red therefore depends on that frame landing during the hold;
+  // on the fixed code the assertions below hold regardless of frame timing.
+  test('releasing a drag that has already rendered does not repeat the last onChange (#851)', async ({ page }) => {
+    await open(page, { min: 0, max: 100, from: 0 });
+    const h = await page.locator('.irs-handle.single').boundingBox();
+    const l = await page.locator('.irs-line').boundingBox();
+    const x = h.x + h.width / 2, y = h.y + h.height / 2;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x + l.width * 0.5, y, { steps: 12 });
+    await page.waitForTimeout(150);
+    await page.mouse.up();
+
+    const ev = await events(page);
+    const types = ev.map((e) => e.type);
+    expect(types.at(-1)).toBe('onFinish');
+
+    // One-line bug this catches: dropping the "did from/to actually change"
+    // check from drawHandles()'s onChange condition -- the release above
+    // adds one more onChange carrying the exact same from/to as the one
+    // right before it.
+    for (let i = 1; i < ev.length; i++) {
+      if (ev[i].type === 'onChange' && ev[i - 1].type === 'onChange') {
+        expect(ev[i].from === ev[i - 1].from && ev[i].to === ev[i - 1].to).toBe(false);
+      }
+    }
+
+    const last = ev[ev.length - 1];
+    const beforeLast = ev[ev.length - 2];
+    expect(beforeLast.type).toBe('onChange');
+    expect(beforeLast.from).toBe(last.from);
+    expect(beforeLast.to).toBe(last.to);
+  });
+
   test('clicking the line jumps to the clicked value', async ({ page }) => {
     await open(page, { min: 0, max: 100, from: 0 });
     const l = await page.locator('.irs-line').boundingBox();
@@ -251,6 +294,30 @@ test.describe(`smoke (${LABEL})`, () => {
     // current_plugin assignment is unexercised here; it matters once a
     // second slider is on the page, which this suite does not cover.
     await expect.poll(() => eventTypes(page)).toEqual(['onStart', 'onChange', 'onFinish', 'onChange', 'onFinish']);
+  });
+
+  // #851: an arrow-key press with the handle already at the range edge is
+  // a no-op -- the value cannot move any further -- but the pre-fix
+  // onChange guard did not check for that, so it fired onChange for a
+  // value that never changed, right before the (correct) onFinish.
+  test('an arrow key press at the range edge fires onFinish only, no onChange (#851)', async ({ page }) => {
+    await open(page, { min: 0, max: 100, from: 0 });
+    await page.locator('.irs-line').focus();
+    await expect(page.locator('.irs-line')).toBeFocused();
+    // Outlast the idle render poll so a still-buggy focus handler cannot
+    // hide inside the same idle pass the key press below consumes (mirrors
+    // the keyboard test above).
+    await page.waitForTimeout(400);
+    const before = (await events(page)).length;
+
+    await page.keyboard.press('ArrowLeft');
+    await expect.poll(async () => (await events(page)).length).toBeGreaterThan(before);
+
+    const added = (await events(page)).slice(before).map((e) => e.type);
+    // One-line bug this catches: dropping the "did from/to actually change"
+    // check from drawHandles()'s onChange condition -- the no-op press
+    // above still reports onChange before onFinish.
+    expect(added).toEqual(['onFinish']);
   });
 
   test('double: two handles, the input holds "from;to", dragging "to" keeps from', async ({ page }) => {

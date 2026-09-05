@@ -39,6 +39,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - run: npm run build
       - id: pw
         run: echo "version=$(node -e 'console.log(require("@playwright/test/package.json").version)')" >> "$GITHUB_OUTPUT"
       - uses: actions/cache@v4
