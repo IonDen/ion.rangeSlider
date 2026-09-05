@@ -122,6 +122,67 @@ test('convertToValue handles a negative exponent-notation min symmetrically (#68
   assert.ok(Math.abs(q3 - 5e-8) <= 1e-8, `convertToValue(75) = ${q3}, expected within one step of 5e-8`);
 });
 
+test('convertToValue rounds a fractional-min config to the min-anchored lattice instead of leaking binary float noise (#760)', (t) => {
+  // Before #760 convertToValue() rounded its final result to the decimals
+  // of options.step only; with a fractional min and an integer step (the reporter's
+  // {min: -39.9, max: 111, step: 1}) the shift-back from the negative-min
+  // offset reintroduces float noise: the value nearest 0 comes back as
+  // 0.10000000000000142 instead of 0.1, and the value nearest -16 comes back
+  // as -15.899999999999999 instead of -15.9. Both ARE the correct
+  // min-anchored lattice points (-39.9 + 40 = 0.1, -39.9 + 24 = -15.9); only
+  // the noise needs to go. Mutation: drop min_decimals/max_decimals from the
+  // final rounding precision (use the step's own decimals alone, i.e. revert
+  // to the pre-#760 `string`-only precision).
+  const { slider } = createSlider(t, '<input>', { type: 'double', min: -39.9, max: 111, step: 1 });
+  const nearZeroPercent = slider.convertToPercent(0);
+  const nearZero = slider.convertToValue(nearZeroPercent);
+  assert.equal(nearZero, 0.1, `convertToValue(${nearZeroPercent}) = ${nearZero}, expected the clean lattice point 0.1 (-39.9 + 40)`);
+
+  const near16Percent = slider.convertToPercent(-16);
+  const near16 = slider.convertToValue(near16Percent);
+  assert.equal(near16, -15.9, `convertToValue(${near16Percent}) = ${near16}, expected the clean lattice point -15.9 (-39.9 + 24)`);
+});
+
+test('convertToValue keeps a fractional-min config with an integer step snapping to whole numbers, unchanged from 2.4.1 (#760)', (t) => {
+  // {min: 0.5, step: 1} is a documented quirk, deferred on purpose:
+  // convertToValue() takes the "integer step" branch (divide/multiply by
+  // step, then toFixed(0)), which discards min's 0.5 offset and always
+  // lands on a whole number instead of the min-anchored lattice 0.5, 1.5,
+  // 2.5, ... Widening this to the min-anchored lattice is a behavior
+  // change and stays out of scope for a patch release -- #760 only removes
+  // binary float noise for a negative min whose decimals exceed the
+  // step's. Values pinned straight from the 2.4.1 source (git show
+  // 2.4.1:js/ion.rangeSlider.js). Mutation this catches: sizing the
+  // pre-shift toFixed() from Math.max(string, this.getDecimalPlaces(min))
+  // instead of the step's decimals alone -- convertToValue(10)/(20) would
+  // then return 1.5 / 2.5.
+  const { slider } = createSlider(t, '<input>', { min: 0.5, max: 10.5, step: 1 });
+  assert.equal(slider.convertToValue(10), 2);
+  assert.equal(slider.convertToValue(20), 3);
+});
+
+test('convertToValue keeps a 2-decimal negative min with a 1-decimal step at the 2.4.1 values, half a step off the scale on purpose (#760)', (t) => {
+  // {min: -39.95, max: 111, step: 0.1}: the min has more decimals (2) than
+  // the fractional step (1). 2.4.1 rounds the result to the step's own
+  // decimals, so the first two step-aligned points above min print as
+  // -39.9 and -39.8 -- half a step off the min-anchored scale (-39.95 + 0.1
+  // = -39.85, -39.95 + 0.2 = -39.75). Moving them onto the scale changes
+  // values, not just noise, so it stays out of a patch release; #760 widens
+  // the final rounding for whole-number steps only, where 2.4.1 produced
+  // float noise. Values pinned straight from the 2.4.1 source (git show
+  // 2.4.1:js/ion.rangeSlider.js). Mutation this catches: widening the
+  // final rounding for fractional steps too (precision =
+  // Math.max(string, min_decimals, max_decimals) unconditionally) --
+  // convertToValue would then return -39.85 / -39.75 for these percents.
+  const { slider } = createSlider(t, '<input>', { type: 'double', min: -39.95, max: 111, step: 0.1 });
+
+  const p1 = slider.convertToPercent(-39.85);
+  assert.equal(slider.convertToValue(p1), -39.9, `convertToValue(${p1}) expected the 2.4.1 value -39.9`);
+
+  const p2 = slider.convertToPercent(-39.75);
+  assert.equal(slider.convertToValue(p2), -39.8, `convertToValue(${p2}) expected the 2.4.1 value -39.8`);
+});
+
 test('calcWithStep snaps a percent to the step grid and clamps at 100', (t) => {
   const { slider } = createSlider(t, '<input>', { min: 0, max: 10, step: 2 }); // p_step = 20
   assert.equal(slider.calcWithStep(29), 20);
