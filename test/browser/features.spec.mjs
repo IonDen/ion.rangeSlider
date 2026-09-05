@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { open, events, eventTypes, input, drag, LABEL } from './helpers.mjs';
+import { open, events, eventTypes, input, drag, touchDrag, LABEL } from './helpers.mjs';
 
 // Real-browser coverage for ion.rangeSlider features and bugfixes. Each of
 // these already has jsdom unit coverage; these tests exercise the same fixes
@@ -454,6 +454,79 @@ test.describe(`feature and bugfix coverage (${LABEL})`, () => {
       // across both drags -- never a bare index and never a stray 0.
       const pretty = await page.evaluate(() => window.__pretty);
       expect(pretty.every((n) => [1, 5, 20, 100, 1000].includes(n))).toBe(true);
+    });
+  });
+
+  test.describe('#507 coincident double-slider handles', () => {
+    // #507: with a double slider whose from and to start equal, both handle
+    // spans render at the exact same pixel. setTopHandler() (js/ion.rangeSlider.js)
+    // gives the top z-index to "to" for any non-max pair, so a real
+    // mousedown always lands on it -- and calc()'s "to may not pass from"
+    // crossing guard then only lets it move away from "from", never toward
+    // it. The unit suite (test/unit/coincident-handles.test.mjs) drives the
+    // same fix through direct pointerDown()/pointerMove() calls with jsdom's
+    // stubbed geometry; these tests exercise it through the real element
+    // stacking and hit-testing jsdom cannot provide, which is exactly what
+    // the reported bug depends on.
+
+    test('mouse: dragging the coincident handle left reveals "from" while "to" stays put (#507)', async ({ page }) => {
+      await open(page, { type: 'double', min: 0, max: 100, from: 50, to: 50, step: 1 });
+      // Both handles sit at the same spot; the real click lands on whichever
+      // one is on top ("to", per setTopHandler() above) regardless of which
+      // selector's bounding box this reads.
+      await drag(page, '.irs-handle.to', -0.2);
+
+      // One-line bug this catches: dropping pointerDown()/pointerMove()'s
+      // direction-based reassignment of this.target -- the drag would leave
+      // both from and to at 50.
+      const [from, to] = (await input(page).inputValue()).split(';').map(Number);
+      expect(from).toBeLessThan(50);
+      expect(to).toBe(50);
+    });
+
+    test('mouse: dragging the coincident handle right moves "to" up while "from" stays put (#507)', async ({ page }) => {
+      // Already green on 2.4.1: a real click lands on "to" (the top
+      // handle, per setTopHandler() above), and "to" moving right, away
+      // from the coincident "from", was never blocked by the reported bug
+      // -- this is a characterization test, not red-first evidence.
+      // Catcher: a mutation that always resolves the direction switch to
+      // "from" regardless of movement direction -- "from" cannot move right
+      // past the coincident "to" either, so this drag would leave both
+      // values pinned at 50 instead of raising "to".
+      await open(page, { type: 'double', min: 0, max: 100, from: 50, to: 50, step: 1 });
+      await drag(page, '.irs-handle.to', 0.2);
+
+      const [from, to] = (await input(page).inputValue()).split(';').map(Number);
+      expect(to).toBeGreaterThan(50);
+      expect(from).toBe(50);
+    });
+
+    test('touch: dragging the coincident handle left through real touch dispatch reveals "from" (#507)', async ({ page, browserName }) => {
+      // browserContext.newCDPSession() (see touchDrag() in helpers.mjs) is
+      // chromium-only; firefox/webkit skip rather than fail.
+      test.skip(browserName !== 'chromium', 'real touch dispatch via CDP is chromium-only');
+      await open(page, { type: 'double', min: 0, max: 100, from: 50, to: 50, step: 1 });
+      await touchDrag(page, '.irs-handle.to', -0.2);
+
+      // Same fix, exercised through the touchstart/touchmove/touchend path
+      // shared with mouse (pointerDown()/pointerMove()/pointerUp() bind both
+      // -- see bindEvents() in js/ion.rangeSlider.js) rather than mousedown/
+      // mousemove/mouseup.
+      const [from, to] = (await input(page).inputValue()).split(';').map(Number);
+      expect(from).toBeLessThan(50);
+      expect(to).toBe(50);
+    });
+
+    test('keyboard: the increase arrow on a coincident pair moves "to" to 51 (#507)', async ({ page }) => {
+      await open(page, { type: 'double', min: 0, max: 100, from: 50, to: 50, step: 1 });
+      await page.locator('.irs-line').focus();
+
+      // One-line bug this catches: dropping moveByKey()'s keyboard target
+      // switch -- pointerFocus() always arms "from" by default, and
+      // increasing "from" toward a coincident "to" hits the same crossing
+      // guard the mouse path does, leaving the value at "50;50".
+      await page.keyboard.press('ArrowRight');
+      await expect(input(page)).toHaveValue('50;51');
     });
   });
 

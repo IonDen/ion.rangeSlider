@@ -191,6 +191,19 @@
         this.is_active = false;
         this.is_resize = false;
         this.is_click = false;
+        // #507: true from a mousedown/touchstart on a coincident from/to
+        // pair (double mode) until the first real pointermove picks a
+        // direction, or the press is released with no movement at all --
+        // see pointerDown()/pointerMove()/pointerUp(). coincident_pending_x
+        // is the pageX read at that mousedown/touchstart.
+        this.coincident_pending = false;
+        this.coincident_pending_x = 0;
+        // #507: like coincident_pending above, but for the keyboard path --
+        // true only when pointerFocus() just armed its DEFAULT target (no
+        // explicit prior click) onto a pair that is coincident right then;
+        // re-resolved on every key press while the pair stays coincident
+        // and cleared once a press moves a value, see moveByKey().
+        this.coincident_key_pending = false;
 
         options = options || {};
 
@@ -517,6 +530,15 @@
             this.coords.p_step = this.convertToPercent(this.options.step, true);
 
             this.target = "base";
+            // #507: init() re-runs on update()/reset() (remove() + init(),
+            // not the constructor), so a flag left armed by a press or focus
+            // from before the re-init -- e.g. a still-pending
+            // coincident_key_pending from a focus that happened just before
+            // an update() call -- must not survive into the rebuilt
+            // instance's own $cache handles.
+            this.coincident_pending = false;
+            this.coincident_pending_x = 0;
+            this.coincident_key_pending = false;
 
             this.toggleInput();
             this.append();
@@ -803,6 +825,23 @@
             if (!this.target) {
                 this.current_plugin = this.plugin_count;
                 this.target = this.options.type === "single" ? "single" : "from";
+
+                // #507: this default target is a guess (no explicit prior
+                // click chose it) -- if the pair happens to be coincident
+                // right now, "from" may be the buried handle the user can
+                // never actually reach with it. Let the key presses that
+                // follow resolve that, mirroring the mouse path's own
+                // coincident_pending (see moveByKey()). An assignment, not
+                // just a conditional "= true": defensive, so a focus that
+                // does NOT qualify (single mode, or a non-coincident pair)
+                // never leaves an older value in place. The ARMING check runs
+                // only here (the resolution in moveByKey() is per press), so a
+                // pair that only becomes coincident through legitimate,
+                // already-armed keyboard movement -- e.g. stepping "from" up
+                // until it meets "to" -- keeps clamping there exactly as
+                // before (#302); that instance never had a "wrong default"
+                // problem to begin with.
+                this.coincident_key_pending = this.options.type !== "single" && this.result.from === this.result.to;
             }
         },
 
@@ -817,8 +856,37 @@
                 return;
             }
 
-            var x = e.pageX || e.originalEvent.touches && e.originalEvent.touches[0].pageX;
+            var x = e.pageX || e.originalEvent.touches && e.originalEvent.touches[0].pageX,
+                hit_target;
+
             this.coords.x_pointer = x - this.coords.x_gap;
+
+            // #507: resolve which handle a coincident-pair press actually
+            // meant to grab from the direction of the first real movement --
+            // moving right means "to", moving left means "from" -- EXCEPT
+            // when that handle is fixed, in which case the other (non-fixed)
+            // handle is chosen instead, regardless of which handle was
+            // actually hit: e.g. with to_fixed, a hit on "to" that then
+            // moves right still resolves to "from" (mirrors chooseHandle()'s
+            // own from_fixed/to_fixed ternary). changeLevel() re-arms
+            // .type_last/state_hover and p_gap for the resolved handle, same
+            // as a fresh pointerDown on it would; if that resolved handle
+            // differs from the one actually hit, the hit handle's own
+            // state_hover (added by pointerDown()'s own changeLevel() call)
+            // is removed below, since changeLevel() only ever adds hover to
+            // its target and never clears a different handle's.
+            if (this.coincident_pending && x !== this.coincident_pending_x) {
+                hit_target = this.target;
+                this.target = x > this.coincident_pending_x ?
+                    (this.options.to_fixed ? "from" : "to") :
+                    (this.options.from_fixed ? "to" : "from");
+                this.coincident_pending = false;
+                this.changeLevel(this.target);
+
+                if (this.target !== hit_target) {
+                    (hit_target === "to" ? this.$cache.s_to : this.$cache.s_from).removeClass("state_hover");
+                }
+            }
 
             this.calc();
         },
@@ -857,6 +925,11 @@
             }
 
             this.dragging = false;
+            // #507: a press-and-release with no movement never reaches
+            // pointerMove()'s own resolution -- clear it here so it can
+            // never leak into the next, unrelated press (see the flag's
+            // declaration in the constructor).
+            this.coincident_pending = false;
         },
 
         /**
@@ -883,6 +956,29 @@
 
             this.current_plugin = this.plugin_count;
             this.target = target;
+            // #507: an explicit press always overrides a keyboard default
+            // that was only ever a guess (see pointerFocus()) and is now
+            // moot -- drop any resolution still pending for it so a later,
+            // unrelated key press never resolves against it.
+            this.coincident_key_pending = false;
+
+            // #507: with a double slider's from/to coincident, the hit
+            // handle (target here) is whichever setTopHandler()/changeLevel()
+            // last put on top, not necessarily the one the user means to
+            // move -- defer committing to it until pointerMove() sees which
+            // way the press actually goes. target stays the hit handle in
+            // the meantime, so drawing code never sees a null target. Both
+            // branches assign (never just the true side), so a press that
+            // does NOT qualify -- including one interrupted before
+            // pointerMove()/pointerUp() ever run again, e.g. a touchcancel or
+            // a mouseup delivered outside the window -- can never leave a
+            // stale true/x behind for the next, unrelated press to pick up.
+            if (this.options.type !== "single" && (target === "from" || target === "to") && this.result.from === this.result.to) {
+                this.coincident_pending = true;
+                this.coincident_pending_x = x;
+            } else {
+                this.coincident_pending = false;
+            }
 
             this.is_active = true;
             this.dragging = true;
@@ -918,6 +1014,8 @@
 
             this.current_plugin = this.plugin_count;
             this.target = target;
+            // #507: see the matching comment in pointerDown().
+            this.coincident_key_pending = false;
 
             this.is_click = true;
             this.coords.x_gap = this.$cache.rs.offset().left;
@@ -990,6 +1088,40 @@
                 return;
             }
 
+            // #507: resolve pointerFocus()'s default-armed target ("from")
+            // for as long as the pair it landed on stays coincident, in case
+            // it defaulted onto a handle buried under that pair -- stepping
+            // it toward the other one would otherwise hit the same calc()
+            // crossing guard the mouse path does, and the key press would
+            // silently do nothing. Re-resolved on EVERY press while pending,
+            // not just the first: a press whose direction is itself blocked
+            // (e.g. increasing "to" from an already-maxed 100/100) leaves
+            // the pair coincident, and a one-shot switch that committed to
+            // "to" there and cleared the flag would then strand the pair --
+            // the opposite-direction press that follows needs the SAME
+            // re-resolution to reach "from" instead. Only committed to the
+            // OTHER handle, same as the mouse path, mirroring
+            // chooseHandle()'s own from_fixed/to_fixed ternary so a fixed
+            // handle is never the one picked; when the direction's own
+            // handle is fixed, this.target is left as it already is (calc()'s
+            // own from_fixed/to_fixed guard turns that press into a no-op,
+            // same as it would for a fixed handle hit directly). The switch
+            // toggles .type_last directly rather than through changeLevel():
+            // that would add state_hover (which only pointerUp() removes) and,
+            // with no pointer position yet, set a p_gap that clamps this very
+            // press to 0, killing the step.
+            if (this.coincident_key_pending && this.result.from === this.result.to) {
+                if (right && !this.options.to_fixed) {
+                    this.target = "to";
+                    this.$cache.s_to.addClass("type_last");
+                    this.$cache.s_from.removeClass("type_last");
+                } else if (!right && !this.options.from_fixed) {
+                    this.target = "from";
+                    this.$cache.s_from.addClass("type_last");
+                    this.$cache.s_to.removeClass("type_last");
+                }
+            }
+
             switch (this.target) {
                 case "single":
                     p_real = this.coords.p_single_real + step;
@@ -1021,6 +1153,17 @@
 
                 this.is_key = true;
                 this.calc();
+
+                // #507: only clear once a press has actually moved the pair
+                // apart -- checked here, after calc() has run, rather than
+                // before it, so a press that resolves to a handle whose step
+                // is itself clamped right back to the same coincident value
+                // (e.g. increasing "to" from an already-maxed 100/100) keeps
+                // the flag armed for the next, opposite-direction press to
+                // resolve instead of stranding the pair.
+                if (this.coincident_key_pending && this.result.from !== this.result.to) {
+                    this.coincident_key_pending = false;
+                }
             }
         },
 
