@@ -443,8 +443,7 @@ test.describe(`feature and bugfix coverage (${LABEL})`, () => {
     // no-repeated-neighbour assertions below.
     test('a range with fewer steps than grid_num shows the repeated tick once, not twice (#772)', async ({ page }) => {
       await open(page, {
-        type: 'integer', min: 1, max: 4, from: 1, to: 4,
-        postfix: '', hide_min_max: true, grid: true
+        min: 1, max: 4, from: 1, to: 4, hide_min_max: true, grid: true
       });
 
       const texts = await page.locator('.irs-grid-text').allTextContents();
@@ -456,6 +455,21 @@ test.describe(`feature and bugfix coverage (${LABEL})`, () => {
       }
 
       expect(texts.filter((t) => t !== '')).toEqual(['1', '2', '3', '4']);
+    });
+
+    // Pin: min: 1, max: 3 repeats twice, with the second repeat landing on
+    // the last tick -- the fix keeps that tick's label ("3") over its
+    // earlier twin instead of blanking it. Mutation this catches: dropping
+    // the last-tick branch in appendGrid()'s dedup pass (js/ion.rangeSlider.js)
+    // -- the last tick would blank instead, leaving the range's right edge
+    // unlabeled.
+    test('a repeat landing on the last tick keeps that tick label, not its earlier twin (#772)', async ({ page }) => {
+      await open(page, { min: 1, max: 3, grid: true });
+
+      const texts = await page.locator('.irs-grid-text').allTextContents();
+      expect(texts.length).toBe(5);
+      expect(texts[texts.length - 1]).toBe('3');
+      expect(texts[texts.length - 2]).toBe('');
     });
   });
 });
