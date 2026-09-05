@@ -82,8 +82,13 @@ test.describe(`feature and bugfix coverage (${LABEL})`, () => {
     expect(startEv, 'onStart must have fired').toBeTruthy();
     expect(startEv).toMatchObject({ min_pretty: '0', max_pretty: '100' });
 
-    await expect(page.locator('.irs-min')).toBeHidden();
-    await expect(page.locator('.irs-max')).toBeHidden();
+    // toHaveCount + toHaveCSS rather than toBeHidden: toBeHidden also passes
+    // when the locator matches nothing, which would not prove the labels
+    // exist and are hidden.
+    await expect(page.locator('.irs-min')).toHaveCount(1);
+    await expect(page.locator('.irs-max')).toHaveCount(1);
+    await expect(page.locator('.irs-min')).toHaveCSS('display', 'none');
+    await expect(page.locator('.irs-max')).toHaveCSS('display', 'none');
   });
 
   // #503: from_min/from_max/to_min/to_max are mirrored onto the result

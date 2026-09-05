@@ -70,9 +70,11 @@ test('hide_min_max: true keeps .irs-min/.irs-max hidden, at init and after an up
 
   const { slider: updatedSlider } = createSlider(t, '<input>', { min: 0, max: 100, from: 30 });
   updatedSlider.update({ hide_min_max: true, max: 500 });
-  // One-line bug this catches: dropping the `style.display = "none"` lines
-  // during the restructure -- the labels would fall back to visible instead
-  // of staying hidden once the pretty-string writes moved above the check.
+  // Characterization pin: green before and after the #852 fix (2.4.1 already
+  // hid the labels; only the result writes were missing). One-line bug this
+  // catches: dropping the `style.display = "none"` lines during the
+  // restructure -- the labels would fall back to visible instead of staying
+  // hidden once the pretty-string writes moved above the check.
   assert.equal(updatedSlider.$cache.min[0].style.display, 'none', 'hidden after update');
   assert.equal(updatedSlider.$cache.max[0].style.display, 'none', 'hidden after update');
 });

@@ -1111,9 +1111,10 @@
 
             // result carries the prettified entry regardless of hide_min_max, so
             // callback consumers always get current data; decorate() (prefix/
-            // postfix) and the DOM writes below are display-only and must not
-            // run when the labels are hidden -- that's why they stay below the
-            // hide_min_max check while the result writes stay above it (#852)
+            // postfix), the DOM writes and the width measurement below are
+            // display-only, so they stay below the hide_min_max check (and
+            // labels.w_min/w_max stay 0 for hidden labels, as before) while the
+            // result writes sit above it (#852)
             this.result.min_pretty = min_pretty;
             this.result.max_pretty = max_pretty;
 
