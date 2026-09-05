@@ -2139,12 +2139,21 @@
                 max = +(max + abs).toFixed(avg_decimals);
             }
 
+            // #760: rounding the pre-shift number to the step's own decimals
+            // (ignoring min) keeps it on the min-anchored step lattice --
+            // when min < 0 the shift above already absorbed min's decimals
+            // into an (almost exactly) whole-number offset, so re-reading
+            // the CURRENT (possibly shifted) min's decimals here still
+            // targets the right lattice granularity, both with and without
+            // the shift.
             var number = ((max - min) / 100 * percent) + min,
                 string = this.getDecimalPlaces(this.options.step),
+                early_precision = Math.max(string, this.getDecimalPlaces(min)),
+                precision,
                 result;
 
-            if (string) {
-                number = +number.toFixed(string);
+            if (early_precision) {
+                number = +number.toFixed(early_precision);
             } else {
                 number = number / this.options.step;
                 number = number * this.options.step;
@@ -2156,8 +2165,16 @@
                 number -= abs;
             }
 
-            if (string) {
-                result = +number.toFixed(string);
+            // #760: shifting back by `abs` can reintroduce binary float
+            // noise (e.g. 38 - 39.9 = -1.8999999999999986) even though the
+            // lattice point itself is correct. Round the final result to
+            // the largest decimal count among step, min and max -- not the
+            // step's alone -- so that noise is cleaned up instead of
+            // round-tripped untouched through toFixed(20).
+            precision = Math.max(string, min_decimals, max_decimals);
+
+            if (precision) {
+                result = +number.toFixed(precision);
             } else {
                 result = this.toFixed(number);
             }

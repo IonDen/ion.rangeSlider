@@ -122,6 +122,39 @@ test('convertToValue handles a negative exponent-notation min symmetrically (#68
   assert.ok(Math.abs(q3 - 5e-8) <= 1e-8, `convertToValue(75) = ${q3}, expected within one step of 5e-8`);
 });
 
+test('convertToValue rounds a fractional-min config to the min-anchored lattice instead of leaking binary float noise (#760)', (t) => {
+  // convertToValue() rounds its final result to the decimals of options.step
+  // only; with a fractional min and an integer step (the reporter's
+  // {min: -39.9, max: 111, step: 1}) the shift-back from the negative-min
+  // offset reintroduces float noise: the value nearest 0 comes back as
+  // 0.10000000000000142 instead of 0.1, and the value nearest -16 comes back
+  // as -15.899999999999999 instead of -15.9. Both ARE the correct
+  // min-anchored lattice points (-39.9 + 40 = 0.1, -39.9 + 24 = -15.9); only
+  // the noise needs to go. Mutation: drop min_decimals/max_decimals from the
+  // final rounding precision (use the step's own decimals alone, i.e. revert
+  // to the pre-#760 `string`-only precision).
+  const { slider } = createSlider(t, '<input>', { type: 'double', min: -39.9, max: 111, step: 1 });
+  const nearZeroPercent = slider.convertToPercent(0);
+  const nearZero = slider.convertToValue(nearZeroPercent);
+  assert.equal(nearZero, 0.1, `convertToValue(${nearZeroPercent}) = ${nearZero}, expected the clean lattice point 0.1 (-39.9 + 40)`);
+
+  const near16Percent = slider.convertToPercent(-16);
+  const near16 = slider.convertToValue(near16Percent);
+  assert.equal(near16, -15.9, `convertToValue(${near16Percent}) = ${near16}, expected the clean lattice point -15.9 (-39.9 + 24)`);
+});
+
+test('convertToValue keeps a fractional-min lattice with an integer step instead of snapping to whole numbers (#760)', (t) => {
+  // {min: 0.5, step: 1} is a documented-quirk report: convertToValue() takes
+  // the "integer step" branch (divide/multiply by step, then toFixed(0)),
+  // which discards min's 0.5 offset and always lands on a whole number
+  // instead of the min-anchored lattice 0.5, 1.5, 2.5, ... Mutation: drop
+  // `this.getDecimalPlaces(min)` from the Math.max() that sizes the
+  // early-rounding precision (i.e. size it from the step's decimals alone).
+  const { slider } = createSlider(t, '<input>', { min: 0.5, max: 10.5, step: 1 });
+  assert.equal(slider.convertToValue(10), 1.5);
+  assert.equal(slider.convertToValue(20), 2.5);
+});
+
 test('calcWithStep snaps a percent to the step grid and clamps at 100', (t) => {
   const { slider } = createSlider(t, '<input>', { min: 0, max: 10, step: 2 }); // p_step = 20
   assert.equal(slider.calcWithStep(29), 20);
