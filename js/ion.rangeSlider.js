@@ -2678,6 +2678,10 @@
                 small_w = 0,
 
                 result,
+                pols = [],
+                lefts = [],
+                texts = [],
+                kept = 0,
                 html = '';
 
 
@@ -2706,6 +2710,7 @@
 
             for (i = 0; i < big_num + 1; i++) {
                 local_small_max = small_max;
+                pols[i] = '';
 
                 big_w = this.toFixed(big_p * i);
 
@@ -2723,10 +2728,10 @@
 
                     small_w = this.toFixed(big_w - (small_p * z));
 
-                    html += '<span class="irs-grid-pol small" style="left: ' + small_w + '%"></span>';
+                    pols[i] += '<span class="irs-grid-pol small" style="left: ' + small_w + '%"></span>';
                 }
 
-                html += '<span class="irs-grid-pol" style="left: ' + big_w + '%"></span>';
+                pols[i] += '<span class="irs-grid-pol" style="left: ' + big_w + '%"></span>';
 
                 result = this.convertToValue(big_w);
                 if (o.values.length) {
@@ -2735,9 +2740,39 @@
                     result = this._prettifyGrid(result);
                 }
 
-                html += '<span class="irs-grid-text js-grid-text-' + i + '" style="left: ' + big_w + '%">' + result + '</span>';
+                lefts[i] = big_w;
+                texts[i] = String(result);
             }
             this.coords.big_num = Math.ceil(big_num + 1);
+
+            // #772: a range holding fewer steps than grid_num can snap two
+            // neighbouring ticks to the same value; equal neighbouring
+            // labels are shown once. The first tick always keeps its label,
+            // and the last tick (exactly max) keeps its own rather than an
+            // earlier twin, unless every label is equal (min === max), where
+            // only the first stays. Compared as strings so a custom prettify_grid that
+            // maps two values to one text is deduplicated the same way.
+            // Values mode is exempt: each tick is a real values entry, so a
+            // duplicate entry or a merging prettify is the user's own data.
+            if (!o.values.length) {
+                for (i = 1; i < texts.length; i++) {
+                    if (texts[i] === texts[kept]) {
+                        if (i === texts.length - 1 && kept !== 0) {
+                            // the last tick is exactly max: it wins over its twin
+                            texts[kept] = "";
+                            kept = i;
+                        } else {
+                            texts[i] = "";
+                        }
+                    } else {
+                        kept = i;
+                    }
+                }
+            }
+
+            for (i = 0; i < texts.length; i++) {
+                html += pols[i] + '<span class="irs-grid-text js-grid-text-' + i + '" style="left: ' + lefts[i] + '%">' + texts[i] + '</span>';
+            }
 
 
 

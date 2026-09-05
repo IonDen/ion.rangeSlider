@@ -457,6 +457,47 @@ test.describe(`feature and bugfix coverage (${LABEL})`, () => {
     });
   });
 
+  test.describe('#772 grid label deduplication', () => {
+    // Reporter's config (min: 1, max: 4, grid_num left at its default of 4):
+    // the four evenly-spaced tick percentages snap two neighbouring ticks to
+    // the same value, so on 2.4.1 the grid renders "1", "2", "3", "3", "4" --
+    // the third tick's label repeats onto the fourth. Mutation this catches:
+    // dropping appendGrid()'s "equals previous label" guard
+    // (js/ion.rangeSlider.js) -- the repeated tick would render "3" again
+    // instead of going blank, failing both the visible-label-order and the
+    // no-repeated-neighbour assertions below.
+    test('a range with fewer steps than grid_num shows the repeated tick once, not twice (#772)', async ({ page }) => {
+      await open(page, {
+        min: 1, max: 4, from: 1, to: 4, hide_min_max: true, grid: true
+      });
+
+      const texts = await page.locator('.irs-grid-text').allTextContents();
+      expect(texts.length).toBe(5);
+
+      for (let i = 1; i < texts.length; i++) {
+        if (texts[i] === '' || texts[i - 1] === '') continue;
+        expect(texts[i]).not.toBe(texts[i - 1]);
+      }
+
+      expect(texts.filter((t) => t !== '')).toEqual(['1', '2', '3', '4']);
+    });
+
+    // Pin: min: 1, max: 3 repeats twice, with the second repeat landing on
+    // the last tick -- the fix keeps that tick's label ("3") over its
+    // earlier twin instead of blanking it. Mutation this catches: dropping
+    // the last-tick branch in appendGrid()'s dedup pass (js/ion.rangeSlider.js)
+    // -- the last tick would blank instead, leaving the range's right edge
+    // unlabeled.
+    test('a repeat landing on the last tick keeps that tick label, not its earlier twin (#772)', async ({ page }) => {
+      await open(page, { min: 1, max: 3, grid: true });
+
+      const texts = await page.locator('.irs-grid-text').allTextContents();
+      expect(texts.length).toBe(5);
+      expect(texts[texts.length - 1]).toBe('3');
+      expect(texts[texts.length - 2]).toBe('');
+    });
+  });
+
   test.describe('#684 exponent-notation decimals', () => {
     // #684: with a fractional step small enough to stringify in exponent
     // notation (e.g. step: 1e-8), convertToValue()'s decimal-place detector
