@@ -4,9 +4,8 @@ import { readFileSync } from 'node:fs';
 import { compileCss } from '../../scripts/lib/css.mjs';
 
 const lessUrl = new URL('../../less/irs.less', import.meta.url);
-const cssUrl = new URL('../../css/ion.rangeSlider.css', import.meta.url);
 
-test('compiling less/irs.less keeps the IE8 filter fallback and matches the committed CSS', async () => {
+test('compiling less/irs.less keeps the IE8 filter fallback', async () => {
   const lessSrc = readFileSync(lessUrl, 'utf8');
   const { css, min } = await compileCss(lessSrc, lessUrl.pathname);
 
@@ -18,9 +17,8 @@ test('compiling less/irs.less keeps the IE8 filter fallback and matches the comm
   // (c) the minified output is a single line with no banner (the build adds it).
   assert.equal(min.indexOf('\n'), -1);
   assert.equal(min.startsWith('/*'), false);
-  // (d) the plain render reproduces the committed file, byte for byte, once its
-  // 5-line banner comment is stripped.
-  const committed = readFileSync(cssUrl, 'utf8');
-  const committedBody = committed.split('\n').slice(5).join('\n');
-  assert.equal(css, committedBody);
+  // Whether this render matches the committed css/ion.rangeSlider.css is no
+  // longer asserted here: pull requests do not carry rebuilt files, so the
+  // committed file only has to match on a release branch, which is now the
+  // "built files" CI job's job (issue #853), not this unit test's.
 });

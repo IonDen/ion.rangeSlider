@@ -87,8 +87,9 @@ jobs:
             console.log('package.json version matches tag ' + tag);
           "
 
-      # ci.yml's "committed dist is up to date" job does not run on tag
-      # pushes, so this is the last check before a stale dist reaches
+      # ci.yml's "built files" job only runs on pull requests, and even
+      # there it only blocks a non-release branch when it changes a built
+      # file, so this is the last strict check before a stale dist reaches
       # the registry.
       - run: npm run build
       - run: git diff --exit-code -- js css
