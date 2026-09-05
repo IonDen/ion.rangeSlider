@@ -4,6 +4,17 @@
 
 # Update History
 
+### Version 2.4.2. September 05, 2026
+* A double slider whose handles start at the same value can now be opened in either direction: the first drag or key press after the coincident start decides which handle moves, on mouse, touch and keyboard alike
+* `data-prettify-separator=""` now disables the thousands separator instead of being ignored, matching what the JavaScript `prettify_separator: ''` option already did
+* Fixed a `step`, `min` or `max` written in exponent notation (such as `1e-8`) rounding every interior drag to 0
+* Fixed floating-point noise in the from/to values, handle labels and grid ticks on sliders with a negative fractional `min` and a whole-number `step`
+* Fixed the grid repeating a label when two ticks land on the same value; the tick mark stays, only the duplicate number is blanked
+* Releasing a drag without further movement, a motionless press, or a click or key press that doesn't change the value no longer fires an extra `onChange`
+* Fixed `result.min_pretty`/`max_pretty` staying unset or stale when `hide_min_max` is on
+* Pull requests no longer need to carry rebuilt `js`/`css` files; CI builds them from source and checks a PR's built files only if the PR itself touched one
+* Issues: #507, #681, #684, #760, #772, #851, #852, #853
+
 ### Version 2.4.1. September 02, 2026
 * `drag_interval`: dragging the whole interval by its bar fires one `onChange` per step instead of two, and the event no longer reports the interval one step wider than it is. On sliders with a visible handle the first leftward step now fires after one step of mouse travel, where it used to need more. Dragging the bar past the left limit keeps the left edge pinned at `from_min` (or `min`)
 * Values mode: the callback data object now has `min_pretty` and `max_pretty` (they were undefined), and `from_pretty`/`to_pretty` hold the prettified entry the handle bubble shows rather than the prettified index. A custom `prettify` function is called with real entries only, once per entry when the slider is built or updated. The index-based calls and the stray `0` calls are gone
