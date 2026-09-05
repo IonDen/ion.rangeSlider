@@ -33,3 +33,27 @@ export async function drag(page, handleSelector, fraction) {
   await page.mouse.move(x + l.width * fraction, y, { steps: 12 });
   await page.mouse.up();
 }
+
+/**
+ * Drag a handle by a fraction of the line width through real touch dispatch
+ * (touchstart/touchmove/touchend), not the mouse path. Playwright's own
+ * `page.touchscreen` only offers a single-point tap (no move step), so this
+ * goes through the same CDP session `browserContext.newCDPSession()` uses --
+ * chromium-only, which is why every caller must itself be chromium-only (the
+ * context still needs `hasTouch: true` so the page treats the dispatched
+ * events as real touch input, matching a touch-capable device).
+ */
+export async function touchDrag(page, handleSelector, fraction) {
+  const h = await page.locator(handleSelector).boundingBox();
+  const l = await page.locator('.irs-line').boundingBox();
+  const x = h.x + h.width / 2, y = h.y + h.height / 2;
+  const endX = x + l.width * fraction;
+  const cdp = await page.context().newCDPSession(page);
+  const point = (px) => [{ x: px, y: y, id: 1 }];
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: point(x) });
+  const steps = 12;
+  for (let i = 1; i <= steps; i++) {
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: point(x + (endX - x) * (i / steps)) });
+  }
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+}
