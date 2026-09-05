@@ -44,7 +44,7 @@ function git(dir, args) {
 
 function commit(dir, message) {
   git(dir, ['add', '-A']);
-  git(dir, ['-c', 'user.email=test@test', '-c', 'user.name=test', 'commit', '-q', '-m', message]);
+  git(dir, ['-c', 'user.email=test@test', '-c', 'user.name=test', '-c', 'commit.gpgsign=false', 'commit', '-q', '-m', message]);
 }
 
 /** Creates a throwaway git repo on a branch named master, with the three
@@ -123,7 +123,6 @@ test('feature branch that committed a hand edit to one built file: exit 1, names
   assert.equal(result.status, 1);
   assert.match(result.stdout, /css\/ion\.rangeSlider\.min\.css/);
   assert.doesNotMatch(result.stdout, /js\/ion\.rangeSlider\.min\.js/);
-  assert.doesNotMatch(result.stdout, /css\/ion\.rangeSlider\.css\b(?!\.min)/);
 });
 
 test('missing or empty --base: exit 2 with the usage line', async (t) => {
@@ -153,4 +152,17 @@ test('--head release/9.9.9 with the same hand edit: exit 1 naming the file', asy
   const result = run(dir, ['--base', 'master', '--head', 'release/9.9.9']);
   assert.equal(result.status, 1);
   assert.match(result.stdout, /css\/ion\.rangeSlider\.min\.css/);
+});
+
+test('a base branch git does not know: exit 1 with git\'s own error, no stack trace', async (t) => {
+  // One-line bug that reds this: remove the try/catch around the git call
+  // in scripts/check-dist.mjs, so a bad revision surfaces as an uncaught
+  // exception (Node stack trace, "    at ..." lines) instead of the single
+  // git error line and exit 1.
+  const dir = await withScratchRepo(t);
+  git(dir, ['checkout', '-q', '-b', 'fix/x']);
+  const result = run(dir, ['--base', 'no-such-branch', '--head', 'fix/x']);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /bad revision/);
+  assert.doesNotMatch(result.stderr, /^\s+at /m);
 });

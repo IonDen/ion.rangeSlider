@@ -51,6 +51,7 @@ test('a release-looking segment that is not the branch prefix is still a feature
     driftedBuiltFiles: ['css/ion.rangeSlider.css'],
   });
   assert.equal(result.skipped, true);
+  assert.equal(result.ok, true);
 });
 
 test('feature branch with no built-file changes skips', () => {

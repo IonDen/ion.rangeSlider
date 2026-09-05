@@ -25,13 +25,13 @@ function arg(name) {
 }
 
 function fail(err) {
-  console.error(err.stderr || err.message);
+  console.error(String(err.stderr || err.message).trim());
   process.exit(1);
 }
 
 function git(args) {
   try {
-    return execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim();
+    return execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
   } catch (err) {
     return fail(err);
   }
@@ -41,7 +41,7 @@ const base = arg('base');
 const head = arg('head');
 
 try {
-  execFileSync('node', [resolve(root, 'scripts/build.mjs')], { stdio: 'inherit' });
+  execFileSync(process.execPath, [resolve(root, 'scripts/build.mjs')], { stdio: 'inherit' });
 } catch (err) {
   fail(err);
 }
