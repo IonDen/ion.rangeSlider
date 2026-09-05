@@ -12,8 +12,10 @@ const PLUGIN = readFileSync(new URL('../../js/ion.rangeSlider.js', import.meta.u
  * plugin's 300 ms idle timer alive.
  *
  * jsdom has no layout: every width is 0, calc() and drawHandles() return early,
- * so result.*_percent, labels, grid, onChange and resize are never computed here.
- * Test the pure methods and the validated options; geometry belongs to Playwright.
+ * so result.*_percent, labels, grid, onChange and resize are never computed here
+ * unless a test stubs the geometry (outerWidth/offset on $cache) the way the
+ * drag tests do. Test the pure methods and the validated options; real geometry
+ * belongs to Playwright.
  */
 export function createSlider(t, html, options, setup) {
   const dom = new JSDOM(`<!doctype html><html><body>${html}</body></html>`, {

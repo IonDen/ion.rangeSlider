@@ -142,7 +142,7 @@ Or use `data-*` attributes on the input:
 | `to_max` | `data-to-max` | `max` | number | Maximum limit for right handle |
 | `to_shadow` | `data-to-shadow` | `false` | boolean | Highlight the limits for right handle |
 | `prettify_enabled` | `data-prettify-enabled` | `true` | boolean | Format long numbers: 10000000 → 10 000 000 |
-| `prettify_separator` | `data-prettify-separator` | ` ` | string | Separator for long numbers: 10000000 → 10,000,000 |
+| `prettify_separator` | `data-prettify-separator` | ` ` | string | Separator for long numbers: 10000000 → 10,000,000. An empty string disables the separator |
 | `prettify` | `data-prettify` | `null` | function, string | Custom formatting function. Receives a number, returns a string (with `prettify_all_values`, non-numeric `values` entries are passed too). A string names a global function instead (`window[name]`); an unresolved name falls back to default formatting. Use trusted config, as with any option |
 | `prettify_grid` | `data-prettify-grid` | `null` | function, string | Formatting function for the grid tick labels only. Falls back to `prettify`, then to default number formatting, when unset. Same string-name resolution and trust rules as `prettify`. Does not apply in `values` mode |
 | `prettify_min_max` | `data-prettify-min-max` | `null` | function, string | Formatting function for the min and max labels only. Falls back to `prettify`, then to default number formatting, when unset. Same string-name resolution and trust rules as `prettify`. Does not apply in `values` mode |
