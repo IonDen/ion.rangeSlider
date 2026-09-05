@@ -456,4 +456,18 @@ test.describe(`feature and bugfix coverage (${LABEL})`, () => {
       expect(pretty.every((n) => [1, 5, 20, 100, 1000].includes(n))).toBe(true);
     });
   });
+
+  // #681: for every other option an empty data-* attribute means "not set",
+  // but prettify_separator's empty string is itself a meaningful value (it
+  // disables the thousands separator). The unit suite (test/unit/
+  // config-precedence.test.mjs) covers this at the options/_prettify level;
+  // jsdom has no layout, so this is the only place the rendered bubble text
+  // itself is checked. Mutation this catches: removing the `prop !==
+  // "prettify_separator"` exception from the data-* strip loop in
+  // js/ion.rangeSlider.js -- the bubble would read "1 234 567" instead of
+  // "1234567".
+  test('data-prettify-separator="" renders the handle bubble with no separator (#681)', async ({ page }) => {
+    await open(page, { min: 0, max: 10000000, from: 1234567 }, { attrs: JSON.stringify({ 'data-prettify-separator': '' }) });
+    await expect(page.locator('.irs-single')).toHaveText('1234567');
+  });
 });
