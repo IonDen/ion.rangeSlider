@@ -64,13 +64,13 @@ test('data-prettify-separator="" overrides a non-empty JS prettify_separator opt
 
 // #681 guard: the exception is scoped to prettify_separator alone -- every
 // other empty data-* attribute must still be stripped ("" still means "not
-// set" for them). extra_classes and postfix both already default to "", so
-// widening the exception to every key (dropping the `prop !==
-// "prettify_separator"` test) would NOT turn either of those red -- said
-// honestly rather than glossed over. grid_num defaults to 4, a non-""
-// value, so it is the one attribute here that actually distinguishes a
-// correctly-scoped exception from a widened one: an un-stripped "" would
-// override the default 4, and validate() coerces that leftover "" to 0.
+// set" for them). Mutation: drop the whole `config_from_data[prop] === ""`
+// clause from the strip loop so no empty attribute is ever stripped.
+// extra_classes and postfix both already default to "", so that mutation
+// would NOT turn either of those red -- said honestly rather than glossed
+// over. grid_num defaults to 4, a non-"" value, so it is the one attribute
+// here that actually distinguishes: an un-stripped "" would override the
+// default 4, and validate() coerces that leftover "" to 0.
 test('the prettify_separator exception does not leak into other empty data-* attributes (#681)', (t) => {
   const { slider } = createSlider(t, '<input data-extra-classes="" data-postfix="" data-grid-num="">', { min: 0, max: 100 });
   assert.equal(slider.options.extra_classes, '');   // stripped -- matches the untouched default
@@ -90,4 +90,15 @@ test('data-prettify-separator="0" keeps the numeric-zero separator (#681)', (t) 
   const { slider } = createSlider(t, '<input data-prettify-separator="0">', { min: 0, max: 10000000, from: 1234567 });
   assert.equal(slider.options.prettify_separator, 0);
   assert.equal(slider._prettify(1234567), '102340567');
+});
+
+// #681 pin for the keys that are NOT excepted: a zero-valued numeric data-*
+// attribute (jQuery's .data() hands it over as the number 0) must survive the
+// strip. Green before and after the #681 change. Mutation: change the
+// non-excepted branch to a falsiness check, `(!config_from_data[prop] &&
+// prop !== "prettify_separator")` -- data-from="0" would then be treated as
+// unset and from would fall back to min (-10) instead of 0.
+test('data-from="0" is kept by the strip loop (strict "" check, not falsiness) (#681)', (t) => {
+  const { slider } = createSlider(t, '<input data-from="0">', { min: -10, max: 10 });
+  assert.equal(slider.options.from, 0);
 });
