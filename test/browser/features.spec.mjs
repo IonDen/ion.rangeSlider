@@ -431,4 +431,31 @@ test.describe(`feature and bugfix coverage (${LABEL})`, () => {
       expect(pretty.every((n) => [1, 5, 20, 100, 1000].includes(n))).toBe(true);
     });
   });
+
+  test.describe('#772 grid label deduplication', () => {
+    // Reporter's config (min: 1, max: 4, grid_num left at its default of 4):
+    // the four evenly-spaced tick percentages snap two neighbouring ticks to
+    // the same value, so on 2.4.1 the grid renders "1", "2", "3", "3", "4" --
+    // the third tick's label repeats onto the fourth. Mutation this catches:
+    // dropping appendGrid()'s "equals previous label" guard
+    // (js/ion.rangeSlider.js) -- the repeated tick would render "3" again
+    // instead of going blank, failing both the visible-label-order and the
+    // no-repeated-neighbour assertions below.
+    test('a range with fewer steps than grid_num shows the repeated tick once, not twice (#772)', async ({ page }) => {
+      await open(page, {
+        type: 'integer', min: 1, max: 4, from: 1, to: 4,
+        postfix: '', hide_min_max: true, grid: true
+      });
+
+      const texts = await page.locator('.irs-grid-text').allTextContents();
+      expect(texts.length).toBe(5);
+
+      for (let i = 1; i < texts.length; i++) {
+        if (texts[i] === '' || texts[i - 1] === '') continue;
+        expect(texts[i]).not.toBe(texts[i - 1]);
+      }
+
+      expect(texts.filter((t) => t !== '')).toEqual(['1', '2', '3', '4']);
+    });
+  });
 });

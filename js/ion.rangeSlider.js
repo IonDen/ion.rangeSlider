@@ -2623,6 +2623,7 @@
                 small_w = 0,
 
                 result,
+                prev_text = null,
                 html = '';
 
 
@@ -2678,6 +2679,19 @@
                     result = o.p_values[result];
                 } else {
                     result = this._prettifyGrid(result);
+                }
+
+                // #772: a step grid coarser than grid_num can snap two
+                // neighbouring ticks to the same value; keep the mark and
+                // the span (cacheGridLabels/calcGridLabels/
+                // calcGridCollision still index the same number of nodes)
+                // but blank the repeated label text. Compared as strings so
+                // a custom prettify_grid that maps two values to one text
+                // is deduplicated the same way.
+                if (String(result) === prev_text) {
+                    result = "";
+                } else {
+                    prev_text = String(result);
                 }
 
                 html += '<span class="irs-grid-text js-grid-text-' + i + '" style="left: ' + big_w + '%">' + result + '</span>';
