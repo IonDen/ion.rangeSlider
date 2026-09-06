@@ -5,9 +5,7 @@ test.describe(`smoke (${LABEL})`, () => {
   test('init renders, writes the input and fires onStart once', async ({ page }) => {
     await open(page, { min: 0, max: 100, from: 30 });
     await expect(page.locator('.irs--flat')).toHaveCount(1);
-    // Temporary probe for #863: deliberately wrong expected value, to
-    // exercise the report upload on a failing browser run.
-    await expect(input(page)).toHaveValue('31');
+    await expect(input(page)).toHaveValue('30');
     const ev = await events(page);
     expect(ev.map((e) => e.type)).toEqual(['onStart']);
     expect(ev[0]).toMatchObject({ from: 30, min: 0, max: 100 });
