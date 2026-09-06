@@ -33,8 +33,8 @@ jobs:
           - { id: '4.0.0', jquery: 'jquery-4.0.0', slim: '0' }
           - { id: '4.0.0-slim', jquery: 'jquery-4.0.0', slim: '1' }
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: npm
@@ -42,7 +42,7 @@ jobs:
       - run: npm run build
       - id: pw
         run: echo "version=$(node -e 'console.log(require("@playwright/test/package.json").version)')" >> "$GITHUB_OUTPUT"
-      - uses: actions/cache@v4
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
@@ -52,7 +52,7 @@ jobs:
           IRS_JQUERY: ${{ matrix.jquery }}
           IRS_SLIM: ${{ matrix.slim }}
           IRS_MIN: ${{ matrix.min || '0' }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         if: always()
         with:
           name: playwright-report-${{ matrix.id }}
