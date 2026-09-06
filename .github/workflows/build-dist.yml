@@ -1,0 +1,61 @@
+# Keeps the built files on master current after every merge. Runs only on
+# pushes to master that touch a source of the build; rebuilds, and if any
+# built file changed, commits it back as "Rebuild dist". Pull requests never
+# carry built files (see CONTRIBUTING.md); this job is what refreshes them
+# between releases, so anyone reading js/ion.rangeSlider.min.js straight
+# from master always gets the current source.
+#
+# Prerequisite (maintainer, once): the "changes only via pull requests"
+# ruleset must list GitHub Actions as a bypass actor, otherwise the push at
+# the end is rejected. Every action is pinned to a commit because this job
+# holds contents: write. workflow_dispatch exists for a manual first run.
+name: Build dist on master
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - js/ion.rangeSlider.js
+      - less/**
+      - scripts/build.mjs
+      - scripts/lib/**
+      - package.json
+      - package-lock.json
+
+permissions:
+  contents: write
+
+concurrency:
+  group: build-dist-master
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: rebuild and commit
+    runs-on: ubuntu-latest
+    # The commit this job pushes touches only js/ and css/, which are not in
+    # the paths above, so it cannot retrigger itself; the actor guard is a
+    # second belt.
+    if: github.actor != 'github-actions[bot]'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: master
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Commit the rebuilt files if anything changed
+        run: |
+          if git diff --quiet -- js css; then
+            echo "built files already current"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add js/ion.rangeSlider.min.js css/ion.rangeSlider.css css/ion.rangeSlider.min.css
+          git commit -m "Rebuild dist"
+          git push origin HEAD:master
