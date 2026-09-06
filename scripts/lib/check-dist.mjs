@@ -12,13 +12,14 @@
  *   RELEASING.md). It fails naming every stale file, whether or not this
  *   branch's commits touched it.
  * - On any other branch, a pull request that touches no built file has
- *   nothing to check: dist on master intentionally lags the source between
- *   releases, so the job is skipped rather than judged.
+ *   nothing to check: the built files on master are rebuilt after every
+ *   merge by the "Build dist on master" workflow (pull requests still carry
+ *   none of them), so the job is skipped rather than judged.
  * - Otherwise, only the built files the pull request itself changed must
  *   match the build output; that blocks a hand-edited or half-rebuilt
  *   commit. A built file that drifted for an unrelated reason (master is
- *   simply behind the last release) but that this branch never touched does
- *   not fail it.
+ *   between a merge and its "Build dist on master" run) but that this branch
+ *   never touched does not fail it.
  *
  * @param {{ headRef: string, changedBuiltFiles: string[], driftedBuiltFiles: string[] }} input
  * @returns {{ ok: boolean, skipped: boolean, message: string }}
@@ -46,7 +47,7 @@ export function decide({ headRef, changedBuiltFiles, driftedBuiltFiles }) {
     return {
       ok: false,
       skipped: false,
-      message: `built file(s) in this pull request do not match a fresh build; remove them from the pull request, built files are regenerated at release (see CONTRIBUTING.md): ${offending.join(', ')}`,
+      message: `built file(s) in this pull request do not match a fresh build; remove them from the pull request, built files are rebuilt on master after every merge by the "Build dist on master" workflow (pull requests still carry none): ${offending.join(', ')}`,
     };
   }
   return { ok: true, skipped: false, message: 'built files this pull request changed match the build output.' };

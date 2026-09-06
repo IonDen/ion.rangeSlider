@@ -18,7 +18,9 @@ test('compiling less/irs.less keeps the IE8 filter fallback', async () => {
   assert.equal(min.indexOf('\n'), -1);
   assert.equal(min.startsWith('/*'), false);
   // Whether this render matches the committed css/ion.rangeSlider.css is no
-  // longer asserted here: pull requests do not carry rebuilt files, so the
-  // committed file only has to match on a release branch, which is now the
-  // "built files" CI job's job (issue #853), not this unit test's.
+  // longer asserted here: pull requests do not carry rebuilt files, and the
+  // built files on master are rebuilt after every merge by the "Build dist
+  // on master" workflow (pull requests still carry none), so the committed
+  // file only has to match on a release branch, which is now the "built
+  // files" CI job's job (issue #853), not this unit test's.
 });
