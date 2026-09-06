@@ -10,10 +10,10 @@
 # npm reject the publish). Until that is configured, `npm publish`
 # below will fail with an auth error.
 #
-# actions/checkout and actions/setup-node are pinned to a commit SHA
-# (not just the v4 tag ci.yml/jquery-matrix.yml use) because this job
-# carries id-token: write, which can mint short-lived OIDC credentials -
-# only the publish path needs that extra supply-chain hardening.
+# Every workflow pins its actions to a commit SHA with the version in a
+# trailing comment (since #863). It matters most here: this job carries
+# id-token: write, which can mint short-lived OIDC credentials, so a moved
+# tag must never be able to change what runs on the publish path.
 #
 # Normal release: pushing a release tag (bare number, e.g. "2.3.2") runs
 # this automatically. To publish a tag that was already pushed (for
