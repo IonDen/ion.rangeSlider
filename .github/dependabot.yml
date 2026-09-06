@@ -1,0 +1,12 @@
+# Keeps the commit-hash pins of the GitHub Actions in .github/workflows current:
+# Dependabot opens a pull request when a pinned action publishes a new release,
+# updating the hash and the version comment. npm is deliberately not listed: the
+# jQuery versions pinned as devDependencies are test fixtures (see test/vendor/SOURCES.md).
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "CI"
