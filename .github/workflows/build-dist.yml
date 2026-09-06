@@ -13,7 +13,7 @@
 # exits early with no commit.
 #
 # The commit this job makes triggers no other workflow run: a push made with
-# GITHUB_TOKEN does not generate a push event, and the content is a fresh
+# GITHUB_TOKEN does not start workflow runs, and the content is a fresh
 # build that has already passed `npm test` in this job. The job also cannot
 # retrigger itself, because js/ and css/ (the files it commits) are not in
 # the paths list below; the actor guard on the job is a second belt. Every
@@ -73,8 +73,9 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          src=$(git rev-parse --short HEAD)
           git add js/ion.rangeSlider.min.js css/ion.rangeSlider.css css/ion.rangeSlider.min.css
-          git commit -m "Rebuild dist (source ${GITHUB_SHA::7})"
+          git commit -m "Rebuild dist (source ${src})"
           for attempt in 1 2 3; do
             if git push -q "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:master; then
               exit 0

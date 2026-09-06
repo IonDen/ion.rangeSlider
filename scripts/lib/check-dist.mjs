@@ -18,8 +18,8 @@
  * - Otherwise, only the built files the pull request itself changed must
  *   match the build output; that blocks a hand-edited or half-rebuilt
  *   commit. A built file that drifted for an unrelated reason (master is
- *   simply behind the last release) but that this branch never touched does
- *   not fail it.
+ *   between a merge and its "Build dist on master" run) but that this branch
+ *   never touched does not fail it.
  *
  * @param {{ headRef: string, changedBuiltFiles: string[], driftedBuiltFiles: string[] }} input
  * @returns {{ ok: boolean, skipped: boolean, message: string }}
