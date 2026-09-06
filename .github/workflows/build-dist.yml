@@ -1,14 +1,28 @@
-# Keeps the built files on master current after every merge. Runs only on
-# pushes to master that touch a source of the build; rebuilds, and if any
-# built file changed, commits it back as "Rebuild dist". Pull requests never
-# carry built files (see CONTRIBUTING.md); this job is what refreshes them
-# between releases, so anyone reading js/ion.rangeSlider.min.js straight
-# from master always gets the current source.
+# Rebuilds the built files (js/ion.rangeSlider.min.js, css/ion.rangeSlider.css,
+# css/ion.rangeSlider.min.css) from source and pushes the result back to
+# master whenever a push to master touches a build input and the rebuild
+# differs from what is committed. Pull requests never carry built files (see
+# CONTRIBUTING.md); this job is what keeps master's copy current between
+# releases, so anyone reading js/ion.rangeSlider.min.js straight from master
+# always gets the current source.
 #
-# Prerequisite (maintainer, once): the "changes only via pull requests"
-# ruleset must list GitHub Actions as a bypass actor, otherwise the push at
-# the end is rejected. Every action is pinned to a commit because this job
-# holds contents: write. workflow_dispatch exists for a manual first run.
+# Prerequisite (maintainer, once): the master ruleset must not require pull
+# requests, so this job's push can land directly (it should keep "no force
+# push" and "no deletion"). workflow_dispatch lets the job be rerun by hand;
+# it still only pushes when a built file actually changed, an unchanged tree
+# exits early with no commit.
+#
+# The commit this job makes triggers no other workflow run: a push made with
+# GITHUB_TOKEN does not generate a push event, and the content is a fresh
+# build that has already passed `npm test` in this job. The job also cannot
+# retrigger itself, because js/ and css/ (the files it commits) are not in
+# the paths list below; the actor guard on the job is a second belt. Every
+# action is pinned to a commit because this job holds contents: write.
+#
+# The version and build-date banner inside the rebuilt files still reflects
+# the last tagged release (both come from package.json): a rebuild of
+# unchanged source is byte-identical, and only the next release's build
+# bumps them.
 name: Build dist on master
 
 on:
@@ -34,22 +48,25 @@ jobs:
   build:
     name: rebuild and commit
     runs-on: ubuntu-latest
-    # The commit this job pushes touches only js/ and css/, which are not in
-    # the paths above, so it cannot retrigger itself; the actor guard is a
-    # second belt.
     if: github.actor != 'github-actions[bot]'
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: master
+          fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: npm
-      - run: npm ci
+      - run: npm ci --ignore-scripts # the build needs no lifecycle scripts
       - run: npm run build
-      - name: Commit the rebuilt files if anything changed
+      - run: npm test
+      - name: Commit and push the rebuilt files
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
           if git diff --quiet -- js css; then
             echo "built files already current"
             exit 0
@@ -57,5 +74,16 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add js/ion.rangeSlider.min.js css/ion.rangeSlider.css css/ion.rangeSlider.min.css
-          git commit -m "Rebuild dist"
-          git push origin HEAD:master
+          git commit -m "Rebuild dist (source ${GITHUB_SHA::7})"
+          for attempt in 1 2 3; do
+            if git push -q "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:master; then
+              exit 0
+            fi
+            echo "push rejected, attempt ${attempt} of 3"
+            if [ "${attempt}" -lt 3 ]; then
+              git fetch origin master
+              git rebase origin/master
+            fi
+          done
+          echo "push failed after 3 attempts"
+          exit 1
