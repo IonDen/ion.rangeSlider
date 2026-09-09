@@ -1512,15 +1512,28 @@
                     //
                     // p_gap_left/p_gap_right (captured in changeLevel's
                     // "both" case) are REAL-percent offsets of the pointer
-                    // from from/to at drag start, so adding/subtracting them
+                    // from from/to at drag start, so subtracting p_gap_left
                     // from convertToRealPercent(handle_x) here stays in one
-                    // consistent percent space throughout.
+                    // consistent percent space throughout; "to" is derived
+                    // from that snapped "from" (see the #867 note below), not
+                    // from the pointer.
+                    //
+                    // #867: only "from" is snapped to the step grid; "to" is
+                    // derived from the snapped "from" plus the exact width
+                    // captured at drag start (p_gap_left + p_gap_right),
+                    // instead of being step-snapped independently. Snapping
+                    // both ends independently rounds each to its OWN nearest
+                    // step, which drifts in and out of sync as the pointer
+                    // moves whenever the width isn't a whole number of
+                    // steps -- the reported width alternated between two
+                    // neighboring values instead of staying pinned. Known
+                    // trade-off: "to" now sits off the step grid whenever
+                    // the width itself does (e.g. 807, 812 for a 502-wide
+                    // interval on a step-5 grid).
                     var p_from_real = this.convertToRealPercent(handle_x) - this.coords.p_gap_left;
                     p_from_real = this.calcWithStep(p_from_real);
+                    var p_to_real = this.toFixed(p_from_real + this.coords.p_gap_left + this.coords.p_gap_right);
                     p_from_real = this.checkDiapason(p_from_real, this.options.from_min, this.options.from_max);
-
-                    var p_to_real = this.convertToRealPercent(handle_x) + this.coords.p_gap_right;
-                    p_to_real = this.calcWithStep(p_to_real);
                     p_to_real = this.checkDiapason(p_to_real, this.options.to_min, this.options.to_max);
 
                     // checkMinInterval can push a handle past its OWN
