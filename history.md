@@ -4,6 +4,12 @@
 
 # Update History
 
+### Version 2.5.0. September 09, 2026
+* New `step_from_min` option makes every value `min` plus a whole number of steps: with `min: 0.5, step: 1` the values are 0.5, 1.5, 2.5 instead of 0.5, 2, 3, and the grid labels follow the same scale. Off by default; the readme row says what to put on that scale
+* New `values_raw` option keeps `values` entries exactly as given, so "20.0" stays "20.0" in `from_value`/`to_value`, in the input and on the label instead of becoming the number 20. Off by default. Spaces around the commas in `data-values` are ignored when it is on
+* `drag_interval`: an interval whose width is not a multiple of `step` keeps that width while the bar is dragged, fires one `onChange` per step instead of two, and no longer ends up a step wider after a release. When the width is off the step grid the upper end now sits off the grid instead of the interval changing size
+* Issues: #505, #867, #869
+
 ### Version 2.4.2. September 05, 2026
 * A double slider whose handles start at the same value can now be opened in either direction: the first drag or key press after the coincident start decides which handle moves, on mouse, touch and keyboard alike
 * `data-prettify-separator=""` now disables the thousands separator instead of being ignored, matching what the JavaScript `prettify_separator: ''` option already did
