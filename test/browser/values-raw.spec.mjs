@@ -15,14 +15,20 @@ import { open, events, input, drag, LABEL } from './helpers.mjs';
 test.describe(`values_raw coverage (${LABEL})`, () => {
   // Mutation this catches: dropping the `o.values_raw && typeof v[i] !==
   // "number"` guard from validate()'s values loop (js/ion.rangeSlider.js) --
-  // the bubble, the max label, the input and the onStart payload would all
-  // read "20" instead of "20.0".
+  // the bubble, the max label, the input, the onStart payload and the grid
+  // labels would all read "20" instead of "20.0".
   test('values_raw keeps the raw entry on the bubble, the max label, the input and the onStart payload (#505)', async ({ page }) => {
-    await open(page, { values: ['17.5', '12.2b', '20.0'], from: 2, values_raw: true });
+    await open(page, { values: ['17.5', '12.2b', '20.0'], from: 2, values_raw: true, grid: true });
 
     await expect(page.locator('.irs-single')).toHaveText('20.0');
     await expect(page.locator('.irs-max')).toHaveText('20.0');
     await expect(input(page)).toHaveValue('20.0');
+
+    // Values mode snaps the grid to one tick per entry (validate() derives
+    // grid_num/grid_snap from the values array), so the grid must carry the
+    // same raw entries as the bubble/label/input above, in order.
+    const gridTexts = await page.locator('.irs-grid-text').allTextContents();
+    expect(gridTexts).toEqual(['17.5', '12.2b', '20.0']);
 
     const ev = await events(page);
     const startEv = ev.find((e) => e.type === 'onStart');

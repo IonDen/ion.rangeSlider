@@ -443,19 +443,6 @@
         };
         config_from_data.values = config_from_data.values && config_from_data.values.split(",");
 
-        // #505: data-values is a comma-separated string, so "10, 20, 30" carries
-        // a leading space into every entry after the first. values_raw keeps a
-        // values entry exactly as given everywhere else, so the split entries
-        // are trimmed only when it is on; a JS values array is never touched
-        // here, only what came from the comma split. data-values-raw (checked
-        // first) overrides a JS values_raw option, matching every other data-*
-        // attribute in this constructor.
-        if (config_from_data.values && (config_from_data.values_raw !== undefined ? config_from_data.values_raw : options.values_raw)) {
-            for (i = 0; i < config_from_data.values.length; i++) {
-                config_from_data.values[i] = config_from_data.values[i].replace(/^\s+|\s+$/g, "");
-            }
-        }
-
         for (prop in config_from_data) {
             if (config_from_data.hasOwnProperty(prop)) {
                 // #681: for every other option "" means "not set", but for
@@ -497,6 +484,22 @@
 
         // data config extends config
         $.extend(config, config_from_data);
+
+        // #505: data-values is a comma-separated string, so "10, 20, 30"
+        // carries a leading space into every entry after the first. With
+        // values_raw on those spaces would reach from_value, the input and
+        // the labels, so the split entries are trimmed here, once the option
+        // has been resolved from the data attribute and the JS option in the
+        // usual order (an empty data-values-raw attribute means "not set",
+        // like every other data-* option). A JS values array is never
+        // touched: only entries that came from the comma split are trimmed,
+        // and only when values_raw is on.
+        if (config_from_data.values && config.values_raw) {
+            for (i = 0; i < config.values.length; i++) {
+                config.values[i] = config.values[i].replace(/^\s+|\s+$/g, "");
+            }
+        }
+
         this.options = config;
 
 
@@ -2655,6 +2658,9 @@
                     // number. Entries that are already numbers are exempt, so
                     // values: [1000, 2000] still gets the thousands-separator
                     // prettify below whether values_raw is on or off.
+                    // Turning values_raw on later through update() cannot restore
+                    // entries this loop has already converted, because the clone
+                    // holds numbers by then; pass values again in the same update() call.
                     if (o.values_raw && typeof v[i] !== "number") {
                         value = NaN;
                     } else {

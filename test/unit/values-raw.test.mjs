@@ -134,3 +134,25 @@ test("the input's value in double mode joins both raw entries with input_values_
   slider.update({ from: 0, to: 2 });
   assert.equal($input.val(), '17.5;20.0');
 });
+
+test('a JS values_raw option trims data-values when no data-values-raw attribute is present -- the resolved-option gate must still fall back to the JS option, the way the old ternary did (mutation: replace `config.values_raw` in the new gate with `config_from_data.values_raw`) (#505)', (t) => {
+  const { slider } = createSlider(t, '<input data-values="10, 20, 30">', { values_raw: true });
+  assert.deepEqual(plain(slider.options.values), ['10', '20', '30']);
+
+  slider.update({ from: 0 });
+  assert.equal(slider.result.from_value, '10');
+});
+
+test('an empty data-values-raw attribute is "not set" and falls back to a JS values_raw: true option, matching every other data-* attribute -- RED on HEAD bd35676, where the trim ran before the empty-string strip and so saw "" as an explicit off, leaving " 20"/" 30" untrimmed (#505)', (t) => {
+  const { slider } = createSlider(t, '<input data-values="10, 20, 30" data-values-raw="">', { values_raw: true });
+  assert.equal(slider.options.values_raw, true);
+  assert.deepEqual(plain(slider.options.values), ['10', '20', '30']);
+});
+
+test('the no-argument init path -- options undefined at construction still resolves values_raw and trims/keeps entries the same as passing {} (characterization; mutation: remove `options = options || {};` near the top of the constructor -- with a value attribute present, the constructor reaches the unguarded `options.input_values_separator` read and throws a TypeError) (#505)', (t) => {
+  const { slider } = createSlider(t, '<input value="2" data-values="17.5,12.2b,20.0" data-values-raw="true" data-from="2">');
+  assert.equal(slider.options.values_raw, true);
+
+  slider.update({ from: 2 });
+  assert.equal(slider.result.from_value, '20.0');
+});
