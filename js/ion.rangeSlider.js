@@ -1492,9 +1492,11 @@
                     //
                     // p_gap_left/p_gap_right (captured in changeLevel's
                     // "both" case) are REAL-percent offsets of the pointer
-                    // from from/to at drag start, so adding/subtracting them
+                    // from from/to at drag start, so subtracting p_gap_left
                     // from convertToRealPercent(handle_x) here stays in one
-                    // consistent percent space throughout.
+                    // consistent percent space throughout; "to" is derived
+                    // from that snapped "from" (see the #867 note below), not
+                    // from the pointer.
                     //
                     // #867: only "from" is snapped to the step grid; "to" is
                     // derived from the snapped "from" plus the exact width
