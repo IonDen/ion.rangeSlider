@@ -17,7 +17,7 @@ test.describe(`values_raw coverage (${LABEL})`, () => {
   // "number"` guard from validate()'s values loop (js/ion.rangeSlider.js) --
   // the bubble, the max label, the input, the onStart payload and the grid
   // labels would all read "20" instead of "20.0".
-  test('values_raw keeps the raw entry on the bubble, the max label, the input and the onStart payload (#505)', async ({ page }) => {
+  test('values_raw keeps the raw entry on the bubble, the max label, the grid labels, the input and the onStart payload (#505)', async ({ page }) => {
     await open(page, { values: ['17.5', '12.2b', '20.0'], from: 2, values_raw: true, grid: true });
 
     await expect(page.locator('.irs-single')).toHaveText('20.0');

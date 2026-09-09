@@ -133,7 +133,7 @@ Or use `data-*` attributes on the input:
 | `drag_interval` | `data-drag-interval` | `false` | boolean | Allow dragging the whole range. Double type only |
 | `drag_over_limit` | `data-drag-over-limit` | `false` | boolean | Let a dragged handle push the other handle instead of stopping at it. Mouse/touch drag only, respects min_interval, max_interval, from_fixed and to_fixed. Double type only |
 | `values` | `data-values` | `[]` | array | Custom array of possible values (numbers or strings). When set, min, max and step are ignored. Numeric-looking strings are converted to numbers unless `values_raw` is set |
-| `values_raw` | `data-values-raw` | `false` | boolean | Keep `values` entries exactly as given: "20.0" stays "20.0" in `from_value`, in the value written to the input and on the label. By default numeric-looking strings are converted to numbers ("20.0" becomes 20). Spaces around the commas in `data-values` are ignored when this is on. Set it when creating the slider, or pass `values` again in the same `update()` call |
+| `values_raw` | `data-values-raw` | `false` | boolean | Keep `values` entries exactly as given: "20.0" stays "20.0" in `from_value`/`to_value`, in the value written to the input and on the label. By default numeric-looking strings are converted to numbers ("20.0" becomes 20). Spaces around the commas in `data-values` are ignored when this is on. Set it when creating the slider, or pass `values` again in the same `update()` call |
 | `from_fixed` | `data-from-fixed` | `false` | boolean | Fix position of left (or single) handle |
 | `from_min` | `data-from-min` | `min` | number | Minimum limit for left (or single) handle |
 | `from_max` | `data-from-max` | `max` | number | Maximum limit for left (or single) handle |
