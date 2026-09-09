@@ -4,8 +4,8 @@ import { createSlider } from './helpers.mjs';
 
 // #869: `step_from_min` (new, default false) counts the step scale from
 // `min` instead of from zero. Off, convertToValue() rounds its result to the
-// decimals of `step`, so an integer step always lands on whole numbers and a
-// fractional `min` is dropped: {min: 0.5, max: 10.5, step: 1} snaps to 2, 3,
+// decimals of `step`, so with a min at or above zero an integer step lands on
+// whole numbers and the min's fraction is dropped: {min: 0.5, max: 10.5, step: 1} snaps to 2, 3,
 // 4 rather than to its own scale 1.5, 2.5, 3.5. On, the value is min plus a
 // whole number of steps, so the scale starts at min and the final rounding
 // only cleans binary float noise.
@@ -259,18 +259,22 @@ test('step_from_min defaults to false (#869)', (t) => {
 });
 
 // T12. Known limit of the scale, pinned on purpose so a change to it is a
-// deliberate one. Limits are clamped in percent and the clamped percent then
-// lands on the nearest scale point like any other value, so a from_max that
-// is not on the scale is crossed by half a step: from_max 5 on the 0.5, 1.5,
-// ... scale becomes 5.5 (round half up). The default path does the same for
-// integer steps (from_min 2.4 lands on 2). Reds if the clamp helpers learn
-// to snap inward (ceil for a lower limit, floor for an upper one), which is
-// the fix a follow-up issue tracks; the readme row therefore asks users to
-// put limits on the scale.
+// deliberate one. checkDiapason() compares the value against from_max exactly
+// but hands the limit back as a percent, and the convertToValue() read-back
+// in drawHandles() rounds that percent onto the nearest scale point, so a
+// from_max that is not on the scale is crossed by half a step: from_max 5 on
+// the 0.5, 1.5, ... scale becomes 5.5 (round half up). calc()'s base case
+// runs checkDiapason() for the initial from: 8, so primeSingle() drives the
+// real path (a direct convertToValue() call would never reach the clamp).
+// The default path does the same for integer steps with a min at or above
+// zero (from_min 2.4 lands on 2). Reds with 4.5 if checkDiapason() learns to
+// snap an upper limit down onto the scale, the fix a follow-up issue tracks;
+// the readme row therefore asks users to put limits on the scale.
 test('a from_max off the scale is crossed by half a step with step_from_min on, pinned (#869)', (t) => {
   const { slider } = createSlider(t, '<input>', {
-    min: 0.5, max: 10.5, step: 1, from_max: 5, step_from_min: true
+    min: 0.5, max: 10.5, step: 1, from: 8, from_max: 5, step_from_min: true
   });
+  primeSingle(slider);
 
-  assert.equal(slider.convertToValue(slider.convertToPercent(5)), 5.5);
+  assert.equal(slider.result.from, 5.5);
 });

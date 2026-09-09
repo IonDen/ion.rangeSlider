@@ -127,7 +127,7 @@ Or use `data-*` attributes on the input:
 | `max` | `data-max` | `100` | number | Maximum value |
 | `from` | `data-from` | `min` | number | Start position for left handle (or single handle) |
 | `to` | `data-to` | `max` | number | Start position for right handle |
-| `step` | `data-step` | `1` | number | Step size. Always > 0. Can be fractional. Values are rounded to the decimals of `step`, so an integer step gives whole numbers even when `min` is fractional; see `step_from_min` |
+| `step` | `data-step` | `1` | number | Step size. Always > 0. Can be fractional. Values are rounded to the decimals of `step`; with `min: 0.5, step: 1` that gives 0.5, 2, 3 ... See `step_from_min` to keep the scale on `min` |
 | `step_from_min` | `data-step-from-min` | `false` | boolean | Make every value `min` plus a whole number of steps: with `min: 0.5, step: 1` the values are 0.5, 1.5, 2.5 ... instead of 0.5, 2, 3 ... Grid labels follow the same scale. Put an initial `from`/`to`, the handle limits and `min_interval`/`max_interval` on that scale too; a value off it is moved to the nearest point |
 | `min_interval` | `data-min-interval` | `-` | number | Minimum range between handles. Double type only |
 | `max_interval` | `data-max-interval` | `-` | number | Maximum range between handles. Double type only |

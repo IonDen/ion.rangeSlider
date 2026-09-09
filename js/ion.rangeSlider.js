@@ -2272,14 +2272,18 @@
             // the widest decimal count of step, min and max instead of the
             // step's alone. No negative-min shift is needed here: the distance
             // is measured from min, wherever min sits. validate() guarantees
-            // step > 0. Limits and intervals are clamped in percent and then
-            // land on the nearest scale point like any other value, so a
-            // from_min/from_max/to_min/to_max or min_interval that is not on
-            // the scale is crossed by up to half a step (the branch below does
-            // the same for integer steps). The branch below rounds to the
-            // step's decimals, so an integer step lands on whole numbers and a
-            // fractional min is dropped; it stays byte-identical while
-            // step_from_min is off, which is the default.
+            // step > 0. The clamp helpers (checkDiapason, checkMinInterval,
+            // checkMaxInterval) compare values exactly but hand the limit back
+            // as a percent, and the next convertToValue() call rounds that
+            // percent onto the nearest scale point, so a from_min/from_max/
+            // to_min/to_max, min_interval or max_interval that is not on the
+            // scale is crossed by up to half a step (the branch below does the
+            // same for integer steps with a min at or above zero). The branch
+            // below rounds to the step's decimals, so with a min at or above
+            // zero an integer step lands on whole numbers and the min's
+            // fraction is dropped (a negative min is shifted first, see #760
+            // below); it stays byte-identical while step_from_min is off,
+            // which is the default.
             if (this.options.step_from_min) {
                 var step_offset = (this.options.max - this.options.min) / 100 * percent,
                     step_count = Math.round(step_offset / this.options.step),
