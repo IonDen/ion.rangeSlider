@@ -108,8 +108,10 @@ test.describe(`drag_interval off-grid width (${LABEL})`, () => {
 
   // B3: the fix's own accepted trade-off (see the code comment at the fix
   // site) is that "to" sits off the step grid whenever the width itself
-  // does -- what the fix guarantees instead is that "from" always stays on
-  // it, on every onChange during the drag, not just the settled end state.
+  // does -- what the fix guarantees instead is that "from" stays on it on
+  // every onChange while neither end is pushed against a range limit (at
+  // the far edge the pair settles at 498/1000, which U5 pins), not just the
+  // settled end state.
   // Reds on master: the drag's own checkMinInterval pin (min_interval set
   // to the pre-drag width, not a multiple of step) pulls "from" through a
   // value-space round-trip that lands it off the grid mid-drag, e.g. 303.

@@ -218,7 +218,8 @@ test('U6 from_fixed and to_fixed each leave the interval unmoved through a full 
 });
 
 // U7: characterization -- proves the fix leaves an on-grid width's tick
-// sequence and onChange count byte-for-byte identical to master. This does
+// sequence byte-for-byte identical to master (fineDrag renders nothing, so
+// onChange is not counted here; U3 covers the count). This does
 // NOT hold for the two candidate mutations one might expect to catch it:
 // verified that neither reverting to master's independent-snap code nor
 // swapping which side gets snapped (snap "to", derive "from" instead) can
@@ -226,7 +227,7 @@ test('U6 from_fixed and to_fixed each leave the interval unmoved through a full 
 // both handles round to the grid the same way regardless of which one is
 // snapped first, which is exactly why the original bug only ever showed up
 // on an off-grid width. The catching mutation actually verified against this
-// test is the same one that catches U5 and U7's own "to" derivation: drop
+// test is the same one that catches U5: drop
 // the "+ this.coords.p_gap_left + this.coords.p_gap_right" term so "to"
 // collapses onto "from" -- the recorded sequence below is not reproduced at
 // all (the first tick alone reports from=0, to=500 instead of 300, 800).
@@ -278,8 +279,8 @@ test('U8 six successive short bar drags never grow the width (#867)', (t) => {
   }
 });
 
-// U9: same bug as U1, on a non-integer step. The issue's own reported
-// example (step: 0.1) happens not to reproduce -- floating-point rounding
+// U9: same bug as U1, on a non-integer step. A step of 0.1 with this
+// width happens not to reproduce -- floating-point rounding
 // to the step's own decimal places happens to land both candidates on the
 // same lattice point for that particular width -- so this uses step: 0.25
 // instead, which does. Reds on master: width alternates 50.25/50.1 instead
