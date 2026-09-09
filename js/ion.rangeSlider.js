@@ -307,6 +307,7 @@
             from: null,
             to: null,
             step: 1,
+            step_from_min: false,
 
             min_interval: 0,
             max_interval: 0,
@@ -387,6 +388,7 @@
             from: $inp.data("from"),
             to: $inp.data("to"),
             step: $inp.data("step"),
+            step_from_min: $inp.data("stepFromMin"),
 
             min_interval: $inp.data("minInterval"),
             max_interval: $inp.data("maxInterval"),
@@ -2261,6 +2263,38 @@
             }
             if (percent === 100) {
                 return this.options.max;
+            }
+
+            // #869: with step_from_min the steps are counted from min instead
+            // of from zero, so the values are min, min + step, min + 2 * step,
+            // ... plus max. The rounding at the end only cleans binary float
+            // noise off a lattice point the arithmetic has already placed,
+            // which is why it takes the widest decimal count of step, min and
+            // max instead of the step's alone. No negative-min shift is needed
+            // here: the distance is measured from min, wherever min sits.
+            // validate() guarantees step > 0. The branch below counts from
+            // zero -- an integer step therefore lands on whole numbers, and a
+            // fractional min is dropped -- and stays byte-identical while
+            // step_from_min is off, which is the default.
+            if (this.options.step_from_min) {
+                var step_offset = (this.options.max - this.options.min) / 100 * percent,
+                    step_count = Math.round(step_offset / this.options.step),
+                    step_value = this.options.min + (step_count * this.options.step),
+                    step_precision = Math.max(this.getDecimalPlaces(this.options.step), min_decimals, max_decimals);
+
+                if (step_precision) {
+                    step_value = +step_value.toFixed(step_precision);
+                } else {
+                    step_value = this.toFixed(step_value);
+                }
+
+                if (step_value < this.options.min) {
+                    step_value = this.options.min;
+                } else if (step_value > this.options.max) {
+                    step_value = this.options.max;
+                }
+
+                return step_value;
             }
 
 
