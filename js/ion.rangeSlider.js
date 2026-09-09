@@ -295,7 +295,7 @@
          */
         var $inp = this.$cache.input,
             val = $inp.prop("value"),
-            config, config_from_data, prop;
+            config, config_from_data, prop, i;
 
         // default config
         config = {
@@ -314,6 +314,7 @@
             drag_over_limit: false,
 
             values: [],
+            values_raw: false,
             p_values: [],
 
             from_fixed: false,
@@ -394,6 +395,7 @@
             drag_over_limit: $inp.data("dragOverLimit"),
 
             values: $inp.data("values"),
+            values_raw: $inp.data("valuesRaw"),
 
             from_fixed: $inp.data("fromFixed"),
             from_min: $inp.data("fromMin"),
@@ -440,6 +442,19 @@
             extra_classes: $inp.data("extraClasses")
         };
         config_from_data.values = config_from_data.values && config_from_data.values.split(",");
+
+        // #505: data-values is a comma-separated string, so "10, 20, 30" carries
+        // a leading space into every entry after the first. values_raw keeps a
+        // values entry exactly as given everywhere else, so the split entries
+        // are trimmed only when it is on; a JS values array is never touched
+        // here, only what came from the comma split. data-values-raw (checked
+        // first) overrides a JS values_raw option, matching every other data-*
+        // attribute in this constructor.
+        if (config_from_data.values && (config_from_data.values_raw !== undefined ? config_from_data.values_raw : options.values_raw)) {
+            for (i = 0; i < config_from_data.values.length; i++) {
+                config_from_data.values[i] = config_from_data.values[i].replace(/^\s+|\s+$/g, "");
+            }
+        }
 
         for (prop in config_from_data) {
             if (config_from_data.hasOwnProperty(prop)) {
@@ -2635,7 +2650,16 @@
                 o.grid_snap = true;
 
                 for (i = 0; i < vl; i++) {
-                    value = +v[i];
+                    // #505: values_raw keeps a values entry exactly as given
+                    // instead of converting a numeric-looking string to a
+                    // number. Entries that are already numbers are exempt, so
+                    // values: [1000, 2000] still gets the thousands-separator
+                    // prettify below whether values_raw is on or off.
+                    if (o.values_raw && typeof v[i] !== "number") {
+                        value = NaN;
+                    } else {
+                        value = +v[i];
+                    }
 
                     if (!isNaN(value)) {
                         v[i] = value;
