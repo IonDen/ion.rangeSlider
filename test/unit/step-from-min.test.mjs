@@ -257,3 +257,20 @@ test('step_from_min defaults to false (#869)', (t) => {
 
   assert.equal(slider.options.step_from_min, false);
 });
+
+// T12. Known limit of the scale, pinned on purpose so a change to it is a
+// deliberate one. Limits are clamped in percent and the clamped percent then
+// lands on the nearest scale point like any other value, so a from_max that
+// is not on the scale is crossed by half a step: from_max 5 on the 0.5, 1.5,
+// ... scale becomes 5.5 (round half up). The default path does the same for
+// integer steps (from_min 2.4 lands on 2). Reds if the clamp helpers learn
+// to snap inward (ceil for a lower limit, floor for an upper one), which is
+// the fix a follow-up issue tracks; the readme row therefore asks users to
+// put limits on the scale.
+test('a from_max off the scale is crossed by half a step with step_from_min on, pinned (#869)', (t) => {
+  const { slider } = createSlider(t, '<input>', {
+    min: 0.5, max: 10.5, step: 1, from_max: 5, step_from_min: true
+  });
+
+  assert.equal(slider.convertToValue(slider.convertToPercent(5)), 5.5);
+});

@@ -2265,16 +2265,20 @@
                 return this.options.max;
             }
 
-            // #869: with step_from_min the steps are counted from min instead
-            // of from zero, so the values are min, min + step, min + 2 * step,
-            // ... plus max. The rounding at the end only cleans binary float
-            // noise off a lattice point the arithmetic has already placed,
-            // which is why it takes the widest decimal count of step, min and
-            // max instead of the step's alone. No negative-min shift is needed
-            // here: the distance is measured from min, wherever min sits.
-            // validate() guarantees step > 0. The branch below counts from
-            // zero -- an integer step therefore lands on whole numbers, and a
-            // fractional min is dropped -- and stays byte-identical while
+            // #869: with step_from_min every value is min plus a whole number
+            // of steps (min, min + step, min + 2 * step, ... plus max). The
+            // rounding at the end only cleans binary float noise off a scale
+            // point the arithmetic has already placed, which is why it takes
+            // the widest decimal count of step, min and max instead of the
+            // step's alone. No negative-min shift is needed here: the distance
+            // is measured from min, wherever min sits. validate() guarantees
+            // step > 0. Limits and intervals are clamped in percent and then
+            // land on the nearest scale point like any other value, so a
+            // from_min/from_max/to_min/to_max or min_interval that is not on
+            // the scale is crossed by up to half a step (the branch below does
+            // the same for integer steps). The branch below rounds to the
+            // step's decimals, so an integer step lands on whole numbers and a
+            // fractional min is dropped; it stays byte-identical while
             // step_from_min is off, which is the default.
             if (this.options.step_from_min) {
                 var step_offset = (this.options.max - this.options.min) / 100 * percent,
@@ -2296,7 +2300,6 @@
 
                 return step_value;
             }
-
 
             if (min_decimals) {
                 min_length = min_decimals;
