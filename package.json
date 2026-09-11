@@ -1,7 +1,7 @@
 {
     "name": "ion-rangeslider",
     "version": "2.5.0",
-    "description": "Cool, comfortable and easily customizable range slider with many options and skin support",
+    "description": "jQuery range slider with one or two handles, six skins, touch and keyboard support, custom values and a value grid",
     "homepage": "http://ionden.com/a/plugins/ion.rangeSlider/",
     "author": {
         "name": "Denis Ineshin (IonDen)",
@@ -17,10 +17,10 @@
         "range",
         "slider",
         "rangeslider",
+        "range-slider",
         "interface",
-        "diapason",
         "ui",
-        "noui",
+        "touch",
         "skins"
     ],
     "main": "./js/ion.rangeSlider.js",

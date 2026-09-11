@@ -1060,7 +1060,7 @@
             }
 
             switch (e.which) {
-                case 83: // W
+                case 83: // S
                 case 65: // A
                 case 40: // DOWN
                 case 37: // LEFT
@@ -1068,7 +1068,7 @@
                     this.moveByKey(false);
                     break;
 
-                case 87: // S
+                case 87: // W
                 case 68: // D
                 case 38: // UP
                 case 39: // RIGHT

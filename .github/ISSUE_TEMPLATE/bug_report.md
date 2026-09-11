@@ -13,4 +13,4 @@ assignees: ''
 
 **Reproduce it** — fork https://jsfiddle.net/IonDen/b79q0vnm/ and paste the link:
 
-**Versions** — ion.rangeSlider: 2.3.1 / jQuery: / browser:
+**Versions** — Ion.RangeSlider: / jQuery: / browser:
