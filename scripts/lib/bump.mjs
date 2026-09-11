@@ -46,6 +46,9 @@ export function rewriteFiles({ files, from, to, build, buildDate, entry }) {
   t = must(t, new RegExp(`^\\* Version: ${f}$`, 'm'), `* Version: ${to}`, 'readme.md: "Version:" line');
   t = must(t, new RegExp(`archive/${f}\\.zip`), `archive/${to}.zip`, 'readme.md: ZIP link');
   t = must(t, new RegExp(`ion-rangeslider/${f}/`, 'g'), `ion-rangeslider/${to}/`, 'readme.md: cdnjs URLs', 2);
+  // The CDN block ships both providers, so both path forms are version sites:
+  // cdnjs uses "ion-rangeslider/<version>/", jsDelivr uses "ion-rangeslider@<version>/".
+  t = must(t, new RegExp(`ion-rangeslider@${f}/`, 'g'), `ion-rangeslider@${to}/`, 'readme.md: jsDelivr URLs', 2);
   out['readme.md'] = t;
   out['history.md'] = must(out['history.md'], /^# Update History\n\n/m, `# Update History\n\n${entry}`, 'history.md: heading');
   const changed = Object.keys(out).filter((p) => out[p] !== files[p]);

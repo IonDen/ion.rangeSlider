@@ -11,4 +11,4 @@ assignees: ''
 
 **Why the current options don't cover it**
 
-**Proposed option / API** (new options default to today's behaviour)
+**Proposed option / API** (new options default to today's behavior)

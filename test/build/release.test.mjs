@@ -18,7 +18,7 @@ const PATHS = ['package.json', 'js/ion.rangeSlider.js', 'readme.md', 'history.md
 const fixture = () => ({
   'package.json': '{\n  "version": "2.3.1",\n  "config": {\n    "build": 382,\n    "buildDate": "2019-12-19 16:51:02"\n  }\n}',
   'js/ion.rangeSlider.js': '// Ion.RangeSlider\n// version 2.3.1 Build: 382\n// © Denis Ineshin, 2019\n// x\n        this.VERSION = "2.3.1";\n',
-  'readme.md': '* Version: 2.3.1\n* [Download ZIP](https://github.com/IonDen/ion.rangeSlider/archive/2.3.1.zip)\n<link href="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/css/ion.rangeSlider.min.css"/>\n<script src="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/js/ion.rangeSlider.min.js"></script>\nsome 2.3.1 in prose stays\n',
+  'readme.md': '* Version: 2.3.1\n* [Download ZIP](https://github.com/IonDen/ion.rangeSlider/archive/2.3.1.zip)\n<link href="https://cdn.jsdelivr.net/npm/ion-rangeslider@2.3.1/css/ion.rangeSlider.min.css"/>\n<script src="https://cdn.jsdelivr.net/npm/ion-rangeslider@2.3.1/js/ion.rangeSlider.min.js"></script>\n<link href="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/css/ion.rangeSlider.min.css"/>\n<script src="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.3.1/js/ion.rangeSlider.min.js"></script>\nsome 2.3.1 in prose stays\n',
   'history.md': '![logo](x.png)\n\n# Update History\n\n### Version 2.3.1. December 19, 2019\n',
 });
 
