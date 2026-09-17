@@ -14,6 +14,7 @@
  */
 
 import { rangeOf, scalePoint, isValuesMode } from '../lib/scale.mjs';
+import { valuesEntry } from '../lib/format.mjs';
 
 // ---------------------------------------------------------------------------------------
 // Small helpers
@@ -292,9 +293,31 @@ function toDataAttrValue(v) {
     return String(v);
 }
 
+/**
+ * Snapshots the merged option set as the PLUGIN will see it, BEFORE this route moves
+ * any key out of entry.config into an attribute.
+ *
+ * Only the route dimension changes where an option travels, never which options the
+ * slider ends up with: data-* attributes and the input's value attribute are read back
+ * into the same config by config_from_data(). matrix.spec.mjs hands entry.effective to
+ * the invariants and to the label oracle, which have to read `type`, `min`, `values`,
+ * `hide_from_to` and the rest even for an entry whose `config` is left empty because
+ * every option travelled as an attribute.
+ *
+ * @param {{config: object, effective?: object}} entry
+ */
+function snapshotEffective(entry) {
+    entry.effective = Object.assign({}, entry.config);
+    // Own copy of the array so a later mutation of one side cannot rewrite the other.
+    if (Array.isArray(entry.config.values)) entry.effective.values = entry.config.values.slice();
+}
+
 const route = [
-    level('js', () => {}),
+    level('js', (entry) => {
+        snapshotEffective(entry);
+    }),
     level('data', (entry) => {
+        snapshotEffective(entry);
         entry.attrs = entry.attrs || {};
         for (const key of Object.keys(entry.config)) {
             if (!DATA_TWIN_KEYS.has(key)) continue;
@@ -305,10 +328,18 @@ const route = [
         }
     }),
     level('value-attr', (entry) => {
+        snapshotEffective(entry);
         const cfg = entry.config;
         const sep = typeof cfg.input_values_separator === 'string' ? cfg.input_values_separator : ';';
         entry.attrs = entry.attrs || {};
-        entry.attrs.value = cfg.to !== undefined ? `${cfg.from}${sep}${cfg.to}` : `${cfg.from}`;
+        // readme, config resolution: the input's value attribute sets from/to, and
+        // "with a values array the value is looked up as an index" -- so the markup
+        // names the ENTRY and the slider resolves its index from it. Writing the index
+        // there builds a different slider (the index is looked up as an entry and is
+        // not in the array), which is why the entry goes through the same conversion
+        // the labels and the input write-back use.
+        const written = (value) => (isValuesMode(cfg) ? String(valuesEntry(cfg, value)) : String(value));
+        entry.attrs.value = cfg.to !== undefined ? `${written(cfg.from)}${sep}${written(cfg.to)}` : written(cfg.from);
         delete cfg.from;
         delete cfg.to;
     })
@@ -393,6 +424,13 @@ export const EXCLUSIONS = [
 ];
 
 // ---------------------------------------------------------------------------------------
+// A named case may also carry `stages`, a small per-case override of the matrix script's
+// shared stage targets (currently only `s1`, the track fraction S1 drags the from/single
+// handle to; the shared target is 0.3). It exists for a case whose bug lives at a place
+// the shared script never visits -- edge:min-interval-top needs the from handle at the
+// very top of the track. matrix.spec.mjs reads it; every other entry keeps the shared
+// targets, so the interaction script stays one script.
+//
 // NAMED_CASES -- the 34 site demo inits (website/src/a/plugins/ion.rangeSlider/res/
 // page_demo.js, page_demo_adv.js, page_demo_int.js; those three files use CRLF line
 // endings, unrelated to this file), `skin` and every callback dropped, everything else
@@ -434,11 +472,11 @@ export const NAMED_CASES = [
         name: 'demo:page_demo:demo_6',
         config: {
             grid: true,
-            from: new Date().getMonth(),
+            from: 5,
             values: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
             force_edges: true
         },
-        notes: ['from is new Date().getMonth() in the site demo -- always a valid 0..11 index, but this named case is time-dependent: regenerating configs.json on a different month changes it.']
+        notes: ['from is new Date().getMonth() in the site demo, always a valid 0..11 index; pinned to 5 (Jun) here so the committed configs.json and any failure it produces stay reproducible whatever month the generator is run in.']
     },
     { name: 'demo:page_demo:demo_7', config: { grid: true, min: 1000, max: 1000000, from: 100000, step: 1000, prettify_enabled: true } },
     {
@@ -536,5 +574,33 @@ export const NAMED_CASES = [
     { name: 'edge:min-eq-max', config: { min: 5, max: 5 } },
     { name: 'edge:step-gt-range', config: { min: 0, max: 10, step: 25 } },
     { name: 'edge:huge', config: { min: 0, max: 1e9, step: 1 } },
-    { name: 'edge:tiny', config: { min: 0, max: 0.001, step: 0.0001 } }
+    { name: 'edge:tiny', config: { min: 0, max: 0.001, step: 0.0001 } },
+
+    // ---- edge cases that exist to REACH a known bug (2) ----
+    //
+    // The pairwise entries cover the option pairs, not the geometry a particular bug
+    // needs, so these two carry the configuration the bug lives in. Each is the minimal
+    // config of a filed issue, driven by the matrix's own stage script:
+    //
+    // #879: S5 drags the bar 10 % of the track to the right. from starts 100 below its
+    // from_max and the whole interval is asked to move 100, so the leading handle lands
+    // on its limit while the trailing one keeps following the pointer -- the bar drag
+    // stretches the interval instead of stopping it. from_max sits between from and to
+    // so only the leading handle is clamped.
+    {
+        name: 'edge:bar-drag-from-max',
+        config: { type: 'double', min: 0, max: 1000, step: 5, from: 300, to: 800, drag_interval: true, from_max: 400 },
+        notes: ['Reaches issue #879: a bar drag against from_max stretches the interval instead of moving it as a unit.']
+    },
+    // #881: max is half a step above the last reachable value (min 0.5, step 1 gives
+    // 0.5, 2, 3 ... 10, while max is 10.5), so a `to` resting on max is only 0.5 above a
+    // `from` the interval clamp lets reach 10 -- half the min_interval of 1. S1 drives
+    // from to the top of the track (the shared 30 % target would stop far short of the
+    // edge), hence the stages override below.
+    {
+        name: 'edge:min-interval-top',
+        config: { type: 'double', min: 0.5, max: 10.5, step: 1, from: 8, to: 10.5, min_interval: 1, drag_over_limit: true },
+        stages: { s1: 1 },
+        notes: ['Reaches issue #881: min_interval is violated at the top edge when max sits off the step scale.']
+    }
 ];

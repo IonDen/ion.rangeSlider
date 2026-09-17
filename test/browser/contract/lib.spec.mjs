@@ -45,6 +45,17 @@ test.describe(`browser lib (${LABEL})`, () => {
     const s = await readState(page, 1, cfg);
     expect(s.values).toEqual({ from: 1, to: 3 });
   });
+  // Bug caught: resolving the input text against the RAW entries (String(v) === part)
+  // instead of the converted ones -- the plugin writes "20" for the entry "20.0"
+  // (readme note "values": a numeric-looking entry is converted unless values_raw),
+  // so a raw comparison finds no match and the index reads back as null.
+  test('readState resolves a numeric-string entry the way the plugin writes it: "20.0" reads back as index 1', async ({ page }) => {
+    const cfg = { values: ['10', '20.0', '30'], from: 1 };
+    await open(page, cfg);
+    await expect(page.locator('#slider')).toHaveValue('20');
+    const s = await readState(page, 1, cfg);
+    expect(s.values.from).toBe(1);
+  });
   test('readState reports plain numeric from/to when the config carries no values array', async ({ page }) => {
     const cfg = { type: 'double', min: 0, max: 100, from: 20, to: 80 };
     await open(page, cfg);

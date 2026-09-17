@@ -112,13 +112,31 @@ function pairsOf(pickedIds) {
  * type, type before the levels that branch on double, everything before route,
  * container last) against a fresh entry.
  *
+ * The route level is the one that snapshots `entry.effective` (the option set as the
+ * plugin will see it) before it moves keys into `attrs`; the fallback below keeps the
+ * field present even if a future dimension set ever drops the route dimension.
+ *
  * @param {Record<string, {id: string, apply(entry: object): void}>} pickedLevels
- * @returns {{ config: object, attrs: object|null, extra: object, notes: string[] }}
+ * @returns {{ config: object, effective: object, attrs: object|null, extra: object, notes: string[] }}
  */
 function buildEntry(pickedLevels) {
-    const entry = { config: {}, attrs: null, extra: {}, notes: [] };
+    const entry = { config: {}, effective: null, attrs: null, extra: {}, notes: [] };
     for (const dim of DIMENSION_NAMES) pickedLevels[dim].apply(entry);
+    if (!entry.effective) entry.effective = effectiveOf(entry.config);
     return entry;
+}
+
+/**
+ * A standalone copy of a config, for entries that never pass through a route level
+ * (the named cases, which travel entirely through the JS config).
+ *
+ * @param {object} config
+ * @returns {object}
+ */
+function effectiveOf(config) {
+    const effective = Object.assign({}, config);
+    if (Array.isArray(config.values)) effective.values = config.values.slice();
+    return effective;
 }
 
 /**
@@ -144,7 +162,7 @@ function drawCandidate(rng) {
  * a given seed), then every NAMED_CASES entry, unchanged, in its source order.
  *
  * @param {number} [seed]
- * @returns {Array<{ id: string, name: string, dims?: Record<string,string>, config: object, attrs: object|null, extra: object }>}
+ * @returns {Array<{ id: string, name: string, dims?: Record<string,string>, config: object, effective: object, attrs: object|null, extra: object }>}
  */
 export function generate(seed = 1) {
     const rng = mulberry32(seed);
@@ -179,6 +197,7 @@ export function generate(seed = 1) {
             name: DIMENSION_NAMES.map((d) => `${d}=${best.pickedIds[d]}`).join(','),
             dims: best.pickedIds,
             config: entry.config,
+            effective: entry.effective,
             attrs: entry.attrs,
             extra: entry.extra,
             notes: entry.notes
@@ -189,14 +208,21 @@ export function generate(seed = 1) {
         throw new Error(`generate(${seed}): ${required.size - covered.size} required pairs are still uncovered after ${MAX_ROUNDS} rounds -- raise CANDIDATES_PER_ROUND or MAX_ROUNDS, or check for an uncoverable pair`);
     }
 
-    const named = NAMED_CASES.map((nc, i) => ({
-        id: 'n' + String(i + 1).padStart(3, '0'),
-        name: nc.name,
-        config: nc.config,
-        attrs: nc.attrs || null,
-        extra: nc.extra || {},
-        notes: nc.notes || []
-    }));
+    const named = NAMED_CASES.map((nc, i) => {
+        const entry = {
+            id: 'n' + String(i + 1).padStart(3, '0'),
+            name: nc.name,
+            config: nc.config,
+            effective: effectiveOf(nc.config),
+            attrs: nc.attrs || null,
+            extra: nc.extra || {},
+            notes: nc.notes || []
+        };
+        // Only the handful of cases that need a stage target of their own carry the
+        // field, so configs.json does not gain a null on every other entry.
+        if (nc.stages) entry.stages = nc.stages;
+        return entry;
+    });
 
     return [...generated, ...named];
 }

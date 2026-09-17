@@ -1,7 +1,7 @@
 [
   {
-    "_generated": "2026-09-15 seed 1",
-    "_count": 126
+    "_generated": "2026-09-16 seed 1",
+    "_count": 128
   },
   {
     "id": "m001",
@@ -24,6 +24,30 @@
       "container": "600"
     },
     "config": {},
+    "effective": {
+      "values": [
+        "10",
+        "20",
+        "30",
+        "40",
+        "50"
+      ],
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "from_min": 2.4,
+      "min_interval": 4,
+      "max_interval": 4,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_snap": true,
+      "prettify_separator": ",",
+      "decorate_both": false,
+      "values_separator": " to ",
+      "hide_from_to": true,
+      "disable": true,
+      "skin": "flat"
+    },
     "attrs": {
       "data-values": "10,20,30,40,50",
       "data-type": "double",
@@ -84,6 +108,25 @@
       "force_edges": true,
       "skin": "sharp"
     },
+    "effective": {
+      "min": -50,
+      "max": 50,
+      "step": 5,
+      "type": "double",
+      "from": -20,
+      "to": 20,
+      "from_min": -25,
+      "from_max": 10,
+      "to_min": -10,
+      "to_max": 40,
+      "min_interval": 10,
+      "to_fixed": true,
+      "grid": true,
+      "grid_num": 4,
+      "prettify_separator": "",
+      "force_edges": true,
+      "skin": "sharp"
+    },
     "attrs": null,
     "extra": {
       "hidden": "1"
@@ -112,6 +155,24 @@
     },
     "config": {
       "__prettify_src": "function (n) { return n + \"x\"; }"
+    },
+    "effective": {
+      "min": 0.25,
+      "max": 9.75,
+      "step": 0.5,
+      "step_from_min": true,
+      "type": "double",
+      "from": 3.25,
+      "to": 6.75,
+      "from_min": 2.75,
+      "from_max": 5.75,
+      "from_fixed": true,
+      "drag_interval": true,
+      "__prettify_src": "function (n) { return n + \"x\"; }",
+      "from_shadow": true,
+      "to_shadow": true,
+      "block": true,
+      "skin": "modern"
     },
     "attrs": {
       "data-min": "0.25",
@@ -173,6 +234,24 @@
       "keyboard": false,
       "skin": "square"
     },
+    "effective": {
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "type": "double",
+      "from": 0.3,
+      "to": 0.7,
+      "max_interval": 0.6,
+      "drag_interval": true,
+      "drag_over_limit": true,
+      "prettify_enabled": false,
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "hide_min_max": true,
+      "keyboard": false,
+      "skin": "square"
+    },
     "attrs": {
       "value": "0.3;0.7"
     },
@@ -219,8 +298,27 @@
       "keyboard": false,
       "skin": "big"
     },
+    "effective": {
+      "values": [
+        "10",
+        "20",
+        "30",
+        "40",
+        "50"
+      ],
+      "values_raw": true,
+      "from": 1,
+      "from_min": 1,
+      "from_max": 2,
+      "from_fixed": true,
+      "__prettify_src": "function (n) { return n + \"x\"; }",
+      "prefix": "$",
+      "postfix": "k",
+      "keyboard": false,
+      "skin": "big"
+    },
     "attrs": {
-      "value": "1"
+      "value": "20"
     },
     "extra": {
       "hidden": "1"
@@ -276,6 +374,33 @@
       "block": true,
       "skin": "big"
     },
+    "effective": {
+      "values": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e"
+      ],
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "to_min": 2,
+      "to_max": 4,
+      "min_interval": 4,
+      "max_interval": 4,
+      "to_fixed": true,
+      "drag_interval": true,
+      "grid": true,
+      "grid_num": 10,
+      "prettify_separator": "",
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "force_edges": true,
+      "block": true,
+      "skin": "big"
+    },
     "attrs": null,
     "extra": {
       "width": "300"
@@ -305,6 +430,29 @@
     "config": {
       "__prettify_grid_src": "function (n) { return \"g\" + n; }",
       "__prettify_min_max_src": "function (n) { return \"mm\" + n; }"
+    },
+    "effective": {
+      "values": [
+        10,
+        20,
+        30,
+        40,
+        50
+      ],
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "min_interval": 2,
+      "from_fixed": true,
+      "drag_interval": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_num": 4,
+      "__prettify_grid_src": "function (n) { return \"g\" + n; }",
+      "__prettify_min_max_src": "function (n) { return \"mm\" + n; }",
+      "decorate_both": false,
+      "values_separator": " to ",
+      "skin": "round"
     },
     "attrs": {
       "data-values": "10,20,30,40,50",
@@ -365,6 +513,23 @@
       "disable": true,
       "skin": "round"
     },
+    "effective": {
+      "min": 0.25,
+      "max": 9.75,
+      "step": 0.5,
+      "step_from_min": true,
+      "from": 4.25,
+      "from_min": 2.75,
+      "from_max": 5.75,
+      "grid": true,
+      "grid_num": 10,
+      "prettify_separator": ",",
+      "prefix": "$",
+      "postfix": "k",
+      "from_shadow": true,
+      "disable": true,
+      "skin": "round"
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -390,6 +555,26 @@
       "container": "flex"
     },
     "config": {
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "type": "double",
+      "from": 30,
+      "to": 70,
+      "to_min": 40,
+      "to_max": 90,
+      "max_interval": 6,
+      "drag_interval": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_margin": false,
+      "prefix": "$",
+      "postfix": "k",
+      "hide_from_to": true,
+      "block": true,
+      "skin": "big"
+    },
+    "effective": {
       "min": 0,
       "max": 100,
       "step": 1,
@@ -459,8 +644,34 @@
       "keyboard": false,
       "skin": "sharp"
     },
+    "effective": {
+      "values": [
+        10,
+        20,
+        30,
+        40,
+        50
+      ],
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "from_min": 1,
+      "from_max": 2,
+      "to_min": 2,
+      "to_max": 4,
+      "min_interval": 4,
+      "max_interval": 4,
+      "to_fixed": true,
+      "drag_interval": true,
+      "grid": true,
+      "grid_snap": true,
+      "from_shadow": true,
+      "to_shadow": true,
+      "keyboard": false,
+      "skin": "sharp"
+    },
     "attrs": {
-      "value": "1;3"
+      "value": "20;40"
     },
     "extra": {},
     "notes": []
@@ -486,6 +697,31 @@
       "container": "flex"
     },
     "config": {
+      "values": [
+        "10",
+        "20",
+        "30",
+        "40",
+        "50"
+      ],
+      "values_raw": true,
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "from_min": 2.4,
+      "min_interval": 2,
+      "to_fixed": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_num": 4,
+      "__prettify_src": "function (n) { return n + \"x\"; }",
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "hide_min_max": true,
+      "skin": "flat"
+    },
+    "effective": {
       "values": [
         "10",
         "20",
@@ -558,6 +794,28 @@
       "disable": true,
       "skin": "round"
     },
+    "effective": {
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "type": "double",
+      "from": 0.3,
+      "to": 0.7,
+      "to_min": 0.4,
+      "to_max": 0.9,
+      "min_interval": 0.4,
+      "max_interval": 0.4,
+      "from_fixed": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_margin": false,
+      "prettify_separator": "",
+      "decorate_both": false,
+      "values_separator": " to ",
+      "hide_min_max": true,
+      "disable": true,
+      "skin": "round"
+    },
     "attrs": {
       "value": "0.3;0.7"
     },
@@ -587,6 +845,24 @@
       "container": "flex"
     },
     "config": {},
+    "effective": {
+      "min": 0.5,
+      "max": 10.5,
+      "step": 1,
+      "type": "double",
+      "from": 4,
+      "to": 8,
+      "to_min": 5,
+      "to_max": 10,
+      "min_interval": 2,
+      "from_fixed": true,
+      "grid": true,
+      "grid_snap": true,
+      "prettify_enabled": false,
+      "force_edges": true,
+      "disable": true,
+      "skin": "square"
+    },
     "attrs": {
       "data-min": "0.5",
       "data-max": "10.5",
@@ -645,6 +921,23 @@
       "block": true,
       "skin": "sharp"
     },
+    "effective": {
+      "min": 0,
+      "max": 1000000,
+      "step": 1000,
+      "type": "double",
+      "from": 300000,
+      "to": 700000,
+      "min_interval": 2000,
+      "from_fixed": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_num": 10,
+      "__prettify_grid_src": "function (n) { return \"g\" + n; }",
+      "__prettify_min_max_src": "function (n) { return \"mm\" + n; }",
+      "block": true,
+      "skin": "sharp"
+    },
     "attrs": {
       "value": "300000;700000"
     },
@@ -674,6 +967,29 @@
       "container": "600"
     },
     "config": {},
+    "effective": {
+      "values": [
+        "10",
+        "20",
+        "30",
+        "40",
+        "50"
+      ],
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "max_interval": 6,
+      "to_fixed": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_margin": false,
+      "prettify_separator": "",
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "disable": true,
+      "skin": "modern"
+    },
     "attrs": {
       "data-values": "10,20,30,40,50",
       "data-type": "double",
@@ -715,6 +1031,23 @@
       "container": "300"
     },
     "config": {},
+    "effective": {
+      "values": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e"
+      ],
+      "from": 1,
+      "from_min": 2.4,
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "force_edges": true,
+      "keyboard": false,
+      "skin": "sharp"
+    },
     "attrs": {
       "data-values": "a,b,c,d,e",
       "data-from": "1",
@@ -764,6 +1097,20 @@
       "hide_min_max": true,
       "skin": "modern"
     },
+    "effective": {
+      "min": 0.5,
+      "max": 10.5,
+      "step": 1,
+      "from": 5,
+      "grid": true,
+      "grid_num": 4,
+      "prettify_separator": ",",
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "hide_min_max": true,
+      "skin": "modern"
+    },
     "attrs": {
       "value": "5"
     },
@@ -791,6 +1138,29 @@
       "container": "hidden"
     },
     "config": {},
+    "effective": {
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "type": "double",
+      "from": 30,
+      "to": 70,
+      "from_min": 25,
+      "from_max": 60,
+      "min_interval": 4,
+      "max_interval": 4,
+      "to_fixed": true,
+      "drag_interval": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_num": 10,
+      "prettify_enabled": false,
+      "decorate_both": false,
+      "values_separator": " to ",
+      "hide_from_to": true,
+      "keyboard": false,
+      "skin": "square"
+    },
     "attrs": {
       "data-min": "0",
       "data-max": "100",
@@ -840,6 +1210,30 @@
       "container": "hidden"
     },
     "config": {},
+    "effective": {
+      "min": 0,
+      "max": 1000000,
+      "step": 1000,
+      "type": "double",
+      "from": 300000,
+      "to": 700000,
+      "from_min": 250000,
+      "from_max": 600000,
+      "to_min": 400000,
+      "to_max": 900000,
+      "max_interval": 6000,
+      "to_fixed": true,
+      "drag_interval": true,
+      "grid": true,
+      "grid_num": 4,
+      "prettify_enabled": false,
+      "prefix": "$",
+      "postfix": "k",
+      "from_shadow": true,
+      "to_shadow": true,
+      "block": true,
+      "skin": "modern"
+    },
     "attrs": {
       "data-min": "0",
       "data-max": "1000000",
@@ -913,8 +1307,34 @@
       "disable": true,
       "skin": "modern"
     },
+    "effective": {
+      "values": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e"
+      ],
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "from_min": 1,
+      "from_max": 2,
+      "to_min": 2,
+      "to_max": 4,
+      "min_interval": 2,
+      "drag_interval": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_margin": false,
+      "__prettify_grid_src": "function (n) { return \"g\" + n; }",
+      "__prettify_min_max_src": "function (n) { return \"mm\" + n; }",
+      "hide_from_to": true,
+      "disable": true,
+      "skin": "modern"
+    },
     "attrs": {
-      "value": "1;3"
+      "value": "b;d"
     },
     "extra": {
       "wrap": "flex"
@@ -944,6 +1364,28 @@
       "container": "300"
     },
     "config": {
+      "min": 0.25,
+      "max": 9.75,
+      "step": 0.5,
+      "step_from_min": true,
+      "type": "double",
+      "from": 3.25,
+      "to": 6.75,
+      "from_min": 1.45,
+      "from_fixed": true,
+      "drag_interval": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_snap": true,
+      "__prettify_grid_src": "function (n) { return \"g\" + n; }",
+      "__prettify_min_max_src": "function (n) { return \"mm\" + n; }",
+      "decorate_both": false,
+      "values_separator": " to ",
+      "from_shadow": true,
+      "to_shadow": true,
+      "skin": "flat"
+    },
+    "effective": {
       "min": 0.25,
       "max": 9.75,
       "step": 0.5,
@@ -1015,6 +1457,28 @@
       "values_separator": " to ",
       "skin": "square"
     },
+    "effective": {
+      "values": [
+        "10",
+        "20",
+        "30",
+        "40",
+        "50"
+      ],
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "to_min": 2,
+      "to_max": 4,
+      "max_interval": 6,
+      "to_fixed": true,
+      "drag_interval": true,
+      "drag_over_limit": true,
+      "prettify_separator": ",",
+      "decorate_both": false,
+      "values_separator": " to ",
+      "skin": "square"
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -1044,6 +1508,27 @@
       "max": 100,
       "step": 1,
       "type": "double",
+      "from_min": 25,
+      "from_max": 60,
+      "to_min": 40,
+      "to_max": 90,
+      "min_interval": 2,
+      "from_fixed": true,
+      "drag_interval": true,
+      "grid": true,
+      "grid_snap": true,
+      "prettify_separator": ",",
+      "hide_min_max": true,
+      "disable": true,
+      "skin": "round"
+    },
+    "effective": {
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "type": "double",
+      "from": 30,
+      "to": 70,
       "from_min": 25,
       "from_max": 60,
       "to_min": 40,
@@ -1106,8 +1591,30 @@
       "block": true,
       "skin": "round"
     },
+    "effective": {
+      "values": [
+        "10",
+        "20",
+        "30",
+        "40",
+        "50"
+      ],
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "from_min": 2.4,
+      "max_interval": 6,
+      "from_fixed": true,
+      "drag_interval": true,
+      "grid": true,
+      "grid_margin": false,
+      "__prettify_src": "function (n) { return n + \"x\"; }",
+      "force_edges": true,
+      "block": true,
+      "skin": "round"
+    },
     "attrs": {
-      "value": "1;3"
+      "value": "20;40"
     },
     "extra": {
       "hidden": "1"
@@ -1139,6 +1646,30 @@
     "config": {
       "__prettify_grid_src": "function (n) { return \"g\" + n; }",
       "__prettify_min_max_src": "function (n) { return \"mm\" + n; }"
+    },
+    "effective": {
+      "values": [
+        "10",
+        "20",
+        "30",
+        "40",
+        "50"
+      ],
+      "values_raw": true,
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "min_interval": 4,
+      "max_interval": 4,
+      "from_fixed": true,
+      "drag_interval": true,
+      "__prettify_grid_src": "function (n) { return \"g\" + n; }",
+      "__prettify_min_max_src": "function (n) { return \"mm\" + n; }",
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "hide_from_to": true,
+      "skin": "round"
     },
     "attrs": {
       "data-values": "10,20,30,40,50",
@@ -1202,6 +1733,25 @@
       "keyboard": false,
       "skin": "flat"
     },
+    "effective": {
+      "min": 0,
+      "max": 1000000,
+      "step": 1000,
+      "type": "double",
+      "from": 300000,
+      "to": 700000,
+      "from_min": 2400,
+      "drag_interval": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_snap": true,
+      "prettify_separator": "",
+      "prefix": "$",
+      "postfix": "k",
+      "hide_from_to": true,
+      "keyboard": false,
+      "skin": "flat"
+    },
     "attrs": null,
     "extra": {
       "hidden": "1"
@@ -1229,6 +1779,25 @@
       "container": "300"
     },
     "config": {
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "type": "double",
+      "from": 0.3,
+      "to": 0.7,
+      "from_min": 0.3,
+      "from_max": 0.6,
+      "max_interval": 0.6,
+      "from_fixed": true,
+      "grid": true,
+      "grid_num": 10,
+      "decorate_both": false,
+      "values_separator": " to ",
+      "force_edges": true,
+      "block": true,
+      "skin": "modern"
+    },
+    "effective": {
       "min": 0,
       "max": 1,
       "step": 0.1,
@@ -1290,6 +1859,23 @@
       "postfix": "k",
       "skin": "square"
     },
+    "effective": {
+      "min": -50,
+      "max": 50,
+      "step": 5,
+      "type": "double",
+      "from": -20,
+      "to": 20,
+      "from_min": -38,
+      "min_interval": 20,
+      "max_interval": 20,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_num": 10,
+      "prefix": "$",
+      "postfix": "k",
+      "skin": "square"
+    },
     "attrs": null,
     "extra": {
       "width": "300"
@@ -1317,6 +1903,24 @@
       "container": "600"
     },
     "config": {},
+    "effective": {
+      "min": 0.25,
+      "max": 9.75,
+      "step": 0.5,
+      "step_from_min": true,
+      "type": "double",
+      "from": 3.25,
+      "to": 6.75,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_margin": false,
+      "prettify_enabled": false,
+      "prefix": "$",
+      "postfix": "k",
+      "from_shadow": true,
+      "to_shadow": true,
+      "skin": "big"
+    },
     "attrs": {
       "data-min": "0.25",
       "data-max": "9.75",
@@ -1359,6 +1963,28 @@
       "container": "flex"
     },
     "config": {
+      "values": [
+        10,
+        20,
+        30,
+        40,
+        50
+      ],
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "from_min": 1,
+      "from_max": 2,
+      "to_min": 2,
+      "to_max": 4,
+      "to_fixed": true,
+      "drag_interval": true,
+      "decorate_both": false,
+      "values_separator": " to ",
+      "block": true,
+      "skin": "flat"
+    },
+    "effective": {
       "values": [
         10,
         20,
@@ -1425,6 +2051,27 @@
       "keyboard": false,
       "skin": "big"
     },
+    "effective": {
+      "min": -50,
+      "max": 50,
+      "step": 5,
+      "type": "double",
+      "from": -20,
+      "to": 20,
+      "to_min": -10,
+      "to_max": 40,
+      "max_interval": 30,
+      "to_fixed": true,
+      "grid": true,
+      "grid_margin": false,
+      "__prettify_grid_src": "function (n) { return \"g\" + n; }",
+      "__prettify_min_max_src": "function (n) { return \"mm\" + n; }",
+      "decorate_both": false,
+      "values_separator": " to ",
+      "hide_min_max": true,
+      "keyboard": false,
+      "skin": "big"
+    },
     "attrs": {
       "value": "-20;20"
     },
@@ -1455,6 +2102,27 @@
     },
     "config": {
       "__prettify_src": "function (n) { return n + \"x\"; }"
+    },
+    "effective": {
+      "min": 0.5,
+      "max": 10.5,
+      "step": 1,
+      "type": "double",
+      "from": 4,
+      "to": 8,
+      "to_min": 5,
+      "to_max": 10,
+      "from_fixed": true,
+      "drag_interval": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_margin": false,
+      "__prettify_src": "function (n) { return n + \"x\"; }",
+      "decorate_both": false,
+      "values_separator": " to ",
+      "hide_min_max": true,
+      "disable": true,
+      "skin": "sharp"
     },
     "attrs": {
       "data-min": "0.5",
@@ -1525,8 +2193,34 @@
       "disable": true,
       "skin": "flat"
     },
+    "effective": {
+      "values": [
+        10,
+        20,
+        30,
+        40,
+        50
+      ],
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "from_min": 1,
+      "from_max": 2,
+      "max_interval": 6,
+      "from_fixed": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_num": 10,
+      "prettify_enabled": false,
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "hide_min_max": true,
+      "disable": true,
+      "skin": "flat"
+    },
     "attrs": {
-      "value": "1;3"
+      "value": "20;40"
     },
     "extra": {
       "wrap": "flex"
@@ -1576,6 +2270,31 @@
       "keyboard": false,
       "skin": "round"
     },
+    "effective": {
+      "min": -50,
+      "max": 50,
+      "step": 5,
+      "type": "double",
+      "from": -20,
+      "to": 20,
+      "from_min": -25,
+      "from_max": 10,
+      "to_min": -10,
+      "to_max": 40,
+      "min_interval": 20,
+      "max_interval": 20,
+      "from_fixed": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_snap": true,
+      "__prettify_src": "function (n) { return n + \"x\"; }",
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "hide_from_to": true,
+      "keyboard": false,
+      "skin": "round"
+    },
     "attrs": {
       "value": "-20;20"
     },
@@ -1607,6 +2326,30 @@
       "container": "hidden"
     },
     "config": {},
+    "effective": {
+      "values": [
+        "10",
+        "20",
+        "30",
+        "40",
+        "50"
+      ],
+      "values_raw": true,
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "from_min": 1,
+      "from_max": 2,
+      "min_interval": 2,
+      "drag_interval": true,
+      "grid": true,
+      "grid_num": 4,
+      "prettify_separator": "",
+      "from_shadow": true,
+      "to_shadow": true,
+      "block": true,
+      "skin": "square"
+    },
     "attrs": {
       "data-values": "10,20,30,40,50",
       "data-values-raw": "true",
@@ -1666,6 +2409,22 @@
       "hide_from_to": true,
       "skin": "sharp"
     },
+    "effective": {
+      "min": 0.5,
+      "max": 10.5,
+      "step": 1,
+      "type": "double",
+      "from": 4,
+      "to": 8,
+      "max_interval": 6,
+      "from_fixed": true,
+      "drag_over_limit": true,
+      "prettify_enabled": false,
+      "prefix": "$",
+      "postfix": "k",
+      "hide_from_to": true,
+      "skin": "sharp"
+    },
     "attrs": null,
     "extra": {
       "wrap": "flex"
@@ -1695,6 +2454,19 @@
     "config": {
       "__prettify_grid_src": "function (n) { return \"g\" + n; }",
       "__prettify_min_max_src": "function (n) { return \"mm\" + n; }"
+    },
+    "effective": {
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "from": 40,
+      "grid": true,
+      "grid_snap": true,
+      "__prettify_grid_src": "function (n) { return \"g\" + n; }",
+      "__prettify_min_max_src": "function (n) { return \"mm\" + n; }",
+      "force_edges": true,
+      "disable": true,
+      "skin": "modern"
     },
     "attrs": {
       "data-min": "0",
@@ -1746,6 +2518,20 @@
       "disable": true,
       "skin": "big"
     },
+    "effective": {
+      "min": 0,
+      "max": 1000000,
+      "step": 1000,
+      "type": "double",
+      "from": 300000,
+      "to": 700000,
+      "from_min": 2400,
+      "min_interval": 2000,
+      "drag_over_limit": true,
+      "hide_min_max": true,
+      "disable": true,
+      "skin": "big"
+    },
     "attrs": {
       "value": "300000;700000"
     },
@@ -1777,6 +2563,23 @@
     "config": {
       "__prettify_grid_src": "function (n) { return \"g\" + n; }",
       "__prettify_min_max_src": "function (n) { return \"mm\" + n; }"
+    },
+    "effective": {
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "from": 0.4,
+      "from_min": 0.3,
+      "from_max": 0.6,
+      "grid": true,
+      "grid_snap": true,
+      "__prettify_grid_src": "function (n) { return \"g\" + n; }",
+      "__prettify_min_max_src": "function (n) { return \"mm\" + n; }",
+      "prefix": "$",
+      "postfix": "k",
+      "hide_min_max": true,
+      "block": true,
+      "skin": "flat"
     },
     "attrs": {
       "data-min": "0",
@@ -1845,6 +2648,31 @@
       "keyboard": false,
       "skin": "sharp"
     },
+    "effective": {
+      "min": 0.25,
+      "max": 9.75,
+      "step": 0.5,
+      "step_from_min": true,
+      "type": "double",
+      "from": 3.25,
+      "to": 6.75,
+      "from_min": 2.75,
+      "from_max": 5.75,
+      "to_min": 4.25,
+      "to_max": 8.75,
+      "min_interval": 2,
+      "max_interval": 2,
+      "to_fixed": true,
+      "grid": true,
+      "grid_num": 4,
+      "prettify_separator": ",",
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "hide_min_max": true,
+      "keyboard": false,
+      "skin": "sharp"
+    },
     "attrs": null,
     "extra": {
       "hidden": "1"
@@ -1872,6 +2700,28 @@
       "container": "hidden"
     },
     "config": {},
+    "effective": {
+      "values": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e"
+      ],
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "from_min": 1,
+      "from_max": 2,
+      "max_interval": 6,
+      "from_fixed": true,
+      "drag_interval": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_snap": true,
+      "prettify_enabled": false,
+      "skin": "sharp"
+    },
     "attrs": {
       "data-values": "a,b,c,d,e",
       "data-type": "double",
@@ -1933,8 +2783,30 @@
       "disable": true,
       "skin": "flat"
     },
+    "effective": {
+      "values": [
+        10,
+        20,
+        30,
+        40,
+        50
+      ],
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "min_interval": 2,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_margin": false,
+      "prettify_separator": ",",
+      "prefix": "$",
+      "postfix": "k",
+      "force_edges": true,
+      "disable": true,
+      "skin": "flat"
+    },
     "attrs": {
-      "value": "1;3"
+      "value": "20;40"
     },
     "extra": {
       "width": "300"
@@ -1962,6 +2834,26 @@
       "container": "600"
     },
     "config": {
+      "values": [
+        "10",
+        "20",
+        "30",
+        "40",
+        "50"
+      ],
+      "from": 1,
+      "from_min": 2.4,
+      "grid": true,
+      "grid_num": 4,
+      "__prettify_grid_src": "function (n) { return \"g\" + n; }",
+      "__prettify_min_max_src": "function (n) { return \"mm\" + n; }",
+      "prefix": "$",
+      "postfix": "k",
+      "force_edges": true,
+      "disable": true,
+      "skin": "square"
+    },
+    "effective": {
       "values": [
         "10",
         "20",
@@ -2028,6 +2920,29 @@
       "keyboard": false,
       "skin": "big"
     },
+    "effective": {
+      "min": 0.5,
+      "max": 10.5,
+      "step": 1,
+      "type": "double",
+      "from": 4,
+      "to": 8,
+      "from_min": 4,
+      "from_max": 7,
+      "to_min": 5,
+      "to_max": 10,
+      "min_interval": 2,
+      "from_fixed": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_num": 4,
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "hide_from_to": true,
+      "keyboard": false,
+      "skin": "big"
+    },
     "attrs": {
       "value": "4;8"
     },
@@ -2057,6 +2972,25 @@
       "container": "300"
     },
     "config": {
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "type": "double",
+      "from": 0.3,
+      "to": 0.7,
+      "from_min": 0.3,
+      "from_max": 0.6,
+      "to_min": 0.4,
+      "to_max": 0.9,
+      "max_interval": 0.6,
+      "drag_interval": true,
+      "grid": true,
+      "grid_num": 4,
+      "__prettify_src": "function (n) { return n + \"x\"; }",
+      "force_edges": true,
+      "skin": "square"
+    },
+    "effective": {
       "min": 0,
       "max": 1,
       "step": 0.1,
@@ -2106,6 +3040,25 @@
     "config": {
       "__prettify_grid_src": "function (n) { return \"g\" + n; }",
       "__prettify_min_max_src": "function (n) { return \"mm\" + n; }"
+    },
+    "effective": {
+      "min": 0.5,
+      "max": 10.5,
+      "step": 1,
+      "type": "double",
+      "from": 4,
+      "to": 8,
+      "to_min": 5,
+      "to_max": 10,
+      "min_interval": 4,
+      "max_interval": 4,
+      "to_fixed": true,
+      "__prettify_grid_src": "function (n) { return \"g\" + n; }",
+      "__prettify_min_max_src": "function (n) { return \"mm\" + n; }",
+      "from_shadow": true,
+      "to_shadow": true,
+      "block": true,
+      "skin": "flat"
     },
     "attrs": {
       "data-min": "0.5",
@@ -2166,6 +3119,22 @@
       "disable": true,
       "skin": "modern"
     },
+    "effective": {
+      "min": -50,
+      "max": 50,
+      "step": 5,
+      "from": -10,
+      "from_min": -25,
+      "from_max": 10,
+      "from_fixed": true,
+      "grid": true,
+      "grid_margin": false,
+      "__prettify_grid_src": "function (n) { return \"g\" + n; }",
+      "__prettify_min_max_src": "function (n) { return \"mm\" + n; }",
+      "hide_from_to": true,
+      "disable": true,
+      "skin": "modern"
+    },
     "attrs": {
       "value": "-10"
     },
@@ -2197,6 +3166,34 @@
       "container": "300"
     },
     "config": {},
+    "effective": {
+      "values": [
+        "10",
+        "20",
+        "30",
+        "40",
+        "50"
+      ],
+      "values_raw": true,
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "from_min": 1,
+      "from_max": 2,
+      "to_min": 2,
+      "to_max": 4,
+      "max_interval": 6,
+      "to_fixed": true,
+      "drag_interval": true,
+      "grid": true,
+      "grid_num": 10,
+      "prettify_separator": ",",
+      "decorate_both": false,
+      "values_separator": " to ",
+      "force_edges": true,
+      "keyboard": false,
+      "skin": "round"
+    },
     "attrs": {
       "data-values": "10,20,30,40,50",
       "data-values-raw": "true",
@@ -2263,6 +3260,25 @@
       "to_shadow": true,
       "skin": "modern"
     },
+    "effective": {
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "type": "double",
+      "from": 30,
+      "to": 70,
+      "from_min": 2.4,
+      "max_interval": 6,
+      "grid": true,
+      "grid_num": 4,
+      "__prettify_src": "function (n) { return n + \"x\"; }",
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "from_shadow": true,
+      "to_shadow": true,
+      "skin": "modern"
+    },
     "attrs": null,
     "extra": {},
     "notes": [
@@ -2295,6 +3311,28 @@
       "step": 0.5,
       "step_from_min": true,
       "type": "double",
+      "to_min": 4.25,
+      "to_max": 8.75,
+      "max_interval": 3,
+      "drag_interval": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_num": 4,
+      "prettify_separator": "",
+      "prefix": "$",
+      "postfix": "k",
+      "force_edges": true,
+      "block": true,
+      "skin": "modern"
+    },
+    "effective": {
+      "min": 0.25,
+      "max": 9.75,
+      "step": 0.5,
+      "step_from_min": true,
+      "type": "double",
+      "from": 3.25,
+      "to": 6.75,
       "to_min": 4.25,
       "to_max": 8.75,
       "max_interval": 3,
@@ -2353,6 +3391,24 @@
       "force_edges": true,
       "skin": "square"
     },
+    "effective": {
+      "min": 0,
+      "max": 1000000,
+      "step": 1000,
+      "type": "double",
+      "from": 300000,
+      "to": 700000,
+      "from_min": 2400,
+      "min_interval": 4000,
+      "max_interval": 4000,
+      "to_fixed": true,
+      "grid": true,
+      "grid_snap": true,
+      "decorate_both": false,
+      "values_separator": " to ",
+      "force_edges": true,
+      "skin": "square"
+    },
     "attrs": null,
     "extra": {
       "width": "300"
@@ -2380,6 +3436,24 @@
       "container": "flex"
     },
     "config": {
+      "values": [
+        10,
+        20,
+        30,
+        40,
+        50
+      ],
+      "from": 1,
+      "from_min": 2.4,
+      "prettify_separator": "",
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "hide_min_max": true,
+      "keyboard": false,
+      "skin": "round"
+    },
+    "effective": {
       "values": [
         10,
         20,
@@ -2448,6 +3522,31 @@
       "block": true,
       "skin": "round"
     },
+    "effective": {
+      "values": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e"
+      ],
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "to_min": 2,
+      "to_max": 4,
+      "max_interval": 6,
+      "to_fixed": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_margin": false,
+      "prettify_separator": ",",
+      "prefix": "$",
+      "postfix": "k",
+      "hide_min_max": true,
+      "block": true,
+      "skin": "round"
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -2473,6 +3572,27 @@
       "container": "flex"
     },
     "config": {},
+    "effective": {
+      "min": -50,
+      "max": 50,
+      "step": 5,
+      "type": "double",
+      "from": -20,
+      "to": 20,
+      "from_min": -38,
+      "from_fixed": true,
+      "drag_interval": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_num": 4,
+      "prettify_separator": ",",
+      "prefix": "$",
+      "postfix": "k",
+      "from_shadow": true,
+      "to_shadow": true,
+      "block": true,
+      "skin": "big"
+    },
     "attrs": {
       "data-min": "-50",
       "data-max": "50",
@@ -2547,6 +3667,34 @@
       "keyboard": false,
       "skin": "big"
     },
+    "effective": {
+      "values": [
+        "10",
+        "20",
+        "30",
+        "40",
+        "50"
+      ],
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "from_min": 1,
+      "from_max": 2,
+      "to_min": 2,
+      "to_max": 4,
+      "from_fixed": true,
+      "drag_interval": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_num": 4,
+      "prettify_enabled": false,
+      "prefix": "$",
+      "postfix": "k",
+      "from_shadow": true,
+      "to_shadow": true,
+      "keyboard": false,
+      "skin": "big"
+    },
     "attrs": null,
     "extra": {
       "width": "300"
@@ -2574,6 +3722,28 @@
       "container": "600"
     },
     "config": {},
+    "effective": {
+      "values": [
+        "10",
+        "20",
+        "30",
+        "40",
+        "50"
+      ],
+      "values_raw": true,
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "drag_interval": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_margin": false,
+      "prettify_enabled": false,
+      "decorate_both": false,
+      "values_separator": " to ",
+      "disable": true,
+      "skin": "round"
+    },
     "attrs": {
       "data-values": "10,20,30,40,50",
       "data-values-raw": "true",
@@ -2615,6 +3785,31 @@
     },
     "config": {
       "__prettify_src": "function (n) { return n + \"x\"; }"
+    },
+    "effective": {
+      "values": [
+        10,
+        20,
+        30,
+        40,
+        50
+      ],
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "to_min": 2,
+      "to_max": 4,
+      "max_interval": 6,
+      "drag_interval": true,
+      "grid": true,
+      "grid_snap": true,
+      "__prettify_src": "function (n) { return n + \"x\"; }",
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "hide_from_to": true,
+      "keyboard": false,
+      "skin": "modern"
     },
     "attrs": {
       "data-values": "10,20,30,40,50",
@@ -2683,6 +3878,28 @@
       "block": true,
       "skin": "square"
     },
+    "effective": {
+      "values": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e"
+      ],
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "min_interval": 2,
+      "drag_interval": true,
+      "grid": true,
+      "grid_num": 4,
+      "__prettify_src": "function (n) { return n + \"x\"; }",
+      "decorate_both": false,
+      "values_separator": " to ",
+      "force_edges": true,
+      "block": true,
+      "skin": "square"
+    },
     "attrs": null,
     "extra": {
       "hidden": "1"
@@ -2727,6 +3944,24 @@
       "block": true,
       "skin": "big"
     },
+    "effective": {
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "type": "double",
+      "from": 0.3,
+      "to": 0.7,
+      "from_min": 0.24,
+      "to_fixed": true,
+      "drag_interval": true,
+      "grid": true,
+      "grid_num": 4,
+      "prettify_separator": "",
+      "decorate_both": false,
+      "values_separator": " to ",
+      "block": true,
+      "skin": "big"
+    },
     "attrs": {
       "value": "0.3;0.7"
     },
@@ -2758,6 +3993,30 @@
       "max": 1000000,
       "step": 1000,
       "type": "double",
+      "to_min": 400000,
+      "to_max": 900000,
+      "min_interval": 4000,
+      "max_interval": 4000,
+      "from_fixed": true,
+      "drag_interval": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_num": 10,
+      "prettify_separator": ",",
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "force_edges": true,
+      "block": true,
+      "skin": "modern"
+    },
+    "effective": {
+      "min": 0,
+      "max": 1000000,
+      "step": 1000,
+      "type": "double",
+      "from": 300000,
+      "to": 700000,
       "to_min": 400000,
       "to_max": 900000,
       "min_interval": 4000,
@@ -2821,6 +4080,24 @@
       "keyboard": false,
       "skin": "square"
     },
+    "effective": {
+      "min": 0.5,
+      "max": 10.5,
+      "step": 1,
+      "type": "double",
+      "from": 4,
+      "to": 8,
+      "from_min": 2.9,
+      "max_interval": 6,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_num": 10,
+      "prettify_enabled": false,
+      "prefix": "$",
+      "postfix": "k",
+      "keyboard": false,
+      "skin": "square"
+    },
     "attrs": null,
     "extra": {
       "wrap": "flex"
@@ -2864,6 +4141,25 @@
       "keyboard": false,
       "skin": "round"
     },
+    "effective": {
+      "min": 0.25,
+      "max": 9.75,
+      "step": 0.5,
+      "step_from_min": true,
+      "type": "double",
+      "from": 3.25,
+      "to": 6.75,
+      "min_interval": 1,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_snap": true,
+      "prefix": "$",
+      "postfix": "k",
+      "from_shadow": true,
+      "to_shadow": true,
+      "keyboard": false,
+      "skin": "round"
+    },
     "attrs": {
       "value": "3.25;6.75"
     },
@@ -2893,6 +4189,25 @@
       "container": "flex"
     },
     "config": {},
+    "effective": {
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "type": "double",
+      "from": 0.3,
+      "to": 0.7,
+      "from_min": 0.24,
+      "min_interval": 0.2,
+      "drag_interval": true,
+      "grid": true,
+      "grid_margin": false,
+      "prettify_separator": ",",
+      "decorate_both": false,
+      "values_separator": " to ",
+      "hide_min_max": true,
+      "keyboard": false,
+      "skin": "square"
+    },
     "attrs": {
       "data-min": "0",
       "data-max": "1",
@@ -2958,8 +4273,31 @@
       "keyboard": false,
       "skin": "big"
     },
+    "effective": {
+      "values": [
+        "10",
+        "20",
+        "30",
+        "40",
+        "50"
+      ],
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "from_min": 1,
+      "from_max": 2,
+      "min_interval": 2,
+      "from_fixed": true,
+      "grid": true,
+      "grid_num": 10,
+      "__prettify_src": "function (n) { return n + \"x\"; }",
+      "decorate_both": false,
+      "values_separator": " to ",
+      "keyboard": false,
+      "skin": "big"
+    },
     "attrs": {
-      "value": "1;3"
+      "value": "20;40"
     },
     "extra": {
       "wrap": "flex"
@@ -3008,6 +4346,26 @@
       "hide_from_to": true,
       "skin": "flat"
     },
+    "effective": {
+      "min": -50,
+      "max": 50,
+      "step": 5,
+      "type": "double",
+      "from": -20,
+      "to": 20,
+      "from_min": -25,
+      "from_max": 10,
+      "to_min": -10,
+      "to_max": 40,
+      "max_interval": 30,
+      "to_fixed": true,
+      "drag_interval": true,
+      "prettify_enabled": false,
+      "prefix": "$",
+      "postfix": "k",
+      "hide_from_to": true,
+      "skin": "flat"
+    },
     "attrs": null,
     "extra": {
       "hidden": "1"
@@ -3035,6 +4393,29 @@
       "container": "300"
     },
     "config": {},
+    "effective": {
+      "values": [
+        "10",
+        "20",
+        "30",
+        "40",
+        "50"
+      ],
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "max_interval": 6,
+      "from_fixed": true,
+      "drag_interval": true,
+      "grid": true,
+      "grid_margin": false,
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "hide_min_max": true,
+      "keyboard": false,
+      "skin": "sharp"
+    },
     "attrs": {
       "data-values": "10,20,30,40,50",
       "data-type": "double",
@@ -3093,6 +4474,22 @@
       "keyboard": false,
       "skin": "sharp"
     },
+    "effective": {
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "type": "double",
+      "from": 30,
+      "to": 70,
+      "to_min": 40,
+      "to_max": 90,
+      "from_fixed": true,
+      "prettify_enabled": false,
+      "decorate_both": false,
+      "values_separator": " to ",
+      "keyboard": false,
+      "skin": "sharp"
+    },
     "attrs": null,
     "extra": {
       "hidden": "1"
@@ -3124,6 +4521,25 @@
       "max": 10.5,
       "step": 1,
       "type": "double",
+      "from_min": 4,
+      "from_max": 7,
+      "min_interval": 4,
+      "max_interval": 4,
+      "drag_interval": true,
+      "prettify_enabled": false,
+      "prefix": "$",
+      "postfix": "k",
+      "hide_from_to": true,
+      "keyboard": false,
+      "skin": "round"
+    },
+    "effective": {
+      "min": 0.5,
+      "max": 10.5,
+      "step": 1,
+      "type": "double",
+      "from": 4,
+      "to": 8,
       "from_min": 4,
       "from_max": 7,
       "min_interval": 4,
@@ -3169,6 +4585,25 @@
       "max": 1000000,
       "step": 1000,
       "type": "double",
+      "from_min": 250000,
+      "from_max": 600000,
+      "min_interval": 2000,
+      "to_fixed": true,
+      "drag_interval": true,
+      "drag_over_limit": true,
+      "__prettify_src": "function (n) { return n + \"x\"; }",
+      "decorate_both": false,
+      "values_separator": " to ",
+      "keyboard": false,
+      "skin": "round"
+    },
+    "effective": {
+      "min": 0,
+      "max": 1000000,
+      "step": 1000,
+      "type": "double",
+      "from": 300000,
+      "to": 700000,
       "from_min": 250000,
       "from_max": 600000,
       "min_interval": 2000,
@@ -3235,6 +4670,30 @@
       "disable": true,
       "skin": "sharp"
     },
+    "effective": {
+      "values": [
+        "10",
+        "20",
+        "30",
+        "40",
+        "50"
+      ],
+      "values_raw": true,
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "from_min": 1,
+      "from_max": 2,
+      "max_interval": 6,
+      "drag_interval": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_snap": true,
+      "from_shadow": true,
+      "to_shadow": true,
+      "disable": true,
+      "skin": "sharp"
+    },
     "attrs": null,
     "extra": {
       "wrap": "flex"
@@ -3262,6 +4721,29 @@
       "container": "hidden"
     },
     "config": {},
+    "effective": {
+      "values": [
+        "10",
+        "20",
+        "30",
+        "40",
+        "50"
+      ],
+      "values_raw": true,
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "to_min": 2,
+      "to_max": 4,
+      "max_interval": 6,
+      "to_fixed": true,
+      "grid": true,
+      "grid_snap": true,
+      "prettify_separator": ",",
+      "prefix": "$",
+      "postfix": "k",
+      "skin": "big"
+    },
     "attrs": {
       "data-values": "10,20,30,40,50",
       "data-values-raw": "true",
@@ -3305,6 +4787,25 @@
       "container": "hidden"
     },
     "config": {},
+    "effective": {
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "type": "double",
+      "from": 30,
+      "to": 70,
+      "to_min": 40,
+      "to_max": 90,
+      "min_interval": 2,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_num": 10,
+      "prettify_separator": "",
+      "decorate_both": false,
+      "values_separator": " to ",
+      "force_edges": true,
+      "skin": "flat"
+    },
     "attrs": {
       "data-min": "0",
       "data-max": "100",
@@ -3368,6 +4869,27 @@
       "hide_from_to": true,
       "skin": "square"
     },
+    "effective": {
+      "min": 0.25,
+      "max": 9.75,
+      "step": 0.5,
+      "step_from_min": true,
+      "type": "double",
+      "from": 3.25,
+      "to": 6.75,
+      "from_min": 1.45,
+      "from_fixed": true,
+      "drag_interval": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_margin": false,
+      "__prettify_src": "function (n) { return n + \"x\"; }",
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "hide_from_to": true,
+      "skin": "square"
+    },
     "attrs": {
       "value": "3.25;6.75"
     },
@@ -3401,6 +4923,24 @@
     "config": {
       "__prettify_grid_src": "function (n) { return \"g\" + n; }",
       "__prettify_min_max_src": "function (n) { return \"mm\" + n; }"
+    },
+    "effective": {
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "type": "double",
+      "from": 0.3,
+      "to": 0.7,
+      "from_min": 0.3,
+      "from_max": 0.6,
+      "max_interval": 0.6,
+      "from_fixed": true,
+      "__prettify_grid_src": "function (n) { return \"g\" + n; }",
+      "__prettify_min_max_src": "function (n) { return \"mm\" + n; }",
+      "from_shadow": true,
+      "to_shadow": true,
+      "block": true,
+      "skin": "sharp"
     },
     "attrs": {
       "data-min": "0",
@@ -3448,6 +4988,34 @@
     "config": {
       "__prettify_grid_src": "function (n) { return \"g\" + n; }",
       "__prettify_min_max_src": "function (n) { return \"mm\" + n; }"
+    },
+    "effective": {
+      "values": [
+        "a",
+        "b",
+        "c",
+        "d",
+        "e"
+      ],
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "from_min": 1,
+      "from_max": 2,
+      "to_min": 2,
+      "to_max": 4,
+      "drag_interval": true,
+      "grid": true,
+      "grid_snap": true,
+      "__prettify_grid_src": "function (n) { return \"g\" + n; }",
+      "__prettify_min_max_src": "function (n) { return \"mm\" + n; }",
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "from_shadow": true,
+      "to_shadow": true,
+      "keyboard": false,
+      "skin": "flat"
     },
     "attrs": {
       "data-values": "a,b,c,d,e",
@@ -3513,6 +5081,23 @@
       "force_edges": true,
       "skin": "flat"
     },
+    "effective": {
+      "type": "double",
+      "from": 37,
+      "to": 73,
+      "from_min": 33,
+      "from_max": 64,
+      "max_interval": 6,
+      "to_fixed": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_margin": false,
+      "prettify_separator": "",
+      "prefix": "$",
+      "postfix": "k",
+      "force_edges": true,
+      "skin": "flat"
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -3538,6 +5123,32 @@
       "container": "flex"
     },
     "config": {
+      "values": [
+        10,
+        20,
+        30,
+        40,
+        50
+      ],
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "to_min": 2,
+      "to_max": 4,
+      "min_interval": 4,
+      "max_interval": 4,
+      "from_fixed": true,
+      "drag_interval": true,
+      "grid": true,
+      "grid_snap": true,
+      "prettify_separator": "",
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "block": true,
+      "skin": "square"
+    },
+    "effective": {
       "values": [
         10,
         20,
@@ -3610,6 +5221,29 @@
       "disable": true,
       "skin": "big"
     },
+    "effective": {
+      "min": 0.5,
+      "max": 10.5,
+      "step": 1,
+      "type": "double",
+      "from": 4,
+      "to": 8,
+      "from_min": 4,
+      "from_max": 7,
+      "to_min": 5,
+      "to_max": 10,
+      "max_interval": 6,
+      "from_fixed": true,
+      "drag_interval": true,
+      "grid": true,
+      "grid_num": 4,
+      "prettify_separator": "",
+      "prefix": "$",
+      "postfix": "k",
+      "force_edges": true,
+      "disable": true,
+      "skin": "big"
+    },
     "attrs": {
       "value": "4;8"
     },
@@ -3639,6 +5273,18 @@
       "container": "300"
     },
     "config": {},
+    "effective": {
+      "min": 0,
+      "max": 1000000,
+      "step": 1000,
+      "from": 400000,
+      "from_fixed": true,
+      "grid": true,
+      "grid_num": 4,
+      "prettify_enabled": false,
+      "hide_from_to": true,
+      "skin": "sharp"
+    },
     "attrs": {
       "data-min": "0",
       "data-max": "1000000",
@@ -3691,6 +5337,23 @@
       "values_separator": " to ",
       "skin": "square"
     },
+    "effective": {
+      "min": 0,
+      "max": 1000000,
+      "step": 1000,
+      "type": "double",
+      "from": 300000,
+      "to": 700000,
+      "from_min": 2400,
+      "max_interval": 6000,
+      "drag_interval": true,
+      "grid": true,
+      "grid_margin": false,
+      "prettify_separator": ",",
+      "decorate_both": false,
+      "values_separator": " to ",
+      "skin": "square"
+    },
     "attrs": {
       "value": "300000;700000"
     },
@@ -3722,6 +5385,29 @@
     "config": {
       "__prettify_grid_src": "function (n) { return \"g\" + n; }",
       "__prettify_min_max_src": "function (n) { return \"mm\" + n; }"
+    },
+    "effective": {
+      "min": 0,
+      "max": 1,
+      "step": 0.1,
+      "type": "double",
+      "from": 0.3,
+      "to": 0.7,
+      "from_min": 0.24,
+      "min_interval": 0.4,
+      "max_interval": 0.4,
+      "from_fixed": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_num": 10,
+      "__prettify_grid_src": "function (n) { return \"g\" + n; }",
+      "__prettify_min_max_src": "function (n) { return \"mm\" + n; }",
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "hide_from_to": true,
+      "disable": true,
+      "skin": "big"
     },
     "attrs": {
       "data-min": "0",
@@ -3787,6 +5473,24 @@
       "force_edges": true,
       "skin": "big"
     },
+    "effective": {
+      "min": -50,
+      "max": 50,
+      "step": 5,
+      "type": "double",
+      "from": -20,
+      "to": 20,
+      "max_interval": 30,
+      "from_fixed": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_snap": true,
+      "prettify_separator": ",",
+      "prefix": "$",
+      "postfix": "k",
+      "force_edges": true,
+      "skin": "big"
+    },
     "attrs": {
       "value": "-20;20"
     },
@@ -3818,6 +5522,35 @@
     "config": {
       "__prettify_grid_src": "function (n) { return \"g\" + n; }",
       "__prettify_min_max_src": "function (n) { return \"mm\" + n; }"
+    },
+    "effective": {
+      "values": [
+        "10",
+        "20",
+        "30",
+        "40",
+        "50"
+      ],
+      "values_raw": true,
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "from_min": 1,
+      "from_max": 2,
+      "min_interval": 4,
+      "max_interval": 4,
+      "to_fixed": true,
+      "drag_over_limit": true,
+      "grid": true,
+      "grid_snap": true,
+      "__prettify_grid_src": "function (n) { return \"g\" + n; }",
+      "__prettify_min_max_src": "function (n) { return \"mm\" + n; }",
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "force_edges": true,
+      "block": true,
+      "skin": "modern"
     },
     "attrs": {
       "data-values": "10,20,30,40,50",
@@ -3888,6 +5621,27 @@
       "disable": true,
       "skin": "big"
     },
+    "effective": {
+      "values": [
+        10,
+        20,
+        30,
+        40,
+        50
+      ],
+      "type": "double",
+      "from": 1,
+      "to": 3,
+      "from_min": 1,
+      "from_max": 2,
+      "min_interval": 2,
+      "grid": true,
+      "grid_num": 4,
+      "decorate_both": false,
+      "values_separator": " to ",
+      "disable": true,
+      "skin": "big"
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -3914,6 +5668,30 @@
     },
     "config": {
       "__prettify_src": "function (n) { return n + \"x\"; }"
+    },
+    "effective": {
+      "min": 0.25,
+      "max": 9.75,
+      "step": 0.5,
+      "step_from_min": true,
+      "type": "double",
+      "from": 3.25,
+      "to": 6.75,
+      "from_min": 2.75,
+      "from_max": 5.75,
+      "to_min": 4.25,
+      "to_max": 8.75,
+      "min_interval": 2,
+      "max_interval": 2,
+      "from_fixed": true,
+      "drag_interval": true,
+      "grid": true,
+      "grid_margin": false,
+      "__prettify_src": "function (n) { return n + \"x\"; }",
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: ",
+      "max_postfix": "+",
+      "skin": "round"
     },
     "attrs": {
       "data-min": "0.25",
@@ -3953,6 +5731,11 @@
       "max": 1000,
       "from": 550
     },
+    "effective": {
+      "min": 100,
+      "max": 1000,
+      "from": 550
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -3961,6 +5744,15 @@
     "id": "n002",
     "name": "demo:page_demo:demo_1",
     "config": {
+      "type": "double",
+      "grid": true,
+      "min": 0,
+      "max": 1000,
+      "from": 200,
+      "to": 800,
+      "prefix": "$"
+    },
+    "effective": {
       "type": "double",
       "grid": true,
       "min": 0,
@@ -3984,6 +5776,14 @@
       "from": -500,
       "to": 500
     },
+    "effective": {
+      "type": "double",
+      "grid": true,
+      "min": -1000,
+      "max": 1000,
+      "from": -500,
+      "to": 500
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -4000,6 +5800,15 @@
       "to": 500,
       "step": 250
     },
+    "effective": {
+      "type": "double",
+      "grid": true,
+      "min": -1000,
+      "max": 1000,
+      "from": -500,
+      "to": 500,
+      "step": 250
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -4008,6 +5817,15 @@
     "id": "n005",
     "name": "demo:page_demo:demo_4",
     "config": {
+      "type": "double",
+      "grid": true,
+      "min": -12.8,
+      "max": 12.8,
+      "from": -3.2,
+      "to": 3.2,
+      "step": 0.1
+    },
+    "effective": {
       "type": "double",
       "grid": true,
       "min": -12.8,
@@ -4039,6 +5857,22 @@
       ],
       "force_edges": true
     },
+    "effective": {
+      "type": "double",
+      "grid": true,
+      "from": 1,
+      "to": 4,
+      "values": [
+        0,
+        10,
+        100,
+        1000,
+        10000,
+        100000,
+        1000000
+      ],
+      "force_edges": true
+    },
     "attrs": null,
     "extra": {},
     "notes": [
@@ -4050,7 +5884,26 @@
     "name": "demo:page_demo:demo_6",
     "config": {
       "grid": true,
-      "from": 8,
+      "from": 5,
+      "values": [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec"
+      ],
+      "force_edges": true
+    },
+    "effective": {
+      "grid": true,
+      "from": 5,
       "values": [
         "Jan",
         "Feb",
@@ -4070,13 +5923,21 @@
     "attrs": null,
     "extra": {},
     "notes": [
-      "from is new Date().getMonth() in the site demo -- always a valid 0..11 index, but this named case is time-dependent: regenerating configs.json on a different month changes it."
+      "from is new Date().getMonth() in the site demo, always a valid 0..11 index; pinned to 5 (Jun) here so the committed configs.json and any failure it produces stay reproducible whatever month the generator is run in."
     ]
   },
   {
     "id": "n008",
     "name": "demo:page_demo:demo_7",
     "config": {
+      "grid": true,
+      "min": 1000,
+      "max": 1000000,
+      "from": 100000,
+      "step": 1000,
+      "prettify_enabled": true
+    },
+    "effective": {
       "grid": true,
       "min": 1000,
       "max": 1000000,
@@ -4092,6 +5953,13 @@
     "id": "n009",
     "name": "demo:page_demo:demo_8",
     "config": {
+      "grid": true,
+      "min": 1,
+      "max": 1024,
+      "from": 256,
+      "__prettify_src": "function my_prettify (n) {\n    var num = Math.log2(n);\n    return n + \" -> \" + (+num.toFixed(3));\n}"
+    },
+    "effective": {
       "grid": true,
       "min": 1,
       "max": 1024,
@@ -4116,6 +5984,15 @@
       "max_postfix": "+",
       "prefix": "$"
     },
+    "effective": {
+      "grid": true,
+      "min": 0,
+      "max": 100,
+      "from": 50,
+      "step": 5,
+      "max_postfix": "+",
+      "prefix": "$"
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -4124,6 +6001,15 @@
     "id": "n011",
     "name": "demo:page_demo:demo_10",
     "config": {
+      "grid": true,
+      "min": 0,
+      "max": 100,
+      "from": 21,
+      "max_postfix": "+",
+      "prefix": "Age: ",
+      "postfix": " years"
+    },
+    "effective": {
       "grid": true,
       "min": 0,
       "max": 100,
@@ -4149,6 +6035,16 @@
       "prefix": "Weight: ",
       "postfix": " million pounds"
     },
+    "effective": {
+      "type": "double",
+      "grid": true,
+      "min": 0,
+      "max": 100,
+      "from": 47,
+      "to": 53,
+      "prefix": "Weight: ",
+      "postfix": " million pounds"
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -4157,6 +6053,15 @@
     "id": "n013",
     "name": "demo:page_demo:demo_12",
     "config": {
+      "type": "double",
+      "grid": true,
+      "min": -100000,
+      "max": 100000,
+      "from": -100000,
+      "to": 50000,
+      "step": 10000
+    },
+    "effective": {
       "type": "double",
       "grid": true,
       "min": -100000,
@@ -4181,6 +6086,15 @@
       "grid_num": 4,
       "grid_snap": false
     },
+    "effective": {
+      "min": 0,
+      "max": 10000,
+      "from": 777,
+      "step": 1,
+      "grid": true,
+      "grid_num": 4,
+      "grid_snap": false
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -4189,6 +6103,17 @@
     "id": "n015",
     "name": "demo:page_demo_adv:demo_1",
     "config": {
+      "type": "double",
+      "min": 0,
+      "max": 10,
+      "from": 2,
+      "to": 8,
+      "grid": true,
+      "grid_snap": true,
+      "from_fixed": false,
+      "to_fixed": false
+    },
+    "effective": {
       "type": "double",
       "min": 0,
       "max": 10,
@@ -4216,6 +6141,16 @@
       "from_max": 750,
       "from_shadow": true
     },
+    "effective": {
+      "type": "single",
+      "min": 0,
+      "max": 1000,
+      "from": 500,
+      "grid": true,
+      "from_min": 250,
+      "from_max": 750,
+      "from_shadow": true
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -4233,6 +6168,16 @@
       "min_interval": null,
       "max_interval": null
     },
+    "effective": {
+      "type": "double",
+      "min": 0,
+      "max": 1000,
+      "from": 400,
+      "to": 600,
+      "drag_interval": true,
+      "min_interval": null,
+      "max_interval": null
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -4241,6 +6186,17 @@
     "id": "n018",
     "name": "demo:page_demo_adv:demo_4",
     "config": {
+      "type": "double",
+      "force_edges": true,
+      "grid": true,
+      "grid_num": 2,
+      "min": 1541026800000,
+      "max": 1543618800000,
+      "from": 1541631600000,
+      "to": 1542927600000,
+      "__prettify_src": "function tsToDate (ts) {\n    var d = new Date(ts);\n    return d.toLocaleDateString(lang, { year: \"numeric\", month: \"long\", day: \"numeric\" });\n}"
+    },
+    "effective": {
       "type": "double",
       "force_edges": true,
       "grid": true,
@@ -4270,6 +6226,15 @@
       "min_prefix": "From: ",
       "max_prefix": "Up to: "
     },
+    "effective": {
+      "type": "double",
+      "min": 0,
+      "max": 100,
+      "from": 20,
+      "to": 80,
+      "min_prefix": "From: ",
+      "max_prefix": "Up to: "
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -4283,6 +6248,12 @@
       "from": 21,
       "prettify": "global_prettify_demo"
     },
+    "effective": {
+      "min": 0,
+      "max": 40,
+      "from": 21,
+      "prettify": "global_prettify_demo"
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -4291,6 +6262,19 @@
     "id": "n021",
     "name": "demo:page_demo_adv:demo_7",
     "config": {
+      "grid": true,
+      "values": [
+        1,
+        5,
+        10,
+        25,
+        "Ask for a quote"
+      ],
+      "from": 4,
+      "__prettify_src": "function weight_tier_prettify (v) {\n    return typeof v === \"number\" ? v + \" kg\" : v;\n}",
+      "prettify_all_values": true
+    },
+    "effective": {
       "grid": true,
       "values": [
         1,
@@ -4322,6 +6306,16 @@
       "__prettify_grid_src": "function shrink_to_k (n) {\n    return (n / 1000) + \"k\";\n}",
       "__prettify_min_max_src": "function label_limit (n) {\n    return \"Limit \" + n;\n}"
     },
+    "effective": {
+      "type": "double",
+      "grid": true,
+      "min": 0,
+      "max": 1000000,
+      "from": 250000,
+      "to": 750000,
+      "__prettify_grid_src": "function shrink_to_k (n) {\n    return (n / 1000) + \"k\";\n}",
+      "__prettify_min_max_src": "function label_limit (n) {\n    return \"Limit \" + n;\n}"
+    },
     "attrs": null,
     "extra": {},
     "notes": [
@@ -4332,6 +6326,17 @@
     "id": "n023",
     "name": "demo:page_demo_adv:demo_9",
     "config": {
+      "type": "double",
+      "min": 0,
+      "max": 100,
+      "from": 20,
+      "to": 80,
+      "from_min": 10,
+      "from_max": 40,
+      "to_min": 60,
+      "to_max": 90
+    },
+    "effective": {
       "type": "double",
       "min": 0,
       "max": 100,
@@ -4357,6 +6362,14 @@
       "to": 70,
       "drag_over_limit": true
     },
+    "effective": {
+      "type": "double",
+      "min": 0,
+      "max": 100,
+      "from": 30,
+      "to": 70,
+      "drag_over_limit": true
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -4365,6 +6378,14 @@
     "id": "n025",
     "name": "demo:page_demo_adv:demo_11",
     "config": {
+      "type": "double",
+      "min": 0,
+      "max": 100,
+      "from": 30,
+      "to": 70,
+      "drag_over_limit": false
+    },
+    "effective": {
       "type": "double",
       "min": 0,
       "max": 100,
@@ -4386,6 +6407,13 @@
       "from": 30,
       "to": 70
     },
+    "effective": {
+      "type": "double",
+      "min": 0,
+      "max": 100,
+      "from": 30,
+      "to": 70
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -4394,6 +6422,14 @@
     "id": "n027",
     "name": "demo:page_demo_adv:demo_13",
     "config": {
+      "min": 0.5,
+      "max": 10.5,
+      "step": 1,
+      "from": 2.5,
+      "grid": true,
+      "step_from_min": true
+    },
+    "effective": {
       "min": 0.5,
       "max": 10.5,
       "step": 1,
@@ -4417,6 +6453,15 @@
       "from": 2,
       "values_raw": true
     },
+    "effective": {
+      "values": [
+        "17.5",
+        "12.2b",
+        "20.0"
+      ],
+      "from": 2,
+      "values_raw": true
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -4429,6 +6474,11 @@
       "max": 10,
       "from": 5
     },
+    "effective": {
+      "min": 0,
+      "max": 10,
+      "from": 5
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -4437,6 +6487,13 @@
     "id": "n030",
     "name": "demo:page_demo_int:demo_1",
     "config": {
+      "type": "double",
+      "min": 0,
+      "max": 10000,
+      "from": 5000,
+      "to": 8000
+    },
+    "effective": {
       "type": "double",
       "min": 0,
       "max": 10000,
@@ -4469,6 +6526,25 @@
       "from": 1,
       "to": 10
     },
+    "effective": {
+      "type": "double",
+      "values": [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec"
+      ],
+      "from": 1,
+      "to": 10
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -4481,6 +6557,11 @@
       "max": 10000,
       "from": 5000
     },
+    "effective": {
+      "min": 0,
+      "max": 10000,
+      "from": 5000
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -4489,6 +6570,13 @@
     "id": "n033",
     "name": "demo:page_demo_int:demo_4",
     "config": {
+      "type": "double",
+      "min": 0,
+      "max": 10000,
+      "from": 4000,
+      "to": 6000
+    },
+    "effective": {
       "type": "double",
       "min": 0,
       "max": 10000,
@@ -4511,6 +6599,15 @@
       "grid": true,
       "step": 2
     },
+    "effective": {
+      "type": "double",
+      "min": 0,
+      "max": 10,
+      "from": 4,
+      "to": 6,
+      "grid": true,
+      "step": 2
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -4519,6 +6616,13 @@
     "id": "n035",
     "name": "edge:coincident",
     "config": {
+      "type": "double",
+      "min": 0,
+      "max": 100,
+      "from": 50,
+      "to": 50
+    },
+    "effective": {
       "type": "double",
       "min": 0,
       "max": 100,
@@ -4537,6 +6641,11 @@
       "max": 1,
       "step": 1
     },
+    "effective": {
+      "min": 0,
+      "max": 1,
+      "step": 1
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -4545,6 +6654,13 @@
     "id": "n037",
     "name": "edge:from-above-to",
     "config": {
+      "type": "double",
+      "min": 0,
+      "max": 100,
+      "from": 80,
+      "to": 20
+    },
+    "effective": {
       "type": "double",
       "min": 0,
       "max": 100,
@@ -4562,6 +6678,10 @@
       "min": 5,
       "max": 5
     },
+    "effective": {
+      "min": 5,
+      "max": 5
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -4570,6 +6690,11 @@
     "id": "n039",
     "name": "edge:step-gt-range",
     "config": {
+      "min": 0,
+      "max": 10,
+      "step": 25
+    },
+    "effective": {
       "min": 0,
       "max": 10,
       "step": 25
@@ -4586,6 +6711,11 @@
       "max": 1000000000,
       "step": 1
     },
+    "effective": {
+      "min": 0,
+      "max": 1000000000,
+      "step": 1
+    },
     "attrs": null,
     "extra": {},
     "notes": []
@@ -4598,8 +6728,74 @@
       "max": 0.001,
       "step": 0.0001
     },
+    "effective": {
+      "min": 0,
+      "max": 0.001,
+      "step": 0.0001
+    },
     "attrs": null,
     "extra": {},
     "notes": []
+  },
+  {
+    "id": "n042",
+    "name": "edge:bar-drag-from-max",
+    "config": {
+      "type": "double",
+      "min": 0,
+      "max": 1000,
+      "step": 5,
+      "from": 300,
+      "to": 800,
+      "drag_interval": true,
+      "from_max": 400
+    },
+    "effective": {
+      "type": "double",
+      "min": 0,
+      "max": 1000,
+      "step": 5,
+      "from": 300,
+      "to": 800,
+      "drag_interval": true,
+      "from_max": 400
+    },
+    "attrs": null,
+    "extra": {},
+    "notes": [
+      "Reaches issue #879: a bar drag against from_max stretches the interval instead of moving it as a unit."
+    ]
+  },
+  {
+    "id": "n043",
+    "name": "edge:min-interval-top",
+    "config": {
+      "type": "double",
+      "min": 0.5,
+      "max": 10.5,
+      "step": 1,
+      "from": 8,
+      "to": 10.5,
+      "min_interval": 1,
+      "drag_over_limit": true
+    },
+    "effective": {
+      "type": "double",
+      "min": 0.5,
+      "max": 10.5,
+      "step": 1,
+      "from": 8,
+      "to": 10.5,
+      "min_interval": 1,
+      "drag_over_limit": true
+    },
+    "attrs": null,
+    "extra": {},
+    "notes": [
+      "Reaches issue #881: min_interval is violated at the top edge when max sits off the step scale."
+    ],
+    "stages": {
+      "s1": 1
+    }
   }
 ]
