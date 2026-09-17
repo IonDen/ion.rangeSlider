@@ -9,8 +9,16 @@
  *   {
  *     issue: 892,                                   // the filed GitHub issue number
  *     title: 'grid labels name values off the step scale',   // one line, in the glossary's words
+ *     what: /grid label at unit/,                   // the failure MESSAGE this bug produces
  *     matches(ctx, id) { return id === 'grid' && gridBoundariesOffScale(ctx.cfg); }
  *   }
+ *
+ * `what` is the second half of the entry and is not optional: `matches` says which
+ * configurations and stages carry the bug, `what` says which of that rule's messages the bug
+ * accounts for. A rule reports many different things -- the callbacks rule alone speaks for
+ * onStart, onChange, onFinish, the payload's values and its formatted text -- and an entry
+ * without `what` would annotate all of them away on any cell it matched. A failure of a
+ * matched invariant whose message the pattern does not cover stays REAL.
  *
  * `matches` receives the same ctx the invariants get ({ state, cfg, stage, prev,
  * expectations }) plus the failing invariant id. What a predicate may read:
@@ -35,11 +43,16 @@
  * Each entry says, in its comment, which matrix entries it was written against and which
  * stages reproduce -- a predicate wider than that annotates healthy cells away, and one
  * narrower leaves the matrix red on a bug that is already filed.
+ *
+ * judgeStage() at the foot of this file is what matrix.spec.mjs calls with a stage's
+ * failures: it annotates what the register covers, keeps everything else real, and reports
+ * an entry that matches a cell where NO failure of its own answers `what` -- the bug is
+ * fixed there, and the entry has to be retired.
  */
 
 import { isValuesMode, nearestOnScale, onScale, rangeOf, scaleDecimals, scalePoint } from './scale.mjs';
 import { builtinPrettify, valuesEntry } from './format.mjs';
-import { gridUnits, keyStops } from './invariants.mjs';
+import { gridUnits, keyStops, INVARIANTS } from './invariants.mjs';
 
 /** Values sit on a step grid, so only float representation noise is tolerated. */
 const EPS = 1e-9;
@@ -52,8 +65,86 @@ const LIMITS = [
     { handle: 'to', key: 'to_max', side: 1 }
 ];
 
-/** The fraction of the track S5 drags the bar to the right (matrix.spec.mjs). */
+/**
+ * The fraction of the track S5 drags the bar to the right (matrix.spec.mjs).
+ *
+ * It is a bar drag only while there is a bar to press. The press aims at the bar's centre
+ * and the bar runs from one handle's centre to the other's, so each handle covers half its
+ * own width of the bar and the centre of a bar no wider than a handle lies under one of
+ * them: m080 holds 6000 of a range of a million, under four pixels of track beneath two
+ * sixteen-pixel handles. matrix.spec.mjs reads that off the geometry and the width promise
+ * stands down, so a pair that stage closes is a handle drag doing what a handle drag may --
+ * no entry here speaks for it (that was #895, closed as an artefact of this harness).
+ */
 const BAR_DRAG_FRACTION = 0.1;
+
+/**
+ * The fractions of the track the mouse stages aim at, mirroring matrix.spec.mjs's shared
+ * targets: S1 drives the from (or single) handle, S2 the to handle, S3 clicks the track.
+ * Where a stage drives a handle itself is configuration in the same sense
+ * BAR_DRAG_FRACTION is -- the script is fixed, and a predicate that has to say "this stage
+ * pushes the handle into its own limit" can only say it from here. The two named cases with
+ * an s1 target of their own (n042 and n043) carry no off-scale limit, so the shared fraction
+ * is what these predicates read.
+ */
+const STAGE_DRAG_TARGETS = { S1: 0.2, S2: 0.8 };
+const S3_CLICK_FRACTION = 0.55;
+
+/**
+ * The handle a drag stage drives and the value it aims it at, or null for a stage that
+ * drives nothing of its own.
+ *
+ * @param {object} ctx
+ * @returns {{handle: 'from'|'to', value: number}|null}
+ */
+function aimedByStage(ctx) {
+    const fraction = STAGE_DRAG_TARGETS[stageOf(ctx)];
+    if (fraction === undefined) return null;
+    const { min, max } = rangeOf(ctx.cfg);
+    return { handle: stageOf(ctx) === 'S1' ? 'from' : 'to', value: min + fraction * (max - min) };
+}
+
+/**
+ * Where the two handles stand while THIS stage's clamps run: the pair it started from, with
+ * the move the fixed script makes applied.
+ *
+ * S1 and S2 aim one handle at their own fraction of the track and S5 carries the pair a tenth
+ * of the range to the right; a mask (disable/block) swallows all three, and a fixed handle
+ * ignores its own. Every other stage leaves the pair where the previous one left it. The point
+ * of the whole helper is that a handle can be driven INTO a limit by the stage itself (m063 at
+ * S1) and carried back OUT of it by the next one (m063 at S5), and a predicate that reads only
+ * where the handle started gets both ends wrong.
+ *
+ * @param {object} ctx
+ * @returns {{from: number|null, to: number|null}}
+ */
+function valuesUnderStage(ctx) {
+    const cfg = ctx.cfg;
+    const before = stageOf(ctx) === 'S0' ? {} : valuesOf(ctx.prev);
+    const values = {
+        from: isNum(before.from) ? before.from : cfg.from,
+        to: isNum(before.to) ? before.to : cfg.to
+    };
+    if (isInert(cfg)) return values;
+    const { min, max } = rangeOf(cfg);
+    const aimed = aimedByStage(ctx);
+    if (aimed) {
+        if (!cfg[aimed.handle + '_fixed']) values[aimed.handle] = aimed.value;
+        return values;
+    }
+    if (stageOf(ctx) === 'S5' && cfg.drag_interval && !cfg.from_fixed && !cfg.to_fixed) {
+        const travel = BAR_DRAG_FRACTION * (max - min);
+        if (isNum(values.from)) values.from += travel;
+        if (isNum(values.to)) values.to += travel;
+    }
+    return values;
+}
+
+/** The value S3's track click lands on. */
+function clickedValue(cfg) {
+    const { min, max } = rangeOf(cfg);
+    return min + S3_CLICK_FRACTION * (max - min);
+}
 
 const isNum = (value) => typeof value === 'number' && Number.isFinite(value);
 const isDouble = (cfg) => cfg.type === 'double';
@@ -93,9 +184,26 @@ function valuesUnreadableAtInit(ctx) {
     return stageOf(ctx) === 'S0' && !!ctx.cfg.__hidden_at_init && isValuesMode(ctx.cfg);
 }
 
-/** The per-handle limits that do not sit on the documented scale. */
+/**
+ * The per-handle limits a clamp would carry the handle PAST: off the documented scale, and
+ * rounded onto the wrong side of themselves.
+ *
+ * readme note "step": a value that does not sit on the scale is moved to the nearest point
+ * that does, and which way that goes decides whether the limit holds. On min 0.5 with step 1
+ * (0.5, 2, 3 ...) a from_min of 2.4 lands on 2, below the limit and against the readme; a
+ * from_min of 2.9 lands on 3, above it and perfectly legal (m061). A maximum limit is the
+ * mirror: the crossing is the one that rounds up.
+ *
+ * @param {object} cfg
+ * @returns {Array<{handle: string, key: string, side: number}>}
+ */
 function offScaleLimits(cfg) {
-    return LIMITS.filter((limit) => isNum(cfg[limit.key]) && !onScale(cfg[limit.key], cfg));
+    return LIMITS.filter((limit) => {
+        const value = cfg[limit.key];
+        if (!isNum(value) || onScale(value, cfg)) return false;
+        const landed = nearestOnScale(value, cfg);
+        return limit.side < 0 ? landed < value - EPS : landed > value + EPS;
+    });
 }
 
 /**
@@ -347,7 +455,13 @@ function separatorSplitsFraction(value, cfg) {
 function payloadStage(ctx) {
     const stage = stageOf(ctx);
     if (stage === 'S8') return false;                               // destroy() records nothing
+    // S9 builds the slider a second time straight from the entry's config literal, which
+    // carries no recorder, so nothing of that slider's own callbacks is recorded either.
+    if (stage === 'S9') return false;
     if (stage === 'S0' || stage === 'S6' || stage === 'S7') return true;  // onStart/onInit, onUpdate
+    // A key press on a slider whose keyboard the interval-drag bug killed (#891) is dropped
+    // whole, callbacks included, so there is no payload for any field of it to be wrong in.
+    if (isKeyStage(ctx) && intervalKeyboardIsDead(ctx.cfg)) return false;
     if (!isInert(ctx.cfg)) return true;                             // a live slider reports every interaction
     // An inert slider is silent under the mouse; a blocked one still answers the
     // keyboard, which is bug #890 and the only payload it produces.
@@ -398,6 +512,7 @@ export const KNOWN_BUGS = [
     {
         issue: 882,
         title: 'a handle limit off the step scale is crossed by up to half a step',
+        what: /passed (below|above) (from|to)_(min|max)/,
         // Matrix entries: every one carrying a limit that is not a scale point -- the
         // `limits=off-scale` level puts from_min at min + 2.4 steps -- and a handle the
         // stage pushes into it (m001, m011, m016, m024, m043, m052 among them). An entry
@@ -411,18 +526,17 @@ export const KNOWN_BUGS = [
             // where that state has no value to give (a slider built hidden reports none
             // until it is revealed, so the first stage after the reveal starts from the
             // configured pair).
-            const before = stageOf(ctx) === 'S0' ? {} : valuesOf(ctx.prev);
-            const values = {
-                from: isNum(before.from) ? before.from : cfg.from,
-                to: isNum(before.to) ? before.to : cfg.to
-            };
-            return pushedIntoAnOffScaleLimit(values, cfg);
+            // Where the handles stand while this stage's clamp runs: the handle need not
+            // START inside the limit (m063's S1 drag aims below an off-scale from_min), and
+            // one that started inside can be carried back out (m063's S5 bar drag).
+            return pushedIntoAnOffScaleLimit(valuesUnderStage(ctx), cfg);
         }
     },
 
     {
         issue: 883,
         title: 'from_value and to_value turn undefined after the first update() or reset()',
+        what: /from_value|to_value/,
         // Every slider without a values array, at S6 and S7: the onUpdate payload carries
         // undefined where the readme documents null, and the field stays that way.
         matches(ctx, id) {
@@ -437,6 +551,7 @@ export const KNOWN_BUGS = [
     {
         issue: 881,
         title: 'min_interval is violated at the top edge when max sits off the step scale',
+        what: /closed past min_interval/,
         // n043 (edge:min-interval-top). The top reachable value is half a step below max,
         // so a `to` resting on max is closer to a `from` driven to the top than
         // min_interval allows, and the clamp lets it stand. It takes that resting `to`:
@@ -462,6 +577,7 @@ export const KNOWN_BUGS = [
     {
         issue: 885,
         title: 'min_interval and max_interval are not applied at init or by update()',
+        what: /closed past min_interval|opened past max_interval/,
         // validate() clamps from/to against the per-handle limits but never against the
         // interval limits, so the starting pair (S0) and the pair update() leaves behind
         // (S6, and S7, where reset() rebuilds from the very same options) can break them.
@@ -490,6 +606,13 @@ export const KNOWN_BUGS = [
     {
         issue: 889,
         title: 'the *_pretty callback fields come back as numbers with prettify_enabled off',
+        // The number is what this entry speaks for: `got 0`, `got -50`, never `got undefined`.
+        // A slider built hidden drops its two handle fields at init instead of turning them
+        // into numbers (#897), and the five entries that are built hidden AND with prettify
+        // off (m018, m019, m065, m067, m068) report both at S0 -- a pattern wide enough to
+        // cover "got undefined" would swallow the missing text along with the numbers and
+        // leave #897 looking as if it had never reproduced.
+        what: /_pretty must be the formatted [a-z]+ value \(expected .*, got -?\d/,
         // Every stage that records a payload on a slider with prettify_enabled: false and
         // numeric values behind it. _prettify() returns its argument unchanged there, so
         // the "formatted" half of every pair is the raw number the readme shows as text.
@@ -500,8 +623,24 @@ export const KNOWN_BUGS = [
     },
 
     {
+        issue: 897,
+        title: 'a slider built inside a hidden container reports no from_pretty or to_pretty in onStart and onInit',
+        what: /(from|to)_pretty must be the formatted [a-z]+ value \(expected .*, got undefined\)/,
+        // All twenty-two container=hidden entries, at S0 alone: the onStart and onInit
+        // payloads carry the from and to values but no text for them, while min_pretty and
+        // max_pretty are filled in correctly -- so only the two handle fields are claimed
+        // here, and a missing min_pretty or max_pretty stays a finding of its own. One idle
+        // tick after the container is revealed every later payload carries the text, which
+        // is why no stage after S0 is matched.
+        matches(ctx, id) {
+            return id === 'callbacks' && stageOf(ctx) === 'S0' && !!ctx.cfg.__hidden_at_init;
+        }
+    },
+
+    {
         issue: 890,
         title: 'block leaves the keyboard working, so a blocked slider still changes value',
+        what: /must not fire on a disabled or blocked slider|changed its (from|to) value/,
         // The mask swallows the mouse but the track keeps its tabindex, so every key
         // stage of a blocked slider reports callbacks it should not (and moves the value
         // when nothing else holds it). A blocked slider whose keyboard the interval-drag
@@ -523,6 +662,7 @@ export const KNOWN_BUGS = [
     {
         issue: 888,
         title: 'a values-mode slider built in a hidden container leaves its input empty',
+        what: /must be a number|must be one of the values entries|must carry one value per handle|_value must be the entry|handle moved|changed its (from|to) value|must fire onChange/,
         // At S0 the input is empty, from is null and the onStart/onInit payloads carry
         // from_value null. One idle tick after the container is revealed the slider fills
         // everything in -- and that filling-in reads as a value change that never
@@ -547,19 +687,32 @@ export const KNOWN_BUGS = [
     {
         issue: 891,
         title: 'after a track click drag_interval with a fixed handle makes every key press a no-op',
+        what: /onFinish/,
         // The click leaves the interval path in charge of the keyboard, and its
         // fixed-handle guard drops the whole press, callbacks included -- so the press
         // owes an onFinish it never fires. An inert slider is silent anyway, which is why
         // disable/block are left out (the callbacks rule passes there).
         matches(ctx, id) {
             const cfg = ctx.cfg;
-            return id === 'callbacks' && isKeyStage(ctx) && intervalKeyboardIsDead(cfg) && !isInert(cfg);
+            if (id !== 'callbacks' || !isKeyStage(ctx) || !intervalKeyboardIsDead(cfg) || isInert(cfg)) return false;
+            // What the keyboard inherits is the BAR: the click has to land between the two
+            // handles for the interval path to take the press over. A pair too narrow to
+            // reach the click (m085, held two units wide by a locked interval while the click
+            // sits at 55 % of the range) leaves the press on the ordinary key path, where it
+            // reports the onFinish it owes. The pair is read from the state the press started
+            // from -- a press this bug drops moves nothing, so that pair is still the one the
+            // click saw.
+            const before = valuesOf(ctx.prev);
+            const clicked = clickedValue(cfg);
+            return isNum(before.from) && isNum(before.to)
+                && clicked >= before.from - EPS && clicked <= before.to + EPS;
         }
     },
 
     {
         issue: 892,
         title: 'grid labels name values off the step scale on a range that does not divide',
+        what: /grid label at unit/,
         // n008 (the site's 1000 to 1000000 step 1000 demo) and n034 (0 to 10 step 2): the
         // grid is built once at init and redrawn unchanged, so every stage but the
         // destroyed one shows the same wrong labels.
@@ -571,6 +724,7 @@ export const KNOWN_BUGS = [
     {
         issue: 886,
         title: 'destroy() leaves the input disabled when the slider was built with disable',
+        what: /must leave the input enabled/,
         // S8 only, and only for disable: nothing undoes the input's disabled property, so
         // the field stays out of form submission for good.
         matches(ctx, id) {
@@ -581,6 +735,7 @@ export const KNOWN_BUGS = [
     {
         issue: 893,
         title: 'a key press skips a value on a scale whose reported values are rounded',
+        what: /key press must move/,
         // m017 (single type) and m036 (double, the to handle), both on min 0.5, max 10.5,
         // step 1. A press re-snaps the reported value onto the percent grid before adding
         // its step, so it can advance two reported values -- and a press the other way can
@@ -601,8 +756,13 @@ export const KNOWN_BUGS = [
             if (id !== 'keys' || !isKeyStage(ctx)) return false;
             const cfg = ctx.cfg;
             if (!reportedValuesOffGrid(cfg) || !promised(ctx).changed) return false;
-            const direction = promised(ctx).key === '+' ? 1 : promised(ctx).key === '-' ? -1 : 0;
-            if (!direction) return false;
+            // Only the presses that move the handle UP skip a value. A decrease press that
+            // moves at all lands on the scale point one step below (m017 goes 10.5 -> 10),
+            // which is what the keys rule predicts once it snaps its one-step target onto the
+            // scale, so the rule passes there and there is nothing to excuse; a decrease press
+            // that moves nothing never reaches this rule at all.
+            if (promised(ctx).key !== '+') return false;
+            const direction = 1;
             const before = valuesOf(ctx.prev);
             const { step } = rangeOf(cfg);
             const movable = isDouble(cfg)
@@ -623,6 +783,7 @@ export const KNOWN_BUGS = [
     {
         issue: 880,
         title: 'the input value attribute cannot name a numeric-looking values entry',
+        what: /handles crossed|closed past min_interval/,
         // m024 and m064: the lookup misses, both handles fall back, and from_min then
         // lifts `from` above the `to` that fell to the first entry -- the crossing the
         // bounds rule reports. It stands until a stage actually moves a handle (m064's
@@ -639,6 +800,10 @@ export const KNOWN_BUGS = [
             const cfg = ctx.cfg;
             if (id === 'intervals' && !(isNum(cfg.min_interval) && cfg.min_interval > 0)) return false;
             if (!valueAttrLookupFails(cfg) || !isDouble(cfg) || !isNum(cfg.from_min) || !(cfg.from_min > 0)) return false;
+            // A values-mode slider built hidden reports no pair at all at init (#888), so the
+            // bounds rule reports a missing number there rather than a crossing -- m024, where
+            // this entry would otherwise look as if the crossing had stopped reproducing.
+            if (valuesUnreadableAtInit(ctx)) return false;
             const stage = stageOf(ctx);
             if (stage === 'S0') return true;
             if (stage === 'S8') return false;
@@ -653,6 +818,7 @@ export const KNOWN_BUGS = [
     {
         issue: 887,
         title: 'the built-in thousands separator is inserted into the fractional part',
+        what: /label text|grid label at|_pretty must be/,
         // n041 (edge:tiny, step 0.0001). Whether a label shows it depends on the value the
         // label carries: at init that is the configured from/to (0 formats cleanly), and
         // after reset() it is the pair the last update() left, which reset() rebuilds from
@@ -660,13 +826,21 @@ export const KNOWN_BUGS = [
         // four-decimal grid, where the separator always lands inside the fraction.
         matches(ctx, id) {
             const cfg = ctx.cfg;
-            if (id !== 'labels' && id !== 'grid') return false;
+            if (id !== 'labels' && id !== 'grid' && id !== 'callbacks') return false;
             if (id === 'grid' && !cfg.grid) return false;
+            // The payload's from_pretty/to_pretty carry the same text the value label does,
+            // so a stage that records a payload reports the same split fraction (n041 at S1).
+            if (id === 'callbacks' && !payloadStage(ctx)) return false;
             if (!builtinFormattingActive(cfg) || isValuesMode(cfg)) return false;
             if (scaleDecimals(cfg) < 4) return false;
             const stage = stageOf(ctx);
             if (stage === 'S8') return false;
-            if (id === 'labels' && (stage === 'S0' || stage === 'S7')) {
+            // S0, S7 and S9 all show a pair the slider was BUILT with rather than one a
+            // handle was dragged to: the configured from/to at init, and the pair reset()
+            // restored (which the second build then reads back off the input) after that.
+            // The grid is the exception -- it is drawn across the whole range whatever the
+            // handles do.
+            if (id !== 'grid' && (stage === 'S0' || stage === 'S7' || stage === 'S9')) {
                 const before = valuesOf(ctx.prev);
                 const shown = stage === 'S0' ? [cfg.from, cfg.to] : [before.from, before.to];
                 return shown.some((value) => separatorSplitsFraction(value, cfg));
@@ -678,6 +852,7 @@ export const KNOWN_BUGS = [
     {
         issue: 879,
         title: 'a bar drag against from_max stretches the interval instead of moving it',
+        what: /bar drag moves the whole interval/,
         // n042 (edge:bar-drag-from-max) and any drag_interval entry whose from handle is
         // within one bar drag of its from_max. The interval path clamps each handle on its
         // own, so the trailing handle stops at the limit while the leading one keeps
@@ -698,6 +873,7 @@ export const KNOWN_BUGS = [
     {
         issue: 884,
         title: 'max_postfix followed by a postfix renders a space the readme never asks for',
+        what: /label text/,
         // n011 (the site's age demo, postfix " years"). The plugin writes a space of its
         // own between the two, which doubles the space of a postfix that already starts
         // with one. Any label carrying the max value shows it, the max label included, so
@@ -711,6 +887,7 @@ export const KNOWN_BUGS = [
     {
         issue: 894,
         title: 'a handle limit and an interval limit that cannot both hold push the handle past its own limit',
+        what: /passed (below|above) (from|to)_(min|max)|closed past min_interval|opened past max_interval|key press must move/,
         // m006, m010, m011, m018, m019, m025, m076 and m083: each pins one handle
         // (to_fixed, or from_fixed in m025) and then asks for an interval the other
         // handle's own limits leave no room for. The interval wins, so the moving handle
@@ -767,33 +944,53 @@ export const KNOWN_BUGS = [
     },
 
     {
-        issue: 895,
-        title: 'a bar drag collapses the interval to zero width when it sits at max_interval',
-        // m080 (max_interval 6000 on a range of a million). Once the clamp has settled the
-        // pair at exactly max_interval, the trailing handle travels the whole drag while
-        // max_interval holds the leading one where it is, and the two meet: both labels
-        // read the same value and the bar has no width left to grab.
-        //
-        // It takes a drag wider than the interval itself. S5 moves the pair by a tenth of
-        // the range (matrix.spec.mjs), which is room enough to cross an interval of 6000
-        // in a million and nowhere near enough to cross m068's four units of ten -- that
-        // pair travels as a unit and keeps its width, so its cell stays healthy.
-        //
-        // Only S5 drags the bar, and only a live slider with two free handles gets that
-        // drag at all: a fixed handle drops it, and the mask swallows it on a disabled or
-        // blocked one. Not #879, which needs a from_max for the trailing handle to stop
-        // against and stretches the pair instead of collapsing it.
+        issue: 896,
+        what: /onFinish/,
+        title: 'a slider whose min equals max fires no onFinish when a handle is released',
+        // n038 (edge:min-eq-max), and any slider with one reachable value -- a one-entry
+        // values array is the same thing. Every interaction stage: the press and release, the
+        // track click and each key press all end without the onFinish the readme promises
+        // "even without moving". Only the callbacks rule, and only its onFinish line: the
+        // handle really does stay where it is, so every other rule holds and stays armed.
         matches(ctx, id) {
-            if (id !== 'intervals' || stageOf(ctx) !== 'S5') return false;
+            if (id !== 'callbacks' || !isInteractionStage(ctx)) return false;
+            const { min, max } = rangeOf(ctx.cfg);
+            return min === max;
+        }
+    },
+
+    {
+        issue: 898,
+        title: 'a track click hides every value label while drag_interval holds both handles on the same value',
+        what: /neither the merged label nor both value labels/,
+        // m080, from S3 on. Its max_interval clamp walks the pair together until the two
+        // handles sit on the same value, and the click that follows goes down the
+        // whole-interval path and leaves the merged label AND both value labels hidden.
+        // Every later key press travels the same path and redraws the same nothing, so the
+        // click stage and the four key stages all report it.
+        //
+        // Where it stops: S5 drags the bar, which pulls the two handles apart again and
+        // brings a label back (m080 shows the merged label from S5 on), and S6/S7 rebuild
+        // the whole DOM through update() and reset(). Matching those would claim a healthy
+        // cell and red the entry as "no longer reproduces", so the stage half stops at S4.
+        //
+        // The pair is read from the state the stage STARTED from, which is the click's own
+        // reading at S3 and stays the click's reading afterwards: on this path a press
+        // carries both handles by one step, so a pair coincident when the click landed is
+        // still coincident at every press that follows, and the "started coincident" and
+        // "was coincident at the click" readings are the same pair. A press that did pull
+        // the handles apart would leave this entry silent at the next stage, which is the
+        // honest answer -- the labels come back with the interval.
+        matches(ctx, id) {
+            if (id !== 'labels') return false;
             const cfg = ctx.cfg;
+            if (stageOf(ctx) !== 'S3' && !isKeyStage(ctx)) return false;
             if (!isDouble(cfg) || !cfg.drag_interval || isInert(cfg)) return false;
-            if (cfg.from_fixed || cfg.to_fixed) return false;
-            if (!(isNum(cfg.max_interval) && cfg.max_interval > 0)) return false;
-            const { min, max } = rangeOf(cfg);
-            if (BAR_DRAG_FRACTION * (max - min) <= cfg.max_interval + EPS) return false;
+            // With hide_from_to on, the rule judges that every value label is hidden and
+            // never reports this message at all, so there would be nothing to excuse.
+            if (cfg.hide_from_to) return false;
             const before = valuesOf(ctx.prev);
-            const gap = gapBetween(before.from, before.to);
-            return isNum(gap) && Math.abs(gap - cfg.max_interval) <= EPS;
+            return isNum(before.from) && isNum(before.to) && Math.abs(before.to - before.from) <= EPS;
         }
     }
 ];
@@ -801,13 +998,64 @@ export const KNOWN_BUGS = [
 /**
  * The register entry that covers this failure, if any.
  *
- * @param {object} ctx   the invariant context ({ state, cfg, stage, prev, expectations })
- * @param {string} id    the failing invariant id
+ * With a message, an entry answers only when its `what` pattern covers that message: two
+ * entries can match the same configuration and rule (m065 carries both #889 and #891 on the
+ * callbacks rule), and the message is what tells them apart. Without one the question is the
+ * weaker "does any entry claim this configuration and rule at all", which is what the
+ * retirement check in judgeStage() asks.
+ *
+ * @param {object} ctx        the invariant context ({ state, cfg, stage, prev, expectations })
+ * @param {string} id         the failing invariant id
+ * @param {string} [message]  the failure message
  * @returns {object|null}
  */
-export function matchKnownBug(ctx, id) {
+export function matchKnownBug(ctx, id, message) {
     for (const bug of KNOWN_BUGS) {
-        if (bug && typeof bug.matches === 'function' && bug.matches(ctx, id)) return bug;
+        if (!bug || typeof bug.matches !== 'function' || !bug.matches(ctx, id)) continue;
+        if (typeof message === 'string' && !(bug.what instanceof RegExp && bug.what.test(message))) continue;
+        return bug;
     }
     return null;
+}
+
+/**
+ * Judges one stage's failures against the register.
+ *
+ * A failure a filed bug accounts for -- its entry matches the configuration and stage AND its
+ * `what` covers the message -- becomes an annotation. Everything else stays real. On top of
+ * that, an entry that matches this cell while NO failure of its rule answers its `what` is
+ * reported as real: the bug does not reproduce here any more, and its register line has to go,
+ * or the suite would keep excusing a cell that is already healthy.
+ *
+ * @param {Array<{id: string, message: string}>} failures   what checkInvariants() reported
+ * @param {object} ctx                                      the invariant context
+ * @param {string[]} [skippedIds]  invariant ids this stage did not check (no usable oracle),
+ *                                 which are neither annotated nor retired on
+ * @returns {{real: Array<{id: string, message: string}>, annotations: Array<object>}}
+ */
+export function judgeStage(failures, ctx, skippedIds) {
+    const skipped = skippedIds || [];
+    const stage = stageOf(ctx);
+    const real = [];
+    const annotations = [];
+
+    for (const failure of failures || []) {
+        const known = matchKnownBug(ctx, failure.id, failure.message);
+        if (known) annotations.push({ issue: known.issue, title: known.title, id: failure.id, stage: stage, message: failure.message });
+        else real.push(failure);
+    }
+
+    for (const invariant of INVARIANTS) {
+        if (skipped.indexOf(invariant.id) >= 0) continue;
+        for (const bug of KNOWN_BUGS) {
+            if (!bug || typeof bug.matches !== 'function' || !bug.matches(ctx, invariant.id)) continue;
+            const reproduced = (failures || []).some((failure) =>
+                failure.id === invariant.id && bug.what instanceof RegExp && bug.what.test(failure.message));
+            if (!reproduced) {
+                real.push({ id: invariant.id, message: `${invariant.id}: bug #${bug.issue} no longer reproduces here; remove its register entry (after ${stage})` });
+            }
+        }
+    }
+
+    return { real: real, annotations: annotations };
 }

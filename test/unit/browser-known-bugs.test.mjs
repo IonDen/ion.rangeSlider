@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { KNOWN_BUGS, matchKnownBug } from '../browser/lib/known-bugs.mjs';
+import { KNOWN_BUGS, judgeStage, matchKnownBug } from '../browser/lib/known-bugs.mjs';
 import { INVARIANTS } from '../browser/lib/invariants.mjs';
 
 // #877: the known-bug register. Every entry below is fed the minimal configuration from
@@ -37,6 +37,31 @@ const hit = (cfg, stage, id, over) => {
     return found ? found.issue : null;
 };
 
+/**
+ * The issue number the register answers ONE failure message with, or null: two entries can
+ * match the same configuration and rule, and the message is what tells them apart.
+ */
+const answers = (cfg, stage, id, message, over) => {
+    const found = matchKnownBug(ctxOf(cfg, stage, over), id, message);
+    return found ? found.issue : null;
+};
+
+/**
+ * One payload-text failure of the callbacks rule, spelled the way lib/invariants.mjs
+ * reports it (its report() writes "<id>: <what> (expected <x>, got <y>) after <stage>", and
+ * a string expectation is quoted while a number is not).
+ *
+ * @param {string} type    the callback the payload came from
+ * @param {string} field   from_pretty, to_pretty, min_pretty or max_pretty
+ * @param {string} expected the text the readme promises
+ * @param {string} got     the value the payload carried, as the report prints it
+ * @param {string} [stage]
+ * @returns {string}
+ */
+const prettyFailure = (type, field, expected, got, stage = 'S0') =>
+    `callbacks: ${type} payload: ${field} must be the formatted ${field.slice(0, field.indexOf('_'))} value `
+    + `(expected ${JSON.stringify(expected)}, got ${got}) after ${stage}`;
+
 /** Every (stage, invariant) pair the register matches for a config. */
 const allHits = (cfg, over) => {
     const stages = ['S0', 'S1', 'S2', 'S3', 'S4a', 'S4b', 'S4c', 'S4d', 'S5', 'S6', 'S7', 'S8'];
@@ -54,14 +79,17 @@ const allHits = (cfg, over) => {
 
 // Bug caught: an entry filed without its issue number or its one-line title, which would
 // annotate a matrix cell with nothing a reader could look up.
-test('every register entry carries an issue number, a title and a predicate', () => {
-    assert.equal(KNOWN_BUGS.length, 17);
+test('every register entry carries an issue number, a title, a predicate and a message pattern', () => {
+    assert.equal(KNOWN_BUGS.length, 19);
     const issues = KNOWN_BUGS.map((bug) => bug.issue);
     assert.deepEqual(issues, [...new Set(issues)], 'an issue must have one entry');
     for (const bug of KNOWN_BUGS) {
         assert.equal(typeof bug.issue, 'number', 'issue number');
         assert.ok(bug.title && bug.title.length > 15, `#${bug.issue} needs a one-line title`);
         assert.equal(typeof bug.matches, 'function', `#${bug.issue} needs a predicate`);
+        // Bug caught: an entry without its `what` pattern, which would annotate away every
+        // failure of an invariant it was filed against instead of the one it describes.
+        assert.ok(bug.what instanceof RegExp, `#${bug.issue} needs a what pattern`);
     }
 });
 
@@ -99,6 +127,73 @@ test('#882 matches a limit off the step scale, not one on it', () => {
     // The same off-scale limit is no excuse for a different invariant.
     assert.equal(hit(off, 'S0', 'bounds'), null);
     assert.equal(hit(off, 'S0', 'scale'), null);
+});
+
+// The handle need not START inside the limit: S1 drives the from handle to the low end of the
+// track and S2 the to handle to the high end (matrix.spec.mjs's shared fractions), and a drag
+// that runs into an off-scale limit is clamped onto the wrong side of it just the same (m063).
+// Bug caught: a predicate that only looks at the pair the stage started from, which leaves the
+// matrix red on the very stage that drives the handle into the limit.
+test('#882 matches the drag stage that drives a handle into an off-scale limit', () => {
+    const cfg = { type: 'double', min: 0, max: 1, step: 0.1, from: 0.3, to: 0.7, from_min: 0.24 };
+    const s1 = { prev: prevOf(0.3, 0.7), expectations: { changed: true, handle: 'from' } };
+    assert.equal(hit(cfg, 'S1', 'limits', s1), 882);
+
+    // A limit the drag stops short of is no excuse: S1 aims at 20 % of the range.
+    const reachable = { ...cfg, from_min: 0.14 };
+    assert.equal(hit(reachable, 'S1', 'limits', s1), null);
+
+    // Only the stages that drive a handle themselves: a key press from a pair well above the
+    // limit is left to the keys and limits rules.
+    assert.equal(hit(cfg, 'S4a', 'limits', { prev: prevOf(0.3, 0.7), expectations: { key: '+', changed: true } }), null);
+
+    // The to handle is driven the other way, to the high end of the track. A maximum limit is
+    // crossed when the clamp rounds UP off it (0.76 lands on 0.8).
+    const toLimit = { type: 'double', min: 0, max: 1, step: 0.1, from: 0.3, to: 0.7, to_max: 0.76 };
+    const s2 = { prev: prevOf(0.3, 0.7), expectations: { changed: true, handle: 'to' } };
+    assert.equal(hit(toLimit, 'S2', 'limits', s2), 882);
+    assert.equal(hit({ ...toLimit, to_max: 0.86 }, 'S2', 'limits', s2), null, 'a limit above the drag target is never reached');
+
+    // A drag the slider never feels leaves the handle where it was: the mask swallows it on a
+    // blocked or disabled slider (m059, m081), and a fixed handle ignores it (m081).
+    assert.equal(hit({ ...cfg, block: true }, 'S1', 'limits', s1), null);
+    assert.equal(hit({ ...cfg, disable: true }, 'S1', 'limits', s1), null);
+    assert.equal(hit({ ...cfg, from_fixed: true }, 'S1', 'limits', s1), null);
+});
+
+// An off-scale limit is only crossed when the clamp ROUNDS THE WRONG WAY: from_min 2.4 on the
+// 0.5 / step 1 scale lands on 2, below the limit, while from_min 2.9 lands on 3, above it and
+// perfectly legal (m061).
+// Bug caught: a predicate that reads "off the scale" as "crossed", which annotates away a
+// healthy slider whose limit happens to round in its favour.
+test('#882 matches a limit the clamp rounds below it, not one it rounds above', () => {
+    const roundsDown = { min: 0.5, max: 10.5, step: 1, from: 1.5, from_min: 2.4 };
+    assert.equal(hit(roundsDown, 'S0', 'limits'), 882);
+
+    const roundsUp = { min: 0.5, max: 10.5, step: 1, from: 1.5, from_min: 2.9 };
+    assert.equal(hit(roundsUp, 'S0', 'limits'), null);
+    assert.equal(hit(roundsUp, 'S1', 'limits', { prev: prevOf(4), expectations: { changed: true, handle: 'from' } }), null);
+
+    // The mirror case on a maximum limit: a to_max the clamp rounds ABOVE is the crossing.
+    const maxRoundsUp = { type: 'double', min: 0.5, max: 10.5, step: 1, from: 2, to: 6, to_max: 5.6 };
+    assert.equal(hit(maxRoundsUp, 'S0', 'limits'), 882);
+    const maxRoundsDown = { type: 'double', min: 0.5, max: 10.5, step: 1, from: 2, to: 6, to_max: 5.4 };
+    assert.equal(hit(maxRoundsDown, 'S0', 'limits'), null);
+});
+
+// S5 drags the whole interval a tenth of the range to the right, which carries a handle back
+// out of the limit it was sitting in (m063): the clamp does not run there and the rule passes.
+// Bug caught: a predicate that reads only where the handle STARTED, which would keep claiming
+// every stage after the one that freed the handle.
+test('#882 stops claiming once the bar drag carries the handle out of the limit', () => {
+    const cfg = { type: 'double', min: 0, max: 1, step: 0.1, from: 0.3, to: 0.7, from_min: 0.24, min_interval: 0.2, drag_interval: true };
+    const s5 = (from, to) => ({ prev: prevOf(from, to), expectations: { bar: true, changed: true } });
+    assert.equal(hit(cfg, 'S5', 'limits', s5(0.2, 0.5)), null, 'the drag adds a tenth of the range and clears the limit');
+    assert.equal(hit(cfg, 'S5', 'limits', s5(0.1, 0.4)), 882, 'a pair far enough left is still inside the limit after the drag');
+
+    // A fixed handle or an inert slider gets no bar drag at all, so the handle stays put.
+    assert.equal(hit({ ...cfg, from_fixed: true }, 'S5', 'limits', s5(0.2, 0.5)), 882);
+    assert.equal(hit({ ...cfg, block: true }, 'S5', 'limits', s5(0.2, 0.5)), 882);
 });
 
 // ------------------------------------------------------- #883 from_value after update
@@ -185,6 +280,88 @@ test('#889 matches a payload stage of a slider with prettify_enabled off', () =>
     assert.equal(hit(numberValues, 'S0', 'callbacks'), 889);
 });
 
+// ------------------------------------------- #897 the init payload of a hidden slider
+
+// readme "Callback data": from_pretty is "FROM formatted" and to_pretty the same for the to
+// value. A slider built inside a display:none container hands both back undefined in its
+// onStart and onInit payloads, while min_pretty and max_pretty are filled in correctly.
+test('#897 matches the missing payload text of a slider built hidden, not of a visible one', () => {
+    // m002's configuration (values=off, scale=neg, container=hidden), with the two fields the
+    // bug drops. prettify_separator is empty there, so the text is the bare number.
+    const m002 = {
+        type: 'double', min: -50, max: 50, step: 5, from: -20, to: 20,
+        from_min: -25, from_max: 10, to_min: -10, to_max: 40, min_interval: 10,
+        to_fixed: true, grid: true, grid_num: 4, prettify_separator: '', force_edges: true,
+        skin: 'sharp', __hidden_at_init: true
+    };
+    const missingFrom = prettyFailure('onStart', 'from_pretty', '-20', 'undefined');
+    const missingTo = prettyFailure('onInit', 'to_pretty', '20', 'undefined');
+    assert.equal(answers(m002, 'S0', 'callbacks', missingFrom), 897);
+    assert.equal(answers(m002, 'S0', 'callbacks', missingTo), 897);
+
+    // The same slider in a visible container reports the text, so there is nothing to excuse.
+    const visible = { ...m002, __hidden_at_init: undefined };
+    assert.equal(answers(visible, 'S0', 'callbacks', missingFrom), null);
+
+    // Only the two handle fields. min_pretty and max_pretty are filled in at init whatever the
+    // container does, so a missing one there is a finding of its own and must stay real.
+    assert.equal(answers(m002, 'S0', 'callbacks', prettyFailure('onStart', 'min_pretty', '-50', 'undefined')), null);
+    assert.equal(answers(m002, 'S0', 'callbacks', prettyFailure('onStart', 'max_pretty', '50', 'undefined')), null);
+
+    // Init alone: one idle tick after the reveal every payload carries its text again.
+    const afterReveal = { prev: prevOf(-20, 20), expectations: { changed: true, handle: 'from' } };
+    assert.equal(answers(m002, 'S1', 'callbacks', prettyFailure('onChange', 'from_pretty', '-30', 'undefined', 'S1'), afterReveal), null);
+
+    // And only the payload text: everything else the callbacks rule says stays armed.
+    assert.equal(answers(m002, 'S0', 'callbacks', 'callbacks: onStart fires once (expected 1, got 2) after S0'), null);
+});
+
+// m018, m019, m065, m067 and m068 are built hidden AND with prettify_enabled off, so their
+// init payloads carry the two bugs at once: the handle fields come back undefined (#897)
+// while min_pretty and max_pretty come back as the raw numbers (#889). The message is the
+// only thing that tells them apart.
+// Bug caught: #889 keeping a `what` wide enough to claim "got undefined" as well, which files
+// the missing text under the prettify bug and leaves #897 looking as if it never reproduced.
+test("the init payload of m018 is split between #897 and #889 by the message", () => {
+    // m018's configuration (formatting=no-prettify, container=hidden, route=data).
+    const m018 = {
+        type: 'double', min: 0, max: 100, step: 1, from: 30, to: 70,
+        from_min: 25, from_max: 60, min_interval: 4, max_interval: 4,
+        to_fixed: true, drag_interval: true, drag_over_limit: true, grid: true, grid_num: 10,
+        prettify_enabled: false, decorate_both: false, values_separator: ' to ',
+        hide_from_to: true, keyboard: false, skin: 'square', __hidden_at_init: true
+    };
+    const missingFrom = prettyFailure('onStart', 'from_pretty', '30', 'undefined');
+    const missingTo = prettyFailure('onStart', 'to_pretty', '70', 'undefined');
+    const numericMin = prettyFailure('onStart', 'min_pretty', '0', '0');
+    const numericMax = prettyFailure('onStart', 'max_pretty', '100', '100');
+    assert.equal(answers(m018, 'S0', 'callbacks', missingFrom), 897);
+    assert.equal(answers(m018, 'S0', 'callbacks', missingTo), 897);
+    assert.equal(answers(m018, 'S0', 'callbacks', numericMin), 889);
+    assert.equal(answers(m018, 'S0', 'callbacks', numericMax), 889);
+
+    // Judged together, as the matrix judges them: the starting pair also breaks the interval
+    // it was built with (#885), and nothing of the stage is left real.
+    const interval = {
+        id: 'intervals',
+        message: 'intervals: the handles opened past max_interval (expected "<= 4", got 40) after S0'
+    };
+    const failures = [missingFrom, missingTo, numericMin, numericMax]
+        .map((message) => ({ id: 'callbacks', message }))
+        .concat(interval);
+    const { real, annotations } = judgeStage(failures, ctxOf(m018, 'S0'), []);
+    assert.deepEqual(real, []);
+    assert.deepEqual(annotations.map((a) => a.issue).sort(), [885, 889, 889, 897, 897]);
+
+    // The same slider in a visible container: every field comes back a number, and all four
+    // are #889's -- the narrowing must not cost that entry the cells it was filed for.
+    const shown = { ...m018, __hidden_at_init: undefined };
+    assert.equal(answers(shown, 'S0', 'callbacks', prettyFailure('onStart', 'from_pretty', '30', '30')), 889);
+    assert.equal(answers(shown, 'S0', 'callbacks', numericMin), 889);
+    // A negative value is a number too (m065 runs from -50 to 50).
+    assert.equal(answers(shown, 'S0', 'callbacks', prettyFailure('onStart', 'min_pretty', '-50', '-50')), 889);
+});
+
 // ------------------------------------------------------------- #890 block and the keys
 
 // block masks the mouse but leaves the track focusable, so the arrow keys still move the
@@ -216,7 +393,11 @@ test('#888 matches a values-mode slider built hidden, not a numeric one', () => 
     const hidden = { values: [10, 20, 30, 40, 50], from: 1, __hidden_at_init: true };
     assert.equal(hit(hidden, 'S0', 'input'), 888);
     assert.equal(hit(hidden, 'S0', 'bounds'), 888);
-    assert.equal(hit(hidden, 'S0', 'callbacks'), 888);
+    // The callbacks rule at S0 is shared with #897, which speaks for the payload TEXT the
+    // same hidden container drops; this entry answers for the value behind it, so the two
+    // are separated by the message.
+    assert.equal(answers(hidden, 'S0', 'callbacks', 'callbacks: onStart payload: from_value must be the entry at the index (expected 20, got null) after S0'), 888);
+    assert.equal(answers(hidden, 'S0', 'callbacks', prettyFailure('onStart', 'from_pretty', '20', 'undefined')), 897);
     assert.equal(hit(hidden, 'S1', 'input'), null, 'the input fills in once the container is revealed');
 
     const hiddenNumeric = { min: 0, max: 100, from: 30, step: 1, __hidden_at_init: true };
@@ -246,22 +427,28 @@ test('#888 matches a values-mode slider built hidden, not a numeric one', () => 
 // After the track click the interval path owns the keyboard, and its fixed-handle guard
 // drops the whole press -- callbacks included -- so the slider owes an onFinish it never
 // fires.
-test('#891 matches the key stages of a drag_interval slider with a fixed handle', () => {
+test('#891 matches the key stages of a drag_interval slider whose bar the click landed on', () => {
     const dead = { type: 'double', min: 0, max: 100, from: 30, to: 70, step: 1, drag_interval: true, from_fixed: true };
-    assert.equal(hit(dead, 'S4a', 'callbacks'), 891);
-    assert.equal(hit(dead, 'S4d', 'callbacks'), 891);
-    assert.equal(hit(dead, 'S3', 'callbacks'), null, 'the click itself still reports');
+    const onBar = { prev: prevOf(30, 70), expectations: { key: '+', changed: false } };
+    assert.equal(hit(dead, 'S4a', 'callbacks', onBar), 891);
+    assert.equal(hit(dead, 'S4d', 'callbacks', onBar), 891);
+    assert.equal(hit(dead, 'S3', 'callbacks', onBar), null, 'the click itself still reports');
+
+    // The bar is what the keyboard inherits: a pair too narrow to reach the click leaves the
+    // press on the ordinary key path, where it reports its onFinish (m085, whose locked
+    // interval keeps the pair well left of the click).
+    assert.equal(hit(dead, 'S4a', 'callbacks', { prev: prevOf(10, 40), expectations: { key: '+', changed: false } }), null);
 
     const noDrag = { type: 'double', min: 0, max: 100, from: 30, to: 70, step: 1, from_fixed: true };
-    assert.equal(hit(noDrag, 'S4a', 'callbacks'), null);
+    assert.equal(hit(noDrag, 'S4a', 'callbacks', onBar), null);
 
     const noFixed = { type: 'double', min: 0, max: 100, from: 30, to: 70, step: 1, drag_interval: true };
-    assert.equal(hit(noFixed, 'S4a', 'callbacks'), null);
+    assert.equal(hit(noFixed, 'S4a', 'callbacks', onBar), null);
 
     // An inert slider never gets the click that arms the interval path, so its keyboard
     // stays ordinary: that is #890's case, not this one.
     const blocked = { type: 'double', min: 0, max: 100, from: 30, to: 70, step: 1, drag_interval: true, to_fixed: true, block: true };
-    assert.notEqual(hit(blocked, 'S4a', 'callbacks'), 891);
+    assert.notEqual(hit(blocked, 'S4a', 'callbacks', onBar), 891);
 });
 
 // ------------------------------------------------------------- #892 grid off the scale
@@ -312,8 +499,11 @@ test('#893 matches a key press on a scale whose reported values are off the grid
     // A press whose own step runs into max is clamped there, and so is the overshoot:
     // the two agree and the rule passes (m017's third press, from 10 on a 10.5 max).
     assert.equal(hit(rounded, 'S4c', 'keys', { prev: prevOf(10), expectations: { key: '+', changed: true } }), null);
-    assert.equal(hit(rounded, 'S4d', 'keys', { prev: prevOf(10.5), expectations: { key: '-', changed: true } }), 893);
-    // The same at the bottom of a limited range.
+    // Only the presses that move the handle UP skip a value. A decrease press that moves at
+    // all lands on the scale point one step down (m017 goes 10.5 -> 10), which is exactly what
+    // the keys rule predicts once it snaps its one-step target onto the scale, so there is
+    // nothing to excuse; a decrease press that moves nothing is the callbacks rule's business.
+    assert.equal(hit(rounded, 'S4d', 'keys', { prev: prevOf(10.5), expectations: { key: '-', changed: true } }), null);
     const limited = { min: 0.5, max: 10.5, step: 1, from: 5, from_min: 4 };
     assert.equal(hit(limited, 'S4d', 'keys', { prev: prevOf(5), expectations: { key: '-', changed: true } }), null);
 
@@ -370,6 +560,14 @@ test('#880 matches the crossing a fallen-back value attribute leaves behind', ()
     const noLimit = { type: 'double', values: ['10', '20', '30', '40', '50'], from: 1, to: 3, __value_attr: '20;40' };
     assert.equal(hit(noLimit, 'S0', 'bounds'), null, 'without from_min both handles land on entry 0 and nothing is reportable');
 
+    // A values-mode slider built hidden reports no pair at all at S0 (#888), so the bounds
+    // rule reports a missing number there, never a crossing -- this entry must not claim it
+    // (m024), or it would look as if the crossing had stopped reproducing.
+    const hidden = { ...strings, __hidden_at_init: true };
+    const entry880 = KNOWN_BUGS.find((bug) => bug.issue === 880);
+    assert.equal(entry880.matches(ctxOf(hidden, 'S0'), 'bounds'), false);
+    assert.equal(entry880.matches(ctxOf(strings, 'S0'), 'bounds'), true, 'a visible slider still reports the crossing');
+
     // A crossed pair has a negative gap, so an interval limit is broken along with the
     // ordering; that is the same fallen-back lookup, not a second bug.
     const withInterval = { ...strings, min_interval: 2 };
@@ -401,6 +599,13 @@ test('#887 matches a scale fine enough to put four decimals in a label', () => {
     // A custom prettify replaces the built-in formatting altogether.
     const custom = { min: 0, max: 0.001, step: 0.0001, from: 0, __prettify: (n) => String(n) };
     assert.equal(hit(custom, 'S1', 'labels'), null);
+
+    // The callback payload carries the same text the label does, so it breaks on the same
+    // stages (n041 reports both at S1).
+    assert.equal(hit(tiny, 'S1', 'callbacks'), 887);
+    assert.equal(hit(tiny, 'S0', 'callbacks'), null, 'the payload starts on 0, which formats correctly');
+    assert.equal(hit(tiny, 'S8', 'callbacks'), null, 'destroy() records no payload');
+    assert.equal(hit(coarse, 'S1', 'callbacks'), null);
 });
 
 // ------------------------------------------------- #879 a bar drag against from_max
@@ -540,38 +745,198 @@ test('#894 matches the interval and the key press when the conflict runs out of 
     assert.equal(hit(bothFree, 'S4a', 'intervals', firstPress), null);
 });
 
-// ------------------------------------ #895 a bar drag collapses a max_interval pair
+// A pair that closes under a whole-interval move was filed as #895 and is no bug: on the
+// entry it was found on (m080, 6000 of a million) the interval's bar is under four pixels
+// wide and lies beneath two sixteen-pixel handles, so the press aimed at it grabs a handle,
+// and a handle dragged onto the other one closes the gap with no min_interval to stop it.
+// The suite now recognises a bar narrower than a handle and does not judge that stage on its
+// width (test/browser/matrix/matrix.spec.mjs), so there is no failure left for a register
+// entry to answer for -- which is what the register-size assertion at the top of this file
+// and the width tests in browser-invariants.test.mjs pin between them.
 
-// readme settings table: drag_interval "Let the user drag the whole interval by its bar",
-// max_interval "Largest interval between the handles". Once the clamp has settled the pair
-// at exactly max_interval, the next bar drag runs the trailing handle into the leading one
-// and the interval disappears.
-test('#895 matches a bar drag on a pair sitting at max_interval', () => {
-    const cfg = { type: 'double', min: 0, max: 1000000, step: 1000, from: 300000, to: 700000, max_interval: 6000, drag_interval: true };
-    assert.equal(hit(cfg, 'S5', 'intervals', { prev: prevOf(499000, 505000), expectations: { bar: true, changed: true } }), 895);
+// --------------------------------------------------------------- min equals max (#896)
 
-    // A pair the clamp has not yet closed to max_interval survives the drag intact.
-    assert.equal(hit(cfg, 'S5', 'intervals', { prev: prevOf(499000, 504000), expectations: { bar: true, changed: true } }), null);
+// readme settings table, onFinish: "Fires when an interaction ends: a handle is released
+// (even without moving), the track ... is clicked, or a key is pressed". A slider whose min
+// equals max swallows the whole press and fires nothing.
+test('#896 matches the interaction stages of a slider with no range, not one with a range', () => {
+    const degenerate = { min: 5, max: 5 };
+    assert.equal(hit(degenerate, 'S1', 'callbacks'), 896);
+    assert.equal(hit(degenerate, 'S3', 'callbacks'), 896);
+    assert.equal(hit(degenerate, 'S0', 'callbacks'), null, 'init is not an interaction');
+    // S6 is update(), which is not an interaction: the entry that answers there is #883,
+    // the from_value every slider without a values array loses.
+    assert.equal(hit(degenerate, 'S6', 'callbacks'), 883);
+    assert.equal(hit(degenerate, 'S1', 'bounds'), null, 'every other rule stays armed');
 
-    // An interval wider than the drag itself travels as a unit: the trailing handle never
-    // reaches the leading one, and the pair keeps its width.
-    const wideInterval = { type: 'double', min: 0.5, max: 10.5, step: 1, from: 4, to: 8, from_min: 4, from_max: 7, min_interval: 4, max_interval: 4, drag_interval: true };
-    assert.equal(hit(wideInterval, 'S5', 'intervals', { prev: prevOf(5, 9), expectations: { bar: true, changed: true } }), null);
-    assert.equal(hit(cfg, 'S3', 'intervals', { prev: prevOf(499000, 505000), expectations: { click: true, changed: true } }), null, 'the bar drag is the only stage that moves the pair as a unit');
+    const withRange = { min: 5, max: 6 };
+    assert.equal(hit(withRange, 'S1', 'callbacks'), null);
 
-    // Every option the collapse needs, removed one at a time.
-    const noMaxInterval = { type: 'double', min: 0, max: 1000000, step: 1000, from: 300000, to: 700000, drag_interval: true };
-    assert.equal(hit(noMaxInterval, 'S5', 'intervals', { prev: prevOf(499000, 505000), expectations: { bar: true, changed: true } }), null);
-    const noBarDrag = { type: 'double', min: 0, max: 1000000, step: 1000, from: 300000, to: 700000, max_interval: 6000 };
-    assert.equal(hit(noBarDrag, 'S5', 'intervals', { prev: prevOf(499000, 505000), expectations: { bar: true, changed: true } }), null);
+    // A one-entry values array is the same slider, reached the other way.
+    const oneEntry = { values: ['only'] };
+    assert.equal(hit(oneEntry, 'S1', 'callbacks'), 896);
+    const twoEntries = { values: ['a', 'b'] };
+    assert.equal(hit(twoEntries, 'S1', 'callbacks'), null);
+});
 
-    // A fixed handle drops the whole drag, and an inert slider never sees it.
-    const fixed = { ...cfg, to_fixed: true };
-    assert.equal(hit(fixed, 'S5', 'intervals', { prev: prevOf(499000, 505000), expectations: { bar: true, changed: false } }), null);
-    const blocked = { ...cfg, block: true };
-    assert.equal(hit(blocked, 'S5', 'intervals', { prev: prevOf(499000, 505000), expectations: { bar: true, changed: false } }), null);
+// --------------------------------------- #898 the vanishing value labels of a click
 
-    // The bar drag against a from_max is the other interval-drag bug (#879) and keeps its
-    // own entry: this one takes no per-handle limit at all.
-    assert.equal(hit(cfg, 'S5', 'limits', { prev: prevOf(499000, 505000), expectations: { bar: true, changed: true } }), null);
+// readme settings table, hide_from_to "Hide the from and to value labels": with it off a
+// double slider shows the two value labels or the merged one in their place. A click on the
+// track while drag_interval holds both handles on the same value leaves all three hidden, and
+// every key press after it redraws the same nothing.
+test('#898 matches the track click of a coincident drag_interval pair, not a pair with an interval left', () => {
+    // m080's option set, the entry the bug was found on: max_interval walks the pair together
+    // until the two handles meet, and the click that follows hides every label.
+    const m080 = {
+        min: 0, max: 1000000, step: 1000, type: 'double', from: 300000, to: 700000,
+        from_min: 2400, max_interval: 6000, drag_interval: true, grid: true, grid_margin: false,
+        prettify_separator: ',', decorate_both: false, values_separator: ' to ', skin: 'square',
+        __hidden_at_init: true, __value_attr: '300000;700000'
+    };
+    const coincident = { prev: prevOf(700000, 700000), expectations: { click: true, changed: true } };
+    assert.equal(hit(m080, 'S3', 'labels', coincident), 898);
+
+    // The keyboard inherits the same whole-interval path, so the four key stages report it too.
+    const held = { prev: prevOf(548000, 548000), expectations: { key: '+', changed: true } };
+    assert.equal(hit(m080, 'S4a', 'labels', held), 898);
+    assert.equal(hit(m080, 'S4d', 'labels', { prev: prevOf(551000, 551000), expectations: { key: '-', changed: true } }), 898);
+
+    // The bar drag pulls the handles apart again and a label comes back, and update()/reset()
+    // rebuild the DOM: claiming those stages would annotate a healthy cell and hide the day
+    // the bug is fixed.
+    assert.equal(hit(m080, 'S5', 'labels', { prev: prevOf(550000, 550000), expectations: { bar: true, changed: true } }), null);
+    assert.equal(hit(m080, 'S6', 'labels', { prev: prevOf(550000, 550000), expectations: { update: true } }), null);
+
+    // Before the click there is nothing to excuse: S1 drags one handle and the labels hold.
+    assert.equal(hit(m080, 'S1', 'labels', { prev: prevOf(700000, 700000), expectations: { changed: true, handle: 'from' } }), null);
+
+    // A pair with an interval still open between the handles draws its two labels as usual.
+    assert.equal(hit(m080, 'S3', 'labels', { prev: prevOf(694000, 700000), expectations: { click: true, changed: true } }), null);
+
+    // Every option the state needs, removed one at a time.
+    const noBarDrag = { ...m080, drag_interval: undefined };
+    assert.equal(hit(noBarDrag, 'S3', 'labels', coincident), null, 'without drag_interval the click moves one handle and the labels stay');
+    const single = { ...m080, type: 'single', to: undefined };
+    assert.equal(hit(single, 'S3', 'labels', coincident), null, 'a single slider has no interval to click');
+    // The mask swallows the click, so the whole-interval path never runs.
+    assert.equal(hit({ ...m080, block: true }, 'S3', 'labels', coincident), null);
+    assert.equal(hit({ ...m080, disable: true }, 'S3', 'labels', coincident), null);
+    // With hide_from_to on, the rule judges that every value label is hidden and never
+    // reports this message, so an entry claiming that cell could never be retired.
+    assert.equal(hit({ ...m080, hide_from_to: true }, 'S3', 'labels', coincident), null);
+
+    // The same click is no excuse for a different rule.
+    assert.equal(hit(m080, 'S3', 'intervals', coincident), null);
+    assert.equal(hit(m080, 'S3', 'grid', coincident), null);
+});
+
+// The labels rule speaks for the text of every label as well as for which of them is drawn.
+// Bug caught: a `what` wide enough to cover "label text", which would annotate away a label
+// reading the wrong value on the very configurations this bug already makes hard to read.
+test('#898 answers for the hidden labels, never for the text of one that is drawn', () => {
+    const m080 = {
+        min: 0, max: 1000000, step: 1000, type: 'double', from: 300000, to: 700000,
+        from_min: 2400, max_interval: 6000, drag_interval: true, grid: true, grid_margin: false,
+        prettify_separator: ',', decorate_both: false, values_separator: ' to ', skin: 'square'
+    };
+    const coincident = { prev: prevOf(700000, 700000), expectations: { click: true, changed: true } };
+    const hidden = 'labels: neither the merged label nor both value labels are visible (expected "one of them", got "neither") after S3';
+    assert.equal(answers(m080, 'S3', 'labels', hidden, coincident), 898);
+
+    for (const message of [
+        'labels: the from label text (expected "548,000", got "700,000") after S3',
+        'labels: the to label text (expected "548,000", got "700,000") after S3',
+        'labels: the merged label text (expected "548,000 to 548,000", got "700,000 to 700,000") after S3',
+        'labels: the max label text (expected "1,000,000", got "1000000") after S3',
+        'labels: the merged label and the from/to labels are visible together (expected "one of them", got "both") after S3'
+    ]) {
+        assert.equal(answers(m080, 'S3', 'labels', message, coincident), null, message);
+    }
+});
+
+// ------------------------------------------------------------------------ judgeStage
+
+// judgeStage is what matrix.spec.mjs calls per stage: it turns a stage's failures into the
+// ones that are still real and the annotations for the ones a filed bug covers, and it fails
+// when a registered entry stops reproducing.
+
+const DISABLED = { min: 0, max: 100, from: 30, step: 1, disable: true };
+const DESTROY_FAILURE = {
+    id: 'destroy',
+    message: 'destroy: destroy() must leave the input enabled (expected false, got true) after S8'
+};
+
+// Bug caught: judgeStage reporting a failure a filed bug already covers, which would leave the
+// matrix red on every known bug and make the suite unrunnable.
+test('judgeStage annotates a failure its register entry was filed for', () => {
+    const { real, annotations } = judgeStage([DESTROY_FAILURE], ctxOf(DISABLED, 'S8'), []);
+    assert.deepEqual(real, []);
+    assert.equal(annotations.length, 1);
+    assert.equal(annotations[0].issue, 886);
+    assert.equal(annotations[0].id, 'destroy');
+    assert.equal(annotations[0].stage, 'S8');
+    assert.equal(annotations[0].message, DESTROY_FAILURE.message);
+});
+
+// Bug caught: judgeStage staying silent when a bug is fixed, so the register would keep
+// excusing a cell that is healthy again and nobody would retire the entry.
+test('judgeStage reports a register entry that no longer reproduces', () => {
+    const { real, annotations } = judgeStage([], ctxOf(DISABLED, 'S8'), []);
+    assert.deepEqual(annotations, []);
+    assert.equal(real.length, 1);
+    assert.equal(real[0].id, 'destroy');
+    assert.match(real[0].message, /#886 no longer reproduces/);
+
+    // A rule the stage did not check at all (no oracle for it) cannot be retired on.
+    assert.deepEqual(judgeStage([], ctxOf(DISABLED, 'S8'), ['destroy']), { real: [], annotations: [] });
+});
+
+// Bug caught: judgeStage matching on the invariant id alone -- a second, unrelated failure of
+// the same rule on a configuration that carries a filed bug would be annotated away with it.
+test('judgeStage keeps a failure whose message the entry was not filed for', () => {
+    const other = {
+        id: 'destroy',
+        message: 'destroy: destroy() must remove the slider container (expected false, got true) after S8'
+    };
+    const { real, annotations } = judgeStage([DESTROY_FAILURE, other], ctxOf(DISABLED, 'S8'), []);
+    assert.equal(annotations.length, 1);
+    assert.deepEqual(real, [other]);
+
+    // On a configuration no entry covers, every failure stays real.
+    const plain = { min: 0, max: 100, from: 30, step: 1 };
+    const bounds = { id: 'bounds', message: 'bounds: from rose above max (expected "<= 100", got 101) after S1' };
+    const judged = judgeStage([bounds], ctxOf(plain, 'S1'), []);
+    assert.deepEqual(judged.real, [bounds]);
+    assert.deepEqual(judged.annotations, []);
+});
+
+// m065 carries both bugs: prettify_enabled is off (#889) and drag_interval with a fixed handle
+// kills the keyboard after the track click (#891). The missing onFinish is #891's, and #889 is
+// listed first -- an id-only lookup hands the failure to the wrong issue.
+// Bug caught: annotating by invariant id alone, which files m065's dead keyboard under the
+// prettify bug and would leave #891 looking as if it no longer reproduced.
+test('the missing onFinish of m065 is answered by #891, not by #889', () => {
+    const m065 = {
+        min: -50, max: 50, step: 5, type: 'double', from: -20, to: 20,
+        from_min: -25, from_max: 10, to_min: -10, to_max: 40, max_interval: 30,
+        to_fixed: true, drag_interval: true, prettify_enabled: false,
+        prefix: '$', postfix: 'k', hide_from_to: true, skin: 'flat'
+    };
+    const failure = {
+        id: 'callbacks',
+        message: 'callbacks: an interaction ends with exactly one onFinish (expected 1, got 0) after S4a'
+    };
+    // The same stage also carries the interval the starting pair breaks (#885), which is what
+    // m065 really reports at S4a; judging the two together is what the matrix does.
+    const interval = {
+        id: 'intervals',
+        message: 'intervals: the handles opened past max_interval (expected "<= 30", got 40) after S4a'
+    };
+    const ctx = ctxOf(m065, 'S4a', { prev: prevOf(-20, 20), expectations: { key: '+', changed: false } });
+
+    assert.equal(matchKnownBug(ctx, 'callbacks', failure.message).issue, 891);
+    const { real, annotations } = judgeStage([failure, interval], ctx, []);
+    assert.deepEqual(real, [], 'the dead keyboard records no payload, so #889 has nothing to retire on');
+    assert.deepEqual(annotations.map((a) => a.issue).sort(), [885, 891]);
 });
