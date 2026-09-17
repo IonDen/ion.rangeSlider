@@ -15,7 +15,7 @@
  *     stage,          // 'S0'..'S8'
  *     prev,           // the State before this stage, or null at S0
  *     expectations    // what the stage promised: { changed }, { changed, handle },
- *                     // { click, changed }, { keys, changed }, { bar, changed },
+ *                     // { click, changed }, { key: '+'|'-', changed }, { bar, changed },
  *                     // { update: true } or { destroyed: true }
  *   }
  *
@@ -30,14 +30,18 @@
  *   values { from, to }
  */
 
-import { decimalsOf, isValuesMode, onScale, rangeOf } from './scale.mjs';
-import { expectedLabel, expectedMerged, valuesEntry } from './format.mjs';
+import { isValuesMode, nearestOnScale, onScale, rangeOf } from './scale.mjs';
+import { expectedGridLabel, expectedLabel, expectedMerged, valuesEntry } from './format.mjs';
 
 /** Values sit on a step grid, so only float representation noise is tolerated. */
 const EPS = 1e-9;
 
-/** The stages of the matrix script that drive the slider through a user interaction. */
-const INTERACTION_STAGES = ['S1', 'S2', 'S3', 'S4', 'S5'];
+/**
+ * The stages of the matrix script that drive the slider through a user interaction:
+ * S1 and S2 the handle drags, S3 the track click, S4a to S4d one key press each (the
+ * keys are pressed one at a time so every press is judged on its own), S5 the bar drag.
+ */
+const INTERACTION_STAGE_PATTERN = /^S[1-5]/;
 
 /** readme settings table default for input_values_separator. */
 const DEFAULT_INPUT_SEPARATOR = ';';
@@ -48,14 +52,13 @@ const DEFAULT_GRID_NUM = 4;
 /** readme settings table: grid_num is "at most 50", and grid_snap is "capped at 50 units". */
 const GRID_UNIT_CAP = 50;
 
-/**
- * A grid label value carrying more decimals than this is treated as a rounding the
- * readme does not describe (a range that does not divide into whole units).
- */
-const GRID_EXACT_DECIMALS = 6;
-
 const isDouble = (cfg) => cfg.type === 'double';
-const isInteraction = (ctx) => INTERACTION_STAGES.indexOf(ctx.stage) >= 0;
+const isInteraction = (ctx) => INTERACTION_STAGE_PATTERN.test(String(ctx.stage));
+/** The direction of the key this stage pressed: 1 for an increase key, -1 for a decrease key, 0 for no key. */
+const keyDirection = (ctx) => {
+    const key = ctx.expectations && ctx.expectations.key;
+    return key === '+' ? 1 : key === '-' ? -1 : 0;
+};
 const alive = (ctx) => !!(ctx.state && ctx.state.container && ctx.state.container.exists);
 const valuesOf = (state) => (state && state.values) || { from: null, to: null };
 const labelOf = (state, name) => (state && state.labels && state.labels[name]) || { text: '', visible: false };
@@ -102,10 +105,13 @@ function moved(ctx) {
 /**
  * Number of grid units, per readme grid_num / grid_snap / values.
  *
+ * Exported for the known-bug register, whose grid entry has to walk the same unit
+ * boundaries this rule checks (a second copy of the rule there could drift from it).
+ *
  * @param {object} cfg
  * @returns {number}
  */
-function gridUnits(cfg) {
+export function gridUnits(cfg) {
     const { min, max, step } = rangeOf(cfg);
     // readme note "values": "The grid gets one labelled tick per entry, up to the
     // 50-unit cap, because grid_num and grid_snap are set for you."
@@ -120,45 +126,48 @@ function gridUnits(cfg) {
 }
 
 /**
- * The evenly spaced unit boundaries of a range.
+ * The values the grid's unit boundaries carry.
  *
- * readme settings table, grid_num: "A labelled tick mark sits at each unit
- * boundary". When the range does not divide into whole units the boundary values
- * carry a rounding the readme never describes; `exact` reports that, and the grid
- * rule then compares only the two ends (characterization gap).
+ * readme settings table, grid_num: "A labelled tick mark sits at each unit boundary",
+ * and note "step": "Every value is min plus a whole number of steps, rounded to the
+ * decimals of step". A boundary is a value like any other, so an evenly spaced
+ * position that falls between two scale points is labelled with the point it sits on:
+ * on min 0.5 / step 1 the boundary at 50 % of the range is 5.5, which the slider
+ * cannot hold, and the tick there reads 6. The last boundary is max itself, which the
+ * scale only reaches when the range divides into whole steps.
  *
- * @param {number} min
- * @param {number} max
+ * @param {object} cfg
  * @param {number} units
- * @returns {{values: number[], exact: boolean}}
+ * @returns {number[]}   one value per boundary, units + 1 of them
  */
-function evenlySpaced(min, max, units) {
-    const span = (max - min) / units;
+function gridUnitValues(cfg, units) {
+    const { min, max } = rangeOf(cfg);
     const values = [];
-    let exact = true;
-    for (let i = 0; i <= units; i++) {
-        const raw = min + i * span;
-        const cleaned = Number(raw.toPrecision(12));
-        if (!Number.isFinite(cleaned) || Math.abs(cleaned - raw) > EPS || decimalsOf(cleaned) > GRID_EXACT_DECIMALS) exact = false;
-        values.push(cleaned);
+    for (let i = 0; i < units; i++) {
+        values.push(nearestOnScale(min + (i * (max - min)) / units, cfg));
     }
-    return { values, exact };
+    values.push(max);
+    return values;
 }
 
 /**
- * Where a key move of one handle stops.
+ * Where one handle may travel: the lowest and highest value a single key press can
+ * land it on.
  *
  * readme settings table: min/max, from_min/from_max/to_min/to_max ("limit for the
  * ... handle"), min_interval/max_interval ("interval between the handles"), and from
  * being "the left one" with to "the right one".
  *
- * @param {number} wanted   the value the key move asked for
+ * Exported for the known-bug register, whose keyboard entry has to ask where a press
+ * would be stopped -- a press that lands on a stop hides the bug it carries, and a
+ * second copy of this arithmetic there could drift from this one.
+ *
  * @param {'from'|'to'} target
  * @param {object} cfg
  * @param {number|null} other   the value of the handle that did not move
- * @returns {number}
+ * @returns {{lo: number, hi: number}}
  */
-function clampKeyTarget(wanted, target, cfg, other) {
+export function keyStops(target, cfg, other) {
     const { min, max } = rangeOf(cfg);
     const minInterval = isNumber(cfg.min_interval) && cfg.min_interval > 0 ? cfg.min_interval : 0;
     const maxInterval = isNumber(cfg.max_interval) && cfg.max_interval > 0 ? cfg.max_interval : 0;
@@ -180,7 +189,7 @@ function clampKeyTarget(wanted, target, cfg, other) {
             if (maxInterval) hi = Math.min(hi, other + maxInterval);
         }
     }
-    return Math.min(Math.max(wanted, lo), hi);
+    return { lo, hi };
 }
 
 export const INVARIANTS = [
@@ -264,7 +273,7 @@ export const INVARIANTS = [
 
     {
         id: 'intervals',
-        readme: 'settings table: min_interval "Smallest interval between the handles. 0 means no limit. Double type only", max_interval "Largest interval between the handles"',
+        readme: 'settings table: min_interval "Smallest interval between the handles. 0 means no limit. Double type only", max_interval "Largest interval between the handles", drag_interval "Let the user drag the whole interval by its bar. Double type only"',
         check(ctx) {
             if (!alive(ctx) || !isDouble(ctx.cfg)) return [];
             const { cfg, stage } = ctx;
@@ -278,6 +287,18 @@ export const INVARIANTS = [
             }
             if (isNumber(cfg.max_interval) && cfg.max_interval > 0 && gap > cfg.max_interval + EPS) {
                 msgs.push(report('intervals', 'the handles opened past max_interval', `<= ${cfg.max_interval}`, gap, stage));
+            }
+
+            // readme settings table, drag_interval: "Let the user drag the whole
+            // interval by its bar" -- S5 drags the bar, so the pair keeps the width it
+            // had before. When a bound or a limit stops the drag it stops BOTH handles
+            // together and the width still holds; one handle stopping while the other
+            // follows the pointer stretches the interval, which is what this reports.
+            if (stage === 'S5' && ctx.prev) {
+                const was = valuesOf(ctx.prev);
+                if (isNumber(was.from) && isNumber(was.to) && !near(gap, was.to - was.from)) {
+                    msgs.push(report('intervals', 'a bar drag moves the whole interval, so its width is unchanged', was.to - was.from, gap, stage));
+                }
             }
             return msgs;
         }
@@ -362,6 +383,15 @@ export const INVARIANTS = [
     {
         id: 'labels',
         readme: 'settings table: hide_from_to "Hide the from and to value labels", hide_min_max "Hide the min and max labels", decorate_both and values_separator for the merged label, prefix/postfix/min_prefix/max_prefix/max_postfix and the prettify options for the text',
+        // Coincident handles (from === to) are the one case where a double slider shows
+        // neither both value labels nor their merged pair: the plugin draws the from
+        // label alone, hides the to label behind it and leaves the merged label hidden
+        // with its "50 - 50" text unused. Characterization -- the readme describes the
+        // merged label for handles that COLLIDE and says nothing about handles that sit
+        // on the same value, and one number for a zero-width interval is a defensible
+        // reading of it. Accepted only while the two values are equal, and the text of
+        // that lone label is still pinned to the from value below, so a label that
+        // stopped rendering or started reading the wrong value is still reported.
         check(ctx) {
             if (!alive(ctx)) return [];
             const { cfg, stage, state } = ctx;
@@ -387,9 +417,14 @@ export const INVARIANTS = [
                 const fromLabel = labelOf(state, 'from');
                 const toLabel = labelOf(state, 'to');
 
+                // The coincident-handle rendering documented on this rule: with from on
+                // the same value as to, the from label alone is what the plugin draws.
+                const coincident = isNumber(from) && isNumber(to) && near(from, to);
+                const lonelyFrom = coincident && fromLabel.visible && !toLabel.visible;
+
                 if (merged.visible && (fromLabel.visible || toLabel.visible)) {
                     msgs.push(report('labels', 'the merged label and the from/to labels are visible together', 'one of them', 'both', stage));
-                } else if (!merged.visible && !(fromLabel.visible && toLabel.visible)) {
+                } else if (!merged.visible && !(fromLabel.visible && toLabel.visible) && !lonelyFrom) {
                     msgs.push(report('labels', 'neither the merged label nor both value labels are visible', 'one of them', 'neither', stage));
                 }
 
@@ -453,30 +488,17 @@ export const INVARIANTS = [
 
             if (isValuesMode(cfg)) {
                 texts.forEach((text, i) => {
-                    const wanted = expectedLabel(i, cfg, 'grid');
+                    const wanted = expectedGridLabel(i, cfg);
                     if (text !== wanted) msgs.push(report('grid', `the grid label at index ${i}`, wanted, text, stage));
                 });
                 return msgs;
             }
 
-            const { min, max } = rangeOf(cfg);
-            const { values, exact } = evenlySpaced(min, max, units);
-            if (exact) {
-                texts.forEach((text, i) => {
-                    const wanted = expectedLabel(values[i], cfg, 'grid');
-                    if (text !== wanted) msgs.push(report('grid', `the grid label at unit ${i}`, wanted, text, stage));
-                });
-            } else {
-                // Characterization gap: the readme does not say how a boundary value is
-                // rounded when the range does not divide into whole units, so only the
-                // two ends -- min and max, which are boundaries in every case -- are
-                // pinned here. The contract grid tests carry the observed middle values.
-                const ends = [[0, min], [texts.length - 1, max]];
-                for (const [i, value] of ends) {
-                    const wanted = expectedLabel(value, cfg, 'grid');
-                    if (texts[i] !== wanted) msgs.push(report('grid', `the grid label at unit ${i}`, wanted, texts[i], stage));
-                }
-            }
+            const values = gridUnitValues(cfg, units);
+            texts.forEach((text, i) => {
+                const wanted = expectedGridLabel(values[i], cfg);
+                if (text !== wanted) msgs.push(report('grid', `the grid label at unit ${i}`, wanted, text, stage));
+            });
             return msgs;
         }
     },
@@ -513,7 +535,13 @@ export const INVARIANTS = [
                 if (handles.from || handles.to) msgs.push(report('dom', 'single type must not render the from/to handles', 'single', Object.keys(handles), stage));
             }
 
-            if (!!state.mask !== !!cfg.disable) msgs.push(report('dom', 'the disable mask belongs to disable only', !!cfg.disable, !!state.mask, stage));
+            // Both inert states are masked: disable and block put the same
+            // .irs-disable-mask over the slider (pinned by smoke.spec.mjs, "disable
+            // shows the mask and disables the input; block keeps the input enabled").
+            // Only disable reaches the input, which is the whole difference the readme
+            // draws between the two rows.
+            const inert = !!(cfg.disable || cfg.block);
+            if (!!state.mask !== inert) msgs.push(report('dom', 'the mask covers a disabled or blocked slider and nothing else', inert, !!state.mask, stage));
 
             const input = state.input || {};
             if (!!input.disabled !== !!cfg.disable) msgs.push(report('dom', 'the input is disabled only with disable', !!cfg.disable, !!input.disabled, stage));
@@ -563,13 +591,30 @@ export const INVARIANTS = [
                     if (count(noisy)) msgs.push(report('callbacks', `${noisy} must not fire from destroy()`, 0, count(noisy), stage));
                 }
             } else if (isInteraction(ctx) && ctx.prev) {
-                const changed = moved(ctx);
+                // A key stage is one press, so what it changed is read off the state
+                // the matrix took right after that press; a drag or a click is judged
+                // on the movement between its own two states.
+                const isPress = keyDirection(ctx) !== 0;
+                const changed = isPress ? !!expectations.changed : moved(ctx);
                 if (inert) {
                     // A disabled or blocked slider has no interaction to report.
                     if (count('onChange')) msgs.push(report('callbacks', 'onChange must not fire on a disabled or blocked slider', 0, count('onChange'), stage));
                     if (count('onFinish')) msgs.push(report('callbacks', 'onFinish must not fire on a disabled or blocked slider', 0, count('onFinish'), stage));
                 } else {
-                    if (changed && count('onChange') < 1) {
+                    if (isPress) {
+                        // readme onChange: "Fires on each value change made by the
+                        // user"; onFinish: "...or a key is pressed". One press is one
+                        // interaction and at most one value change, so a press that
+                        // moved a handle owes exactly one of each, and a press that
+                        // moved nothing owes the onFinish alone -- the half
+                        // smoke.spec.mjs pins as "an arrow key press at the range edge
+                        // fires onFinish only, no onChange (#851)".
+                        if (changed && count('onChange') !== 1) {
+                            msgs.push(report('callbacks', 'a key press that changed the value fires onChange once', 1, count('onChange'), stage));
+                        }
+                    } else if (changed && count('onChange') < 1) {
+                        // A drag reports every intermediate value it passes through, so
+                        // its onChange count is only bounded from below.
                         msgs.push(report('callbacks', 'a value the user changed must fire onChange', '1 or more', 0, stage));
                     }
                     if (!changed && count('onChange')) {
@@ -643,13 +688,20 @@ export const INVARIANTS = [
         id: 'keys',
         readme: 'settings table: keyboard "Keyboard controls. Left: left arrow, down arrow, A, S. Right: right arrow, up arrow, W, D"; step "Step size"; the limits and intervals stop the move',
         check(ctx) {
-            const expectations = ctx.expectations || {};
-            if (!alive(ctx) || !ctx.prev || !Array.isArray(expectations.keys) || !expectations.changed) return [];
+            // One press per stage (S4a to S4d), so this judges a single press: the
+            // matrix waits out the idle render tick between presses. A burst judged on
+            // its net effect could not tell a press that moved two steps from one that
+            // moved none.
+            const direction = keyDirection(ctx);
+            if (!alive(ctx) || !ctx.prev || !direction) return [];
+
+            // A press that moved nothing leaves no trace of which handle it targeted
+            // (in double type that is the last touched handle, which the State does not
+            // expose), and a press blocked by a bound, a fixed handle or an inert
+            // slider is allowed to do nothing. The callbacks rule judges those.
+            if (!ctx.expectations.changed) return [];
 
             const { cfg, stage, state } = ctx;
-            const net = expectations.keys.reduce((sum, key) => sum + (key === '+' ? 1 : key === '-' ? -1 : 0), 0);
-            if (!net) return [];
-
             const { step } = rangeOf(cfg);
             const now = valuesOf(state);
             const before = valuesOf(ctx.prev);
@@ -660,18 +712,17 @@ export const INVARIANTS = [
             // readme promises a width-preserving move rather than one targeted handle.
             if (fromMoved && toMoved) return [];
 
-            // With nothing moved in double type the targeted handle is the last touched
-            // one, which the State does not expose; single type always targets from.
-            const target = fromMoved ? 'from' : toMoved ? 'to' : (isDouble(cfg) ? null : 'from');
-            if (!target) return [];
-            if (!isNumber(before[target])) return [];
+            const target = fromMoved ? 'from' : toMoved ? 'to' : null;
+            if (!target || !isNumber(before[target])) return [];
 
             const other = target === 'from' ? now.to : now.from;
-            const wanted = clampKeyTarget(before[target] + net * step, target, cfg, other);
+            const stops = keyStops(target, cfg, other);
+            const wanted = Math.min(Math.max(before[target] + direction * step, stops.lo), stops.hi);
             const actual = now[target];
 
             if (!isNumber(actual) || !near(actual, wanted)) {
-                return [report('keys', `${expectations.keys.length} key press(es) must move ${target} by ${net} step(s) unless a bound, limit or interval stops it`, wanted, actual, stage)];
+                const which = direction > 0 ? 'increase' : 'decrease';
+                return [report('keys', `one ${which} key press must move ${target} by one step of ${step} from ${before[target]} unless a bound, limit or interval stops it`, wanted, actual, stage)];
             }
             return [];
         }
@@ -693,8 +744,11 @@ export const INVARIANTS = [
                 if (isDouble(cfg) && now.to !== before.to) msgs.push(report('inert', 'a disabled or blocked slider changed its to value', before.to, now.to, stage));
             }
 
-            if (!!state.mask !== !!cfg.disable) {
-                msgs.push(report('inert', 'the disable mask belongs to disable, not to block', !!cfg.disable, !!state.mask, stage));
+            // The mask marks both inert states; the input is what tells them apart
+            // (readme: disable turns the input off "so its value is not submitted with
+            // the form", block keeps it enabled and submitted).
+            if (!state.mask) {
+                msgs.push(report('inert', 'a disabled or blocked slider is covered by the mask', true, !!state.mask, stage));
             }
             const input = state.input || {};
             if (!!input.disabled !== !!cfg.disable) {

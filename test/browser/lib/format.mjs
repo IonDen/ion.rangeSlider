@@ -127,14 +127,21 @@ function prettyText(value, cfg, surface) {
  * "Postfix for values: 100k"; max_postfix "Postfix for the maximum value only:
  * 0 - 100+".
  *
+ * max_postfix and postfix are written one after the other, with nothing between them:
+ * neither row asks for a separator, so "100+" followed by "k" is "100+k" and a postfix
+ * that already opens with a space carries the only space ("100+ years"). The plugin
+ * inserts a space of its own there, which doubles the space of the site's own age demo
+ * (postfix " years") -- issue #884. Encoding that space here would make the oracle agree
+ * with the defect and hide it from the matrix, so this function stays on the readme's
+ * side and the register carries the bug.
+ *
  * Two points the readme leaves open, pinned here as characterization of the shipped
  * behaviour (the readme never shows the decorations combined):
  *   - min_prefix and max_prefix sit outside prefix, and are mutually exclusive per
  *     call, so a degenerate min === max resolves to min_prefix;
- *   - a single space separates max_postfix from postfix ("100+ k").
- * The readme is also silent on which labels the min/max prefixes reach; the
- * decision is taken on the VALUE, so a handle sitting on max is decorated like the
- * max label. Both are still able to fail: a change to either one reds the tests in
+ *   - the readme is silent on which labels the min/max prefixes reach; the decision is
+ *     taken on the VALUE, so a handle sitting on max is decorated like the max label.
+ * Both are still able to fail: a change to either one reds the tests in
  * test/unit/browser-lib.test.mjs.
  *
  * @param {string} text    already formatted value text
@@ -151,10 +158,7 @@ export function decorate(text, value, cfg, surface) {
     else if (cfg.max_prefix && value === max) out += cfg.max_prefix;
     if (cfg.prefix) out += cfg.prefix;
     out += text;
-    if (cfg.max_postfix && value === max) {
-        out += cfg.max_postfix;
-        if (cfg.postfix) out += ' ';
-    }
+    if (cfg.max_postfix && value === max) out += cfg.max_postfix;
     if (cfg.postfix) out += cfg.postfix;
     return out;
 }
@@ -169,6 +173,30 @@ export function decorate(text, value, cfg, surface) {
  */
 export function expectedLabel(value, cfg, surface = 'handle') {
     return decorate(prettyText(value, cfg, surface), value, cfg, surface);
+}
+
+/**
+ * The text a GRID tick should carry for a value.
+ *
+ * The grid is the one surface that is formatted but never decorated: readme
+ * settings table documents prefix ("Prefix for values: $100"), postfix, min_prefix,
+ * max_prefix and max_postfix as decorations of a VALUE label, while the grid rows
+ * (grid, grid_num, grid_snap) and the values note say nothing about them. The plugin
+ * agrees -- with {min: 0, max: 100, from: 30, grid: true, prefix: '$', postfix: 'k'}
+ * the min and max labels read "$0k" and "$100k" while the grid reads 0, 25, 50, 75,
+ * 100. Characterization: the readme does not say whether grid labels are decorated;
+ * the plugin never has.
+ *
+ * The formatting itself is the documented chain: prettify_grid, then prettify, then
+ * the built-in number formatting (readme note "prettify_grid"), and in values mode the
+ * entry at the index through prettify_all_values (readme note "values").
+ *
+ * @param {number} value   a number, or an index in values mode
+ * @param {object} cfg
+ * @returns {string}
+ */
+export function expectedGridLabel(value, cfg) {
+    return prettyText(value, cfg, 'grid');
 }
 
 /**

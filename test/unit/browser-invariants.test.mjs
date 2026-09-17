@@ -216,6 +216,34 @@ test('intervals: a gap over max_interval is reported', () => {
     assert.ok(ids(ctxOf(doubleState(), cfg, 'S2')).includes('intervals'));
 });
 
+// #877: readme settings table, drag_interval: "Let the user drag the whole interval by
+// its bar. Double type only" -- the bar moves the pair, so the interval keeps the width
+// it had before the drag. A limit stops both handles together; one handle stopping
+// while the other keeps following the pointer is the stretch this reports.
+// Bug caught: the "both" branch clamping each handle on its own, so a bar drag against
+// from_max leaves from behind and stretches the interval (the trailing-edge stretch).
+test('intervals: a bar drag keeps the interval width', () => {
+    const cfg = { type: 'double', min: 0, max: 100, step: 5, drag_interval: true, from_max: 30 };
+    const prev = doubleState();                                   // 20 to 40, width 20
+    const withPair = (from, to) => doubleState({
+        values: { from, to },
+        input: { value: `${from};${to}`, dataFrom: from, dataTo: to },
+        labels: { from: { text: String(from) }, to: { text: String(to) } }
+    });
+
+    const together = withPair(25, 45);
+    assert.ok(!ids(ctxOf(together, cfg, 'S5', prev, { bar: true, changed: true })).includes('intervals'));
+
+    const stopped = withPair(30, 50);                             // both stopped at from_max
+    assert.ok(!ids(ctxOf(stopped, cfg, 'S5', prev, { bar: true, changed: true })).includes('intervals'));
+
+    const stretched = withPair(30, 60);                           // from stopped, to ran on
+    assert.ok(ids(ctxOf(stretched, cfg, 'S5', prev, { bar: true, changed: true })).includes('intervals'));
+
+    // A handle drag is free to change the width: only the bar drag stage is judged.
+    assert.ok(!ids(ctxOf(stretched, cfg, 'S2', prev, { changed: true, handle: 'to' })).includes('intervals'));
+});
+
 // ---------------------------------------------------------------------- fixed
 
 // readme settings table: from_fixed "Fix the position of the from handle".
@@ -307,6 +335,40 @@ test('labels: in double type exactly one of the merged label and the pair is vis
     assert.ok(ids(ctxOf(none, DOUBLE, 'S2')).includes('labels'));
 });
 
+// #877 n035/n037. With the two handles on the same value the plugin draws the from
+// label alone: the to label is hidden behind it and the merged label, though it holds
+// "50 - 50", is hidden too. Characterization -- the readme describes the merged label
+// for handles that collide but says nothing about handles that sit on one value, and a
+// zero-width interval showing one number is a defensible reading. The rule accepts it
+// only while from equals to, and still pins the text.
+// Bug caught: accepting a lone from label on a slider whose handles are apart (a to
+// label that stopped rendering would go unreported), or accepting any text in it.
+test('labels: with from equal to to the lone from label is accepted, with its own text', () => {
+    const coincident = (fromText) => doubleState({
+        input: { value: '50;50', dataFrom: 50, dataTo: 50 },
+        labels: {
+            single: { text: '50 — 50', visible: false },
+            from: { text: fromText, visible: true },
+            to: { text: '50', visible: false }
+        },
+        values: { from: 50, to: 50 }
+    });
+    assert.ok(!ids(ctxOf(coincident('50'), DOUBLE, 'S0')).includes('labels'));
+    assert.ok(ids(ctxOf(coincident('51'), DOUBLE, 'S0')).includes('labels'), 'the lone from label must still read the from value');
+
+    // Handles apart: a single visible from label is still the "neither" case.
+    const apart = doubleState({ labels: { to: { visible: false } } });
+    assert.ok(ids(ctxOf(apart, DOUBLE, 'S2')).includes('labels'));
+
+    // Coincident handles with nothing visible at all stay a finding.
+    const blank = doubleState({
+        input: { value: '50;50', dataFrom: 50, dataTo: 50 },
+        labels: { single: { visible: false }, from: { text: '50', visible: false }, to: { visible: false } },
+        values: { from: 50, to: 50 }
+    });
+    assert.ok(ids(ctxOf(blank, DOUBLE, 'S0')).includes('labels'));
+});
+
 // Bug caught: merging with the wrong separator, or decorating only one side.
 test('labels: the merged label text follows values_separator and decorate_both', () => {
     const cfg = { ...DOUBLE, prefix: '$', values_separator: ' to ', decorate_both: true };
@@ -372,6 +434,31 @@ test('grid: grid_snap gives one unit per step, capped at 50', () => {
     assert.ok(ids(ctxOf(base({ grid: { present: true, texts: capTexts.slice(0, 50), visibleTexts: [], pols: 51 } }), capped, 'S0')).includes('grid'));
 });
 
+// #877 B1. readme settings table: prefix/postfix/min_prefix/max_prefix/max_postfix
+// are all documented "for values"; the grid rows say nothing about decoration, and the
+// plugin draws its ticks through the prettify chain alone (with prefix "$" and postfix
+// "k" the min/max labels read "$0k"/"$100k" while the grid reads 0, 25, 50, 75, 100).
+// Characterization: the readme does not say whether grid labels are decorated; the
+// plugin never has.
+// Bug caught: running a grid label through decorate(), which reds every decorated
+// entry of the matrix against labels the plugin never draws that way.
+test('grid: the tick labels are prettified but not decorated', () => {
+    const cfg = { min: 0, max: 100, step: 1, grid: true, prefix: '$', postfix: 'k', max_postfix: '+', min_prefix: 'From: ', max_prefix: 'Up to: ' };
+    const plain = ['0', '25', '50', '75', '100'];
+    const state = base({
+        grid: { present: true, texts: plain, visibleTexts: plain, pols: 21 },
+        labels: { single: { text: '$30k' }, min: { text: 'From: $0k' }, max: { text: 'Up to: $100+k' } }
+    });
+    assert.ok(!ids(ctxOf(state, cfg, 'S0')).includes('grid'));
+
+    const decorated = ['$0k', '$25k', '$50k', '$75k', '$100k'];
+    const wrong = base({
+        grid: { present: true, texts: decorated, visibleTexts: decorated, pols: 21 },
+        labels: { single: { text: '$30k' }, min: { text: 'From: $0k' }, max: { text: 'Up to: $100+k' } }
+    });
+    assert.ok(ids(ctxOf(wrong, cfg, 'S0')).includes('grid'));
+});
+
 // readme note "values": "The grid gets one labelled tick per entry".
 // Bug caught: labelling the grid with indexes instead of entries.
 test('grid: values mode gets one label per entry, showing the entries', () => {
@@ -383,16 +470,47 @@ test('grid: values mode gets one label per entry, showing the entries', () => {
     assert.ok(ids(ctxOf(indexed, cfg, 'S0')).includes('grid'));
 });
 
-// The readme does not say how a grid label value is rounded when the range does not
-// divide into whole units, so the middle labels are a characterization gap: only the
-// count and the two ends are checked there.
-// Bug caught: an empty grid on a non-dividing range (the count check still fires).
-test('grid: a range that does not divide is checked on its count and its ends only', () => {
-    const cfg = { min: 0, max: 100, step: 1, grid: true, grid_num: 3 };
-    const odd = ['0', '33.3', '66.7', '100'];
-    assert.ok(!ids(ctxOf(base({ grid: { present: true, texts: odd, visibleTexts: odd, pols: 16 } }), cfg, 'S0')).includes('grid'));
+// #877 B2. readme note "step": "Every value is min plus a whole number of steps,
+// rounded to the decimals of step ... min: 0.5, step: 1 gives 0.5, 2, 3, 4". A grid
+// unit boundary is a value like any other, so the boundary at 50 % of a 0.5..10.5
+// range -- 5.5, which the slider cannot hold -- is labelled 6, and the last boundary
+// is max itself.
+// Bug caught: labelling the boundaries with the raw evenly-spaced arithmetic
+// (0.5, 1.5, 2.5 ...), which no slider on this scale can reach.
+test('grid: the unit boundaries sit on the step scale, and the last one is max', () => {
+    const cfg = { min: 0.5, max: 10.5, step: 1, grid: true, grid_num: 10 };
+    const onScaleTexts = ['0.5', '2', '3', '4', '5', '6', '7', '8', '9', '10', '10.5'];
+    assert.ok(!ids(ctxOf(base({ grid: { present: true, texts: onScaleTexts, visibleTexts: onScaleTexts, pols: 11 } }), cfg, 'S0')).includes('grid'));
 
-    const wrongEnd = base({ grid: { present: true, texts: ['0', '33.3', '66.7', '99'], visibleTexts: [], pols: 16 } });
+    const rawSpacing = ['0.5', '1.5', '2.5', '3.5', '4.5', '5.5', '6.5', '7.5', '8.5', '9.5', '10.5'];
+    assert.ok(ids(ctxOf(base({ grid: { present: true, texts: rawSpacing, visibleTexts: [], pols: 11 } }), cfg, 'S0')).includes('grid'));
+});
+
+// Same readme sentence, second example: "min: 1.2, step: 4 gives 1.2, 5, 9, 13".
+// Bug caught: rounding the boundary to the decimals of the boundary itself instead of
+// snapping it to the scale (6.2 and 11.2 would pass, though the slider holds 5 and 13).
+test('grid: a min 1.2 step 4 scale labels its boundaries 1.2, 5, 13, 17 and max', () => {
+    const cfg = { min: 1.2, max: 21.2, step: 4, grid: true, grid_num: 4 };
+    const snapped = ['1.2', '5', '13', '17', '21.2'];
+    assert.ok(!ids(ctxOf(base({ grid: { present: true, texts: snapped, visibleTexts: snapped, pols: 9 } }), cfg, 'S0')).includes('grid'));
+
+    const unsnapped = ['1.2', '6.2', '11.2', '16.2', '21.2'];
+    assert.ok(ids(ctxOf(base({ grid: { present: true, texts: unsnapped, visibleTexts: [], pols: 9 } }), cfg, 'S0')).includes('grid'));
+});
+
+// A range that does not divide into whole units is no longer a characterization gap:
+// every boundary is a value on the step scale, so every label has an expected text.
+// Bug caught: checking only the first and last label, which would let the three
+// middle ticks of a 0..100 grid_num 3 slider read anything at all.
+test('grid: every label of a non-dividing range is checked, not just the ends', () => {
+    const cfg = { min: 0, max: 100, step: 1, grid: true, grid_num: 3 };
+    const snapped = ['0', '33', '67', '100'];
+    assert.ok(!ids(ctxOf(base({ grid: { present: true, texts: snapped, visibleTexts: snapped, pols: 16 } }), cfg, 'S0')).includes('grid'));
+
+    const middleOff = base({ grid: { present: true, texts: ['0', '33.3', '66.7', '100'], visibleTexts: [], pols: 16 } });
+    assert.ok(ids(ctxOf(middleOff, cfg, 'S0')).includes('grid'));
+
+    const wrongEnd = base({ grid: { present: true, texts: ['0', '33', '67', '99'], visibleTexts: [], pols: 16 } });
     assert.ok(ids(ctxOf(wrongEnd, cfg, 'S0')).includes('grid'));
 });
 
@@ -420,17 +538,28 @@ test('dom: the handles rendered must match the type', () => {
     assert.ok(ids(ctxOf(base(), DOUBLE, 'S0')).includes('dom'));
 });
 
-// readme settings table: disable "Disable the slider and the input"; block "Block
-// the slider but keep the input enabled".
-// Bug caught: block disabling the input, so its value stops being submitted.
-test('dom: the mask and the disabled input belong to disable only', () => {
+// #877 B3. readme settings table: disable "Disable the slider and the input, so its
+// value is not submitted with the form"; block "Block the slider but keep the input
+// enabled. Value is still submitted with the form". Both states cover the slider with
+// the same mask -- smoke.spec.mjs pins it ("disable shows the mask and disables the
+// input; block keeps the input enabled") -- and only disable reaches the input.
+// Bug caught: block disabling the input, so its value stops being submitted; and the
+// mirror mistake of reading the mask as a disable-only marker, which reds every
+// blocked entry of the matrix.
+test('dom: the mask follows disable or block, the disabled input follows disable alone', () => {
     const blocked = { min: 0, max: 100, step: 1, block: true };
-    assert.ok(!ids(ctxOf(base(), blocked, 'S0')).includes('dom'));
-    assert.ok(ids(ctxOf(base({ mask: true, input: { disabled: true } }), blocked, 'S0')).includes('dom'));
+    assert.ok(!ids(ctxOf(base({ mask: true }), blocked, 'S0')).includes('dom'));
+    assert.ok(ids(ctxOf(base(), blocked, 'S0')).includes('dom'), 'a blocked slider without its mask');
+    assert.ok(ids(ctxOf(base({ mask: true, input: { disabled: true } }), blocked, 'S0')).includes('dom'), 'block must not disable the input');
 
     const disabled = { min: 0, max: 100, step: 1, disable: true };
     assert.ok(!ids(ctxOf(base({ mask: true, input: { disabled: true } }), disabled, 'S0')).includes('dom'));
-    assert.ok(ids(ctxOf(base(), disabled, 'S0')).includes('dom'));
+    assert.ok(ids(ctxOf(base({ mask: true }), disabled, 'S0')).includes('dom'), 'disable must disable the input');
+    assert.ok(ids(ctxOf(base({ input: { disabled: true } }), disabled, 'S0')).includes('dom'), 'a disabled slider without its mask');
+
+    const plain = { min: 0, max: 100, step: 1 };
+    assert.ok(!ids(ctxOf(base(), plain, 'S0')).includes('dom'));
+    assert.ok(ids(ctxOf(base({ mask: true }), plain, 'S0')).includes('dom'), 'a mask on a slider that is neither disabled nor blocked');
 });
 
 // ------------------------------------------------------------------ callbacks
@@ -559,43 +688,134 @@ test('callbacks: only the entries recorded since the previous state are judged',
     assert.ok(!ids(ctxOf(state, SINGLE, 'S3', prev, { click: true, changed: false })).includes('callbacks'));
 });
 
+// #877 B4-B6. readme settings table, onFinish: "Fires when an interaction ends: a
+// handle is released (even without moving), the track ... is clicked, or a key is
+// pressed"; onChange: "Fires on each value change made by the user". One press is one
+// interaction and at most one value change.
+// Bug caught: letting the 300 ms idle render loop fold several presses into one
+// callback pair, so a caller that logs each change sees one entry for four presses.
+test('callbacks: a key press that moved the value gives exactly one onChange and one onFinish', () => {
+    const cfg = { min: 0, max: 100, step: 5 };
+    const prev = afterPress(10, INIT_EVENTS);
+
+    const one = afterPress(15, [...INIT_EVENTS, ...pressEvents(15)]);
+    assert.ok(!ids(ctxOf(one, cfg, 'S4a', prev, { key: '+', changed: true })).includes('callbacks'));
+
+    const noFinish = afterPress(15, [...INIT_EVENTS, ...pressEvents(15).slice(0, 1)]);
+    assert.ok(ids(ctxOf(noFinish, cfg, 'S4a', prev, { key: '+', changed: true })).includes('callbacks'));
+
+    const twoFinishes = afterPress(15, [...INIT_EVENTS, ...pressEvents(15), ...pressEvents(15).slice(1)]);
+    assert.ok(ids(ctxOf(twoFinishes, cfg, 'S4a', prev, { key: '+', changed: true })).includes('callbacks'));
+
+    const twoChanges = afterPress(15, [...INIT_EVENTS, ...pressEvents(15).slice(0, 1), ...pressEvents(15)]);
+    assert.ok(ids(ctxOf(twoChanges, cfg, 'S4a', prev, { key: '+', changed: true })).includes('callbacks'));
+});
+
+// Same two readme rows from the other side, and the half smoke.spec.mjs already pins:
+// "an arrow key press at the range edge fires onFinish only, no onChange (#851)".
+// Bug caught: dropping the "did from/to actually change" check from drawHandles()'s
+// onChange condition, or swallowing the onFinish a blocked press still owes.
+test('callbacks: a key press that moved nothing gives no onChange and still one onFinish', () => {
+    const cfg = { min: 0, max: 100, step: 5 };
+    const prev = afterPress(0, INIT_EVENTS);
+    const finishOnly = cb('onFinish', { from: 0, from_pretty: '0', from_percent: 0 });
+
+    const quiet = afterPress(0, [...INIT_EVENTS, finishOnly]);
+    assert.ok(!ids(ctxOf(quiet, cfg, 'S4d', prev, { key: '-', changed: false })).includes('callbacks'));
+
+    const silent = afterPress(0, [...INIT_EVENTS]);
+    assert.ok(ids(ctxOf(silent, cfg, 'S4d', prev, { key: '-', changed: false })).includes('callbacks'));
+
+    const noisy = afterPress(0, [...INIT_EVENTS, cb('onChange', { from: 0, from_pretty: '0', from_percent: 0 }), finishOnly]);
+    assert.ok(ids(ctxOf(noisy, cfg, 'S4d', prev, { key: '-', changed: false })).includes('callbacks'));
+});
+
 // ----------------------------------------------------------------------- keys
 
-// readme settings table: keyboard "Keyboard controls. Left: <-, v, A, S. Right: ->,
-// ^, W, D", with step as the unit of movement.
-// Bug caught: adding a real-percent step to a fake-percent pointer, which doubles
-// the key step (#696/#825).
-test('keys: the targeted value moves by the net number of steps', () => {
-    const cfg = { min: 0, max: 100, step: 5 };
-    const prev = base({ values: { from: 10 }, input: { value: '10', dataFrom: 10 }, labels: { single: { text: '10' } }, events: INIT_EVENTS });
-    const events = [...INIT_EVENTS, cb('onChange', { from: 20, from_pretty: '20', from_percent: 20 }), cb('onFinish', { from: 20, from_pretty: '20', from_percent: 20 })];
-    const moved = base({ values: { from: 20 }, input: { value: '20', dataFrom: 20 }, labels: { single: { text: '20' } }, events });
-    assert.ok(!ids(ctxOf(moved, cfg, 'S4', prev, { keys: ['+', '+', '+', '-'], changed: true })).includes('keys'));
+// #877 B4-B6: the matrix presses the four keys of S4 one at a time, 400 ms apart, and
+// reads a state after each press, so every rule below judges ONE press (stages S4a to
+// S4d) instead of the net effect of a burst.
 
-    const doubled = base({
-        values: { from: 30 }, input: { value: '30', dataFrom: 30 },
-        events: [...INIT_EVENTS, cb('onChange'), cb('onFinish')]
-    });
-    assert.ok(ids(ctxOf(doubled, cfg, 'S4', prev, { keys: ['+', '+', '+', '-'], changed: true })).includes('keys'));
+/** A single-type state at `value`, with the events of one settled key press. */
+const afterPress = (value, events) => base({
+    values: { from: value },
+    input: { value: String(value), dataFrom: value },
+    labels: { single: { text: String(value) } },
+    events
+});
+
+/** The recorded pair a press that moved the value to `value` owes. */
+const pressEvents = (value) => [
+    cb('onChange', { from: value, from_pretty: String(value), from_percent: value }),
+    cb('onFinish', { from: value, from_pretty: String(value), from_percent: value })
+];
+
+// readme settings table: keyboard "Keyboard controls. Left: <-, v, A, S. Right: ->,
+// ^, W, D", with step "Step size" as the unit of movement.
+// Bug caught: adding a real-percent step to a fake-percent pointer, which makes a
+// press consume two steps (#696/#825).
+test('keys: one press moves the targeted handle by exactly one step', () => {
+    const cfg = { min: 0, max: 100, step: 5 };
+    const prev = afterPress(10, INIT_EVENTS);
+
+    const up = afterPress(15, [...INIT_EVENTS, ...pressEvents(15)]);
+    assert.ok(!ids(ctxOf(up, cfg, 'S4a', prev, { key: '+', changed: true })).includes('keys'));
+
+    const doubled = afterPress(20, [...INIT_EVENTS, ...pressEvents(20)]);
+    assert.ok(ids(ctxOf(doubled, cfg, 'S4a', prev, { key: '+', changed: true })).includes('keys'));
+
+    const down = afterPress(5, [...INIT_EVENTS, ...pressEvents(5)]);
+    assert.ok(!ids(ctxOf(down, cfg, 'S4d', prev, { key: '-', changed: true })).includes('keys'));
+
+    const wrongWay = afterPress(15, [...INIT_EVENTS, ...pressEvents(15)]);
+    assert.ok(ids(ctxOf(wrongWay, cfg, 'S4d', prev, { key: '-', changed: true })).includes('keys'), 'a decrease key that moved the handle up');
 });
 
 // readme settings table: from_max "Maximum limit for the from handle" -- a key move
 // stops there instead of overshooting.
-// Bug caught: the keyboard path skipping checkDiapason.
-test('keys: a move stopped by a limit must sit exactly on the limit', () => {
-    const cfg = { min: 0, max: 100, step: 5, from_max: 15 };
-    const prev = base({ values: { from: 10 }, input: { value: '10', dataFrom: 10 }, labels: { single: { text: '10' } }, events: INIT_EVENTS });
-    const clamped = base({
-        values: { from: 15 }, input: { value: '15', dataFrom: 15 }, labels: { single: { text: '15' } },
-        events: [...INIT_EVENTS, cb('onChange', { from: 15, from_pretty: '15', from_percent: 15 }), cb('onFinish', { from: 15, from_pretty: '15', from_percent: 15 })]
-    });
-    assert.ok(!ids(ctxOf(clamped, cfg, 'S4', prev, { keys: ['+', '+'], changed: true })).includes('keys'));
+// Bug caught: the keyboard path skipping checkDiapason, so a press walks past the
+// handle's own limit.
+test('keys: a press stopped by a limit must sit exactly on the limit', () => {
+    const cfg = { min: 0, max: 100, step: 5, from_max: 12 };
+    const prev = afterPress(10, INIT_EVENTS);
 
-    const past = base({
-        values: { from: 20 }, input: { value: '20', dataFrom: 20 }, labels: { single: { text: '20' } },
-        events: [...INIT_EVENTS, cb('onChange', { from: 20, from_pretty: '20', from_percent: 20 }), cb('onFinish', { from: 20, from_pretty: '20', from_percent: 20 })]
+    const clamped = afterPress(12, [...INIT_EVENTS, ...pressEvents(12)]);
+    assert.ok(!ids(ctxOf(clamped, cfg, 'S4a', prev, { key: '+', changed: true })).includes('keys'));
+
+    const past = afterPress(15, [...INIT_EVENTS, ...pressEvents(15)]);
+    assert.ok(ids(ctxOf(past, cfg, 'S4a', prev, { key: '+', changed: true })).includes('keys'));
+});
+
+// readme settings table: min_interval "Smallest interval between the handles" stops a
+// key move just as a limit does.
+// Bug caught: moveByKey() resolving through a path that skips checkMinInterval.
+test('keys: a press stopped by min_interval must sit exactly on the interval edge', () => {
+    const cfg = { type: 'double', min: 0, max: 100, step: 5, min_interval: 18 };
+    const prev = doubleState({ events: INIT_EVENTS });
+    const withFrom = (value) => doubleState({
+        values: { from: value },
+        input: { value: `${value};40`, dataFrom: value },
+        labels: { from: { text: String(value) } },
+        events: [...INIT_EVENTS,
+            cb('onChange', { from: value, to: 40, from_pretty: String(value), to_pretty: '40', from_percent: value, to_percent: 40 }),
+            cb('onFinish', { from: value, to: 40, from_pretty: String(value), to_pretty: '40', from_percent: value, to_percent: 40 })]
     });
-    assert.ok(ids(ctxOf(past, cfg, 'S4', prev, { keys: ['+', '+'], changed: true })).includes('keys'));
+
+    assert.ok(!ids(ctxOf(withFrom(22), cfg, 'S4a', prev, { key: '+', changed: true })).includes('keys'));
+    assert.ok(ids(ctxOf(withFrom(25), cfg, 'S4a', prev, { key: '+', changed: true })).includes('keys'));
+});
+
+// A press that moved nothing leaves no trace of which handle it targeted (in double
+// type that is the last-touched handle, which the State deliberately does not expose),
+// and a press blocked by a bound, a fixed handle or an inert slider is allowed to do
+// nothing -- the callbacks rule is what judges those.
+// Bug caught: the rule assuming `from` was the target and reporting every blocked
+// press of a double slider.
+test('keys: a press that moved nothing is left to the callbacks rule', () => {
+    const cfg = { type: 'double', min: 0, max: 100, step: 5, from_fixed: true };
+    const prev = doubleState({ events: INIT_EVENTS });
+    const still = doubleState({ events: [...INIT_EVENTS, cb('onFinish', { from: 20, to: 40, from_pretty: '20', to_pretty: '40', from_percent: 20, to_percent: 40 })] });
+    assert.ok(!ids(ctxOf(still, cfg, 'S4a', prev, { key: '+', changed: false })).includes('keys'));
 });
 
 // ---------------------------------------------------------------------- inert
@@ -613,13 +833,16 @@ test('inert: a disabled slider keeps its values and carries the mask', () => {
     assert.ok(ids(ctxOf(moved, cfg, 'S1', prev, { changed: false })).includes('inert'));
 });
 
-// Bug caught: block growing a disable mask, or disabling the input.
-test('inert: a blocked slider has no mask and an enabled input', () => {
+// #877 B3. Same pair of readme rows, seen from the inert rule: block covers the
+// slider with the mask like disable does, and leaves the input enabled.
+// Bug caught: block disabling the input (its value would stop being submitted), or
+// losing the mask that tells the user the slider is inert.
+test('inert: a blocked slider carries the mask and keeps its input enabled', () => {
     const cfg = { min: 0, max: 100, step: 1, block: true };
-    const prev = base();
-    assert.ok(!ids(ctxOf(base(), cfg, 'S1', prev, { changed: false })).includes('inert'));
-    assert.ok(ids(ctxOf(base({ mask: true }), cfg, 'S1', prev, { changed: false })).includes('inert'));
-    assert.ok(ids(ctxOf(base({ input: { disabled: true } }), cfg, 'S1', prev, { changed: false })).includes('inert'));
+    const prev = base({ mask: true });
+    assert.ok(!ids(ctxOf(base({ mask: true }), cfg, 'S1', prev, { changed: false })).includes('inert'));
+    assert.ok(ids(ctxOf(base(), cfg, 'S1', prev, { changed: false })).includes('inert'), 'a blocked slider without its mask');
+    assert.ok(ids(ctxOf(base({ mask: true, input: { disabled: true } }), cfg, 'S1', prev, { changed: false })).includes('inert'), 'block must not disable the input');
 });
 
 // -------------------------------------------------------------------- destroy
@@ -649,12 +872,13 @@ test('destroy: the container is gone and the input is back to normal', () => {
 
 // ------------------------------------------------------------- known-bug register
 
-// Bug caught: a register that silently matches everything (every real failure would
-// be annotated away), or a lookup that ignores the invariant id.
-test('the known-bug register starts empty and matches by predicate', () => {
-    assert.deepEqual(KNOWN_BUGS, []);
+// The entries themselves live in test/unit/browser-known-bugs.test.mjs; what is pinned
+// here is the lookup the matrix spec calls, against an entry of known shape.
+// Bug caught: a lookup that ignores the invariant id (every failure of a matched config
+// would be annotated away), or one that stops at the first entry whatever it answers.
+test('matchKnownBug answers per invariant id and per config', () => {
     const ctx = ctxOf(base(), SINGLE, 'S1');
-    assert.equal(matchKnownBug(ctx, 'bounds'), null);
+    assert.equal(matchKnownBug(ctx, 'bounds'), null, 'a healthy single slider has no bounds bug on the register');
 
     KNOWN_BUGS.push({ issue: 9999, title: 'sample', matches: (c, id) => id === 'scale' && c.cfg.step === 1 });
     try {
@@ -662,6 +886,6 @@ test('the known-bug register starts empty and matches by predicate', () => {
         assert.equal(matchKnownBug(ctx, 'scale').issue, 9999);
         assert.equal(matchKnownBug(ctxOf(base(), { ...SINGLE, step: 5 }, 'S1'), 'scale'), null);
     } finally {
-        KNOWN_BUGS.length = 0;
+        KNOWN_BUGS.pop();
     }
 });

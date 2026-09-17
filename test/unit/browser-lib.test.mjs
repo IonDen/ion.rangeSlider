@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { onScale, scaleDecimals, nearestOnScale, scalePoint } from '../browser/lib/scale.mjs';
-import { builtinPrettify, decorate, expectedLabel, expectedMerged, valuesEntry } from '../browser/lib/format.mjs';
+import { builtinPrettify, decorate, expectedGridLabel, expectedLabel, expectedMerged, valuesEntry } from '../browser/lib/format.mjs';
 
 // #877: unit tests for the browser suite's readme-derived oracles. The oracle for
 // every expected value below is a readme sentence, quoted in the test comment; the
@@ -107,6 +107,26 @@ test('onScale: a value below min is not on the scale', () => {
   assert.equal(onScale(-10, { min: 0, max: 100, step: 10 }), false);
 });
 
+// readme note "step" ("Every value is min plus a whole number of steps") and readme
+// settings table, max ("Maximum value") cannot both hold when the range is not a whole
+// number of steps wide: the top of the range is then off the step grid, and a slider
+// either overshoots max or stops on a value the step rule does not list. Stopping at
+// max is the sane half, so max counts as a scale point the way min does -- the readme
+// lists min first in every one of its sequences for the same reason.
+// Bug caught: accepting any value near the top edge instead of max alone, which would
+// let a handle resting between two scale points pass unreported.
+test('onScale: max itself is a scale point the way min is, even off the step grid', () => {
+  const wider = { min: 0, max: 10, step: 25 };            // one step is wider than the range
+  assert.equal(onScale(0, wider), true);
+  assert.equal(onScale(10, wider), true);
+  assert.equal(onScale(5, wider), false);
+
+  const uneven = { min: 0, max: 100, step: 3 };           // 99 is the last grid point
+  assert.equal(onScale(99, uneven), true);
+  assert.equal(onScale(100, uneven), true);
+  assert.equal(onScale(98, uneven), false);
+});
+
 // readme settings table defaults: min 10, max 100, step 1.
 // Bug caught: defaulting a missing step to 0 (every value would be on the scale).
 test('onScale: an omitted min/step falls back to the documented defaults (min 10, step 1)', () => {
@@ -173,9 +193,30 @@ test('builtinPrettify groups the integer part in threes with the separator', () 
 test('expectedLabel applies prefix, postfix, max_postfix and the min/max prefixes in the documented order', () => {
   const cfg = { min: 0, max: 100, step: 1, prettify_enabled: true, prettify_separator: ' ', prefix: '$', postfix: 'k', max_postfix: '+', min_prefix: 'From: ', max_prefix: 'Up to: ' };
   assert.equal(expectedLabel(50, cfg, 'handle'), '$50k');
-  assert.equal(expectedLabel(100, cfg, 'handle'), 'Up to: $100+ k');
+  assert.equal(expectedLabel(100, cfg, 'handle'), 'Up to: $100+k');
   assert.equal(expectedLabel(0, cfg, 'min'), 'From: $0k');
-  assert.equal(expectedLabel(100, cfg, 'max'), 'Up to: $100+ k');
+  assert.equal(expectedLabel(100, cfg, 'max'), 'Up to: $100+k');
+});
+
+// #884. readme settings table: max_postfix "Postfix for the maximum value only:
+// 0 - 100+"; postfix "Postfix for values: 100k". Neither row asks for a separator
+// between the two, so the oracle writes max_postfix and postfix one after the other
+// and nothing else: a postfix that already begins with a space carries the only space
+// ("100+ years"), and one that does not is joined tight ("100+k"). The plugin inserts a
+// space of its own, which is issue #884 -- the extra space is the defect, so the oracle
+// must not encode it or the matrix could never see it.
+// Bug caught: putting the plugin's separator back into decorate(), which would predict
+// "100+  years" for the site's own age demo and pass the label the readme calls wrong.
+test('decorate: max_postfix runs straight into postfix, with no separator of its own', () => {
+  const spaced = { min: 0, max: 100, prefix: 'Age: ', postfix: ' years', max_postfix: '+' };
+  assert.equal(decorate('100', 100, spaced, 'handle'), 'Age: 100+ years');
+  assert.equal(decorate('21', 21, spaced, 'handle'), 'Age: 21 years');
+
+  const tight = { min: 0, max: 100, postfix: 'k', max_postfix: '+' };
+  assert.equal(decorate('100', 100, tight, 'handle'), '100+k');
+
+  // max_postfix alone is unchanged: it only ever appended itself.
+  assert.equal(decorate('100', 100, { min: 0, max: 100, max_postfix: '+' }, 'handle'), '100+');
 });
 
 // min === max makes both prefixes eligible; the plugin resolves it to min_prefix.
@@ -266,4 +307,47 @@ test('expectedLabel decorates values-mode labels against the index range', () =>
   assert.equal(expectedLabel(0, cfg, 'min'), 'From: a');
   assert.equal(expectedLabel(2, cfg, 'max'), 'Up to: c');
   assert.equal(expectedLabel(1, cfg, 'handle'), 'b');
+});
+
+// #877 B1. readme settings table: prefix "Prefix for values: $100", postfix
+// "Postfix for values: 100k", min_prefix/max_prefix/max_postfix all say "value" too;
+// the grid rows (grid, grid_num, grid_snap) say nothing about decoration, and the
+// plugin draws grid ticks through the prettify chain alone -- with
+// {min: 0, max: 100, from: 30, grid: true, prefix: '$', postfix: 'k'} the min and max
+// labels read "$0k" and "$100k" while the grid reads 0, 25, 50, 75, 100.
+// Characterization: the readme does not say whether grid labels are decorated; the
+// plugin never has.
+// Bug caught: sending a grid label through decorate(), which predicts "$50k" for the
+// tick the plugin draws as "50" and reds every decorated grid entry of the matrix.
+test('expectedGridLabel formats the value but never decorates it', () => {
+  const cfg = {
+    min: 0, max: 100, step: 1, prettify_separator: ' ',
+    prefix: '$', postfix: 'k', min_prefix: 'From: ', max_prefix: 'Up to: ', max_postfix: '+'
+  };
+  assert.equal(expectedGridLabel(50, cfg), '50');
+  assert.equal(expectedGridLabel(0, cfg), '0');
+  assert.equal(expectedGridLabel(100, cfg), '100');
+  // The same values on a value label, where the readme does ask for decoration.
+  assert.equal(expectedLabel(50, cfg, 'handle'), '$50k');
+  assert.equal(expectedLabel(0, cfg, 'min'), 'From: $0k');
+});
+
+// readme note "prettify_grid": "Formats the grid labels only. When it is not set, the
+// grid labels fall back to prettify, and then to the built-in number formatting", and
+// note "values": the grid gets one labelled tick per entry.
+// Bug caught: dropping the prettify chain from the undecorated grid path, so a custom
+// prettify_grid would never reach a tick.
+test('expectedGridLabel keeps the prettify_grid then prettify then built-in fallback', () => {
+  const plain = { min: 0, max: 1000000, step: 1000, prettify_separator: ' ' };
+  assert.equal(expectedGridLabel(10000, plain), '10 000');
+
+  const custom = { ...plain, __prettify: (n) => `<${n}>` };
+  assert.equal(expectedGridLabel(10000, custom), '<10000>');
+
+  const perSurface = { ...custom, __prettify_grid: (n) => `g${n}` };
+  assert.equal(expectedGridLabel(10000, perSurface), 'g10000');
+
+  const values = { values: ['low', 1000], prefix: '$', __prettify: (v) => `[${v}]`, prettify_all_values: true };
+  assert.equal(expectedGridLabel(0, values), '[low]');
+  assert.equal(expectedGridLabel(1, values), '[1000]');
 });

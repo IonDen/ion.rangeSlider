@@ -131,6 +131,14 @@ export function scalePoint(k, cfg) {
  * whole number of steps, so k is never negative. A value above max is left to the
  * bounds invariant; this function only answers the scale question.
  *
+ * max itself is a scale point, exactly the way min is. When the range is not a whole
+ * number of steps wide -- min 0, max 10, step 25, or the milder min 0, max 100, step 3
+ * -- the readme's two sentences pull apart: "Maximum value" says the handle reaches max,
+ * while "min plus a whole number of steps" says it may not stop there. A handle can only
+ * honour one of them, and stopping at max is the half every slider takes, so the rule
+ * accepts it. Nothing else is loosened: a value strictly between two scale points, max
+ * excluded, is still reported.
+ *
  * @param {number} value
  * @param {object} cfg
  * @returns {boolean}
@@ -138,7 +146,8 @@ export function scalePoint(k, cfg) {
 export function onScale(value, cfg) {
     if (typeof value !== 'number' || !Number.isFinite(value)) return false;
     if (isValuesMode(cfg)) return Number.isInteger(value) && value >= 0 && value <= cfg.values.length - 1;
-    const { min, step } = rangeOf(cfg);
+    const { min, max, step } = rangeOf(cfg);
+    if (value === max) return true;
     if (!(step > 0) || !Number.isFinite(min)) return false;
     const estimate = Math.round((value - min) / step);
     if (!Number.isFinite(estimate)) return false;
