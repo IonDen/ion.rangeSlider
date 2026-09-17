@@ -96,12 +96,17 @@ function prettifyFor(cfg, surface) {
  * entries"); without a custom prettify there is nothing to run, so the entry is
  * shown as written.
  *
+ * Exported as expectedPretty because it is also the oracle for the callback payload:
+ * readme "Callback data" documents from_pretty / to_pretty as "FROM formatted" and
+ * min_pretty / max_pretty as "MIN formatted" -- the text a label is built from, before
+ * decorate() wraps the prefixes and postfixes around it.
+ *
  * @param {number} value   a number, or an index in values mode
  * @param {object} cfg
  * @param {'handle'|'min'|'max'|'grid'} surface
  * @returns {string}
  */
-function prettyText(value, cfg, surface) {
+export function expectedPretty(value, cfg, surface) {
     const fn = prettifyFor(cfg, surface);
     const separator = typeof cfg.prettify_separator === 'string' ? cfg.prettify_separator : DEFAULT_SEPARATOR;
 
@@ -172,7 +177,7 @@ export function decorate(text, value, cfg, surface) {
  * @returns {string}
  */
 export function expectedLabel(value, cfg, surface = 'handle') {
-    return decorate(prettyText(value, cfg, surface), value, cfg, surface);
+    return decorate(expectedPretty(value, cfg, surface), value, cfg, surface);
 }
 
 /**
@@ -196,7 +201,7 @@ export function expectedLabel(value, cfg, surface = 'handle') {
  * @returns {string}
  */
 export function expectedGridLabel(value, cfg) {
-    return prettyText(value, cfg, 'grid');
+    return expectedPretty(value, cfg, 'grid');
 }
 
 /**
@@ -217,9 +222,9 @@ export function expectedGridLabel(value, cfg) {
 export function expectedMerged(from, to, cfg) {
     const separator = typeof cfg.values_separator === 'string' ? cfg.values_separator : DEFAULT_VALUES_SEPARATOR;
     if (cfg.decorate_both === false) {
-        return decorate(prettyText(from, cfg, 'handle') + separator + prettyText(to, cfg, 'handle'), to, cfg, 'handle');
+        return decorate(expectedPretty(from, cfg, 'handle') + separator + expectedPretty(to, cfg, 'handle'), to, cfg, 'handle');
     }
-    return decorate(prettyText(from, cfg, 'handle'), from, cfg, 'handle')
+    return decorate(expectedPretty(from, cfg, 'handle'), from, cfg, 'handle')
         + separator
-        + decorate(prettyText(to, cfg, 'handle'), to, cfg, 'handle');
+        + decorate(expectedPretty(to, cfg, 'handle'), to, cfg, 'handle');
 }

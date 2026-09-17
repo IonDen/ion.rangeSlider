@@ -1,7 +1,7 @@
 /**
  * #877 browser suite -- the fifteen combination-matrix dimensions, their levels, the
- * impossible-combination predicates and the named cases, per
- * docs/2026-09-15-browser-suite-design.md, "Combination matrix".
+ * impossible-combination predicates and the named cases of the combination matrix
+ * test/browser/matrix/matrix.spec.mjs drives.
  *
  * Consumed by generate-configs.mjs to build configs.json. Every level's apply(entry)
  * mutates entry = { config, attrs, extra, notes }; the fraction-to-value arithmetic
@@ -426,10 +426,12 @@ export const EXCLUSIONS = [
 // ---------------------------------------------------------------------------------------
 // A named case may also carry `stages`, a small per-case override of the matrix script's
 // shared stage targets (currently only `s1`, the track fraction S1 drags the from/single
-// handle to; the shared target is 0.3). It exists for a case whose bug lives at a place
-// the shared script never visits -- edge:min-interval-top needs the from handle at the
-// very top of the track. matrix.spec.mjs reads it; every other entry keeps the shared
-// targets, so the interaction script stays one script.
+// handle to; matrix.spec.mjs holds the shared fractions). It exists for a case whose bug
+// lives at a place the shared script never visits: edge:min-interval-top needs the from
+// handle at the very top of the track, and edge:bar-drag-from-max needs it left standing
+// close enough to its from_max for the later bar drag to run into the limit.
+// matrix.spec.mjs reads it; every other entry keeps the shared targets, so the interaction
+// script stays one script.
 //
 // NAMED_CASES -- the 34 site demo inits (website/src/a/plugins/ion.rangeSlider/res/
 // page_demo.js, page_demo_adv.js, page_demo_int.js; those three files use CRLF line
@@ -444,9 +446,12 @@ export const EXCLUSIONS = [
 const PAGE_DEMO_CUSTOM_VALUES = [0, 10, 100, 1000, 10000, 100000, 1000000];
 
 // page_demo_adv.js #demo_4: dateToTS(new Date(year, month, day)) with year = 2018,
-// resolved the same way the site demo computes it (date.valueOf(), local time zone).
+// resolved with Date.UTC so the timestamp is the same number whatever time zone the
+// generator runs in. `new Date(y, m, d)` resolves against the machine's zone, which gives
+// the committed configs.json different numbers in Amsterdam and under TZ=UTC and rewrites
+// the file on a regeneration that changed nothing.
 function dateToTS(y, m, d) {
-    return new Date(y, m, d).valueOf();
+    return Date.UTC(y, m, d);
 }
 
 export const NAMED_CASES = [
@@ -517,8 +522,8 @@ export const NAMED_CASES = [
             __prettify_src: 'function tsToDate (ts) {\n    var d = new Date(ts);\n    return d.toLocaleDateString(lang, { year: "numeric", month: "long", day: "numeric" });\n}'
         },
         notes: [
-            'min/max/from/to are dateToTS(new Date(year, month, day)) with year = 2018 in the site demo, resolved here with Date#valueOf() (local time zone, same as the site demo).',
-            'prettify was the function tsToDate; only its source is kept in config.__prettify_src. It closes over the demo page\'s `lang` variable, which does not exist once inlined elsewhere -- Task 6\'s concern, not this generator\'s.'
+            'min/max/from/to are dateToTS(new Date(year, month, day)) with year = 2018 in the site demo, resolved here with Date.UTC() so the committed timestamps do not move with the generator machine\'s time zone.',
+            'prettify was the function tsToDate; only its source is kept in config.__prettify_src. It closes over the demo page\'s `lang` variable, which does not exist once inlined elsewhere -- test/browser/matrix/matrix.spec.mjs handles that, not this generator.'
         ]
     },
     { name: 'demo:page_demo_adv:demo_5', config: { type: 'double', min: 0, max: 100, from: 20, to: 80, min_prefix: 'From: ', max_prefix: 'Up to: ' } },
@@ -582,14 +587,21 @@ export const NAMED_CASES = [
     // needs, so these two carry the configuration the bug lives in. Each is the minimal
     // config of a filed issue, driven by the matrix's own stage script:
     //
-    // #879: S5 drags the bar 10 % of the track to the right. from starts 100 below its
+    // #879: S5 drags the bar 10 % of the track to the right. from stands 100 below its
     // from_max and the whole interval is asked to move 100, so the leading handle lands
     // on its limit while the trailing one keeps following the pointer -- the bar drag
     // stretches the interval instead of stopping it. from_max sits between from and to
     // so only the leading handle is clamped.
+    //
+    // Where from stands when that drag starts is the fixed script's doing: S1 drags it to
+    // its fraction of the track and the four key presses add three steps and take one
+    // back. The shared S1 fraction would leave it at 200 and the drag would stop at 310,
+    // a hundred short of the limit, so this case carries an S1 target of its own: from
+    // sits at 300, the presses bring it to 310, and the drag reaches 410.
     {
         name: 'edge:bar-drag-from-max',
         config: { type: 'double', min: 0, max: 1000, step: 5, from: 300, to: 800, drag_interval: true, from_max: 400 },
+        stages: { s1: 0.3 },
         notes: ['Reaches issue #879: a bar drag against from_max stretches the interval instead of moving it as a unit.']
     },
     // #881: max is half a step above the last reachable value (min 0.5, step 1 gives

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { open, events, LABEL } from '../helpers.mjs';
+import { open, events, drag, LABEL } from '../helpers.mjs';
 
 test.describe(`fixture additions (${LABEL})`, () => {
   // Mutation caught: dropping the onInit branch from the recorder -> the sequence stays ['onStart'].
@@ -22,7 +22,6 @@ test.describe(`fixture additions (${LABEL})`, () => {
   // Mutation caught: not binding the DOM listeners -> no dom:* entries after a drag.
   test('dom_events=1 records the change and input events the plugin triggers on the input', async ({ page }) => {
     await open(page, { min: 0, max: 100, from: 30 }, { dom_events: '1' });
-    const { drag } = await import('../helpers.mjs');
     await drag(page, '.irs-handle.single', 0.2);
     const types = (await events(page)).map((e) => e.type);
     expect(types).toContain('dom:change');

@@ -1,8 +1,8 @@
 // #877 browser suite -- the combination matrix: every entry of configs.json is built
 // in a real browser and driven through one fixed interaction script (S0 init, S1/S2
 // handle drags, S3 track click, S4a to S4d one key press each, S5 bar drag,
-// S6 update(), S7 reset(), S8 destroy()), with the thirteen readme invariants of
-// ../lib/invariants.mjs checked after every stage.
+// S6 update(), S7 reset(), S8 destroy(), S9 build it again on the same input), with the
+// fourteen readme invariants of ../lib/invariants.mjs checked after every stage.
 //
 // Nothing here carries a per-case expected value: the expectations come from the
 // readme through the invariants and the label/scale oracles, so a failure always names
@@ -17,23 +17,32 @@ import configs from './configs.json' with { type: 'json' };
 import { open } from '../helpers.mjs';
 import { readState } from '../lib/state.mjs';
 import { dragHandleTo, dragBarBy, clickTrackAt, focusTrack, pressKeys } from '../lib/interact.mjs';
-import { INVARIANTS, checkInvariants } from '../lib/invariants.mjs';
-import { matchKnownBug } from '../lib/known-bugs.mjs';
+import { checkInvariants } from '../lib/invariants.mjs';
+import { judgeStage } from '../lib/known-bugs.mjs';
 import { isValuesMode, nearestOnScale, rangeOf } from '../lib/scale.mjs';
 
 /** Outlasts the plugin's 300 ms idle render poll (see the testing reference). */
 const IDLE_TICK = 400;
 
 /**
- * Track fraction S1 drags the from (or single) handle to, shared by every entry.
+ * The three track fractions the mouse stages aim at.
  *
- * A named case may override it with `stages: { s1: <fraction> }` in dimensions.mjs when
- * its bug lives somewhere the shared script never visits -- edge:min-interval-top needs
- * the from handle driven to the very top of the track, which 0.3 never reaches. This is
- * the whole override mechanism: one optional number per entry, read here, defaulted
- * below, so the interaction script itself stays one script for all 128 entries.
+ * A generated double entry starts with its from handle at 30 % of the range and its to
+ * handle at 70 % (dimensions.mjs), so those two fractions are the one place a drag would
+ * move nothing: S1 and S2 aim outside the starting pair instead, and each drag really
+ * travels. The click is off the midpoint for the same reason -- 0.5 is exactly halfway
+ * between a 0.3 and a 0.7 pair, where which handle the plugin picks comes down to float
+ * noise, while 0.55 always resolves to the to handle.
+ *
+ * A named case may override the S1 fraction with `stages: { s1: <fraction> }` in
+ * dimensions.mjs when its bug lives somewhere the shared script never visits --
+ * edge:min-interval-top needs the from handle driven to the very top of the track. That is
+ * the whole override mechanism: one optional number per entry, read here, defaulted below,
+ * so the interaction script itself stays one script for all 128 entries.
  */
-const S1_TARGET = 0.3;
+const S1_TARGET = 0.2;
+const S2_TARGET = 0.8;
+const S3_CLICK = 0.55;
 
 /**
  * The three function-valued prettify options, as
@@ -76,6 +85,31 @@ const KEY_PRESSES = [
 function valuesMoved(before, after) {
   if (!before || !before.values || !after || !after.values) return false;
   return before.values.from !== after.values.from || before.values.to !== after.values.to;
+}
+
+/**
+ * Is this state's bar too narrow to press?
+ *
+ * dragBarBy aims at the bar's CENTRE (../lib/interact.mjs), and the bar runs from the from
+ * handle's centre to the to handle's centre -- so each handle covers half of its own width
+ * of the bar, and the centre of a bar no wider than a handle lies under one of them. The
+ * press grabs that handle and S5 is an ordinary handle drag, free to close the pair where
+ * nothing holds it open. An interval clamp is what leaves a bar that thin: m080 holds 6000
+ * of a range of a million, under four pixels of a 600 px track beneath two sixteen-pixel
+ * handles. The answer is read off the state the stage STARTED from and handed to the
+ * intervals rule, which stands its width promise down on it.
+ *
+ * @param {object|null} state
+ * @returns {boolean}
+ */
+function barNarrowerThanHandle(state) {
+  if (!state) return false;
+  const handles = state.handles || {};
+  const widths = Object.keys(handles).map((name) => (handles[name].box ? handles[name].box.width : 0));
+  const widest = widths.length ? Math.max(...widths) : 0;
+  // A pair walked onto one value renders no bar at all, which is a bar of no width.
+  const bar = state.bar ? state.bar.width : 0;
+  return bar <= widest;
 }
 
 /**
@@ -179,7 +213,8 @@ for (const entry of configs.filter((c) => c.id)) {
       ...(entry.extra || {}),
       ...(entry.attrs ? { attrs: JSON.stringify(entry.attrs) } : {})
     };
-    await open(page, configLiteral(entry.config), extra);
+    const literal = configLiteral(entry.config);
+    await open(page, literal, extra);
 
     // readme, onInit: "for a slider that starts hidden, edit its DOM only after it
     // first becomes visible" -- a slider built inside a display:none container has no
@@ -216,20 +251,11 @@ for (const entry of configs.filter((c) => c.id)) {
       const ctx = { state, cfg, stage, prev, expectations: promised };
       const stageSkipped = hiddenAtInit && stage === 'S0' ? skipped.concat('labels') : skipped;
       const failures = checkInvariants(ctx).filter((f) => stageSkipped.indexOf(f.id) < 0);
-      const real = [];
-      for (const failure of failures) {
-        const known = matchKnownBug(ctx, failure.id);
-        if (known) testInfo.annotations.push({ type: 'known bug', description: `#${known.issue} ${known.title} (${stage}/${failure.id})` });
-        else real.push(failure);
-      }
-      // A register entry that no longer reproduces has to be retired, or the suite
-      // would keep excusing a bug that is already fixed.
-      for (const invariant of INVARIANTS) {
-        if (stageSkipped.indexOf(invariant.id) >= 0) continue;
-        const known = matchKnownBug(ctx, invariant.id);
-        if (known && !failures.some((f) => f.id === invariant.id)) {
-          real.push({ id: invariant.id, message: `bug #${known.issue} no longer reproduces here; remove its register entry` });
-        }
+      // ../lib/known-bugs.mjs decides what a filed bug already accounts for, what is still
+      // real, and which register entry has stopped reproducing here and has to be retired.
+      const { real, annotations } = judgeStage(failures, ctx, stageSkipped);
+      for (const known of annotations) {
+        testInfo.annotations.push({ type: 'known bug', description: `#${known.issue} ${known.title} (${known.stage}/${known.id}): ${known.message}` });
       }
       expect(real, `${stage}: ${real.map((f) => f.message).join('\n')}`).toEqual([]);
       prev = state;
@@ -249,73 +275,83 @@ for (const entry of configs.filter((c) => c.id)) {
     const dbl = cfg.type === 'double';
     const inert = !!(cfg.disable || cfg.block);
 
-    // A slider whose effective min equals its max (edge:min-eq-max, or a one-entry
-    // values array) has one reachable value and nowhere for a handle to go. The readme
-    // gives that slider no interaction semantics at all: every interaction row it
-    // documents -- the drag, the track click, the keyboard, onChange, onFinish -- is
-    // written for a handle that can move, and it never says what a press with nowhere to
-    // go owes. Rather than judge the stages against a promise the readme does not make,
-    // the script runs the two stages that ARE documented for it (the slider is built,
-    // and it is destroyed) and skips the rest. No rule is relaxed: every invariant still
-    // runs, at S0 and S8, exactly as for any other entry.
-    const range = rangeOf(cfg);
-    const zeroRange = range.min === range.max;
-    if (zeroRange) {
-      testInfo.annotations.push({ type: 'skipped stage', description: 'zero range: interaction stages skipped' });
+    const s1Target = entry.stages && typeof entry.stages.s1 === 'number' ? entry.stages.s1 : S1_TARGET;
+    await dragHandleTo(page, dbl ? 'from' : 'single', s1Target);
+    await page.waitForTimeout(IDLE_TICK);
+    await assertStage('S1', { changed: !inert && !cfg.from_fixed, handle: dbl ? 'from' : 'single' });
+
+    if (dbl) {
+      await dragHandleTo(page, 'to', S2_TARGET);
+      await page.waitForTimeout(IDLE_TICK);
+      await assertStage('S2', { changed: !inert && !cfg.to_fixed, handle: 'to' });
+    } else {
+      testInfo.annotations.push({ type: 'skipped stage', description: 'S2 single type has no to handle' });
     }
 
-    if (!zeroRange) {
-      const s1Target = entry.stages && typeof entry.stages.s1 === 'number' ? entry.stages.s1 : S1_TARGET;
-      await dragHandleTo(page, dbl ? 'from' : 'single', s1Target);
-      await page.waitForTimeout(IDLE_TICK);
-      await assertStage('S1', { changed: !inert && !cfg.from_fixed, handle: dbl ? 'from' : 'single' });
+    await clickTrackAt(page, S3_CLICK);
+    await page.waitForTimeout(IDLE_TICK);
+    await assertStage('S3', { click: true, changed: !inert });
 
-      if (dbl) {
-        await dragHandleTo(page, 'to', 0.7);
+    if (cfg.keyboard !== false) {
+      await focusTrack(page);
+      // One press per stage, each given its own idle tick to render: while the slider
+      // sits idle the render loop is a 300 ms setTimeout, so presses fired inside one
+      // window are drawn together and their callbacks collapse into a single pair.
+      // Paced this way every press is judged on what it alone did -- how far it moved
+      // the targeted handle, and which callbacks it owes.
+      for (const [stage, key, direction] of KEY_PRESSES) {
+        await pressKeys(page, [key]);
         await page.waitForTimeout(IDLE_TICK);
-        await assertStage('S2', { changed: !inert && !cfg.to_fixed, handle: 'to' });
-      } else {
-        testInfo.annotations.push({ type: 'skipped stage', description: 'S2 single type has no to handle' });
+        await assertStage(stage, (state, before) => ({ key: direction, changed: valuesMoved(before, state) }));
       }
-
-      await clickTrackAt(page, 0.5);
-      await page.waitForTimeout(IDLE_TICK);
-      await assertStage('S3', { click: true, changed: !inert });
-
-      if (cfg.keyboard !== false) {
-        await focusTrack(page);
-        // One press per stage, each given its own idle tick to render: while the slider
-        // sits idle the render loop is a 300 ms setTimeout, so presses fired inside one
-        // window are drawn together and their callbacks collapse into a single pair.
-        // Paced this way every press is judged on what it alone did -- how far it moved
-        // the targeted handle, and which callbacks it owes.
-        for (const [stage, key, direction] of KEY_PRESSES) {
-          await pressKeys(page, [key]);
-          await page.waitForTimeout(IDLE_TICK);
-          await assertStage(stage, (state, before) => ({ key: direction, changed: valuesMoved(before, state) }));
-        }
-      } else {
-        testInfo.annotations.push({ type: 'skipped stage', description: 'S4 keyboard off' });
-      }
-
-      if (dbl && cfg.drag_interval) {
-        await dragBarBy(page, 0.1);
-        await page.waitForTimeout(IDLE_TICK);
-        await assertStage('S5', { bar: true, changed: !inert && !cfg.from_fixed && !cfg.to_fixed });
-      } else {
-        testInfo.annotations.push({ type: 'skipped stage', description: 'S5 needs double type with drag_interval' });
-      }
-
-      await page.evaluate((m) => window.__irs.slider.update({ from: m }), midValue(cfg));
-      await page.waitForTimeout(IDLE_TICK);
-      await assertStage('S6', { update: true });
-
-      await page.evaluate(() => window.__irs.slider.reset());
-      await page.waitForTimeout(IDLE_TICK);
-      await assertStage('S7', { update: true });
+    } else {
+      testInfo.annotations.push({ type: 'skipped stage', description: 'S4 keyboard off' });
     }
+
+    if (dbl && cfg.drag_interval) {
+      // A bar no wider than the handles standing on it cannot be pressed (see
+      // barNarrowerThanHandle): the press lands on a handle and the stage is an ordinary
+      // handle drag. The intervals rule stands down on the width there
+      // (../lib/invariants.mjs) and every other rule judges the stage as the handle drag it
+      // is, so the reader is told which it was.
+      const narrowBar = barNarrowerThanHandle(prev);
+      if (narrowBar) {
+        testInfo.annotations.push({ type: 'narrow bar', description: 'the S5 drag lands on a handle, the width check does not apply' });
+      }
+      await dragBarBy(page, 0.1);
+      await page.waitForTimeout(IDLE_TICK);
+      await assertStage('S5', {
+        bar: true,
+        changed: !inert && !cfg.from_fixed && !cfg.to_fixed,
+        bar_narrower_than_handle: narrowBar
+      });
+    } else {
+      testInfo.annotations.push({ type: 'skipped stage', description: 'S5 needs double type with drag_interval' });
+    }
+
+    await page.evaluate((m) => window.__irs.slider.update({ from: m }), midValue(cfg));
+    await page.waitForTimeout(IDLE_TICK);
+    await assertStage('S6', { update: true });
+
+    await page.evaluate(() => window.__irs.slider.reset());
+    await page.waitForTimeout(IDLE_TICK);
+    await assertStage('S7', { update: true });
 
     await page.evaluate(() => window.__irs.slider.destroy());
     await assertStage('S8', { destroyed: true });
+
+    // readme, Public methods: "After destroy() the input is back to normal and can be
+    // initialized again." The same input is handed the same configuration a second time --
+    // anything destroy() left behind (the instance handle above all) makes this call a
+    // silent no-op, and the slider never comes back.
+    await page.evaluate((config) => {
+      const el = document.getElementById('slider');
+      // eval, like the fixture's own config parsing: the literal can carry a prettify
+      // function expression, which JSON.parse could not read back.
+      jQuery(el).ionRangeSlider(eval('(' + config + ')'));
+      window.__irs.slider = jQuery.data(el, 'ionRangeSlider');
+    }, literal);
+    await page.waitForTimeout(IDLE_TICK);
+    await assertStage('S9', { reinitialised: true });
   });
 }

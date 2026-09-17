@@ -1,15 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { DIMENSIONS, EXCLUSIONS, NAMED_CASES } from '../browser/matrix/dimensions.mjs';
 import { generate } from '../browser/matrix/generate-configs.mjs';
 import { scalePoint } from '../browser/lib/scale.mjs';
 
-// #877: unit tests for the pairwise combination-matrix generator (docs/2026-09-15-
-// browser-suite-design.md, "Combination matrix"). These pin the generator itself --
-// dimensions.mjs's levels and exclusions, generate-configs.mjs's pairwise algorithm --
-// never the plugin. matrix.spec.mjs (a later task) is what drives configs.json
-// through js/ion.rangeSlider.js.
+// #877: unit tests for the pairwise combination-matrix generator. These pin the generator
+// itself -- dimensions.mjs's levels and exclusions, generate-configs.mjs's pairwise
+// algorithm -- never the plugin. test/browser/matrix/matrix.spec.mjs is what drives
+// configs.json through js/ion.rangeSlider.js.
 
 const DIMENSION_NAMES = Object.keys(DIMENSIONS);
 
@@ -151,6 +151,20 @@ test('the two bug-reaching edge cases keep the configuration that reaches the bu
     assert.equal(bar.config.type, 'double');
     assert.ok(bar.config.from < bar.config.from_max, 'from must start below from_max, or the drag never reaches the limit');
     assert.ok(bar.config.from_max < bar.config.to, 'from_max must sit inside the interval, so only the leading handle is stopped');
+    // Where the from handle stands when the bar drag starts is the whole point of this
+    // case, and the fixed script decides it: S1 drags the handle to its own fraction of
+    // the track, the four key presses add three steps and take one back, and S5 carries
+    // the pair a tenth of the range to the right. The shared S1 fraction (0.2 of a 0 to
+    // 1000 track) leaves the drag stopping at 310, a hundred short of the limit, so the
+    // case carries an S1 target of its own.
+    // Bug caught: an S1 override -- or a script fraction it was written against -- that
+    // leaves the pair too far left for the bar drag to reach from_max, which makes the
+    // matrix pass while the plugin bug is still there and reds #879 as "no longer
+    // reproduces" for want of a cell.
+    assert.equal(bar.stages.s1, 0.3);
+    const range = bar.config.max - bar.config.min;
+    const atBarDrag = bar.config.min + bar.stages.s1 * range + 2 * bar.config.step;
+    assert.ok(atBarDrag + 0.1 * range > bar.config.from_max, `the bar drag must carry from (${atBarDrag}) past from_max ${bar.config.from_max}`);
 
     const top = NAMED_CASES.find((c) => c.name === 'edge:min-interval-top');
     assert.ok(top, 'edge:min-interval-top must stay in the named cases');
@@ -160,18 +174,22 @@ test('the two bug-reaching edge cases keep the configuration that reaches the bu
     // half step is the gap the interval clamp then allows.
     const k = Math.round((top.config.max - top.config.min) / top.config.step);
     assert.notEqual(scalePoint(k, top.config), top.config.max, 'max must sit off the step scale, which is what opens the gap');
-    // S1's shared target is 30 % of the track; this case needs the from handle driven
-    // all the way to the top edge, so it carries its own S1 target.
+    // This case needs the from handle driven all the way to the top edge, which the
+    // shared S1 fraction never reaches, so it carries its own S1 target.
     assert.equal(top.stages.s1, 1);
 });
 
 // Bug caught: generate() dropping a named case's `stages` override, so matrix.spec.mjs
-// would drive edge:min-interval-top to the shared 30 % target and never reach the edge.
+// would drive edge:min-interval-top to the shared S1 fraction and never reach the edge.
 test('a named case carries its stage overrides into the generated entry', () => {
     const named = ALL.slice(ALL.length - NAMED_CASES.length);
     const top = named.find((e) => e.name === 'edge:min-interval-top');
     assert.ok(top, 'the entry must be generated');
     assert.deepEqual(top.stages, { s1: 1 });
+
+    const bar = named.find((e) => e.name === 'edge:bar-drag-from-max');
+    assert.ok(bar, 'the bar-drag entry must be generated');
+    assert.deepEqual(bar.stages, { s1: 0.3 });
 
     const plain = named.find((e) => e.name === 'edge:coincident');
     assert.equal(plain.stages, undefined, 'a case without overrides carries no stages field');
@@ -351,4 +369,30 @@ test('the named cases hold no wall-clock value', () => {
     `;
     const printed = execFileSync(process.execPath, ['--input-type=module', '-e', script], { encoding: 'utf8' });
     assert.equal(printed, JSON.stringify(NAMED_CASES), 'the named cases must not depend on when they are built');
+});
+
+// Bug caught: a named case built with `new Date(y, m, d)`, which resolves in the machine's
+// local time zone -- the date demo's committed timestamps then differ between a generator run
+// in Amsterdam and one under TZ=UTC, so configs.json is rewritten by a regeneration that
+// changed nothing. Reading the module in two far-apart zones is what proves it; asserting the
+// committed numbers alone would pass on the one zone they were generated in.
+test('the named cases hold the same values in every time zone', () => {
+    const moduleUrl = new URL('../browser/matrix/dimensions.mjs', import.meta.url).href;
+    const script = `
+        const { NAMED_CASES } = await import(${JSON.stringify(moduleUrl)});
+        process.stdout.write(JSON.stringify(NAMED_CASES));
+    `;
+    const inZone = (tz) => execFileSync(process.execPath, ['--input-type=module', '-e', script], {
+        encoding: 'utf8',
+        env: { ...process.env, TZ: tz }
+    });
+    assert.equal(inZone('UTC'), inZone('Pacific/Kiritimati'), 'a named case resolves against the local time zone');
+});
+
+// Bug caught: the generator stamping the current date into configs.json's header, so every
+// regeneration rewrites the committed file and buries the change that was actually made.
+test('the committed configs.json header names the seed alone, with no generation date', () => {
+    const header = JSON.parse(readFileSync(new URL('../browser/matrix/configs.json', import.meta.url), 'utf8'))[0];
+    assert.match(header._generated, /^seed \d+$/, 'the header must not carry a date');
+    assert.equal(header._count, generate(1).length, 'the committed entry count must match a fresh generate(1)');
 });

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { onScale, scaleDecimals, nearestOnScale, scalePoint } from '../browser/lib/scale.mjs';
-import { builtinPrettify, decorate, expectedGridLabel, expectedLabel, expectedMerged, valuesEntry } from '../browser/lib/format.mjs';
+import { builtinPrettify, decorate, expectedGridLabel, expectedLabel, expectedMerged, expectedPretty, valuesEntry } from '../browser/lib/format.mjs';
 
 // #877: unit tests for the browser suite's readme-derived oracles. The oracle for
 // every expected value below is a readme sentence, quoted in the test comment; the
@@ -196,6 +196,30 @@ test('expectedLabel applies prefix, postfix, max_postfix and the min/max prefixe
   assert.equal(expectedLabel(100, cfg, 'handle'), 'Up to: $100+k');
   assert.equal(expectedLabel(0, cfg, 'min'), 'From: $0k');
   assert.equal(expectedLabel(100, cfg, 'max'), 'Up to: $100+k');
+});
+
+// readme "Callback data": "from_pretty": "10 000" is "FROM formatted (values mode: the
+// prettified entry, not the index)", with "min_pretty": "MIN formatted" and "max_pretty" the
+// same for the range ends. The payload carries the formatted number the label is built from,
+// before the prefixes and postfixes wrap around it.
+// Bug caught: handing the callbacks rule expectedLabel() instead -- every decorated slider
+// would then be asked for "$50k" in a payload field the plugin fills with "50".
+test('expectedPretty formats a value for its surface and never decorates it', () => {
+  const cfg = { min: 0, max: 100000, step: 1, prefix: '$', postfix: 'k', max_postfix: '+', min_prefix: 'From: ' };
+  assert.equal(expectedPretty(10000, cfg, 'handle'), '10 000');
+  assert.equal(expectedPretty(0, cfg, 'min'), '0');
+  assert.equal(expectedPretty(100000, cfg, 'max'), '100 000');
+
+  // readme note "prettify_min_max": the min and max labels take their own function when it is
+  // set, and fall back to prettify otherwise -- the payload fields follow the same chain.
+  const split = { min: 0, max: 100, step: 1, __prettify: (n) => `<${n}>`, __prettify_min_max: (n) => `m${n}` };
+  assert.equal(expectedPretty(50, split, 'handle'), '<50>');
+  assert.equal(expectedPretty(0, split, 'min'), 'm0');
+
+  // readme "Callback data" in values mode: the prettified entry, not the index.
+  const values = { values: ['low', 'mid', 'high'] };
+  assert.equal(expectedPretty(1, values, 'handle'), 'mid');
+  assert.equal(expectedPretty(2, values, 'max'), 'high');
 });
 
 // #884. readme settings table: max_postfix "Postfix for the maximum value only:

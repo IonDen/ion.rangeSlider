@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * #877 browser suite -- the deterministic greedy pairwise generator for the
- * combination matrix (docs/2026-09-15-browser-suite-design.md, "Combination matrix").
+ * combination matrix driven by test/browser/matrix/matrix.spec.mjs.
  *
  * `generate(seed)` repeatedly draws a batch of candidates (one level per dimension)
  * from a seeded PRNG, scores each by how many still-uncovered, non-excluded
@@ -233,7 +233,9 @@ if (isMain) {
     const seed = 1;
     const entries = generate(seed);
     const generatedCount = entries.filter((e) => e.id.startsWith('m')).length;
-    const header = { _generated: `${new Date().toISOString().slice(0, 10)} seed ${seed}`, _count: entries.length };
+    // Seed only, no date: the generator is deterministic for a seed, so stamping the day of
+    // the run would rewrite the committed configs.json on every regeneration.
+    const header = { _generated: `seed ${seed}`, _count: entries.length };
     const outPath = fileURLToPath(new URL('./configs.json', import.meta.url));
     writeFileSync(outPath, JSON.stringify([header, ...entries], null, 2) + '\n');
     console.log(`generate-configs: wrote ${entries.length} entries (${generatedCount} generated + ${entries.length - generatedCount} named) to configs.json`);

@@ -52,8 +52,8 @@ function computeValues(rawValue, cfg) {
  * @param {object} [cfg] the config object the test opened the slider with;
  *   used only to derive `values` (never sent back as a source of truth for
  *   anything the DOM itself reports).
- * @returns {Promise<object>} the State shape documented in
- *   docs/2026-09-15-browser-suite-design.md ("Harness additions" / lib/state.mjs).
+ * @returns {Promise<object>} the State the invariants of lib/invariants.mjs read (its
+ *   module comment lists the fields).
  */
 export async function readState(page, n = 1, cfg) {
   const wrapSel = wrapSelector(n);
@@ -112,12 +112,17 @@ export async function readState(page, n = 1, cfg) {
 
     let dataFrom = null;
     let dataTo = null;
+    // The instance handle the readme tells the caller to fetch with
+    // $("#range").data("ionRangeSlider"): present while the slider lives, gone once
+    // destroy() has restored the input.
+    let dataHandle = false;
     if (inputEl && typeof jQuery !== 'undefined') {
       const $input = jQuery(inputEl);
       dataFrom = $input.data('from');
       dataTo = $input.data('to');
       if (dataFrom === undefined) dataFrom = null;
       if (dataTo === undefined) dataTo = null;
+      dataHandle = !!jQuery.data(inputEl, 'ionRangeSlider');
     }
 
     return {
@@ -126,6 +131,7 @@ export async function readState(page, n = 1, cfg) {
         disabled: inputEl ? inputEl.disabled : null,
         dataFrom: dataFrom,
         dataTo: dataTo,
+        dataHandle: dataHandle,
         // the plugin toggles .irs-hidden-input on the input at init and
         // destroy(); the destroy invariant reads it back here
         classes: classes(inputEl)

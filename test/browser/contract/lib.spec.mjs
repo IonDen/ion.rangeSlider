@@ -13,22 +13,30 @@ test.describe(`browser lib (${LABEL})`, () => {
     expect(s.labels.single.text).toBe('30');
     expect(s.input.dataFrom).toBe(30);
   });
+  // Bug caught: clickTrackAt targeting the raw fraction of the line instead of the
+  // handle-centred position, which lands a 0.75 click on 74 or 76 on a 600px track.
   test('clickTrackAt 0.75 moves the single handle to 75', async ({ page }) => {
     await open(page, { min: 0, max: 100, from: 10, step: 1 });
     await clickTrackAt(page, 0.75);
     await expect(page.locator('#slider')).toHaveValue('75');
   });
+  // Bug caught: dragBarBy measuring its travel against the full line width instead of the
+  // usable travel (line minus one handle), which moves the pair by more than the fraction asks.
   test('dragBarBy 0.1 moves a 20..40 interval to 30..50', async ({ page }) => {
     await open(page, { type: 'double', min: 0, max: 100, from: 20, to: 40, step: 1, drag_interval: true });
     await dragBarBy(page, 0.1);
     await expect(page.locator('#slider')).toHaveValue('30;50');
   });
+  // Bug caught: pressKeys firing the presses with no pause, so the plugin's 300 ms idle render
+  // loop folds them into one move and two presses advance a single step.
   test('pressKeys ArrowRight x2 on the focused track moves by two steps', async ({ page }) => {
     await open(page, { min: 0, max: 100, from: 10, step: 5 });
     await focusTrack(page);
     await pressKeys(page, ['ArrowRight', 'ArrowRight']);
     await expect(page.locator('#slider')).toHaveValue('20');
   });
+  // Bug caught: readState reading visibility off the element's existence instead of its
+  // computed style -- a hidden label is in the DOM, so every hide_* rule would pass blindly.
   test('readState reports hidden labels as not visible', async ({ page }) => {
     await open(page, { min: 0, max: 100, from: 10, hide_min_max: true, hide_from_to: true });
     const s = await readState(page);
@@ -56,10 +64,22 @@ test.describe(`browser lib (${LABEL})`, () => {
     const s = await readState(page, 1, cfg);
     expect(s.values.from).toBe(1);
   });
+  // Bug caught: running the values-mode lookup on a config with no values array, which would
+  // turn every plain number into null.
   test('readState reports plain numeric from/to when the config carries no values array', async ({ page }) => {
     const cfg = { type: 'double', min: 0, max: 100, from: 20, to: 80 };
     await open(page, cfg);
     const s = await readState(page, 1, cfg);
     expect(s.values).toEqual({ from: 20, to: 80 });
+  });
+  // readme "Public methods": the instance is fetched with $("#range").data("ionRangeSlider"),
+  // and after destroy() "the input is back to normal and can be initialized again".
+  // Bug caught: reading the handle off window.__irs.slider (which survives destroy()) instead
+  // of the input's own jQuery data, so the destroy rule could never see the handle left behind.
+  test('readState reports the instance handle while the slider lives and not after destroy()', async ({ page }) => {
+    await open(page, { min: 0, max: 100, from: 30 });
+    expect((await readState(page)).input.dataHandle).toBe(true);
+    await page.evaluate(() => window.__irs.slider.destroy());
+    expect((await readState(page)).input.dataHandle).toBe(false);
   });
 });

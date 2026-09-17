@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { INVARIANTS, checkInvariants } from '../browser/lib/invariants.mjs';
 import { KNOWN_BUGS, matchKnownBug } from '../browser/lib/known-bugs.mjs';
 
-// #877: the thirteen readme invariants, fed hand-built State objects. Every failing
+// #877: the fourteen readme invariants, fed hand-built State objects. Every failing
 // fixture below is a state a one-line plugin change could really produce, and the
 // matching passing fixture is the state the readme promises instead, so each test
 // names the bug it catches in its comment.
@@ -26,7 +26,7 @@ function merge(target, over) {
 /** A healthy single-type State: 0..100 step 1, from 30, no grid, nothing hidden. */
 function base(over = {}) {
     return merge({
-        input: { value: '30', disabled: false, dataFrom: 30, dataTo: null, classes: ['irs-hidden-input'] },
+        input: { value: '30', disabled: false, dataFrom: 30, dataTo: null, classes: ['irs-hidden-input'], dataHandle: true },
         container: { exists: true, classes: ['irs', 'irs--flat', 'js-irs-0'] },
         labels: {
             single: { text: '30', visible: true },
@@ -65,6 +65,13 @@ function doubleState(over = {}) {
     return merge(state, over);
 }
 
+/** A double-type State holding exactly this pair, with the input and labels to match. */
+const withPair = (from, to) => doubleState({
+    values: { from, to },
+    input: { value: `${from};${to}`, dataFrom: from, dataTo: to },
+    labels: { from: { text: String(from) }, to: { text: String(to) } }
+});
+
 const SINGLE = { min: 0, max: 100, step: 1 };
 const DOUBLE = { type: 'double', min: 0, max: 100, step: 1 };
 
@@ -84,13 +91,13 @@ const INIT_EVENTS = [cb('onStart'), cb('onInit')];
 
 // ------------------------------------------------------------------ structure
 
-// Task 6 iterates this exact id list to retire register entries, so a renamed or
-// dropped invariant must be visible here.
+// judgeStage() in test/browser/lib/known-bugs.mjs iterates this exact id list to retire
+// register entries, so a renamed or dropped invariant must be visible here.
 // Bug caught: exporting twelve invariants, or one without its readme citation.
-test('INVARIANTS carries the thirteen documented ids, each with a readme citation', () => {
+test('INVARIANTS carries the fourteen documented ids, each with a readme citation', () => {
     assert.deepEqual(INVARIANTS.map((i) => i.id), [
         'bounds', 'scale', 'limits', 'intervals', 'fixed', 'input', 'labels',
-        'grid', 'dom', 'callbacks', 'keys', 'inert', 'destroy'
+        'grid', 'dom', 'callbacks', 'keys', 'inert', 'destroy', 'reinit'
     ]);
     for (const inv of INVARIANTS) {
         assert.equal(typeof inv.check, 'function', `${inv.id} needs a check()`);
@@ -244,6 +251,86 @@ test('intervals: a bar drag keeps the interval width', () => {
     assert.ok(!ids(ctxOf(stretched, cfg, 'S2', prev, { changed: true, handle: 'to' })).includes('intervals'));
 });
 
+// #877: readme settings table, drag_interval: "Let the user drag the whole interval by
+// its bar. Double type only" -- and the click goes down the same path, which is what the
+// suite's interactions contract records as "line clicks (nearest handle, drag_interval
+// centre move, click on a handle position)". So a track click on a drag_interval slider
+// carries the pair to the click and owes the width it had, exactly as the bar drag does.
+// Bug caught: the click path clamping each handle on its own, so a click that runs one
+// handle into from_max leaves it behind while the other follows the pointer -- with the
+// rule reading S5 alone, a click that did it would go unreported.
+test('intervals: a track click with drag_interval keeps the interval width', () => {
+    const cfg = { type: 'double', min: 0, max: 100, step: 5, drag_interval: true, from_max: 30 };
+    const prev = doubleState();                                   // 20 to 40, width 20
+    const click = { click: true, changed: true };
+
+    const together = withPair(25, 45);
+    assert.ok(!ids(ctxOf(together, cfg, 'S3', prev, click)).includes('intervals'));
+
+    const stopped = withPair(30, 50);                             // both stopped at from_max
+    assert.ok(!ids(ctxOf(stopped, cfg, 'S3', prev, click)).includes('intervals'));
+
+    const stretched = withPair(30, 60);                           // from stopped, to ran on
+    assert.ok(ids(ctxOf(stretched, cfg, 'S3', prev, click)).includes('intervals'));
+
+    // The wording is what the known-bug register keys on, so it is pinned here.
+    const messages = checkInvariants(ctxOf(stretched, cfg, 'S3', prev, click))
+        .filter((f) => f.id === 'intervals').map((f) => f.message);
+    assert.deepEqual(messages, [
+        'intervals: a track click with drag_interval moves the whole interval, so its width is unchanged (expected 20, got 30) after S3'
+    ]);
+
+    // Without drag_interval the click resolves to the nearest handle and moves that one
+    // alone, so the width is free to change.
+    const nearest = { type: 'double', min: 0, max: 100, step: 5, from_max: 30 };
+    assert.ok(!ids(ctxOf(stretched, nearest, 'S3', prev, click)).includes('intervals'));
+});
+
+// #877: S5 presses the BAR, and the press aims at its centre. The bar runs from one
+// handle's centre to the other's, so each handle covers half of its own width of the bar's
+// end and the centre of a bar no wider than a handle is under one of them: the press grabs
+// that handle and the stage is an ordinary handle drag, which may close the pair without
+// breaking any promise. The width rule stands down there. matrix.spec.mjs reads the
+// geometry of the state the stage started from (its bar box against the widest handle box)
+// and passes the answer in as bar_narrower_than_handle, so the rule itself reads no pixels;
+// the fixtures below carry both the geometry and the answer derived from it.
+// Bug caught: measuring a handle press against the width of a bar nobody could grab, which
+// reports every pair an interval clamp has walked together as a stretch the plugin never made.
+test('intervals: a bar narrower than the handles standing on it is not a bar drag', () => {
+    const cfg = { type: 'double', min: 0, max: 1000000, step: 1000, drag_interval: true, max_interval: 6000 };
+
+    // m080's geometry: an interval of 6000 on a range of a million is under four pixels of
+    // a 600 px track, lying under two 16 px handles.
+    const narrow = withPair(499000, 505000);
+    narrow.bar = box(299, 3.6);
+    const collapsed = withPair(505000, 505000);
+    const pressedAHandle = { bar: true, changed: true, bar_narrower_than_handle: true };
+    assert.ok(!ids(ctxOf(collapsed, cfg, 'S5', narrow, pressedAHandle)).includes('intervals'));
+
+    // A bar wide enough to press is judged exactly as before: a handle left behind while
+    // the other follows the pointer is the stretch the rule exists to report.
+    const wide = withPair(200000, 500000);
+    wide.bar = box(120, 180);
+    const stretched = withPair(200000, 600000);
+    const realBarDrag = { bar: true, changed: true, bar_narrower_than_handle: false };
+    const messages = checkInvariants(ctxOf(stretched, { ...cfg, max_interval: 0 }, 'S5', wide, realBarDrag))
+        .filter((f) => f.id === 'intervals').map((f) => f.message);
+    assert.deepEqual(messages, [
+        'intervals: a bar drag moves the whole interval, so its width is unchanged (expected 300000, got 400000) after S5'
+    ]);
+
+    // A pair an interval clamp has walked onto one value is the same stand-down reached the
+    // same way: a bar of no width is narrower than any handle.
+    const coincident = withPair(550000, 550000);
+    coincident.bar = box(330, 0);
+    const opened = withPair(548000, 554000);
+    assert.ok(!ids(ctxOf(opened, cfg, 'S5', coincident, pressedAHandle)).includes('intervals'));
+
+    // The click is not the bar: it has a track to land on whatever the handles are doing, so
+    // a stage that starts from a bar nobody could press is still judged on its width.
+    assert.ok(ids(ctxOf(opened, cfg, 'S3', coincident, { click: true, changed: true, bar_narrower_than_handle: true })).includes('intervals'));
+});
+
 // ---------------------------------------------------------------------- fixed
 
 // readme settings table: from_fixed "Fix the position of the from handle".
@@ -343,7 +430,7 @@ test('labels: in double type exactly one of the merged label and the pair is vis
 // only while from equals to, and still pins the text.
 // Bug caught: accepting a lone from label on a slider whose handles are apart (a to
 // label that stopped rendering would go unreported), or accepting any text in it.
-test('labels: with from equal to to the lone from label is accepted, with its own text', () => {
+test('labels: with from equal to to the lone value label is accepted, with its own text', () => {
     const coincident = (fromText) => doubleState({
         input: { value: '50;50', dataFrom: 50, dataTo: 50 },
         labels: {
@@ -355,6 +442,20 @@ test('labels: with from equal to to the lone from label is accepted, with its ow
     });
     assert.ok(!ids(ctxOf(coincident('50'), DOUBLE, 'S0')).includes('labels'));
     assert.ok(ids(ctxOf(coincident('51'), DOUBLE, 'S0')).includes('labels'), 'the lone from label must still read the from value');
+
+    // Which of the two the plugin leaves showing is the handle last touched: a drag of the
+    // from handle onto the to handle leaves the TO label alone (edge:from-above-to at S1).
+    const lonelyTo = (toText) => doubleState({
+        input: { value: '50;50', dataFrom: 50, dataTo: 50 },
+        labels: {
+            single: { text: '50 — 50', visible: false },
+            from: { text: '50', visible: false },
+            to: { text: toText, visible: true }
+        },
+        values: { from: 50, to: 50 }
+    });
+    assert.ok(!ids(ctxOf(lonelyTo('50'), DOUBLE, 'S1')).includes('labels'));
+    assert.ok(ids(ctxOf(lonelyTo('51'), DOUBLE, 'S1')).includes('labels'), 'the lone to label must still read the to value');
 
     // Handles apart: a single visible from label is still the "neither" case.
     const apart = doubleState({ labels: { to: { visible: false } } });
@@ -680,6 +781,42 @@ test('callbacks: every payload carries min_pretty and max_pretty and percents wi
     assert.ok(ids(ctxOf(over, SINGLE, 'S3', prev, { click: true, changed: false })).includes('callbacks'));
 });
 
+// readme "Callback data": "from_pretty": "10 000" is "FROM formatted", "to_pretty" the same
+// for the to value, "min_pretty": "MIN formatted", "max_pretty": "MAX formatted" -- the text
+// the labels are built from, before the prefixes and postfixes decorate it.
+// Bug caught: a payload whose formatted text is built from a stale value, run through the
+// wrong prettify surface, or decorated on the way in (the #661 family) -- the label would look
+// right while every caller that logs the payload gets the wrong text.
+test('callbacks: every payload carries the formatted text of its values', () => {
+    const cfg = { min: 0, max: 100000, step: 1, prefix: '$' };
+    const payload = (over) => base({
+        values: { from: 10000 }, input: { value: '10000', dataFrom: 10000 },
+        labels: { single: { text: '$10 000' }, min: { text: '$0' }, max: { text: '$100 000' } },
+        events: [cb('onStart', { from: 10000, max: 100000, from_percent: 10, from_pretty: '10 000', min_pretty: '0', max_pretty: '100 000', ...over })]
+    });
+    assert.ok(!ids(ctxOf(payload({}), cfg, 'S0', null, { changed: false })).includes('callbacks'));
+
+    assert.ok(ids(ctxOf(payload({ from_pretty: '$10 000' }), cfg, 'S0', null, { changed: false })).includes('callbacks'), 'the payload text is never decorated');
+    assert.ok(ids(ctxOf(payload({ from_pretty: '9 000' }), cfg, 'S0', null, { changed: false })).includes('callbacks'), 'the payload text must follow the value it ships with');
+    assert.ok(ids(ctxOf(payload({ max_pretty: '100000' }), cfg, 'S0', null, { changed: false })).includes('callbacks'), 'max_pretty goes through the same formatting');
+
+    // In double type to_pretty is checked as well; in single type the plugin has no to value
+    // to format, so the field is left alone.
+    const both = doubleState({
+        events: [cb('onStart', { from: 20, to: 40, from_percent: 20, to_percent: 40, from_pretty: '20', to_pretty: '40', min_pretty: '0', max_pretty: '100' })]
+    });
+    assert.ok(!ids(ctxOf(both, DOUBLE, 'S0', null, { changed: false })).includes('callbacks'));
+    const wrongTo = doubleState({
+        events: [cb('onStart', { from: 20, to: 40, from_percent: 20, to_percent: 40, from_pretty: '20', to_pretty: '41', min_pretty: '0', max_pretty: '100' })]
+    });
+    assert.ok(ids(ctxOf(wrongTo, DOUBLE, 'S0', null, { changed: false })).includes('callbacks'));
+
+    // An entry whose custom prettify cannot run in the test process has no honest expected
+    // text; matrix.spec.mjs marks it, and the four comparisons stand down there.
+    const marked = { ...cfg, __skip_label_invariants: true };
+    assert.ok(!ids(ctxOf(payload({ from_pretty: 'anything at all' }), marked, 'S0', null, { changed: false })).includes('callbacks'));
+});
+
 // Bug caught: the matrix attributing a stage's callbacks to the wrong stage by
 // reading the whole log instead of the entries recorded since the previous state.
 test('callbacks: only the entries recorded since the previous state are judged', () => {
@@ -805,6 +942,60 @@ test('keys: a press stopped by min_interval must sit exactly on the interval edg
     assert.ok(ids(ctxOf(withFrom(25), cfg, 'S4a', prev, { key: '+', changed: true })).includes('keys'));
 });
 
+// readme note "step": "min: 0.5, step: 1 gives 0.5, 2, 3, 4" -- the value one step below 2
+// is min itself, because every value is min plus WHOLE steps. The arithmetic alone gives 1,
+// which this slider can never hold.
+// Bug caught: predicting `before + direction * step` without putting it back on the
+// documented scale, which reds the only value a decrease press from 2 can land on.
+test('keys: the one-step target is a value the documented scale holds', () => {
+    const cfg = { min: 0.5, max: 10.5, step: 1 };
+    const prev = afterPress(2, INIT_EVENTS);
+
+    const onScaleLanding = afterPress(0.5, [...INIT_EVENTS, ...pressEvents(0.5)]);
+    assert.ok(!ids(ctxOf(onScaleLanding, cfg, 'S4d', prev, { key: '-', changed: true })).includes('keys'));
+
+    const offScaleLanding = afterPress(1, [...INIT_EVENTS, ...pressEvents(1)]);
+    assert.ok(ids(ctxOf(offScaleLanding, cfg, 'S4d', prev, { key: '-', changed: true })).includes('keys'), '1 is not a value this scale holds');
+});
+
+// The values a slider reports travel through the percent conversions, so two readings of the
+// same value can differ in the last bits. Every other comparison in the file goes through the
+// near() epsilon; these three did not.
+// Bug caught: comparing the before and after values with !== in the fixed rule, in moved() and
+// in the keys rule's target choice -- 20.000000000000004 would read as a handle that moved, so
+// a fixed handle would be reported and a drag that changed nothing would be asked for an
+// onChange.
+test('fixed, moved and keys read float noise as no movement', () => {
+    const noise = 20 + 1e-12;
+    const withFrom = (value) => doubleState({
+        values: { from: value },
+        input: { value: `${value};40`, dataFrom: value },
+        labels: { from: { text: String(value) } }
+    });
+
+    const fixedCfg = { type: 'double', min: 0, max: 100, step: 1, from_fixed: true };
+    const prev = doubleState({ events: INIT_EVENTS });
+    assert.ok(!ids(ctxOf(withFrom(noise), fixedCfg, 'S1', prev, { changed: false })).includes('fixed'));
+    assert.ok(ids(ctxOf(withFrom(21), fixedCfg, 'S1', prev, { changed: false })).includes('fixed'), 'a real move is still reported');
+
+    // moved(), through the callbacks rule: a drag whose value only shifted by noise owes no
+    // onChange, and the one onFinish it fired is all it owes.
+    const dragCfg = { type: 'double', min: 0, max: 100, step: 1 };
+    const quiet = withFrom(noise);
+    quiet.events = [...INIT_EVENTS, cb('onFinish', { from: noise, to: 40, from_pretty: String(noise), to_pretty: '40', from_percent: 20, to_percent: 40 })];
+    assert.ok(!ids(ctxOf(quiet, dragCfg, 'S1', prev, { changed: true, handle: 'from' })).includes('callbacks'));
+
+    // The keys rule picks its target by asking which handle moved; noise must not make it
+    // judge the from handle against a one-step prediction it never tried to reach.
+    const pressed = withFrom(noise);
+    pressed.values.to = 45;
+    pressed.input.value = `${noise};45`;
+    pressed.input.dataTo = 45;
+    pressed.labels.to = { text: '45', visible: true };
+    pressed.events = [...INIT_EVENTS, cb('onChange', { from: noise, to: 45, from_pretty: String(noise), to_pretty: '45', from_percent: 20, to_percent: 45 }), cb('onFinish', { from: noise, to: 45, from_pretty: String(noise), to_pretty: '45', from_percent: 20, to_percent: 45 })];
+    assert.ok(!ids(ctxOf(pressed, { type: 'double', min: 0, max: 100, step: 5 }, 'S4a', prev, { key: '+', changed: true })).includes('keys'), 'the to handle is the one that moved');
+});
+
 // A press that moved nothing leaves no trace of which handle it targeted (in double
 // type that is the last-touched handle, which the State deliberately does not expose),
 // and a press blocked by a bound, a fixed handle or an inert slider is allowed to do
@@ -854,20 +1045,63 @@ test('inert: a blocked slider carries the mask and keeps its input enabled', () 
 test('destroy: the container is gone and the input is back to normal', () => {
     const gone = base({
         container: { exists: false, classes: [] },
-        input: { classes: [] },
+        input: { classes: [], dataHandle: false },
         labels: { single: { visible: false }, min: { visible: false }, max: { visible: false } },
         events: INIT_EVENTS
     });
     assert.deepEqual(checkInvariants(ctxOf(gone, SINGLE, 'S8', base({ events: INIT_EVENTS }), { destroyed: true })), []);
 
-    const left = base({ input: { classes: [] }, events: INIT_EVENTS });
+    const left = base({ input: { classes: [], dataHandle: false }, events: INIT_EVENTS });
     assert.ok(ids(ctxOf(left, SINGLE, 'S8', base({ events: INIT_EVENTS }), { destroyed: true })).includes('destroy'));
 
-    const stillHidden = base({ container: { exists: false, classes: [] }, events: INIT_EVENTS });
+    const stillHidden = base({ container: { exists: false, classes: [] }, input: { dataHandle: false }, events: INIT_EVENTS });
     assert.ok(ids(ctxOf(stillHidden, SINGLE, 'S8', base({ events: INIT_EVENTS }), { destroyed: true })).includes('destroy'));
 
-    const stillDisabled = base({ container: { exists: false, classes: [] }, input: { classes: [], disabled: true }, events: INIT_EVENTS });
+    const stillDisabled = base({ container: { exists: false, classes: [] }, input: { classes: [], disabled: true, dataHandle: false }, events: INIT_EVENTS });
     assert.ok(ids(ctxOf(stillDisabled, { ...SINGLE, disable: true }, 'S8', base({ events: INIT_EVENTS }), { destroyed: true })).includes('destroy'));
+});
+
+// readme "Public methods": "Remove the slider and restore the original input" -- the instance
+// handle the readme tells the caller to fetch with $("#range").data("ionRangeSlider") is part
+// of what destroy() takes back.
+// Bug caught: destroy() removing the container but leaving the instance on the input's jQuery
+// data, so the input looks initialised and a second ionRangeSlider() call is a no-op.
+test('destroy: the $.data instance handle is gone', () => {
+    const prev = base({ events: INIT_EVENTS });
+    const gone = base({
+        container: { exists: false, classes: [] },
+        input: { classes: [], dataHandle: false },
+        labels: { single: { visible: false }, min: { visible: false }, max: { visible: false } },
+        events: INIT_EVENTS
+    });
+    assert.deepEqual(checkInvariants(ctxOf(gone, SINGLE, 'S8', prev, { destroyed: true })), []);
+
+    const stillHeld = merge(gone, { input: { dataHandle: true } });
+    assert.ok(ids(ctxOf(stillHeld, SINGLE, 'S8', prev, { destroyed: true })).includes('destroy'));
+});
+
+// readme "Public methods": "After destroy() the input is back to normal and can be
+// initialized again."
+// Bug caught: destroy() leaving the input in a state a second ionRangeSlider() call cannot
+// build on -- the container never comes back and the input stays a plain field.
+test('reinit: the slider is there again after a second ionRangeSlider() call', () => {
+    const destroyed = base({
+        container: { exists: false, classes: [] },
+        input: { classes: [], dataHandle: false },
+        labels: { single: { visible: false }, min: { visible: false }, max: { visible: false } },
+        events: INIT_EVENTS
+    });
+
+    const rebuilt = base({ input: { dataHandle: true }, events: INIT_EVENTS });
+    assert.ok(!ids(ctxOf(rebuilt, SINGLE, 'S9', destroyed, { reinitialised: true })).includes('reinit'));
+
+    assert.ok(ids(ctxOf(destroyed, SINGLE, 'S9', destroyed, { reinitialised: true })).includes('reinit'), 'no container means the input could not be initialized again');
+
+    const noHandle = base({ input: { dataHandle: false }, events: INIT_EVENTS });
+    assert.ok(ids(ctxOf(noHandle, SINGLE, 'S9', destroyed, { reinitialised: true })).includes('reinit'), 'the second call must leave the instance handle on the input');
+
+    // Every other stage is left alone: the rule speaks only for the re-initialisation.
+    assert.ok(!ids(ctxOf(destroyed, SINGLE, 'S8', base({ events: INIT_EVENTS }), { destroyed: true })).includes('reinit'));
 });
 
 // ------------------------------------------------------------- known-bug register
@@ -888,4 +1122,31 @@ test('matchKnownBug answers per invariant id and per config', () => {
     } finally {
         KNOWN_BUGS.pop();
     }
+});
+
+// Two register entries speak for the payload text of a slider built hidden with
+// prettify_enabled off (m018, m019, m065, m067, m068): the handle fields come back undefined
+// (#897) and the min/max fields come back as raw numbers (#889). They are told apart by the
+// MESSAGE, so their patterns are written against the wording this rule produces -- which the
+// other register tests can only assume, because they hand the lookup a hand-typed string.
+// Bug caught: a change to the failure wording here, or a register pattern that drifts from
+// it, which would hand a stage's failures to the wrong issue without anything going red.
+test('the payload-text failures this rule reports are the ones the register tells apart', () => {
+    const cfg = { type: 'double', min: 0, max: 100, step: 1, prettify_enabled: false, __hidden_at_init: true };
+    const hiddenInit = doubleState({
+        events: [cb('onStart', {
+            from: 20, to: 40, from_percent: 20, to_percent: 40,
+            from_pretty: undefined, to_pretty: undefined, min_pretty: 0, max_pretty: 100
+        })]
+    });
+
+    const ctx = ctxOf(hiddenInit, cfg, 'S0', null, { changed: false });
+    const issues = {};
+    for (const failure of checkInvariants(ctx)) {
+        const field = failure.id === 'callbacks' && failure.message.match(/\b(from|to|min|max)_pretty\b/);
+        if (!field) continue;
+        const known = matchKnownBug(ctx, failure.id, failure.message);
+        issues[field[0]] = known && known.issue;
+    }
+    assert.deepEqual(issues, { from_pretty: 897, to_pretty: 897, min_pretty: 889, max_pretty: 889 });
 });

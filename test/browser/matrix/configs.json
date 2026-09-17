@@ -1,6 +1,6 @@
 [
   {
-    "_generated": "2026-09-16 seed 1",
+    "_generated": "seed 1",
     "_count": 128
   },
   {
@@ -6190,10 +6190,10 @@
       "force_edges": true,
       "grid": true,
       "grid_num": 2,
-      "min": 1541026800000,
-      "max": 1543618800000,
-      "from": 1541631600000,
-      "to": 1542927600000,
+      "min": 1541030400000,
+      "max": 1543622400000,
+      "from": 1541635200000,
+      "to": 1542931200000,
       "__prettify_src": "function tsToDate (ts) {\n    var d = new Date(ts);\n    return d.toLocaleDateString(lang, { year: \"numeric\", month: \"long\", day: \"numeric\" });\n}"
     },
     "effective": {
@@ -6201,17 +6201,17 @@
       "force_edges": true,
       "grid": true,
       "grid_num": 2,
-      "min": 1541026800000,
-      "max": 1543618800000,
-      "from": 1541631600000,
-      "to": 1542927600000,
+      "min": 1541030400000,
+      "max": 1543622400000,
+      "from": 1541635200000,
+      "to": 1542931200000,
       "__prettify_src": "function tsToDate (ts) {\n    var d = new Date(ts);\n    return d.toLocaleDateString(lang, { year: \"numeric\", month: \"long\", day: \"numeric\" });\n}"
     },
     "attrs": null,
     "extra": {},
     "notes": [
-      "min/max/from/to are dateToTS(new Date(year, month, day)) with year = 2018 in the site demo, resolved here with Date#valueOf() (local time zone, same as the site demo).",
-      "prettify was the function tsToDate; only its source is kept in config.__prettify_src. It closes over the demo page's `lang` variable, which does not exist once inlined elsewhere -- Task 6's concern, not this generator's."
+      "min/max/from/to are dateToTS(new Date(year, month, day)) with year = 2018 in the site demo, resolved here with Date.UTC() so the committed timestamps do not move with the generator machine's time zone.",
+      "prettify was the function tsToDate; only its source is kept in config.__prettify_src. It closes over the demo page's `lang` variable, which does not exist once inlined elsewhere -- test/browser/matrix/matrix.spec.mjs handles that, not this generator."
     ]
   },
   {
@@ -6764,7 +6764,10 @@
     "extra": {},
     "notes": [
       "Reaches issue #879: a bar drag against from_max stretches the interval instead of moving it as a unit."
-    ]
+    ],
+    "stages": {
+      "s1": 0.3
+    }
   },
   {
     "id": "n043",

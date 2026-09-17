@@ -1,5 +1,5 @@
 /**
- * #877 browser suite -- the thirteen readme invariants checked after every stage of
+ * #877 browser suite -- the fourteen readme invariants checked after every stage of
  * the combination matrix.
  *
  * Each entry carries the readme sentence it derives from, so a failure names the
@@ -12,15 +12,16 @@
  *   ctx = {
  *     state,          // the State from lib/state.mjs, read after the stage settled
  *     cfg,            // the configuration the slider was built with
- *     stage,          // 'S0'..'S8'
+ *     stage,          // 'S0'..'S9'
  *     prev,           // the State before this stage, or null at S0
  *     expectations    // what the stage promised: { changed }, { changed, handle },
- *                     // { click, changed }, { key: '+'|'-', changed }, { bar, changed },
- *                     // { update: true } or { destroyed: true }
+ *                     // { click, changed }, { key: '+'|'-', changed },
+ *                     // { bar, changed, bar_narrower_than_handle }, { update: true },
+ *                     // { destroyed: true } or { reinitialised: true }
  *   }
  *
  * State fields these rules read (the contract with lib/state.mjs):
- *   input { value, disabled, dataFrom, dataTo, classes[] }
+ *   input { value, disabled, dataFrom, dataTo, classes[], dataHandle }
  *   container { exists, classes[] }
  *   labels { single, from, to, min, max } each { text, visible }
  *   handles { single?, from?, to? }
@@ -31,7 +32,7 @@
  */
 
 import { isValuesMode, nearestOnScale, onScale, rangeOf } from './scale.mjs';
-import { expectedGridLabel, expectedLabel, expectedMerged, valuesEntry } from './format.mjs';
+import { expectedGridLabel, expectedLabel, expectedMerged, expectedPretty, valuesEntry } from './format.mjs';
 
 /** Values sit on a step grid, so only float representation noise is tolerated. */
 const EPS = 1e-9;
@@ -64,6 +65,19 @@ const valuesOf = (state) => (state && state.values) || { from: null, to: null };
 const labelOf = (state, name) => (state && state.labels && state.labels[name]) || { text: '', visible: false };
 const isNumber = (value) => typeof value === 'number' && Number.isFinite(value);
 const near = (a, b) => Math.abs(a - b) <= EPS;
+/**
+ * Are these two readings of a handle the same value?
+ *
+ * The values travel through the percent conversions, so two readings of one value can differ
+ * in the last bits; two numbers are compared with the same epsilon the rest of the file uses.
+ * Anything that is not a number (null, the reading of an empty input) is compared exactly, so
+ * a value appearing where there was none stays a change.
+ *
+ * @param {number|null} a
+ * @param {number|null} b
+ * @returns {boolean}
+ */
+const sameValue = (a, b) => (isNumber(a) && isNumber(b) ? near(a, b) : a === b);
 
 const show = (value) => (typeof value === 'string' || Array.isArray(value) ? JSON.stringify(value) : String(value));
 
@@ -99,7 +113,7 @@ function moved(ctx) {
     if (!ctx.prev) return false;
     const now = valuesOf(ctx.state);
     const before = valuesOf(ctx.prev);
-    return now.from !== before.from || now.to !== before.to;
+    return !sameValue(now.from, before.from) || !sameValue(now.to, before.to);
 }
 
 /**
@@ -289,15 +303,36 @@ export const INVARIANTS = [
                 msgs.push(report('intervals', 'the handles opened past max_interval', `<= ${cfg.max_interval}`, gap, stage));
             }
 
-            // readme settings table, drag_interval: "Let the user drag the whole
-            // interval by its bar" -- S5 drags the bar, so the pair keeps the width it
-            // had before. When a bound or a limit stops the drag it stops BOTH handles
-            // together and the width still holds; one handle stopping while the other
-            // follows the pointer stretches the interval, which is what this reports.
-            if (stage === 'S5' && ctx.prev) {
+            // readme settings table, drag_interval: "Let the user drag the whole interval
+            // by its bar. Double type only". Two stages move the pair as a unit and owe
+            // the width it had: S5 drags the bar, and with drag_interval on a track click
+            // carries the whole interval to the click as well -- the suite's interactions
+            // contract records that path as "line clicks (nearest handle, drag_interval
+            // centre move, click on a handle position)". When a bound or a limit stops the
+            // move it stops BOTH handles together and the width still holds; one handle
+            // stopping while the other follows the pointer stretches the interval, which
+            // is what this reports.
+            const wholeIntervalMove = stage === 'S5'
+                ? 'a bar drag moves the whole interval, so its width is unchanged'
+                : stage === 'S3' && cfg.drag_interval
+                    ? 'a track click with drag_interval moves the whole interval, so its width is unchanged'
+                    : null;
+            if (wholeIntervalMove && ctx.prev) {
                 const was = valuesOf(ctx.prev);
-                if (isNumber(was.from) && isNumber(was.to) && !near(gap, was.to - was.from)) {
-                    msgs.push(report('intervals', 'a bar drag moves the whole interval, so its width is unchanged', was.to - was.from, gap, stage));
+                const width = isNumber(was.from) && isNumber(was.to) ? was.to - was.from : null;
+                // A bar narrower than the handles standing on it cannot be pressed: the bar
+                // runs from one handle's centre to the other's, so the press aimed at its
+                // centre lands on a handle and the stage is an ordinary handle drag, which
+                // may close the pair without breaking any promise. The width has nothing to
+                // say there. matrix.spec.mjs measures the bar of the state the stage started
+                // from and passes the answer in, which keeps this rule free of pixel reads;
+                // the bounds, limits, interval and callback rules still judge the stage. The
+                // click keeps its track whatever the handles are doing, so S3 is unaffected.
+                const expectations = ctx.expectations || {};
+                const pressedAHandle = stage === 'S5' && !!expectations.bar_narrower_than_handle;
+                const hasBar = isNumber(width) && !pressedAHandle;
+                if (hasBar && !near(gap, width)) {
+                    msgs.push(report('intervals', wholeIntervalMove, width, gap, stage));
                 }
             }
             return msgs;
@@ -314,10 +349,10 @@ export const INVARIANTS = [
             const before = valuesOf(ctx.prev);
             const msgs = [];
 
-            if (cfg.from_fixed && now.from !== before.from) {
+            if (cfg.from_fixed && !sameValue(now.from, before.from)) {
                 msgs.push(report('fixed', 'a from_fixed handle moved', before.from, now.from, stage));
             }
-            if (cfg.to_fixed && isDouble(cfg) && now.to !== before.to) {
+            if (cfg.to_fixed && isDouble(cfg) && !sameValue(now.to, before.to)) {
                 msgs.push(report('fixed', 'a to_fixed handle moved', before.to, now.to, stage));
             }
             return msgs;
@@ -362,18 +397,21 @@ export const INVARIANTS = [
             });
 
             // The readme documents data-from / data-to as the attribute route INTO the
-            // slider and says nothing about the write-back, so mirroring them is
-            // characterization of the shipped behaviour. It still fails loudly if
-            // writeToInput() stops updating them. Values mode is left out: the readme
-            // does not say whether the index or the entry is written there.
+            // slider and says nothing about the write-back, so mirroring it is
+            // characterization of the shipped behaviour. What writeToInput() actually
+            // writes is the jQuery data of the input (input.data("from"/"to")), which is
+            // what lib/state.mjs reads back, not the DOM attribute -- the message says so.
+            // It still fails loudly if writeToInput() stops updating it. Values mode is
+            // left out: the readme does not say whether the index or the entry is written
+            // there.
             if (!isValuesMode(cfg)) {
                 const values = valuesOf(state);
                 const data = state.input || {};
                 if (isNumber(values.from) && data.dataFrom !== values.from) {
-                    msgs.push(report('input', 'data-from must mirror the from value', values.from, data.dataFrom, stage));
+                    msgs.push(report('input', "the jQuery data 'from' the plugin writes must mirror the from value", values.from, data.dataFrom, stage));
                 }
                 if (isDouble(cfg) && isNumber(values.to) && data.dataTo !== values.to) {
-                    msgs.push(report('input', 'data-to must mirror the to value', values.to, data.dataTo, stage));
+                    msgs.push(report('input', "the jQuery data 'to' the plugin writes must mirror the to value", values.to, data.dataTo, stage));
                 }
             }
             return msgs;
@@ -384,14 +422,16 @@ export const INVARIANTS = [
         id: 'labels',
         readme: 'settings table: hide_from_to "Hide the from and to value labels", hide_min_max "Hide the min and max labels", decorate_both and values_separator for the merged label, prefix/postfix/min_prefix/max_prefix/max_postfix and the prettify options for the text',
         // Coincident handles (from === to) are the one case where a double slider shows
-        // neither both value labels nor their merged pair: the plugin draws the from
-        // label alone, hides the to label behind it and leaves the merged label hidden
-        // with its "50 - 50" text unused. Characterization -- the readme describes the
-        // merged label for handles that COLLIDE and says nothing about handles that sit
-        // on the same value, and one number for a zero-width interval is a defensible
-        // reading of it. Accepted only while the two values are equal, and the text of
-        // that lone label is still pinned to the from value below, so a label that
-        // stopped rendering or started reading the wrong value is still reported.
+        // neither both value labels nor their merged pair: the plugin draws ONE of the two
+        // value labels -- the handle last touched, so the from label at init and the to
+        // label after a drag that carried from onto to -- hides the other behind it and
+        // leaves the merged label hidden with its "50 - 50" text unused. Characterization
+        // -- the readme describes the merged label for handles that COLLIDE and says
+        // nothing about handles that sit on the same value, and one number for a
+        // zero-width interval is a defensible reading of it. Accepted only while the two
+        // values are equal, and the text of that lone label is still pinned to its own
+        // handle's value below, so a label that stopped rendering or started reading the
+        // wrong value is still reported.
         check(ctx) {
             if (!alive(ctx)) return [];
             const { cfg, stage, state } = ctx;
@@ -420,11 +460,11 @@ export const INVARIANTS = [
                 // The coincident-handle rendering documented on this rule: with from on
                 // the same value as to, the from label alone is what the plugin draws.
                 const coincident = isNumber(from) && isNumber(to) && near(from, to);
-                const lonelyFrom = coincident && fromLabel.visible && !toLabel.visible;
+                const lonely = coincident && fromLabel.visible !== toLabel.visible;
 
                 if (merged.visible && (fromLabel.visible || toLabel.visible)) {
                     msgs.push(report('labels', 'the merged label and the from/to labels are visible together', 'one of them', 'both', stage));
-                } else if (!merged.visible && !(fromLabel.visible && toLabel.visible) && !lonelyFrom) {
+                } else if (!merged.visible && !(fromLabel.visible && toLabel.visible) && !lonely) {
                     msgs.push(report('labels', 'neither the merged label nor both value labels are visible', 'one of them', 'neither', stage));
                 }
 
@@ -645,8 +685,30 @@ export const INVARIANTS = [
                 const where = `${entry.type} payload`;
                 if (isNumber(entry.min) && !near(entry.min, min)) msgs.push(report('callbacks', `${where}: min`, min, entry.min, stage));
                 if (isNumber(entry.max) && !near(entry.max, max)) msgs.push(report('callbacks', `${where}: max`, max, entry.max, stage));
-                if (typeof entry.min_pretty !== 'string') msgs.push(report('callbacks', `${where}: min_pretty must be the formatted min`, 'a string', entry.min_pretty, stage));
-                if (typeof entry.max_pretty !== 'string') msgs.push(report('callbacks', `${where}: max_pretty must be the formatted max`, 'a string', entry.max_pretty, stage));
+                // readme "Callback data": "from_pretty": "10 000" -- "FROM formatted (values
+                // mode: the prettified entry, not the index)", with to_pretty, min_pretty
+                // "MIN formatted" and max_pretty the same for the other three values. The
+                // text is what the label is built from, before the prefixes and postfixes
+                // decorate it, so the oracle is the plain prettify chain of each surface.
+                //
+                // An entry whose custom prettify cannot run outside the page has no honest
+                // expected text (matrix.spec.mjs marks it on the cfg), so the four
+                // comparisons stand down there, exactly as the labels and grid rules do.
+                if (!cfg.__skip_label_invariants) {
+                    const formatted = [['from_pretty', entry.from, 'handle'], ['min_pretty', min, 'min'], ['max_pretty', max, 'max']];
+                    if (isDouble(cfg)) formatted.push(['to_pretty', entry.to, 'handle']);
+                    for (const [field, value, surface] of formatted) {
+                        // A value the payload does not carry (a slider that has not rendered
+                        // yet reports null) is the bounds rule's business, not this one; in
+                        // values mode only an index the array holds has an entry to format.
+                        if (!isNumber(value)) continue;
+                        if (isValuesMode(cfg) && !(Number.isInteger(value) && value >= 0 && value <= cfg.values.length - 1)) continue;
+                        const wanted = expectedPretty(value, cfg, surface);
+                        if (entry[field] !== wanted) {
+                            msgs.push(report('callbacks', `${where}: ${field} must be the formatted ${field.slice(0, field.indexOf('_'))} value`, wanted, entry[field], stage));
+                        }
+                    }
+                }
 
                 for (const name of ['from_percent', 'to_percent']) {
                     const percent = entry[name];
@@ -705,8 +767,8 @@ export const INVARIANTS = [
             const { step } = rangeOf(cfg);
             const now = valuesOf(state);
             const before = valuesOf(ctx.prev);
-            const fromMoved = now.from !== before.from;
-            const toMoved = isDouble(cfg) && now.to !== before.to;
+            const fromMoved = !sameValue(now.from, before.from);
+            const toMoved = isDouble(cfg) && !sameValue(now.to, before.to);
 
             // Both handles moving is the interval key path (drag_interval), where the
             // readme promises a width-preserving move rather than one targeted handle.
@@ -717,7 +779,12 @@ export const INVARIANTS = [
 
             const other = target === 'from' ? now.to : now.from;
             const stops = keyStops(target, cfg, other);
-            const wanted = Math.min(Math.max(before[target] + direction * step, stops.lo), stops.hi);
+            // readme note "step": every value is min plus WHOLE steps, so one step from a
+            // value that is itself on the scale is the next scale point -- on min 0.5 with
+            // step 1 (0.5, 2, 3 ...) the step below 2 is min itself, not the 1 the bare
+            // arithmetic gives. The bound, limit and interval stops are applied to that point.
+            const onScaleTarget = nearestOnScale(before[target] + direction * step, cfg);
+            const wanted = Math.min(Math.max(onScaleTarget, stops.lo), stops.hi);
             const actual = now[target];
 
             if (!isNumber(actual) || !near(actual, wanted)) {
@@ -774,10 +841,41 @@ export const INVARIANTS = [
             if (input.disabled) {
                 msgs.push(report('destroy', 'destroy() must leave the input enabled', false, true, stage));
             }
+            // readme "Public methods": the instance is fetched with
+            // $("#range").data("ionRangeSlider"), so that handle is part of what "restore the
+            // original input" gives back. An input that still carries it looks initialised,
+            // and the readme's "can be initialized again" call would be a silent no-op.
+            if (input.dataHandle) {
+                msgs.push(report('destroy', "destroy() must drop the input's ionRangeSlider instance handle", false, true, stage));
+            }
             if (!Array.isArray(input.classes)) {
                 msgs.push(report('destroy', 'the state reader must expose input.classes so the restored input can be checked', 'an array of class names', input.classes, stage));
             } else if (input.classes.indexOf('irs-hidden-input') >= 0) {
                 msgs.push(report('destroy', 'destroy() must take the irs-hidden-input class off the input', 'no irs-hidden-input', input.classes, stage));
+            }
+            return msgs;
+        }
+    },
+
+    {
+        id: 'reinit',
+        readme: 'Public methods: "After destroy() the input is back to normal and can be initialized again"',
+        // The one stage that runs after destroy(): matrix.spec.mjs calls ionRangeSlider()
+        // on the same input again and reads the page as S9. A destroy() that leaves
+        // anything behind -- the instance handle on the input's data, a class, an
+        // attribute -- makes that second call do nothing, which is what this reports.
+        check(ctx) {
+            const expectations = ctx.expectations || {};
+            if (!expectations.reinitialised) return [];
+            const { stage, state } = ctx;
+            const input = state.input || {};
+            const msgs = [];
+
+            if (!(state.container && state.container.exists)) {
+                msgs.push(report('reinit', 'a destroyed input must build a slider again', true, false, stage));
+            }
+            if (!input.dataHandle) {
+                msgs.push(report('reinit', 'the rebuilt slider must be reachable through the input again', true, !!input.dataHandle, stage));
             }
             return msgs;
         }
