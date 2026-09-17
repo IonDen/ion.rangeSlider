@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { KNOWN_BUGS, judgeStage, matchKnownBug } from '../browser/lib/known-bugs.mjs';
 import { INVARIANTS } from '../browser/lib/invariants.mjs';
+import { BAR_DRAG_FRACTION, S1_TARGET, S2_TARGET, S3_CLICK } from '../browser/matrix/script.mjs';
 
 // #877: the known-bug register. Every entry below is fed the minimal configuration from
 // its issue -- the one the matrix reproduces the bug with -- and a neighbouring
@@ -64,7 +65,8 @@ const prettyFailure = (type, field, expected, got, stage = 'S0') =>
 
 /** Every (stage, invariant) pair the register matches for a config. */
 const allHits = (cfg, over) => {
-    const stages = ['S0', 'S1', 'S2', 'S3', 'S4a', 'S4b', 'S4c', 'S4d', 'S5', 'S6', 'S7', 'S8'];
+    // Every stage of the matrix script, S9 -- the build that follows destroy() -- included.
+    const stages = ['S0', 'S1', 'S2', 'S3', 'S4a', 'S4b', 'S4c', 'S4d', 'S5', 'S6', 'S7', 'S8', 'S9'];
     const found = [];
     for (const stage of stages) {
         for (const id of INVARIANT_IDS) {
@@ -110,6 +112,53 @@ test('a plain healthy slider matches only the bug every slider without values ca
     ]);
     // In values mode even that one is gone.
     assert.deepEqual(allHits({ values: [10, 20, 30], from: 1 }), []);
+});
+
+// ------------------------------------------------------------------ the script
+
+// Half of what a predicate knows comes from the script matrix.spec.mjs drives the slider
+// with: #882 asks whether a drag stage drove a handle INTO its own limit, #891 whether the
+// track click landed between the two handles, #879 how far the bar drag carries them. Those
+// numbers live in test/browser/matrix/script.mjs, which the spec and the register both read,
+// and the fractions below are taken from there rather than typed out -- so this test moves
+// with the script and fails when the register stops moving with it.
+// Bug caught: the register keeping drag targets of its own (the STAGE_DRAG_TARGETS /
+// S3_CLICK_FRACTION pair it used to carry), which goes on excusing cells at the old target
+// the day the script aims somewhere else.
+test('the register predicates aim where the script aims', () => {
+    const track = { type: 'double', min: 0, max: 1000, step: 10, from: 300, to: 700 };
+    const at = (fraction) => track.min + fraction * (track.max - track.min);
+
+    // S1 drives the from handle to its fraction of the track. A from_min just above where
+    // it lands is an off-scale limit the clamp rounds below (#882); one just under is a
+    // limit the drag stops short of, and nothing is excused.
+    const s1 = { prev: prevOf(300, 700), expectations: { changed: true, handle: 'from' } };
+    assert.equal(hit({ ...track, from_min: at(S1_TARGET) + 4 }, 'S1', 'limits', s1), 882);
+    assert.equal(hit({ ...track, from_min: at(S1_TARGET) - 6 }, 'S1', 'limits', s1), null);
+
+    // S2 drives the to handle the other way, so its mirror is a to_max the clamp rounds
+    // above.
+    const s2 = { prev: prevOf(300, 700), expectations: { changed: true, handle: 'to' } };
+    assert.equal(hit({ ...track, to_max: at(S2_TARGET) - 4 }, 'S2', 'limits', s2), 882);
+    assert.equal(hit({ ...track, to_max: at(S2_TARGET) + 6 }, 'S2', 'limits', s2), null);
+
+    // S3 clicks the track, and #891 takes a click that landed on the bar between the two
+    // handles: the pair that brackets it carries the bug, the pair left of it does not.
+    const clicked = at(S3_CLICK);
+    const deadKeyboard = { ...track, drag_interval: true, from_fixed: true };
+    const press = (from, to) => ({ prev: prevOf(from, to), expectations: { key: '+', changed: false } });
+    // The two pairs are bracketed twenty units either side of the click on a thousand-wide
+    // track, so a register aiming at a click fraction of its own misses the first pair and
+    // claims the second.
+    assert.equal(hit(deadKeyboard, 'S4a', 'callbacks', press(clicked - 20, clicked + 20)), 891);
+    assert.equal(hit(deadKeyboard, 'S4a', 'callbacks', press(clicked - 200, clicked - 20)), null);
+
+    // S5 carries the pair one bar drag to the right, so a from_max inside that travel is
+    // reached (#879) and one beyond it is not.
+    const travel = BAR_DRAG_FRACTION * (track.max - track.min);
+    const barDrag = { prev: prevOf(300, 500), expectations: { bar: true, changed: true } };
+    assert.equal(hit({ ...track, drag_interval: true, from_max: 300 + travel - 10 }, 'S5', 'intervals', barDrag), 879);
+    assert.equal(hit({ ...track, drag_interval: true, from_max: 300 + travel + 10 }, 'S5', 'intervals', barDrag), null);
 });
 
 // ------------------------------------------------------------ #882 limits off scale
@@ -445,6 +494,12 @@ test('#891 matches the key stages of a drag_interval slider whose bar the click 
     const noFixed = { type: 'double', min: 0, max: 100, from: 30, to: 70, step: 1, drag_interval: true };
     assert.equal(hit(noFixed, 'S4a', 'callbacks', onBar), null);
 
+    // The onFinish line it answers is the one a key press owes, spelled the way the rule
+    // reports it.
+    // Bug caught: a message pattern that drifts from the rule's wording, which leaves the
+    // dropped press unexplained and the cell red.
+    assert.equal(answers(dead, 'S4a', 'callbacks', 'callbacks: an interaction ends with exactly one onFinish (expected 1, got 0) after S4a', onBar), 891);
+
     // An inert slider never gets the click that arms the interval path, so its keyboard
     // stays ordinary: that is #890's case, not this one.
     const blocked = { type: 'double', min: 0, max: 100, from: 30, to: 70, step: 1, drag_interval: true, to_fixed: true, block: true };
@@ -608,7 +663,7 @@ test('#887 matches a scale fine enough to put four decimals in a label', () => {
     assert.equal(hit(coarse, 'S1', 'callbacks'), null);
 });
 
-// ------------------------------------------------- #879 a bar drag against from_max
+// ------------------------------------- #879 a whole-interval move against a handle limit
 
 // The interval-drag path clamps each handle on its own, so a bar drag that runs the
 // trailing handle into from_max lets the leading one keep going and stretches the pair.
@@ -620,7 +675,42 @@ test('#879 matches a bar drag that reaches from_max, not one that stops short', 
     const noLimit = { type: 'double', min: 0, max: 1000, step: 5, from: 300, to: 800, drag_interval: true };
     assert.equal(hit(noLimit, 'S5', 'intervals', { prev: prevOf(310, 710) }), null);
 
-    assert.equal(hit(cfg, 'S2', 'intervals', { prev: prevOf(310, 710) }), null, 'only the bar drag stage moves the pair as a unit');
+    assert.equal(hit(cfg, 'S2', 'intervals', { prev: prevOf(310, 710) }), null, 'a handle drag moves one handle and owes no width');
+});
+
+// The track click takes the same interval path: calc() centres the pair on the click and
+// then clamps each handle into its own limits, so a click that carries one handle into
+// from_max leaves the other following the pointer. Same bug, same register entry -- which
+// is what the widened message pattern is for, since the two stages word their failure
+// differently ("a bar drag ..." and "a track click with drag_interval ...").
+// Bug caught: a pattern still tied to the bar drag, which leaves the click's stretch
+// unexplained and the matrix red on a bug that is already filed; and a predicate that claims
+// the click stage without asking whether the clamp splits the pair, which excuses every
+// drag_interval cell at S3 and retires the entry on the first one that is healthy.
+test('#879 answers the track click that stretches the pair, and leaves an untouched pair alone', () => {
+    // n042's option set. Its own pair at S3 -- 300 to 800, five hundred wide -- is already
+    // centred on the click at 55 % of the range, so the click moves nothing there; the
+    // matrix run bears the rest out, with #879 annotating n042's bar drag and nothing else.
+    const n042 = { type: 'double', min: 0, max: 1000, step: 5, from: 300, to: 800, drag_interval: true, from_max: 400 };
+    const stretch = 'intervals: a track click with drag_interval moves the whole interval, so its width is unchanged (expected 200, got 250) after S3';
+    const narrowPair = { prev: prevOf(500, 700), expectations: { click: true, changed: true } };
+    assert.equal(answers(n042, 'S3', 'intervals', stretch, narrowPair), 879, 'centred on 550 the from handle is asked for 450, past its from_max');
+    assert.equal(hit(n042, 'S3', 'intervals', { prev: prevOf(300, 800), expectations: { click: true, changed: true } }), null, 'the pair the entry itself brings to the click centres inside its limits');
+
+    // The same click with no limit to run into clamps nothing and keeps the width.
+    const noLimit = { ...n042, from_max: undefined };
+    assert.equal(answers(noLimit, 'S3', 'intervals', stretch, narrowPair), null);
+
+    // A limit that holds BOTH handles back by the same amount moves the pair as a unit, so
+    // the width survives and there is nothing to excuse.
+    const bothHeld = { ...n042, from_max: 440, to_max: 640 };
+    assert.equal(hit(bothHeld, 'S3', 'intervals', narrowPair), null);
+
+    // The bar drag's own wording is still answered, and the widened pattern still leaves
+    // the interval-limit failures of the same rule to the entries filed for them.
+    const barDrag = 'intervals: a bar drag moves the whole interval, so its width is unchanged (expected 500, got 600) after S5';
+    assert.equal(answers(n042, 'S5', 'intervals', barDrag, { prev: prevOf(310, 710) }), 879);
+    assert.equal(answers({ ...n042, min_interval: 100 }, 'S5', 'intervals', 'intervals: the handles closed past min_interval (expected ">= 100", got 40) after S5', { prev: prevOf(310, 710) }), null);
 });
 
 // ---------------------------------------- #881 min_interval at a top edge off the scale
@@ -777,17 +867,35 @@ test('#896 matches the interaction stages of a slider with no range, not one wit
     assert.equal(hit(oneEntry, 'S1', 'callbacks'), 896);
     const twoEntries = { values: ['a', 'b'] };
     assert.equal(hit(twoEntries, 'S1', 'callbacks'), null);
+
+    // The onFinish line it answers is the one an interaction owes, spelled the way the rule
+    // reports it.
+    // Bug caught: a message pattern that drifts from the rule's wording, which leaves the
+    // failure unexplained and the cell red.
+    assert.equal(answers(degenerate, 'S1', 'callbacks', 'callbacks: an interaction ends with exactly one onFinish (expected 1, got 0) after S1'), 896);
+
+    // A disabled or blocked slider owes no onFinish in the first place: the rule judges it
+    // by "onFinish must not fire on a disabled or blocked slider", which passes, so there is
+    // no failure here for the entry to answer.
+    // Bug caught: claiming the inert cells, where the entry would red as "no longer
+    // reproduces" on a slider that never had the bug.
+    assert.equal(hit({ ...degenerate, disable: true }, 'S1', 'callbacks'), null);
+    assert.equal(hit({ ...degenerate, block: true }, 'S3', 'callbacks'), null);
 });
 
 // --------------------------------------- #898 the vanishing value labels of a click
 
 // readme settings table, hide_from_to "Hide the from and to value labels": with it off a
-// double slider shows the two value labels or the merged one in their place. A click on the
-// track while drag_interval holds both handles on the same value leaves all three hidden, and
-// every key press after it redraws the same nothing.
+// double slider shows the two value labels or the merged one in their place. With the two
+// handles on one value the plugin shows the label of the handle last pressed instead, and a
+// track click under drag_interval presses neither -- so all three come out hidden, and every
+// key press after it redraws the same nothing.
 test('#898 matches the track click of a coincident drag_interval pair, not a pair with an interval left', () => {
-    // m080's option set, the entry the bug was found on: max_interval walks the pair together
-    // until the two handles meet, and the click that follows hides every label.
+    // m080's option set, the entry the bug was found on. What puts its handles on one value
+    // is a drag: 6000 of a million-wide range is a few pixels of track, so the pair overlaps,
+    // the press of a handle drag lands on whichever handle is on top and the crossing guard
+    // parks it on the other -- the state a user reaches by dragging one handle onto the
+    // other. The click that follows is what hides the labels.
     const m080 = {
         min: 0, max: 1000000, step: 1000, type: 'double', from: 300000, to: 700000,
         from_min: 2400, max_interval: 6000, drag_interval: true, grid: true, grid_margin: false,

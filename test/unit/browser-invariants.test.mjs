@@ -443,8 +443,11 @@ test('labels: with from equal to to the lone value label is accepted, with its o
     assert.ok(!ids(ctxOf(coincident('50'), DOUBLE, 'S0')).includes('labels'));
     assert.ok(ids(ctxOf(coincident('51'), DOUBLE, 'S0')).includes('labels'), 'the lone from label must still read the from value');
 
-    // Which of the two the plugin leaves showing is the handle last touched: a drag of the
-    // from handle onto the to handle leaves the TO label alone (edge:from-above-to at S1).
+    // Which of the two the plugin leaves showing is the handle the press went to, and on a
+    // coincident pair that is the handle lying on top rather than the one the drag aimed at.
+    // edge:from-above-to is built from: 80 with to: 20, which validate() parks on one value
+    // before anything is drawn (from comes down onto to), so the S1 drag aimed at `from`
+    // lands on the `to` sitting on top of it and leaves the TO label alone.
     const lonelyTo = (toText) => doubleState({
         input: { value: '50;50', dataFrom: 50, dataTo: 50 },
         labels: {

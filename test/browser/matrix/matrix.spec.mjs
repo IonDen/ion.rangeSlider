@@ -19,30 +19,13 @@ import { readState } from '../lib/state.mjs';
 import { dragHandleTo, dragBarBy, clickTrackAt, focusTrack, pressKeys } from '../lib/interact.mjs';
 import { checkInvariants } from '../lib/invariants.mjs';
 import { judgeStage } from '../lib/known-bugs.mjs';
-import { isValuesMode, nearestOnScale, rangeOf } from '../lib/scale.mjs';
+import { isValuesMode, rangeOf } from '../lib/scale.mjs';
+// The script's own numbers -- the drag targets, the click fraction, the bar travel and
+// S6's update() value -- live in ./script.mjs, which the known-bug register reads too.
+import { BAR_DRAG_FRACTION, S1_TARGET, S2_TARGET, S3_CLICK, midValue } from './script.mjs';
 
 /** Outlasts the plugin's 300 ms idle render poll (see the testing reference). */
 const IDLE_TICK = 400;
-
-/**
- * The three track fractions the mouse stages aim at.
- *
- * A generated double entry starts with its from handle at 30 % of the range and its to
- * handle at 70 % (dimensions.mjs), so those two fractions are the one place a drag would
- * move nothing: S1 and S2 aim outside the starting pair instead, and each drag really
- * travels. The click is off the midpoint for the same reason -- 0.5 is exactly halfway
- * between a 0.3 and a 0.7 pair, where which handle the plugin picks comes down to float
- * noise, while 0.55 always resolves to the to handle.
- *
- * A named case may override the S1 fraction with `stages: { s1: <fraction> }` in
- * dimensions.mjs when its bug lives somewhere the shared script never visits --
- * edge:min-interval-top needs the from handle driven to the very top of the track. That is
- * the whole override mechanism: one optional number per entry, read here, defaulted below,
- * so the interaction script itself stays one script for all 128 entries.
- */
-const S1_TARGET = 0.2;
-const S2_TARGET = 0.8;
-const S3_CLICK = 0.55;
 
 /**
  * The three function-valued prettify options, as
@@ -172,16 +155,30 @@ function attachPrettifyOracles(cfg) {
 }
 
 /**
- * The value S6's update() moves the from handle to: the middle of the range, snapped to
- * the documented scale (values mode works on indexes, so the middle index).
+ * Did the drag stage's press land on the OTHER handle, not the one it aimed at?
  *
- * @param {object} cfg
- * @returns {number}
+ * On a pair whose handles sit on one value -- or overlap within a pixel of track -- the
+ * press lands on the handle lying on TOP: `to` at init (setTopHandler), and the last
+ * touched one (.type_last) from the first press on. So dragHandleTo(page, 'to', ...) can
+ * grab `from` and the other way round, and the crossing guard then parks the pressed
+ * handle on the other one. The handle wearing .type_last afterwards is the one the press
+ * went to, which is what this reads; it is told to the reader of the cell as an
+ * annotation, and no rule depends on it.
+ *
+ * Only a double slider has two handles to confuse, and only a live one feels the press at
+ * all -- the mask of a disabled or blocked slider swallows it, so nothing is pressed and
+ * there is nothing to report.
+ *
+ * @param {object} state         the state the stage left behind
+ * @param {'from'|'to'} aimedAt  the handle the stage's promise named
+ * @returns {boolean}
  */
-function midValue(cfg) {
-  if (isValuesMode(cfg)) return Math.floor(cfg.values.length / 2);
-  const { min, max } = rangeOf(cfg);
-  return nearestOnScale((min + max) / 2, cfg);
+function pressLandedElsewhere(state, aimedAt) {
+  const handles = (state && state.handles) || {};
+  const aimed = handles[aimedAt];
+  const other = handles[aimedAt === 'from' ? 'to' : 'from'];
+  if (!aimed || !other) return false;
+  return (aimed.classes || []).indexOf('type_last') < 0;
 }
 
 for (const entry of configs.filter((c) => c.id)) {
@@ -279,11 +276,17 @@ for (const entry of configs.filter((c) => c.id)) {
     await dragHandleTo(page, dbl ? 'from' : 'single', s1Target);
     await page.waitForTimeout(IDLE_TICK);
     await assertStage('S1', { changed: !inert && !cfg.from_fixed, handle: dbl ? 'from' : 'single' });
+    if (!inert && pressLandedElsewhere(prev, 'from')) {
+      testInfo.annotations.push({ type: 'other handle', description: 'the press landed on the other handle' });
+    }
 
     if (dbl) {
       await dragHandleTo(page, 'to', S2_TARGET);
       await page.waitForTimeout(IDLE_TICK);
       await assertStage('S2', { changed: !inert && !cfg.to_fixed, handle: 'to' });
+      if (!inert && pressLandedElsewhere(prev, 'to')) {
+        testInfo.annotations.push({ type: 'other handle', description: 'the press landed on the other handle' });
+      }
     } else {
       testInfo.annotations.push({ type: 'skipped stage', description: 'S2 single type has no to handle' });
     }
@@ -318,7 +321,7 @@ for (const entry of configs.filter((c) => c.id)) {
       if (narrowBar) {
         testInfo.annotations.push({ type: 'narrow bar', description: 'the S5 drag lands on a handle, the width check does not apply' });
       }
-      await dragBarBy(page, 0.1);
+      await dragBarBy(page, BAR_DRAG_FRACTION);
       await page.waitForTimeout(IDLE_TICK);
       await assertStage('S5', {
         bar: true,
@@ -344,6 +347,12 @@ for (const entry of configs.filter((c) => c.id)) {
     // initialized again." The same input is handed the same configuration a second time --
     // anything destroy() left behind (the instance handle above all) makes this call a
     // silent no-op, and the slider never comes back.
+    //
+    // It does not come back on the configured from/to, though: data beats the JS options
+    // in the readme's resolution order, and the jQuery data writeToInput() put on the
+    // input is still there once destroy() has run, so the second build opens on the pair
+    // reset() left at S7. The container is visible by now whatever the entry was built
+    // in, so this build renders straight away.
     await page.evaluate((config) => {
       const el = document.getElementById('slider');
       // eval, like the fixture's own config parsing: the literal can carry a prettify

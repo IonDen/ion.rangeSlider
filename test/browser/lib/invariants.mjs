@@ -287,7 +287,7 @@ export const INVARIANTS = [
 
     {
         id: 'intervals',
-        readme: 'settings table: min_interval "Smallest interval between the handles. 0 means no limit. Double type only", max_interval "Largest interval between the handles", drag_interval "Let the user drag the whole interval by its bar. Double type only"',
+        readme: 'settings table: min_interval "Smallest interval between the handles. 0 means no limit. Double type only", max_interval "Largest interval between the handles", drag_interval "Let the user drag the whole interval by its bar. Double type only"; the width a track click owes is characterization, the readme documents the bar drag only',
         check(ctx) {
             if (!alive(ctx) || !isDouble(ctx.cfg)) return [];
             const { cfg, stage } = ctx;
@@ -305,13 +305,17 @@ export const INVARIANTS = [
 
             // readme settings table, drag_interval: "Let the user drag the whole interval
             // by its bar. Double type only". Two stages move the pair as a unit and owe
-            // the width it had: S5 drags the bar, and with drag_interval on a track click
-            // carries the whole interval to the click as well -- the suite's interactions
-            // contract records that path as "line clicks (nearest handle, drag_interval
-            // centre move, click on a handle position)". When a bound or a limit stops the
-            // move it stops BOTH handles together and the width still holds; one handle
-            // stopping while the other follows the pointer stretches the interval, which
-            // is what this reports.
+            // the width it had: S5 drags the bar, which is the sentence above, and with
+            // drag_interval on a track click carries the whole interval to the click as
+            // well. That second half is CHARACTERIZATION -- the readme documents the bar
+            // as the way to move an interval and says nothing about the click, and the
+            // centre move is the plugin's shipped behaviour, which the suite's
+            // interactions contract records as "line clicks (nearest handle, drag_interval
+            // centre move, click on a handle position)". Both are judged the same way, and
+            // a failure of either is a finding for the register rather than a rule to
+            // relax. When a bound or a limit stops the move it stops BOTH handles together
+            // and the width still holds; one handle stopping while the other follows the
+            // pointer stretches the interval, which is what this reports.
             const wholeIntervalMove = stage === 'S5'
                 ? 'a bar drag moves the whole interval, so its width is unchanged'
                 : stage === 'S3' && cfg.drag_interval
@@ -423,9 +427,15 @@ export const INVARIANTS = [
         readme: 'settings table: hide_from_to "Hide the from and to value labels", hide_min_max "Hide the min and max labels", decorate_both and values_separator for the merged label, prefix/postfix/min_prefix/max_prefix/max_postfix and the prettify options for the text',
         // Coincident handles (from === to) are the one case where a double slider shows
         // neither both value labels nor their merged pair: the plugin draws ONE of the two
-        // value labels -- the handle last touched, so the from label at init and the to
-        // label after a drag that carried from onto to -- hides the other behind it and
-        // leaves the merged label hidden with its "50 - 50" text unused. Characterization
+        // value labels -- the from label while nothing has been touched, the label of the
+        // handle the press went to after that -- hides the other behind it and leaves the
+        // merged label hidden with its "50 - 50" text unused. Which handle the press went
+        // to is not always the one a drag aimed at: on a coincident pair it lands on the
+        // handle lying on top, `to` at init and the last touched one afterwards. That is
+        // edge:from-above-to, whose from: 80 with to: 20 validate() parks on one value
+        // (from comes down onto to) before a single handle is drawn -- so the pair is
+        // coincident from init, and the to label is what shows from S1 on because `to` is
+        // the handle the S1 press landed on. Characterization
         // -- the readme describes the merged label for handles that COLLIDE and says
         // nothing about handles that sit on the same value, and one number for a
         // zero-width interval is a defensible reading of it. Accepted only while the two

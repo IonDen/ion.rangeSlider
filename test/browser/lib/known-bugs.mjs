@@ -53,6 +53,11 @@
 import { isValuesMode, nearestOnScale, onScale, rangeOf, scaleDecimals, scalePoint } from './scale.mjs';
 import { builtinPrettify, valuesEntry } from './format.mjs';
 import { gridUnits, keyStops, INVARIANTS } from './invariants.mjs';
+// Where the fixed interaction script aims: the same numbers matrix.spec.mjs drives the
+// slider with. A predicate that has to say "this stage pushes the handle into its own
+// limit" can only say it from those, and reading them from the script is what keeps the
+// two from drifting apart.
+import { BAR_DRAG_FRACTION, S1_TARGET, S2_TARGET, S3_CLICK, midValue } from '../matrix/script.mjs';
 
 /** Values sit on a step grid, so only float representation noise is tolerated. */
 const EPS = 1e-9;
@@ -66,42 +71,23 @@ const LIMITS = [
 ];
 
 /**
- * The fraction of the track S5 drags the bar to the right (matrix.spec.mjs).
- *
- * It is a bar drag only while there is a bar to press. The press aims at the bar's centre
- * and the bar runs from one handle's centre to the other's, so each handle covers half its
- * own width of the bar and the centre of a bar no wider than a handle lies under one of
- * them: m080 holds 6000 of a range of a million, under four pixels of track beneath two
- * sixteen-pixel handles. matrix.spec.mjs reads that off the geometry and the width promise
- * stands down, so a pair that stage closes is a handle drag doing what a handle drag may --
- * no entry here speaks for it (that was #895, closed as an artefact of this harness).
- */
-const BAR_DRAG_FRACTION = 0.1;
-
-/**
- * The fractions of the track the mouse stages aim at, mirroring matrix.spec.mjs's shared
- * targets: S1 drives the from (or single) handle, S2 the to handle, S3 clicks the track.
- * Where a stage drives a handle itself is configuration in the same sense
- * BAR_DRAG_FRACTION is -- the script is fixed, and a predicate that has to say "this stage
- * pushes the handle into its own limit" can only say it from here. The two named cases with
- * an s1 target of their own (n042 and n043) carry no off-scale limit, so the shared fraction
- * is what these predicates read.
- */
-const STAGE_DRAG_TARGETS = { S1: 0.2, S2: 0.8 };
-const S3_CLICK_FRACTION = 0.55;
-
-/**
  * The handle a drag stage drives and the value it aims it at, or null for a stage that
  * drives nothing of its own.
+ *
+ * Aimed at, not always moved: on a coincident or overlapping pair the press lands on the
+ * handle lying on top, so the handle named here is the one the script reached for. The
+ * predicates that read this ask whether a stage drove a handle INTO its own limit, which
+ * is a question about where the script aimed.
  *
  * @param {object} ctx
  * @returns {{handle: 'from'|'to', value: number}|null}
  */
 function aimedByStage(ctx) {
-    const fraction = STAGE_DRAG_TARGETS[stageOf(ctx)];
-    if (fraction === undefined) return null;
+    const stage = stageOf(ctx);
+    if (stage !== 'S1' && stage !== 'S2') return null;
+    const fraction = stage === 'S1' ? S1_TARGET : S2_TARGET;
     const { min, max } = rangeOf(ctx.cfg);
-    return { handle: stageOf(ctx) === 'S1' ? 'from' : 'to', value: min + fraction * (max - min) };
+    return { handle: stage === 'S1' ? 'from' : 'to', value: min + fraction * (max - min) };
 }
 
 /**
@@ -143,7 +129,7 @@ function valuesUnderStage(ctx) {
 /** The value S3's track click lands on. */
 function clickedValue(cfg) {
     const { min, max } = rangeOf(cfg);
-    return min + S3_CLICK_FRACTION * (max - min);
+    return min + S3_CLICK * (max - min);
 }
 
 const isNum = (value) => typeof value === 'number' && Number.isFinite(value);
@@ -154,23 +140,6 @@ const isKeyStage = (ctx) => /^S4/.test(stageOf(ctx));
 const isInteractionStage = (ctx) => /^S[1-5]/.test(stageOf(ctx));
 const valuesOf = (state) => (state && state.values) || { from: null, to: null };
 const promised = (ctx) => ctx.expectations || {};
-
-/**
- * The value S6's update() moves the from handle to.
- *
- * The same middle-of-the-range value matrix.spec.mjs computes; kept here rather than
- * imported because the spec imports this module (importing it back would be a cycle).
- * A change to the spec's S6 target has to be made in both places, which the comment on
- * each side says.
- *
- * @param {object} cfg
- * @returns {number}
- */
-function midValue(cfg) {
-    if (isValuesMode(cfg)) return Math.floor(cfg.values.length / 2);
-    const { min, max } = rangeOf(cfg);
-    return nearestOnScale((min + max) / 2, cfg);
-}
 
 /**
  * At init a values-mode slider built inside a hidden container reports nothing at all --
@@ -260,6 +229,50 @@ function breaksInterval(gap, cfg) {
 /** The distance between two handle values, or null when either is unknown. */
 function gapBetween(from, to) {
     return isNum(from) && isNum(to) ? to - from : null;
+}
+
+/**
+ * Where S3's track click aims the pair of a drag_interval slider: centred on the value the
+ * click landed on.
+ *
+ * calc()'s "both_one" case reads the width the pair had, puts its middle on the click and
+ * holds the pair inside the range by moving BOTH handles, so the width survives the range
+ * edges. Only the per-handle limits are left, which is what clampSplitsThePair() asks
+ * about.
+ *
+ * @param {{from: number, to: number}} before   the pair the stage started from
+ * @param {object} cfg
+ * @returns {{from: number, to: number}}
+ */
+function clickCentredPair(before, cfg) {
+    const { min, max } = rangeOf(cfg);
+    const width = before.to - before.from;
+    let from = clickedValue(cfg) - width / 2;
+    if (from < min) from = min;
+    if (from + width > max) from = max - width;
+    return { from: from, to: from + width };
+}
+
+/**
+ * Would the interval path's per-handle clamp change the width of the pair a whole-interval
+ * move aims at?
+ *
+ * Each handle is clamped into its OWN from_min/from_max (to_min/to_max) window, one after
+ * the other, so the width only survives a limit that holds both handles back by the same
+ * amount. Usually it holds one of them and lets the other follow the pointer, which is the
+ * stretch the intervals rule reports.
+ *
+ * @param {{from: number, to: number}} target   where the move aims the two handles
+ * @param {object} cfg
+ * @returns {boolean}
+ */
+function clampSplitsThePair(target, cfg) {
+    const heldBack = (handle) => {
+        const lo = isNum(cfg[handle + '_min']) ? cfg[handle + '_min'] : -Infinity;
+        const hi = isNum(cfg[handle + '_max']) ? cfg[handle + '_max'] : Infinity;
+        return Math.min(Math.max(target[handle], lo), hi) - target[handle];
+    };
+    return Math.abs(heldBack('from') - heldBack('to')) > EPS;
 }
 
 /**
@@ -687,7 +700,10 @@ export const KNOWN_BUGS = [
     {
         issue: 891,
         title: 'after a track click drag_interval with a fixed handle makes every key press a no-op',
-        what: /onFinish/,
+        // The one callbacks line this speaks for: the press owes the onFinish the readme
+        // promises every key press. The rule's other onFinish sentences (the one an inert
+        // slider must not fire, the one update() must not) belong to other entries.
+        what: /exactly one onFinish/,
         // The click leaves the interval path in charge of the keyboard, and its
         // fixed-handle guard drops the whole press, callbacks included -- so the press
         // owes an onFinish it never fires. An inert slider is silent anyway, which is why
@@ -851,22 +867,42 @@ export const KNOWN_BUGS = [
 
     {
         issue: 879,
-        title: 'a bar drag against from_max stretches the interval instead of moving it',
-        what: /bar drag moves the whole interval/,
+        title: 'a whole-interval move against from_max or to_min stretches the interval instead of moving it',
+        what: /moves the whole interval/,
         // n042 (edge:bar-drag-from-max) and any drag_interval entry whose from handle is
         // within one bar drag of its from_max. The interval path clamps each handle on its
         // own, so the trailing handle stops at the limit while the leading one keeps
         // following the pointer.
+        //
+        // The track click goes down that same path -- calc()'s "both_one" centres the pair
+        // on the click and then runs the very same per-handle clamp -- so a click that
+        // carries one handle into its own limit leaves the other following the pointer and
+        // stretches the pair exactly as the bar drag does. That is this bug, not a second
+        // one, which is why both stages are read here and `what` names the half of the
+        // message the two width failures share. No matrix entry reaches it at S3: the click
+        // sits at 55 % of the range and every entry brings it a pair that centres well
+        // inside its own limits, so the S3 half stands ready rather than excusing a cell.
+        //
+        // Each stage is asked about its own move: the bar drag adds a tenth of the range to
+        // the pair the stage started from, the click re-centres that pair on the value it
+        // landed on. The bar drag only ever travels right, so the limit its trailing handle
+        // runs into is from_max, which is the one the S5 half reads; a to_max the leading
+        // handle reached first would be the same bug, and no matrix entry gets there.
         matches(ctx, id) {
-            if (id !== 'intervals' || stageOf(ctx) !== 'S5') return false;
+            if (id !== 'intervals') return false;
+            const stage = stageOf(ctx);
+            if (stage !== 'S3' && stage !== 'S5') return false;
             const cfg = ctx.cfg;
             if (!isDouble(cfg) || !cfg.drag_interval || isInert(cfg)) return false;
-            if (cfg.from_fixed || cfg.to_fixed) return false;   // the whole drag is dropped then
-            if (!isNum(cfg.from_max)) return false;
+            if (cfg.from_fixed || cfg.to_fixed) return false;   // the whole move is dropped then
             const before = valuesOf(ctx.prev);
             if (!isNum(before.from)) return false;
-            const { min, max } = rangeOf(cfg);
-            return before.from + BAR_DRAG_FRACTION * (max - min) > cfg.from_max + EPS;
+            if (stage === 'S5') {
+                if (!isNum(cfg.from_max)) return false;
+                const { min, max } = rangeOf(cfg);
+                return before.from + BAR_DRAG_FRACTION * (max - min) > cfg.from_max + EPS;
+            }
+            return isNum(before.to) && clampSplitsThePair(clickCentredPair(before, cfg), cfg);
         }
     },
 
@@ -945,15 +981,23 @@ export const KNOWN_BUGS = [
 
     {
         issue: 896,
-        what: /onFinish/,
+        // The one callbacks line this speaks for: the interaction that owes an onFinish and
+        // fires none. An inert slider owes none in the first place, which the guard below
+        // keeps out and this pattern could not.
+        what: /exactly one onFinish/,
         title: 'a slider whose min equals max fires no onFinish when a handle is released',
         // n038 (edge:min-eq-max), and any slider with one reachable value -- a one-entry
         // values array is the same thing. Every interaction stage: the press and release, the
         // track click and each key press all end without the onFinish the readme promises
         // "even without moving". Only the callbacks rule, and only its onFinish line: the
         // handle really does stay where it is, so every other rule holds and stays armed.
+        //
+        // A disabled or blocked slider is silent by the readme's own account, and the rule
+        // judges it by the other half of its callbacks branch ("must not fire on a disabled
+        // or blocked slider"), which passes: there is no failure for this entry to answer,
+        // and claiming the cell would red it as "no longer reproduces".
         matches(ctx, id) {
-            if (id !== 'callbacks' || !isInteractionStage(ctx)) return false;
+            if (id !== 'callbacks' || !isInteractionStage(ctx) || isInert(ctx.cfg)) return false;
             const { min, max } = rangeOf(ctx.cfg);
             return min === max;
         }
@@ -963,11 +1007,18 @@ export const KNOWN_BUGS = [
         issue: 898,
         title: 'a track click hides every value label while drag_interval holds both handles on the same value',
         what: /neither the merged label nor both value labels/,
-        // m080, from S3 on. Its max_interval clamp walks the pair together until the two
-        // handles sit on the same value, and the click that follows goes down the
-        // whole-interval path and leaves the merged label AND both value labels hidden.
-        // Every later key press travels the same path and redraws the same nothing, so the
-        // click stage and the four key stages all report it.
+        // m080, from S3 on. What puts its two handles on one value is a drag: 6000 of a
+        // range of a million is under four pixels of track, so the pair overlaps and the
+        // press of a handle drag lands on whichever handle is on TOP (`to` at init, the
+        // last touched one after that) rather than the one the stage aimed at -- then the
+        // crossing guard parks the pressed handle on the other one. A user reaches the same
+        // state by dragging one handle onto the other; the click that follows is what hides
+        // the labels, and it takes both. With the handles on one value the plugin shows the
+        // label of the handle last touched and hides the rest, and a track click under
+        // drag_interval leaves neither handle in charge: the merged label AND both value
+        // labels come out hidden. Every later key press travels the same whole-interval
+        // path and redraws the same nothing, so the click stage and the four key stages all
+        // report it.
         //
         // Where it stops: S5 drags the bar, which pulls the two handles apart again and
         // brings a label back (m080 shows the merged label from S5 on), and S6/S7 rebuild

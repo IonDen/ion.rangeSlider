@@ -41,7 +41,15 @@ export function xForFraction(line, handleWidth, f) {
   return line.x + handleWidth / 2 + f * (line.width - handleWidth);
 }
 
-/** Drags handle `which` ('single'|'from'|'to') to the absolute track fraction `f`. */
+/**
+ * Drags handle `which` ('single'|'from'|'to') to the absolute track fraction `f`.
+ *
+ * `which` picks the handle the press is AIMED at, not always the one it gets: where the
+ * two handles of a double slider sit on the same value, or overlap within a pixel of
+ * track, the press lands on whichever is on top -- `to` at init (setTopHandler), the last
+ * touched one (.type_last) afterwards -- so a drag aimed at `from` can grab `to` and the
+ * other way round, and the crossing guard then parks the pressed handle on the other one.
+ */
 export async function dragHandleTo(page, which, f, n = 1) {
   const handle = handleLocator(page, which, n);
   const h = await handle.boundingBox();
