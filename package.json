@@ -47,6 +47,7 @@
         "test:vendor": "node scripts/verify-vendor.mjs",
         "test:unit": "node --test test/unit/*.test.mjs",
         "test:browser": "playwright test",
+        "test:browser:matrix": "playwright test --project=matrix",
         "test:all": "npm test && npm run test:browser",
         "release": "node scripts/release.mjs"
     },

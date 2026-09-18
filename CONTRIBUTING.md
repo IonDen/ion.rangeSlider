@@ -38,5 +38,6 @@ Node 22 or newer is needed to build and test. Consumers need nothing: `js/` and 
 - `npm ci` installs the toolchain.
 - `npm run build` regenerates the three built files (`css/ion.rangeSlider.css`, `css/ion.rangeSlider.min.css` and `js/ion.rangeSlider.min.js`) from `less/` and `js/ion.rangeSlider.js`.
 - `npm test` runs the build checks, the vendored jQuery guard and the unit tests; `npm run test:browser` runs the browser suite. Run `npm run build` first so the browser suite exercises your source rather than master's last build, and leave the result out of your commit.
+- `npm run test:browser` covers the engine suites (chromium, firefox, webkit) and the generated combination matrix together; `npm run test:browser:matrix` runs the matrix alone on Chromium. The matrix's configurations live in `test/browser/matrix/configs.json` and are regenerated with `node test/browser/matrix/generate-configs.mjs` when a dimension changes.
 - A pull request must not include rebuilt files. CI builds from source before running the tests and rejects a hand-edited or half-rebuilt built file.
 - Master's built files are refreshed automatically after every merge that touches the plugin source, the LESS sources or the build script, and the release procedure regenerates them too. The version and build-date banner inside them stays on the last tagged release until the next one.

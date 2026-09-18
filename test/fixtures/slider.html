@@ -26,40 +26,56 @@
     document.write('<script src="' + jqSrc + '"><\/script>');
     document.write('<script src="/js/ion.rangeSlider' + (min ? '.min' : '') + '.js"><\/script>');
     window.onload = function () {
-        var config = q.config ? eval('(' + q.config + ')') : {};   // eval: IE8 has no JSON.parse
         var names = ['onStart', 'onChange', 'onFinish', 'onUpdate'];
-        for (var n = 0; n < names.length; n++) {
-            (function (name) {
-                // #359: chain through to a test-supplied handler for this
-                // name, if the config already set one, before recording --
-                // additive only. Every test before #359 leaves these four
-                // unset in its config, so `original` is always null there
-                // and this is byte-identical to before. Lets a test attach a
-                // real onStart body (e.g. a DOM edit, to contrast against
-                // onInit) while this recorder still captures the event.
-                var original = typeof config[name] === 'function' ? config[name] : null;
-                config[name] = function (data) {
-                    if (original) {
-                        original.call(this, data);
-                    }
-                    window.__irs.events.push({
-                        type: name, from: data.from, to: data.to, min: data.min, max: data.max,
-                        from_percent: data.from_percent, to_percent: data.to_percent,
-                        from_value: data.from_value, to_value: data.to_value,
-                        from_min: data.from_min, from_max: data.from_max,
-                        to_min: data.to_min, to_max: data.to_max,
-                        // #661: carries the prettified from/to text -- in values
-                        // mode this must be the prettified VALUE (matching the
-                        // rendered bubble), not the prettified index.
-                        from_pretty: data.from_pretty, to_pretty: data.to_pretty,
-                        // #639: appended, additive only -- existing assertions
-                        // elsewhere compare event `type` sequences or specific
-                        // fields via toMatchObject(), never the whole object.
-                        min_pretty: data.min_pretty, max_pretty: data.max_pretty
-                    });
-                };
-            })(names[n]);
+        if (q.record_init === '1') {
+            // #877: opt-in so the existing four-name sequence assertions keep
+            // their shape when this flag is unset -- record_init=1 additionally
+            // captures onInit in the same entry shape as the other callbacks.
+            names.push('onInit');
         }
+
+        // #877: builds a config object for slider `which` (1 for #slider, 2 for
+        // the count=2 second slider #slider2) from a raw eval'able string,
+        // wiring the same callback recorder every entry gets stamped with
+        // `which` so a multi-slider page can tell the two event streams apart.
+        function buildConfig(rawConfig, which) {
+            var config = rawConfig ? eval('(' + rawConfig + ')') : {};   // eval: IE8 has no JSON.parse
+            for (var n = 0; n < names.length; n++) {
+                (function (name) {
+                    // #359: chain through to a test-supplied handler for this
+                    // name, if the config already set one, before recording --
+                    // additive only. Every test before #359 leaves these four
+                    // unset in its config, so `original` is always null there
+                    // and this is byte-identical to before. Lets a test attach a
+                    // real onStart body (e.g. a DOM edit, to contrast against
+                    // onInit) while this recorder still captures the event.
+                    var original = typeof config[name] === 'function' ? config[name] : null;
+                    config[name] = function (data) {
+                        if (original) {
+                            original.call(this, data);
+                        }
+                        window.__irs.events.push({
+                            type: name, which: which, from: data.from, to: data.to, min: data.min, max: data.max,
+                            from_percent: data.from_percent, to_percent: data.to_percent,
+                            from_value: data.from_value, to_value: data.to_value,
+                            from_min: data.from_min, from_max: data.from_max,
+                            to_min: data.to_min, to_max: data.to_max,
+                            // #661: carries the prettified from/to text -- in values
+                            // mode this must be the prettified VALUE (matching the
+                            // rendered bubble), not the prettified index.
+                            from_pretty: data.from_pretty, to_pretty: data.to_pretty,
+                            // #639: appended, additive only -- existing assertions
+                            // elsewhere compare event `type` sequences or specific
+                            // fields via toMatchObject(), never the whole object.
+                            min_pretty: data.min_pretty, max_pretty: data.max_pretty
+                        });
+                    };
+                })(names[n]);
+            }
+            return config;
+        }
+
+        var config = buildConfig(q.config, 1);
         if (q.hidden === '1') {
             // #831 hidden-at-init coverage: the diapason clamp lives in
             // validate(), which runs before any layout, so it must produce
@@ -102,6 +118,32 @@
         jQuery('#slider').ionRangeSlider(config);
         window.__irs.slider = jQuery.data(document.getElementById('slider'), 'ionRangeSlider');
         window.__irs.jqueryVersion = jQuery.fn.jquery;
+
+        if (q.dom_events === '1') {
+            // #877: records the native change/input DOM events the plugin
+            // itself triggers on the input (writeToInput's changed branch),
+            // distinct from the onChange/onFinish callbacks recorded above.
+            jQuery('#slider').on('change', function () {
+                window.__irs.events.push({ type: 'dom:change', which: 1, value: this.value });
+            }).on('input', function () {
+                window.__irs.events.push({ type: 'dom:input', which: 1, value: this.value });
+            });
+        }
+
+        if (q.count === '2') {
+            // #877: a second, independent slider on the same page so
+            // multi-instance behaviour (values, keyboard target, destroy,
+            // resize, event `which`) can be exercised without a second page.
+            var wrap2 = document.createElement('div');
+            wrap2.id = 'wrap2';
+            wrap2.style.width = document.getElementById('wrap').style.width || '600px';
+            wrap2.innerHTML = '<input type="text" id="slider2" name="slider2">';
+            document.body.appendChild(wrap2);
+            var config2 = buildConfig(q.config2, 2);
+            jQuery('#slider2').ionRangeSlider(config2);
+            window.__irs.slider2 = jQuery.data(document.getElementById('slider2'), 'ionRangeSlider');
+        }
+
         window.__irs.ready = true;
     };
 })();
