@@ -32,7 +32,7 @@ jobs:
       matrix:
         include:
           # The 3.7.1 cell alone carries the generated combination matrix (--project=matrix,
-          # 128 configurations, under five minutes): the other three cells stay
+          # 128 configurations, about eight minutes on the CI runner): the other three cells stay
           # --project=chromium only, so a PR does not pay that run three more times for
           # assertions that do not vary by jQuery build.
           - { id: '3.7.1', jquery: 'jquery-3.7.1', slim: '0', projects: '--project=chromium --project=firefox --project=webkit --project=matrix' }
