@@ -10,12 +10,13 @@
  *
  * These are characterization tests of shipped behaviour, so each row carries a
  * `mutation:` line naming the one-line change to js/ion.rangeSlider.js that reds it.
- * Each was applied live, run, watched red and reverted; the runs are in the task report.
+ * Each was applied live, run, watched red and reverted; the runs are in the pull request.
  */
 import { test, expect } from '@playwright/test';
 import { open, events, LABEL } from '../helpers.mjs';
 import { readState } from '../lib/state.mjs';
-import { dragHandleTo, focusTrack, pressKeys, xForFraction } from '../lib/interact.mjs';
+import { dragHandleTo, focusTrack, pressKeys } from '../lib/interact.mjs';
+import { expectShadowSpans, labelText } from '../lib/labels.mjs';
 
 /**
  * The `data-*` spelling of an option, per the readme's Data-Attr column: the option name
@@ -30,20 +31,10 @@ function toAttrs(config) {
     return attrs;
 }
 
-/** The shadow's left edge and right edge in px, as the track fractions they should cover. */
-async function expectShadowSpans(page, which, startFraction, endFraction) {
-    const state = await readState(page);
-    const shadow = state.shadows[which];
-    const handleWidth = state.handles[which].box.width;
-    expect(shadow.visible).toBe(true);
-    expect(Math.abs(shadow.box.x - xForFraction(state.line, handleWidth, startFraction))).toBeLessThanOrEqual(2);
-    expect(Math.abs(shadow.box.x + shadow.box.width - xForFraction(state.line, handleWidth, endFraction))).toBeLessThanOrEqual(2);
-}
-
 const ROWS = [
     {
         title: 'min, max and from build the range the labels and the input report (Settings: min, max, from)',
-        mutation: 'drawLabels(): write options.min + 1 into .irs-min -> the min label reads 6',
+        mutation: 'setMinMax(): write options.min + 1 into .irs-min -> the min label reads 6',
         config: { min: 5, max: 15, from: 7 },
         check: async (page) => {
             await expect(page.locator('.irs-min')).toHaveText('5');
@@ -116,6 +107,18 @@ const ROWS = [
         }
     },
     {
+        title: 'to_fixed pins the to handle through a drag (Settings: to_fixed)',
+        mutation: 'calc(): `case "to": if (this.options.to_fixed)` -> `if (false)` -> the handle follows the pointer to 10',
+        config: { type: 'double', min: 0, max: 100, from: 20, to: 80, to_fixed: true },
+        act: async (page) => {
+            await dragHandleTo(page, 'to', 0.1);
+            await page.waitForTimeout(400);   // outlast the idle render tick before reading an unchanged value
+        },
+        check: async (page) => {
+            await expect(page.locator('#slider')).toHaveValue('20;80');
+        }
+    },
+    {
         title: 'from_min and from_max bound the from handle (Settings: from_min, from_max)',
         mutation: 'checkDiapason(): `return this.convertToPercent(num)` becomes `return p_num` -> the handle reaches 90 and 0',
         config: { min: 0, max: 100, from: 50, from_min: 20, from_max: 60 },
@@ -172,7 +175,7 @@ const ROWS = [
     },
     {
         title: 'hide_min_max hides the min and max labels (Settings: hide_min_max)',
-        mutation: 'init(): drop the `hide_min_max` display:none branch -> both labels stay visible',
+        mutation: 'setMinMax(): drop the `hide_min_max` display:none branch -> both labels stay visible',
         config: { min: 0, max: 100, from: 30, hide_min_max: true },
         check: async (page) => {
             const state = await readState(page);
@@ -183,7 +186,7 @@ const ROWS = [
     },
     {
         title: 'hide_from_to hides the value labels (Settings: hide_from_to)',
-        mutation: 'init(): drop the `hide_from_to` display:none branch -> the single label stays visible',
+        mutation: 'append(): drop the `hide_from_to` display:none branch -> the single label stays visible',
         config: { min: 0, max: 100, from: 30, hide_from_to: true },
         check: async (page) => {
             const state = await readState(page);
@@ -201,7 +204,7 @@ const ROWS = [
     },
     {
         title: 'disable masks the slider and disables the input (Settings: disable)',
-        mutation: 'init(): drop `this.appendDisableMask()` from the disable branch -> no mask is rendered',
+        mutation: 'append(): drop `this.appendDisableMask()` from the disable branch -> no mask is rendered',
         config: { min: 0, max: 100, from: 30, disable: true },
         act: async (page) => {
             await dragHandleTo(page, 'single', 0.9);
@@ -216,7 +219,7 @@ const ROWS = [
     },
     {
         title: 'block stops the drag but keeps the input enabled (Settings: block)',
-        mutation: 'init(): drop `this.appendDisableMask()` from the block branch -> the drag reaches the handle and the value becomes 90',
+        mutation: 'append(): drop `this.appendDisableMask()` from the block branch -> the drag reaches the handle and the value becomes 90',
         config: { min: 0, max: 100, from: 30, block: true },
         act: async (page) => {
             await dragHandleTo(page, 'single', 0.9);
@@ -235,12 +238,44 @@ const ROWS = [
     },
     {
         title: 'extra_classes reach the slider container (Settings: extra_classes)',
-        mutation: "init(): drop `+ ' ' + this.options.extra_classes` from container_html -> neither class is on the container",
+        mutation: "append(): drop `+ ' ' + this.options.extra_classes` from container_html -> neither class is on the container",
         config: { min: 0, max: 100, from: 30, extra_classes: 'foo bar' },
         check: async (page) => {
             const state = await readState(page);
             expect(state.container.classes).toContain('foo');
             expect(state.container.classes).toContain('bar');
+        }
+    },
+    {
+        title: 'prefix, postfix, min_prefix and max_prefix decorate the labels (Settings: prefix, postfix, min_prefix, max_prefix)',
+        mutation: 'decorate(): `decorated += o.min_prefix;` -> `decorated += o.max_prefix;` -> the min label reads "Up to: $0k"',
+        config: { min: 0, max: 100, from: 50, prefix: '$', postfix: 'k', min_prefix: 'From: ', max_prefix: 'Up to: ' },
+        check: async (page) => {
+            await labelText(page, '.irs-single').toBe('$50k');
+            await labelText(page, '.irs-min').toBe('From: $0k');
+            await labelText(page, '.irs-max').toBe('Up to: $100k');
+        }
+    },
+    {
+        title: 'max_postfix marks every label carrying the maximum value (Settings: max_postfix)',
+        mutation: 'decorate(): `original === o.max` -> `original === o.min` in the max_postfix branch -> the "+" lands on the min label',
+        config: { min: 0, max: 100, from: 100, max_postfix: '+' },
+        check: async (page) => {
+            await labelText(page, '.irs-single').toBe('100+');
+            await labelText(page, '.irs-max').toBe('100+');
+            await labelText(page, '.irs-min').toBe('0');
+        }
+    },
+    {
+        title: 'decorate_both off with a values_separator decorates the merged pair once (Settings: decorate_both, values_separator)',
+        mutation: 'drawLabels(): `if (this.options.decorate_both)` -> `if (true)` -> the merged label reads "$49 to $51"',
+        config: { type: 'double', min: 0, max: 100, from: 49, to: 51, prefix: '$', decorate_both: false, values_separator: ' to ' },
+        check: async (page) => {
+            // Two units apart on a 600 px track, so the from and to labels overlap and
+            // the plugin shows the merged one instead.
+            const state = await readState(page);
+            expect(state.labels.single.visible).toBe(true);
+            await labelText(page, '.irs-single').toBe('$49 to 51');
         }
     }
 ];
@@ -250,7 +285,7 @@ const ROWS = [
 for (const skin of ['flat', 'big', 'modern', 'round', 'sharp', 'square']) {
     ROWS.push({
         title: `skin ${skin} names the container class (Settings: skin)`,
-        mutation: "init(): `'irs--' + this.options.skin` -> `'irs--' + 'flat'` -> every skin but flat loses its container class",
+        mutation: "append(): `'irs--' + this.options.skin` -> `'irs--' + 'flat'` -> every skin but flat loses its container class",
         config: { skin, min: 0, max: 100, from: 30 },
         check: async (page) => {
             const state = await readState(page);
@@ -282,7 +317,7 @@ test.describe(`option routes (${LABEL})`, () => {
     // readme Settings, input_values_separator: `<input value="25;42">`. The attribute is
     // the third route into from/to, and it is read with the separator in force.
     // Mutation: constructor, `config.from = val[0] && +val[0]` -> `config.from = null`
-    // -> the slider starts at min (10) instead of 7.
+    // -> the slider starts at min (5) instead of 7.
     test('the input value attribute sets from in single type (Settings: from, note on input value)', async ({ page }) => {
         await open(page, { min: 5, max: 15 }, { attrs: JSON.stringify({ value: '7' }) });
         await expect(page.locator('#slider')).toHaveValue('7');
@@ -347,5 +382,27 @@ test.describe(`option routes (${LABEL})`, () => {
         await pressKeys(page, ['ArrowRight', 'ArrowRight']);
         await page.waitForTimeout(400);   // outlast the idle render tick before reading an unchanged value
         await expect(page.locator('#slider')).toHaveValue('30');
+    });
+
+    // readme note "step_from_min": "Put the starting `from` and `to` [...] on that scale
+    // as well. A value that does not sit on the scale is moved to the nearest point that
+    // does." On a 0.5..10.5 scale with step 1 the points are 0.5, 1.5, 2.5 ..., so a
+    // starting `from` of 3 lands on 3.5 before the first render.
+    // Mutation caught: convertToValue() -> drop the `o.step_from_min` branch -- the
+    // slider starts on 3, which the scale does not hold.
+    test('a starting from off the step_from_min scale is moved onto it (note "step_from_min")', async ({ page }) => {
+        await open(page, { min: 0.5, max: 10.5, step: 1, step_from_min: true, from: 3 });
+        await expect(page.locator('#slider')).toHaveValue('3.5');
+    });
+
+    // readme note "step": "Every value is `min` plus a whole number of steps". On a
+    // 0..100 scale with step 25 those are 0, 25, 50, 75, 100, and the nearest to a
+    // starting `from` of 10 is 0. The slider instead starts on 10, a value it cannot
+    // otherwise hold: the label and the input read 10, onStart carries from 10, and the
+    // first arrow press jumps to 25 rather than stepping by 25.
+    test('a starting from off the step scale is moved onto it (note "step")', async ({ page }) => {
+        test.fail(true, '#900: a starting value off the step scale is kept until the first interaction');
+        await open(page, { min: 0, max: 100, step: 25, from: 10 });
+        await expect(page.locator('#slider')).toHaveValue('0');
     });
 });

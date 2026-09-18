@@ -12,13 +12,13 @@
  *
  * These are characterization tests of shipped behaviour, so each names in a comment the
  * one-line change to js/ion.rangeSlider.js that reds it. Each was applied live, run,
- * watched red and reverted; the runs are in the task report.
+ * watched red and reverted; the runs are in the pull request.
  */
 import { test, expect } from '@playwright/test';
 import { open, events, LABEL } from '../helpers.mjs';
 import { readState } from '../lib/state.mjs';
 import { dragHandleTo } from '../lib/interact.mjs';
-import { expectedLabel, valuesEntry } from '../lib/format.mjs';
+import { expectedLabel } from '../lib/format.mjs';
 
 /** The first recorded entry of a callback, e.g. the onStart payload. */
 async function payload(page, type) {
@@ -59,7 +59,6 @@ test.describe(`values mode (${LABEL})`, () => {
     test('a numeric-looking entry is converted to a number without values_raw (note "values")', async ({ page }) => {
         const config = { values: ['10', '20.0', '30'], from: 1 };
         await open(page, config);
-        expect(valuesEntry(config, 1)).toBe(20);
         await expect(page.locator('.irs-single')).toHaveText(expectedLabel(1, config));
         await expect(page.locator('#slider')).toHaveValue('20');
         const started = await payload(page, 'onStart');
@@ -73,7 +72,6 @@ test.describe(`values mode (${LABEL})`, () => {
     test('values_raw keeps a numeric-looking entry exactly as written (note "values_raw")', async ({ page }) => {
         const config = { values: ['10', '20.0', '30'], values_raw: true, from: 1 };
         await open(page, config);
-        expect(valuesEntry(config, 1)).toBe('20.0');
         await expect(page.locator('.irs-single')).toHaveText('20.0');
         await expect(page.locator('#slider')).toHaveValue('20.0');
         const started = await payload(page, 'onStart');

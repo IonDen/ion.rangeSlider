@@ -551,14 +551,14 @@ test('grid: the tick labels are prettified but not decorated', () => {
     const plain = ['0', '25', '50', '75', '100'];
     const state = base({
         grid: { present: true, texts: plain, visibleTexts: plain, pols: 21 },
-        labels: { single: { text: '$30k' }, min: { text: 'From: $0k' }, max: { text: 'Up to: $100+k' } }
+        labels: { single: { text: '$30k' }, min: { text: 'From: $0k' }, max: { text: 'Up to: $100+ k' } }
     });
     assert.ok(!ids(ctxOf(state, cfg, 'S0')).includes('grid'));
 
     const decorated = ['$0k', '$25k', '$50k', '$75k', '$100k'];
     const wrong = base({
         grid: { present: true, texts: decorated, visibleTexts: decorated, pols: 21 },
-        labels: { single: { text: '$30k' }, min: { text: 'From: $0k' }, max: { text: 'Up to: $100+k' } }
+        labels: { single: { text: '$30k' }, min: { text: 'From: $0k' }, max: { text: 'Up to: $100+ k' } }
     });
     assert.ok(ids(ctxOf(wrong, cfg, 'S0')).includes('grid'));
 });

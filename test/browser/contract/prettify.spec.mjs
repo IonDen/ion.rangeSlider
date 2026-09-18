@@ -13,15 +13,13 @@
  *
  * These are characterization tests of shipped behaviour, so each names in a comment the
  * one-line change to js/ion.rangeSlider.js that reds it. Each was applied live, run,
- * watched red and reverted; the runs are in the task report.
+ * watched red and reverted; the runs are in the pull request.
  */
 import { test, expect } from '@playwright/test';
 import { open, events, LABEL } from '../helpers.mjs';
 import { readState } from '../lib/state.mjs';
 import { expectedLabel, expectedGridLabel, expectedMerged } from '../lib/format.mjs';
-
-/** Exact rendered text of one element, polled so it outlasts the idle render tick. */
-const labelText = (page, selector) => expect.poll(() => page.locator(selector).evaluate((el) => el.textContent));
+import { labelText } from '../lib/labels.mjs';
 
 /**
  * One number per interesting shape, each carried on the handle while the min and max
@@ -153,6 +151,20 @@ test.describe(`prettify (${LABEL})`, () => {
         await labelText(page, '.js-grid-text-1').toBe(expectedGridLabel(50, config));
     });
 
+    // readme note "prettify": "A function that receives a number and returns the string to
+    // show", and "As with every option, only feed it configuration you control." The
+    // returned string is written with .html(), so markup in it becomes real elements --
+    // characterization of that shipped behaviour, and the reason the readme's warning is
+    // there. Nothing here asserts the behaviour is desirable; it pins what ships.
+    // Mutation caught: drawLabels(), the single-label write -> `this.$cache.single.html(
+    // text_single)` becomes `.text(text_single)` -- no <b> element exists and the label
+    // reads "<b>50</b>" as plain text.
+    test('a prettify that returns markup has it rendered as markup (note "prettify")', async ({ page }) => {
+        await open(page, "{min: 0, max: 100, from: 50, prettify: function (n) { return '<b>' + n + '</b>'; }}");
+        await expect(page.locator('.irs-single b')).toHaveCount(1);
+        await expect(page.locator('.irs-single b')).toHaveText('50');
+    });
+
     // readme Settings: prefix ("$100"), min_prefix ("From: 0 - 100"), max_prefix
     // ("0 - Up to: 100"), postfix ("100k"). The min and max prefixes sit outside prefix
     // and reach only the label carrying that end of the range.
@@ -182,10 +194,11 @@ test.describe(`prettify (${LABEL})`, () => {
         await labelText(page, '.irs-min').toBe('0');
     });
 
-    // readme Settings, max_postfix ("0 - 100+") and postfix ("100k") on the same label: one
-    // space joins the two, so a postfix that brings none of its own reads "100+ k". This is
-    // the half of the pair the plugin already gets right, and the fix for the doubled space
-    // below leaves it exactly as it is, so the test stays green through that fix.
+    // The readme shows max_postfix ("0 - 100+") and postfix ("100k") separately and never
+    // combines them, so the join between the two is not a readme promise. The rule comes
+    // from #884: one space separates them, unless the postfix already opens with
+    // whitespace. This is the half of the pair the plugin already renders that way, and
+    // #884's fix leaves it untouched, so the test stays green through that fix.
     // Mutation caught: decorate() -> drop the `decorated += " ";` line from the numeric
     // (`original === o.max`) branch -- the max label reads "100+k".
     test('a max_postfix followed by a plain postfix keeps one space between them (Settings: max_postfix, postfix)', async ({ page }) => {
@@ -195,8 +208,8 @@ test.describe(`prettify (${LABEL})`, () => {
         await labelText(page, '.irs-max').toBe('100+ k');
     });
 
-    // The readme writes max_postfix and postfix one after the other ("0 - 100+" plus
-    // "100k"), so a postfix that already carries its own space reads "100+ years".
+    // The other half of #884's rule: a postfix that already opens with whitespace brings
+    // its own separator, so "100+" followed by " years" should read "100+ years".
     test('a max_postfix followed by a space-prefixed postfix reads as written (Settings: max_postfix, postfix)', async ({ page }) => {
         test.fail(true, '#884: max_postfix followed by a postfix that starts with a space renders two spaces');
         const config = { min: 0, max: 100, from: 50, max_postfix: '+', postfix: ' years' };
