@@ -191,11 +191,12 @@ function valuesUnreadableAtInit(ctx) {
  * The per-handle limits a clamp would carry the handle PAST: off the documented scale, and
  * rounded onto the wrong side of themselves.
  *
- * readme note "step": a value that does not sit on the scale is moved to the nearest point
- * that does, and which way that goes decides whether the limit holds. On min 0.5 with step 1
- * (0.5, 2, 3 ...) a from_min of 2.4 lands on 2, below the limit and against the readme; a
- * from_min of 2.9 lands on 3, above it and perfectly legal (m061). A maximum limit is the
- * mirror: the crossing is the one that rounds up.
+ * readme note "step_from_min": "A value that does not sit on the scale is moved to the
+ * nearest point that does." Which way that move goes decides whether the limit holds. On
+ * min 0.5 with step 1 the scale is 0.5, 2, 3 ... (readme note "step"), so a from_min of 2.4
+ * lands on 2, below the limit and against the readme; a from_min of 2.9 lands on 3, above it
+ * and perfectly legal (m061). A maximum limit is the mirror: the crossing is the one that
+ * rounds up.
  *
  * @param {object} cfg
  * @returns {Array<{handle: string, key: string, side: number}>}
