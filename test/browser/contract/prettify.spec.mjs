@@ -13,7 +13,7 @@
  *
  * These are characterization tests of shipped behaviour, so each names in a comment the
  * one-line change to js/ion.rangeSlider.js that reds it. Each was applied live, run,
- * watched red and reverted; the runs are in the pull request.
+ * watched red and reverted.
  */
 import { test, expect } from '@playwright/test';
 import { open, events, LABEL } from '../helpers.mjs';

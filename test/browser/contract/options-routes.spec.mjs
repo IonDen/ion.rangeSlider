@@ -10,7 +10,7 @@
  *
  * These are characterization tests of shipped behaviour, so each row carries a
  * `mutation:` line naming the one-line change to js/ion.rangeSlider.js that reds it.
- * Each was applied live, run, watched red and reverted; the runs are in the pull request.
+ * Each was applied live, run, watched red and reverted.
  */
 import { test, expect } from '@playwright/test';
 import { open, events, LABEL } from '../helpers.mjs';
@@ -108,7 +108,7 @@ const ROWS = [
     },
     {
         title: 'to_fixed pins the to handle through a drag (Settings: to_fixed)',
-        mutation: 'calc(): `case "to": if (this.options.to_fixed)` -> `if (false)` -> the handle follows the pointer to 10',
+        mutation: 'calc(): `case "to": if (this.options.to_fixed)` -> `if (false)` -> the handle follows the pointer down until the crossing guard stops it on the from handle at 20',
         config: { type: 'double', min: 0, max: 100, from: 20, to: 80, to_fixed: true },
         act: async (page) => {
             await dragHandleTo(page, 'to', 0.1);
@@ -387,11 +387,14 @@ test.describe(`option routes (${LABEL})`, () => {
     // readme note "step_from_min": "Put the starting `from` and `to` [...] on that scale
     // as well. A value that does not sit on the scale is moved to the nearest point that
     // does." On a 0.5..10.5 scale with step 1 the points are 0.5, 1.5, 2.5 ..., so a
-    // starting `from` of 3 lands on 3.5 before the first render.
+    // starting `from` of 3.2 lands on 3.5 before the first render. 3.2 rather than 3:
+    // 3 sits halfway between 2.5 and 3.5, and the test would pin the rounding direction
+    // instead of the note.
     // Mutation caught: convertToValue() -> drop the `o.step_from_min` branch -- the
-    // slider starts on 3, which the scale does not hold.
+    // default path rounds 3.2 to the step's whole numbers and the slider starts on 3,
+    // which the scale does not hold.
     test('a starting from off the step_from_min scale is moved onto it (note "step_from_min")', async ({ page }) => {
-        await open(page, { min: 0.5, max: 10.5, step: 1, step_from_min: true, from: 3 });
+        await open(page, { min: 0.5, max: 10.5, step: 1, step_from_min: true, from: 3.2 });
         await expect(page.locator('#slider')).toHaveValue('3.5');
     });
 
