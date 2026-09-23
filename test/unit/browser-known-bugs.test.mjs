@@ -31,7 +31,7 @@ const SIGHTED = { jquery: '1.8.3', hiddenTrackMeasuresZero: false };
 /**
  * A matrix context in the shape matrix.spec.mjs builds, minus the outcome state.
  *
- * `env` defaults to BLIND, the jQuery 3.7.1 environment of the per-PR matrix cell every
+ * `env` defaults to BLIND, the environment of the jQuery 3.7.1 matrix cell every
  * hidden-container entry of the register was first written against. A test that needs a
  * context with no env at all passes `env: undefined`.
  */
@@ -490,12 +490,14 @@ test('#888 matches a values-mode slider built hidden, not a numeric one', () => 
 
 // ------------------------------- a slider built hidden, on each side of jQuery 3.3
 
-// Inside a display:none container the browser leaves the slider's width at the unresolved
-// "100%". jQuery before 3.3 parses that as 100 px and the slider renders at init as a visible
-// one does; jQuery 3.3 and later fall back to offsetWidth, which is 0, and the slider has no
-// track to place anything on. #888 and #897 happen on the second kind of build only, and the
-// weekly jQuery matrix went red on every build before 3.3 because the register claimed them
-// there too. ctx.env carries which kind of build the run is on.
+// Inside a display:none container the slider's `width: 100%` stays unresolved, and the browser
+// reports its computed width as "100%". jQuery before 3.3 parses that as 100 px and the slider
+// renders at init as a visible one does. jQuery 3.3 and later refuse a width that is not in
+// pixels and report 0, because an element inside a display:none container has no rendered box
+// (3.3 reads offsetWidth; 3.4 and later skip it for a hidden element and return 0 directly),
+// and the slider has no track to place anything on. #888 and #897 happen on the second kind
+// of build only, and the weekly jQuery matrix went red on every build before 3.3 because the
+// register claimed them there too. ctx.env carries which kind of build the run is on.
 
 // Bug caught: builtBlind() ignoring env (keying on __hidden_at_init alone), which claims the
 // S0 callbacks cell of every slider built hidden on jQuery 1.8.3 and reds it as "no longer
@@ -541,6 +543,29 @@ test('#885 matches the S0 interval of an m025-like hidden slider only on a build
     // Where the hidden track measures zero the slider reports no pair at init, the intervals
     // rule has nothing to judge, and #885 must not claim the cell.
     assert.equal(hit(m025, 'S0', 'intervals', { env: BLIND }), null);
+});
+
+/**
+ * m024's effective configuration (configs.json), with the two fields matrix.spec.mjs adds for
+ * the register: a values array of numeric-looking strings, a value attribute naming two of
+ * them, a from_min of 2.4 that sits off the index scale, blocked, and built hidden.
+ */
+const M024 = {
+    values: ['10', '20', '30', '40', '50'], type: 'double', from: 1, to: 3, from_min: 2.4,
+    max_interval: 6, from_fixed: true, drag_interval: true, grid: true, grid_margin: false,
+    __prettify_src: 'function (n) { return n + "x"; }', force_edges: true, block: true, skin: 'round',
+    __value_attr: '20;40', __hidden_at_init: true
+};
+
+// On a build that renders a slider built hidden at init, m024's from handle is clamped onto
+// its from_min at S0 and rounded onto the scale point below it, as it is for the same slider
+// built visible: that is #882. Where the hidden track measures zero the slider reports no pair
+// at init, and the limits rule has nothing to judge.
+// Bug caught: #882 keying on __hidden_at_init where it calls valuesUnreadableAtInit(), which
+// keeps it away from m024's S0 limits failure on jQuery 1.8.3 and leaves the cell red.
+test('#882 matches the S0 limits of m024 built hidden only on a build that measures a hidden track as non-zero', () => {
+    assert.equal(hit(M024, 'S0', 'limits', { env: SIGHTED }), 882);
+    assert.equal(hit(M024, 'S0', 'limits', { env: BLIND }), null);
 });
 
 // A matrix run that forgot to read the environment would otherwise have the register pick
@@ -708,6 +733,15 @@ test('#880 matches the crossing a fallen-back value attribute leaves behind', ()
     const entry880 = KNOWN_BUGS.find((bug) => bug.issue === 880);
     assert.equal(entry880.matches(ctxOf(hidden, 'S0'), 'bounds'), false);
     assert.equal(entry880.matches(ctxOf(strings, 'S0'), 'bounds'), true, 'a visible slider still reports the crossing');
+
+    // m024 itself, on each side of the jQuery 3.3 split. Where the hidden track measures as
+    // non-zero the slider reports its pair at init, crossing included, as it does built
+    // visible, and this entry claims it.
+    // Bug caught: #880 keying on __hidden_at_init where it calls valuesUnreadableAtInit(),
+    // which leaves m024's S0 crossing on jQuery 1.8.3 unexplained and the cell red.
+    assert.equal(hit(M024, 'S0', 'bounds', { env: SIGHTED }), 880);
+    assert.equal(entry880.matches(ctxOf(M024, 'S0', { env: SIGHTED }), 'bounds'), true);
+    assert.equal(entry880.matches(ctxOf(M024, 'S0', { env: BLIND }), 'bounds'), false);
 
     // A crossed pair has a negative gap, so an interval limit is broken along with the
     // ordering; that is the same fallen-back lookup, not a second bug.

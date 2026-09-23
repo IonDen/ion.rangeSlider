@@ -32,12 +32,13 @@ jobs:
       matrix:
         include:
           # Two cells carry the generated combination matrix (--project=matrix, 128
-          # configurations, about five minutes each): 3.7.1 and 1.8.3, one build on each
-          # side of the jQuery 3.3 change in how a hidden container is measured. From 3.3 a
-          # slider built inside a display:none container measures its track as zero and has
-          # nothing to render on until it is shown; before 3.3 it measures 100 px and renders
-          # at init, so the matrix's hidden-container configurations report different things
-          # on the two sides. The other two cells stay --project=chromium only.
+          # configurations; on the CI runner it takes the 3.7.1 cell about eight minutes):
+          # 3.7.1 and 1.8.3, one build on each side of the jQuery 3.3 change in how a
+          # hidden container is measured. From 3.3 a slider built inside a display:none
+          # container measures its track as zero and has nothing to render on until it is
+          # shown; before 3.3 it measures 100 px and renders at init, so the matrix's
+          # hidden-container configurations report different things on the two sides. The
+          # other two cells stay --project=chromium only.
           - { id: '3.7.1', jquery: 'jquery-3.7.1', slim: '0', projects: '--project=chromium --project=firefox --project=webkit --project=matrix' }
           - { id: '3.7.1-min', jquery: 'jquery-3.7.1', slim: '0', projects: '--project=chromium', min: '1' }
           - { id: '1.8.3', jquery: 'vendor/jquery-1.8.3.js', slim: '0', projects: '--project=chromium --project=matrix' }

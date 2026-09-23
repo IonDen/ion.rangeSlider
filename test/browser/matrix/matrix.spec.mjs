@@ -242,7 +242,7 @@ for (const entry of configs.filter((c) => c.id)) {
     // a form, so the input rule stays armed on every build and the register, which reads
     // `env`, decides where a filed bug accounts for what it reports.
     const hiddenAtInit = !!(entry.extra && entry.extra.hidden === '1');
-    if (hiddenAtInit) testInfo.annotations.push({ type: 'container', description: 'built hidden: the labels rule is not checked at S0, the slider renders once visible' });
+    if (hiddenAtInit) testInfo.annotations.push({ type: 'container', description: 'built hidden: the labels rule is not checked at S0' });
 
     // Two things the register's predicates need that the option set alone cannot carry:
     // the container the slider was built in, and the input's value attribute. Both are
@@ -276,12 +276,30 @@ for (const entry of configs.filter((c) => c.id)) {
       prev = state;
     };
 
+    // The probe in ../lib/env.mjs stands in for the slider, and the register trusts its answer
+    // for every cell built hidden. So on those entries, still at S0 and before the reveal, the
+    // slider's own .irs is measured the same way and the two must agree: a probe that drifted
+    // from the slider would hand the register the wrong side of the jQuery 3.3 split without
+    // a word. This is a harness check that reads the page, not a register predicate (the
+    // predicates never read the outcome), and it runs before the S0 judgement so that a
+    // disagreement is the first failure the cell reports.
+    if (hiddenAtInit) {
+      const sliderWidth = await page.evaluate(() => jQuery('.irs').outerWidth(false));
+      expect(
+        sliderWidth === 0,
+        `S0: jQuery ${env.jquery}: the probe says a hidden track measures ${env.hiddenTrackMeasuresZero ? '0 px' : 'more than 0 px'}, `
+          + `the slider's own .irs measures ${sliderWidth} px`
+      ).toBe(env.hiddenTrackMeasuresZero);
+    }
+
     await assertStage('S0', { changed: false });
 
     if (hiddenAtInit) {
-      // readme note on onInit: a slider built inside a hidden container renders once
-      // the container becomes visible. Every stage from here on measures geometry, so
-      // the container is revealed and given one idle tick to lay itself out.
+      // On jQuery 3.3 and later a slider built inside a hidden container renders once the
+      // container becomes visible (readme note on onInit); on older builds, where it
+      // rendered at init on a 100 px track, it re-lays out at full width then. Every stage
+      // from here on measures geometry, so the container is revealed and given one idle
+      // tick to lay itself out.
       await page.evaluate(() => { document.getElementById('wrap').style.display = ''; });
       await page.waitForTimeout(IDLE_TICK);
       testInfo.annotations.push({ type: 'container', description: 'built hidden, revealed after S0' });

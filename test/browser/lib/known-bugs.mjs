@@ -41,8 +41,8 @@
  * would quietly stop matching the day the bug is fixed, and the "no longer reproduces"
  * check would never fire; the entry id is off limits because the generator renumbers its
  * entries whenever a dimension changes, and an entry keyed on an id would silently stop
- * matching. Predicate on the CONFIG FIELDS, the stage, and where needed the pair the
- * stage started from.
+ * matching. Predicate on the CONFIG FIELDS, the stage, the stage's own `expectations`, the
+ * `env` the run is in, and where needed the pair the stage started from.
  *
  * Each entry says, in its comment, which matrix entries it was written against and which
  * stages reproduce -- a predicate wider than that annotates healthy cells away, and one
@@ -148,12 +148,15 @@ const promised = (ctx) => ctx.expectations || {};
 /**
  * Was the slider built hidden on a jQuery build that measures a hidden track as zero?
  *
- * Inside a display:none container the browser reports the slider's width as the unresolved
- * "100%". jQuery before 3.3 parses that as 100 px, so a slider built hidden there renders at
- * init as a visible one does; jQuery 3.3 and later fall back to offsetWidth, which is 0, and
- * the slider has no track to place its handles on until the container is shown. What the
- * register says of a slider built hidden (#888, #897) happens on the second kind of build
- * only, and matrix.spec.mjs reads which kind the run is on into ctx.env (./env.mjs).
+ * Inside a display:none container the slider's `width: 100%` stays unresolved, and the
+ * browser reports its computed width as "100%". jQuery before 3.3 parses that as 100 px, so a
+ * slider built hidden there renders at init as a visible one does. jQuery 3.3 and later refuse
+ * a width that is not in pixels and report 0, because an element inside a display:none
+ * container has no rendered box (3.3 reads offsetWidth; 3.4 and later skip it for a hidden
+ * element and return 0 directly), and the slider has no track to place its handles on until
+ * the container is shown. What the register says of a slider built hidden (#888, #897)
+ * happens on the second kind of build only, and matrix.spec.mjs reads which kind the run is
+ * on into ctx.env (./env.mjs).
  *
  * @param {object} ctx
  * @returns {boolean}
