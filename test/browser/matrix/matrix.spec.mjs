@@ -19,6 +19,7 @@ import { readState } from '../lib/state.mjs';
 import { dragHandleTo, dragBarBy, clickTrackAt, focusTrack, pressKeys } from '../lib/interact.mjs';
 import { checkInvariants } from '../lib/invariants.mjs';
 import { judgeStage } from '../lib/known-bugs.mjs';
+import { readEnv } from '../lib/env.mjs';
 import { isValuesMode, rangeOf } from '../lib/scale.mjs';
 // The script's own numbers -- the drag targets, the click fraction, the bar travel and
 // S6's update() value -- live in ./script.mjs, which the known-bug register reads too.
@@ -213,16 +214,33 @@ for (const entry of configs.filter((c) => c.id)) {
     const literal = configLiteral(entry.config);
     await open(page, literal, extra);
 
+    // The environment the run is in, read once per test and handed to every stage: which
+    // jQuery build the page loaded, and whether that build measures a hidden track as zero
+    // (../lib/env.mjs). The register needs the second to know what a slider built hidden
+    // reports at init.
+    const env = await readEnv(page);
+    testInfo.annotations.push({
+      type: 'env',
+      description: `jQuery ${env.jquery}: a hidden track measures ${env.hiddenTrackMeasuresZero ? '0 px' : 'more than 0 px'}`
+    });
+
     // readme, onInit: "for a slider that starts hidden, edit its DOM only after it
-    // first becomes visible" -- a slider built inside a display:none container has no
-    // finished render yet, so its value labels still hold the template's placeholder
-    // text and the from/to versus merged choice has not been made. The other twelve
-    // rules hold: the input, the grid and the callbacks are all written at init.
+    // first becomes visible". For a slider built inside a display:none container the
+    // labels rule is not checked at S0, on every jQuery build: the exemption rests on
+    // that note, not on what a given build happens to draw.
     //
-    // Only the labels are carved out. In values mode a slider built hidden also leaves
-    // its input empty at S0, which is NOT exempted here: the readme's note covers the
-    // DOM the slider draws, not the value the input carries into a form, so the input
-    // rule stays armed and keeps reporting it as a finding.
+    // What such a slider does at init depends on the build. jQuery 3.3 and later measure
+    // its track as zero: it has no finished render yet, so its value labels still hold
+    // the template's placeholder text and the from/to versus merged choice has not been
+    // made, a values-mode slider leaves its input empty (#888), and the onStart/onInit
+    // payloads carry no from_pretty or to_pretty (#897). Earlier builds measure the track
+    // as 100 px, and the slider writes its input and its callback payloads at init as a
+    // visible one does.
+    //
+    // Only the labels are carved out. An input left empty at S0 is NOT exempted: the
+    // readme's note covers the DOM the slider draws, not the value the input carries into
+    // a form, so the input rule stays armed on every build and the register, which reads
+    // `env`, decides where a filed bug accounts for what it reports.
     const hiddenAtInit = !!(entry.extra && entry.extra.hidden === '1');
     if (hiddenAtInit) testInfo.annotations.push({ type: 'container', description: 'built hidden: the labels rule is not checked at S0, the slider renders once visible' });
 
@@ -245,7 +263,7 @@ for (const entry of configs.filter((c) => c.id)) {
     const assertStage = async (stage, expectations) => {
       const state = await readState(page, 1, cfg);
       const promised = typeof expectations === 'function' ? expectations(state, prev) : expectations;
-      const ctx = { state, cfg, stage, prev, expectations: promised };
+      const ctx = { state, cfg, stage, prev, expectations: promised, env };
       const stageSkipped = hiddenAtInit && stage === 'S0' ? skipped.concat('labels') : skipped;
       const failures = checkInvariants(ctx).filter((f) => stageSkipped.indexOf(f.id) < 0);
       // ../lib/known-bugs.mjs decides what a filed bug already accounts for, what is still

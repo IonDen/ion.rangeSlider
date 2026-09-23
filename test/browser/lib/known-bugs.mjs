@@ -21,7 +21,7 @@
  * matched invariant whose message the pattern does not cover stays REAL.
  *
  * `matches` receives the same ctx the invariants get ({ state, cfg, stage, prev,
- * expectations }) plus the failing invariant id. What a predicate may read:
+ * expectations, env }) plus the failing invariant id. What a predicate may read:
  *
  *   - `cfg`, the option set the plugin was built with, including the two fields
  *     matrix.spec.mjs adds for the register: `__hidden_at_init` (the fixture built the
@@ -31,6 +31,10 @@
  *     read off the option set alone.
  *   - `stage`, and `expectations`, the stage's own promise.
  *   - `prev`, the state the stage STARTED from.
+ *   - `env`, the environment the run is in (./env.mjs): today, whether the jQuery build
+ *     under test measures a hidden track as zero. It is neither configuration nor the
+ *     outcome being judged; it decides what a slider built hidden reports at init (see
+ *     builtBlind below).
  *
  * What a predicate may NOT read: `ctx.state`, the outcome being judged, and the entry
  * id. The outcome is off limits because a predicate that watched the value it excuses
@@ -142,15 +146,42 @@ const valuesOf = (state) => (state && state.values) || { from: null, to: null };
 const promised = (ctx) => ctx.expectations || {};
 
 /**
- * At init a values-mode slider built inside a hidden container reports nothing at all --
- * its input is empty and its from/to are null (#888) -- so every rule that judges a
- * VALUE passes there and must not be excused by another entry.
+ * Was the slider built hidden on a jQuery build that measures a hidden track as zero?
+ *
+ * Inside a display:none container the browser reports the slider's width as the unresolved
+ * "100%". jQuery before 3.3 parses that as 100 px, so a slider built hidden there renders at
+ * init as a visible one does; jQuery 3.3 and later fall back to offsetWidth, which is 0, and
+ * the slider has no track to place its handles on until the container is shown. What the
+ * register says of a slider built hidden (#888, #897) happens on the second kind of build
+ * only, and matrix.spec.mjs reads which kind the run is on into ctx.env (./env.mjs).
+ *
+ * @param {object} ctx
+ * @returns {boolean}
+ * @throws {Error} when the slider was built hidden and ctx.env carries no boolean
+ *   hiddenTrackMeasuresZero: a default would claim, or leave real, every hidden cell on one
+ *   side of the jQuery 3.3 split without a word.
+ */
+function builtBlind(ctx) {
+    if (!ctx.cfg.__hidden_at_init) return false;
+    const env = ctx.env;
+    if (!env || typeof env.hiddenTrackMeasuresZero !== 'boolean') {
+        throw new Error('known-bugs: a slider built hidden was judged without a boolean ctx.env.hiddenTrackMeasuresZero (read it with readEnv() from lib/env.mjs)');
+    }
+    return env.hiddenTrackMeasuresZero;
+}
+
+/**
+ * At init a values-mode slider built hidden on a jQuery build that measures a hidden track
+ * as zero (3.3 and later) reports nothing at all -- its input is empty and its from/to are
+ * null (#888) -- so every rule that judges a VALUE passes there and must not be excused by
+ * another entry. On an older build the same slider reports at init the pair a visible one
+ * does, and the entries written for that pair (#880, #882, #885) apply to it unchanged.
  *
  * @param {object} ctx
  * @returns {boolean}
  */
 function valuesUnreadableAtInit(ctx) {
-    return stageOf(ctx) === 'S0' && !!ctx.cfg.__hidden_at_init && isValuesMode(ctx.cfg);
+    return stageOf(ctx) === 'S0' && builtBlind(ctx) && isValuesMode(ctx.cfg);
 }
 
 /**
@@ -536,9 +567,10 @@ export const KNOWN_BUGS = [
             if (valuesUnreadableAtInit(ctx)) return false;
             const cfg = ctx.cfg;
             // The pair the stage starts from: the previous state, or the configuration
-            // where that state has no value to give (a slider built hidden reports none
-            // until it is revealed, so the first stage after the reveal starts from the
-            // configured pair).
+            // where that state has no value to give (a values-mode slider built hidden on
+            // a jQuery build that measures a hidden track as zero, 3.3 and later, reports
+            // none until it is revealed, so the first stage after the reveal starts from
+            // the configured pair).
             // Where the handles stand while this stage's clamp runs: the handle need not
             // START inside the limit (m063's S1 drag aims below an off-scale from_min), and
             // one that started inside can be carried back out (m063's S5 bar drag).
@@ -599,6 +631,12 @@ export const KNOWN_BUGS = [
         // why the pair the stage started from is read here. A stage that does move a
         // handle re-applies the interval, so the rule passes there and the entry must not
         // match.
+        //
+        // A values-mode slider built hidden on a jQuery build that measures a hidden track
+        // as zero (3.3 and later) reports no pair at S0, so there is no interval to judge
+        // there (valuesUnreadableAtInit). On an older build it reports the pair it was
+        // built with, and m025 breaks its locked interval at S0 exactly as it would built
+        // visible.
         matches(ctx, id) {
             if (id !== 'intervals') return false;
             const cfg = ctx.cfg;
@@ -620,11 +658,14 @@ export const KNOWN_BUGS = [
         issue: 889,
         title: 'the *_pretty callback fields come back as numbers with prettify_enabled off',
         // The number is what this entry speaks for: `got 0`, `got -50`, never `got undefined`.
-        // A slider built hidden drops its two handle fields at init instead of turning them
-        // into numbers (#897), and the five entries that are built hidden AND with prettify
+        // On a jQuery build that measures a hidden track as zero (3.3 and later) a slider
+        // built hidden drops its two handle fields at init instead of turning them into
+        // numbers (#897), and there the five entries that are built hidden AND with prettify
         // off (m018, m019, m065, m067, m068) report both at S0 -- a pattern wide enough to
         // cover "got undefined" would swallow the missing text along with the numbers and
-        // leave #897 looking as if it had never reproduced.
+        // leave #897 looking as if it had never reproduced. On an older build those five
+        // render at init, their handle fields come back as numbers too, and all four are
+        // this entry's.
         what: /_pretty must be the formatted [a-z]+ value \(expected .*, got -?\d/,
         // Every stage that records a payload on a slider with prettify_enabled: false and
         // numeric values behind it. _prettify() returns its argument unchanged there, so
@@ -639,14 +680,16 @@ export const KNOWN_BUGS = [
         issue: 897,
         title: 'a slider built inside a hidden container reports no from_pretty or to_pretty in onStart and onInit',
         what: /(from|to)_pretty must be the formatted [a-z]+ value \(expected .*, got undefined\)/,
-        // All twenty-two container=hidden entries, at S0 alone: the onStart and onInit
-        // payloads carry the from and to values but no text for them, while min_pretty and
-        // max_pretty are filled in correctly -- so only the two handle fields are claimed
-        // here, and a missing min_pretty or max_pretty stays a finding of its own. One idle
-        // tick after the container is revealed every later payload carries the text, which
-        // is why no stage after S0 is matched.
+        // All twenty-two container=hidden entries, at S0 alone, on a jQuery build that
+        // measures a hidden track as zero (3.3 and later): the onStart and onInit payloads
+        // carry the from and to values but no text for them, while min_pretty and max_pretty
+        // are filled in correctly -- so only the two handle fields are claimed here, and a
+        // missing min_pretty or max_pretty stays a finding of its own. One idle tick after
+        // the container is revealed every later payload carries the text, which is why no
+        // stage after S0 is matched. On an older build the slider renders at init and its
+        // payloads carry the text from the start, so nothing is claimed there (builtBlind).
         matches(ctx, id) {
-            return id === 'callbacks' && stageOf(ctx) === 'S0' && !!ctx.cfg.__hidden_at_init;
+            return id === 'callbacks' && stageOf(ctx) === 'S0' && builtBlind(ctx);
         }
     },
 
@@ -676,16 +719,18 @@ export const KNOWN_BUGS = [
         issue: 888,
         title: 'a values-mode slider built in a hidden container leaves its input empty',
         what: /must be a number|must be one of the values entries|must carry one value per handle|_value must be the entry|handle moved|changed its (from|to) value|must fire onChange/,
-        // At S0 the input is empty, from is null and the onStart/onInit payloads carry
-        // from_value null. One idle tick after the container is revealed the slider fills
-        // everything in -- and that filling-in reads as a value change that never
-        // happened, so the first stage after the reveal reports a moved fixed handle, a
-        // changed value on an inert slider and a missing onChange. All of it is the empty
-        // input working its way out, which is why S1 is part of the entry.
+        // On a jQuery build that measures a hidden track as zero (3.3 and later): at S0 the
+        // input is empty, from is null and the onStart/onInit payloads carry from_value
+        // null. One idle tick after the container is revealed the slider fills everything
+        // in -- and that filling-in reads as a value change that never happened, so the
+        // first stage after the reveal reports a moved fixed handle, a changed value on an
+        // inert slider and a missing onChange. All of it is the empty input working its way
+        // out, which is why S1 is part of the entry. On an older build the slider fills its
+        // input at init and none of this happens (builtBlind).
         matches(ctx, id) {
             const cfg = ctx.cfg;
             const stage = stageOf(ctx);
-            if (!cfg.__hidden_at_init || !isValuesMode(cfg)) return false;
+            if (!builtBlind(ctx) || !isValuesMode(cfg)) return false;
             if (stage === 'S0') return id === 'input' || id === 'bounds' || id === 'callbacks';
             if (stage !== 'S1') return false;
             // Which rule sees the phantom change depends on the slider: a fixed handle
@@ -816,16 +861,19 @@ export const KNOWN_BUGS = [
             const cfg = ctx.cfg;
             if (id === 'intervals' && !(isNum(cfg.min_interval) && cfg.min_interval > 0)) return false;
             if (!valueAttrLookupFails(cfg) || !isDouble(cfg) || !isNum(cfg.from_min) || !(cfg.from_min > 0)) return false;
-            // A values-mode slider built hidden reports no pair at all at init (#888), so the
+            // On a jQuery build that measures a hidden track as zero (3.3 and later) a
+            // values-mode slider built hidden reports no pair at all at init (#888), so the
             // bounds rule reports a missing number there rather than a crossing -- m024, where
-            // this entry would otherwise look as if the crossing had stopped reproducing.
+            // this entry would otherwise look as if the crossing had stopped reproducing. On
+            // an older build m024 reports the crossing at init as it would built visible.
             if (valuesUnreadableAtInit(ctx)) return false;
             const stage = stageOf(ctx);
             if (stage === 'S0') return true;
             if (stage === 'S8') return false;
             const before = valuesOf(ctx.prev);
-            // A slider built hidden reports no pair at S0; the crossing is there all the
-            // same, which is what the "unknown counts as crossed" branch says.
+            // A slider built hidden on a jQuery build that measures a hidden track as zero
+            // reports no pair at S0; the crossing is there all the same, which is what the
+            // "unknown counts as crossed" branch says.
             const startedCrossed = isNum(before.from) && isNum(before.to) ? before.to < before.from - EPS : true;
             return startedCrossed && !promised(ctx).changed;
         }
@@ -1055,7 +1103,7 @@ export const KNOWN_BUGS = [
  * weaker "does any entry claim this configuration and rule at all", which is what the
  * retirement check in judgeStage() asks.
  *
- * @param {object} ctx        the invariant context ({ state, cfg, stage, prev, expectations })
+ * @param {object} ctx        the invariant context ({ state, cfg, stage, prev, expectations, env })
  * @param {string} id         the failing invariant id
  * @param {string} [message]  the failure message
  * @returns {object|null}

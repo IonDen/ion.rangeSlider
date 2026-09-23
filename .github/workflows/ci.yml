@@ -31,13 +31,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # The 3.7.1 cell alone carries the generated combination matrix (--project=matrix,
-          # 128 configurations, under five minutes): the other three cells stay
-          # --project=chromium only, so a PR does not pay that run three more times for
-          # assertions that do not vary by jQuery build.
+          # Two cells carry the generated combination matrix (--project=matrix, 128
+          # configurations, about five minutes each): 3.7.1 and 1.8.3, one build on each
+          # side of the jQuery 3.3 change in how a hidden container is measured. From 3.3 a
+          # slider built inside a display:none container measures its track as zero and has
+          # nothing to render on until it is shown; before 3.3 it measures 100 px and renders
+          # at init, so the matrix's hidden-container configurations report different things
+          # on the two sides. The other two cells stay --project=chromium only.
           - { id: '3.7.1', jquery: 'jquery-3.7.1', slim: '0', projects: '--project=chromium --project=firefox --project=webkit --project=matrix' }
           - { id: '3.7.1-min', jquery: 'jquery-3.7.1', slim: '0', projects: '--project=chromium', min: '1' }
-          - { id: '1.8.3', jquery: 'vendor/jquery-1.8.3.js', slim: '0', projects: '--project=chromium' }
+          - { id: '1.8.3', jquery: 'vendor/jquery-1.8.3.js', slim: '0', projects: '--project=chromium --project=matrix' }
           - { id: '4.0.0-slim', jquery: 'jquery-4.0.0', slim: '1', projects: '--project=chromium' }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

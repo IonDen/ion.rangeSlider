@@ -1128,7 +1128,8 @@ test('matchKnownBug answers per invariant id and per config', () => {
 });
 
 // Two register entries speak for the payload text of a slider built hidden with
-// prettify_enabled off (m018, m019, m065, m067, m068): the handle fields come back undefined
+// prettify_enabled off (m018, m019, m065, m067, m068) on a jQuery build that measures a hidden
+// track as zero (3.3 and later, the env below): the handle fields come back undefined
 // (#897) and the min/max fields come back as raw numbers (#889). They are told apart by the
 // MESSAGE, so their patterns are written against the wording this rule produces -- which the
 // other register tests can only assume, because they hand the lookup a hand-typed string.
@@ -1143,7 +1144,7 @@ test('the payload-text failures this rule reports are the ones the register tell
         })]
     });
 
-    const ctx = ctxOf(hiddenInit, cfg, 'S0', null, { changed: false });
+    const ctx = { ...ctxOf(hiddenInit, cfg, 'S0', null, { changed: false }), env: { jquery: '3.7.1', hiddenTrackMeasuresZero: true } };
     const issues = {};
     for (const failure of checkInvariants(ctx)) {
         const field = failure.id === 'callbacks' && failure.message.match(/\b(from|to|min|max)_pretty\b/);

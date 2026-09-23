@@ -14,18 +14,33 @@ import { BAR_DRAG_FRACTION, S1_TARGET, S2_TARGET, S3_CLICK } from '../browser/ma
 // The register never reads the outcome state (ctx.state): a predicate that watched the
 // value it is excusing would stop matching the day the bug is fixed, and the matrix's
 // "no longer reproduces" check -- the thing that forces a fix to retire its register
-// line -- would never fire. Config, stage, the stage's own promise and the state the
-// stage STARTED from (ctx.prev) are all a predicate may read, which is exactly what the
-// contexts below carry.
+// line -- would never fire. Config, stage, the stage's own promise, the state the stage
+// STARTED from (ctx.prev) and the environment the run is in (ctx.env) are all a predicate
+// may read, which is exactly what the contexts below carry.
 
 const INVARIANT_IDS = INVARIANTS.map((inv) => inv.id);
 
-/** A matrix context in the shape matrix.spec.mjs builds, minus the outcome state. */
+/**
+ * The two environments test/browser/lib/env.mjs can report. jQuery 3.3 and later measure a
+ * slider built inside a display:none container as zero wide; the builds before 3.3 measure
+ * it as 100 px, and the slider renders at init as a visible one does.
+ */
+const BLIND = { jquery: '3.7.1', hiddenTrackMeasuresZero: true };
+const SIGHTED = { jquery: '1.8.3', hiddenTrackMeasuresZero: false };
+
+/**
+ * A matrix context in the shape matrix.spec.mjs builds, minus the outcome state.
+ *
+ * `env` defaults to BLIND, the jQuery 3.7.1 environment of the per-PR matrix cell every
+ * hidden-container entry of the register was first written against. A test that needs a
+ * context with no env at all passes `env: undefined`.
+ */
 const ctxOf = (cfg, stage, over = {}) => ({
     cfg,
     stage,
     prev: over.prev || null,
     expectations: over.expectations || {},
+    env: 'env' in over ? over.env : BLIND,
     state: { values: { from: null, to: null }, container: { exists: true, classes: [] }, events: [] }
 });
 
@@ -332,8 +347,9 @@ test('#889 matches a payload stage of a slider with prettify_enabled off', () =>
 // ------------------------------------------- #897 the init payload of a hidden slider
 
 // readme "Callback data": from_pretty is "FROM formatted" and to_pretty the same for the to
-// value. A slider built inside a display:none container hands both back undefined in its
-// onStart and onInit payloads, while min_pretty and max_pretty are filled in correctly.
+// value. A slider built inside a display:none container on a jQuery build that measures a
+// hidden track as zero (these contexts' default env) hands both back undefined in its onStart
+// and onInit payloads, while min_pretty and max_pretty are filled in correctly.
 test('#897 matches the missing payload text of a slider built hidden, not of a visible one', () => {
     // m002's configuration (values=off, scale=neg, container=hidden), with the two fields the
     // bug drops. prettify_separator is empty there, so the text is the bare number.
@@ -435,9 +451,10 @@ test('#890 matches the key stages of a blocked slider, never a disabled one', ()
 
 // -------------------------------------------------- #888 hidden container in values mode
 
-// A values-mode slider built inside a display:none container writes nothing to its input
-// and reports from_value null, so a form posted before it is ever shown submits an empty
-// field. __hidden_at_init is set by matrix.spec.mjs for the entries the fixture hides.
+// A values-mode slider built inside a display:none container on a jQuery build that measures
+// a hidden track as zero (these contexts' default env) writes nothing to its input and reports
+// from_value null, so a form posted before it is ever shown submits an empty field.
+// __hidden_at_init is set by matrix.spec.mjs for the entries the fixture hides.
 test('#888 matches a values-mode slider built hidden, not a numeric one', () => {
     const hidden = { values: [10, 20, 30, 40, 50], from: 1, __hidden_at_init: true };
     assert.equal(hit(hidden, 'S0', 'input'), 888);
@@ -469,6 +486,74 @@ test('#888 matches a values-mode slider built hidden, not a numeric one', () => 
     assert.equal(hit(blocked, 'S1', 'callbacks'), null, 'a blocked slider fires nothing for the reveal to be missing from');
 
     assert.equal(hit(fixedHandle, 'S2', 'fixed'), null, 'one stage carries the reveal, not the whole run');
+});
+
+// ------------------------------- a slider built hidden, on each side of jQuery 3.3
+
+// Inside a display:none container the browser leaves the slider's width at the unresolved
+// "100%". jQuery before 3.3 parses that as 100 px and the slider renders at init as a visible
+// one does; jQuery 3.3 and later fall back to offsetWidth, which is 0, and the slider has no
+// track to place anything on. #888 and #897 happen on the second kind of build only, and the
+// weekly jQuery matrix went red on every build before 3.3 because the register claimed them
+// there too. ctx.env carries which kind of build the run is on.
+
+// Bug caught: builtBlind() ignoring env (keying on __hidden_at_init alone), which claims the
+// S0 callbacks cell of every slider built hidden on jQuery 1.8.3 and reds it as "no longer
+// reproduces" -- the weekly matrix failure itself.
+test('#897 matches a hidden S0 callbacks failure only on a build that measures a hidden track as zero', () => {
+    const hidden = { type: 'double', min: 0, max: 100, step: 1, from: 30, to: 70, __hidden_at_init: true };
+    const missing = prettyFailure('onStart', 'from_pretty', '30', 'undefined');
+    assert.equal(answers(hidden, 'S0', 'callbacks', missing, { env: BLIND }), 897);
+
+    assert.equal(hit(hidden, 'S0', 'callbacks', { env: SIGHTED }), null);
+    // Judged as the matrix judges it: the slider reports its payload text, the stage has no
+    // failure, and the register has nothing to say about it.
+    assert.deepEqual(judgeStage([], ctxOf(hidden, 'S0', { env: SIGHTED }), ['labels']), { real: [], annotations: [] });
+});
+
+// Bug caught: #888 keying on __hidden_at_init alone, which claims the S0 input, bounds and
+// callbacks cells (and the S1 reveal) of a values-mode slider built hidden on a build where
+// that slider fills its input at init.
+test('#888 matches a hidden values-mode S0 input failure only on a build that measures a hidden track as zero', () => {
+    const hidden = { values: [10, 20, 30, 40, 50], from: 1, __hidden_at_init: true };
+    const empty = 'input: the input\'s from must be one of the values entries (expected ["10","20","30","40","50"], got "") after S0';
+    assert.equal(answers(hidden, 'S0', 'input', empty, { env: BLIND }), 888);
+
+    assert.equal(hit(hidden, 'S0', 'input', { env: SIGHTED }), null);
+    assert.equal(hit(hidden, 'S0', 'bounds', { env: SIGHTED }), null);
+    // No empty input at init means no phantom change for the reveal to show at S1.
+    assert.equal(hit({ ...hidden, from_fixed: true }, 'S1', 'fixed', { env: SIGHTED }), null);
+});
+
+// m025's configuration: a locked interval of 4 entries with the pair built on entries 1 and 3.
+// On a build that renders the slider at init, that pair is there at S0 and breaks the interval
+// exactly as it does for a visible slider, which is #885.
+// Bug caught: valuesUnreadableAtInit() keying on __hidden_at_init alone, which keeps #885 away
+// from the S0 intervals failure m025 reports on jQuery 1.8.3 and leaves it red as a finding.
+test('#885 matches the S0 interval of an m025-like hidden slider only on a build that measures a hidden track as non-zero', () => {
+    const m025 = {
+        type: 'double', values: ['10', '20', '30', '40', '50'], values_raw: true, from: 1, to: 3,
+        min_interval: 4, max_interval: 4, from_fixed: true, drag_interval: true, __hidden_at_init: true
+    };
+    const closed = 'intervals: the handles closed past min_interval (expected ">= 4", got 2) after S0';
+    assert.equal(answers(m025, 'S0', 'intervals', closed, { env: SIGHTED }), 885);
+
+    // Where the hidden track measures zero the slider reports no pair at init, the intervals
+    // rule has nothing to judge, and #885 must not claim the cell.
+    assert.equal(hit(m025, 'S0', 'intervals', { env: BLIND }), null);
+});
+
+// A matrix run that forgot to read the environment would otherwise have the register pick
+// one of the two answers above for it, silently, on every build.
+// Bug caught: builtBlind() defaulting a missing env (to either answer) instead of throwing.
+test('a hidden configuration judged without env makes the register throw, naming the field', () => {
+    const hidden = { values: [10, 20, 30, 40, 50], from: 1, __hidden_at_init: true };
+    assert.throws(() => judgeStage([], ctxOf(hidden, 'S0', { env: undefined }), []), /hiddenTrackMeasuresZero/);
+    assert.throws(() => judgeStage([], ctxOf(hidden, 'S0', { env: { jquery: '3.7.1' } }), []), /hiddenTrackMeasuresZero/);
+
+    // A slider built visible does not depend on the measurement, so it needs no env.
+    const visible = { values: [10, 20, 30, 40, 50], from: 1 };
+    assert.deepEqual(judgeStage([], ctxOf(visible, 'S0', { env: undefined }), []), { real: [], annotations: [] });
 });
 
 // ------------------------------------------- #891 drag_interval plus a fixed handle
@@ -615,9 +700,10 @@ test('#880 matches the crossing a fallen-back value attribute leaves behind', ()
     const noLimit = { type: 'double', values: ['10', '20', '30', '40', '50'], from: 1, to: 3, __value_attr: '20;40' };
     assert.equal(hit(noLimit, 'S0', 'bounds'), null, 'without from_min both handles land on entry 0 and nothing is reportable');
 
-    // A values-mode slider built hidden reports no pair at all at S0 (#888), so the bounds
-    // rule reports a missing number there, never a crossing -- this entry must not claim it
-    // (m024), or it would look as if the crossing had stopped reproducing.
+    // A values-mode slider built hidden on a jQuery build that measures a hidden track as zero
+    // (the default env here) reports no pair at all at S0 (#888), so the bounds rule reports a
+    // missing number there, never a crossing -- this entry must not claim it (m024), or it
+    // would look as if the crossing had stopped reproducing.
     const hidden = { ...strings, __hidden_at_init: true };
     const entry880 = KNOWN_BUGS.find((bug) => bug.issue === 880);
     assert.equal(entry880.matches(ctxOf(hidden, 'S0'), 'bounds'), false);
