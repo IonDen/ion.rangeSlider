@@ -6,7 +6,7 @@
  * rows for type, force_edges, values_separator and decorate_both. The markup itself the
  * readme does not describe, so the structural rows are characterization of shipped DOM --
  * which is a contract all the same, because every .irs-* class is public API that users
- * style and script against (CLAUDE.md, hard constraint 1).
+ * style and script against.
  *
  * Assertions stay on page-observable surfaces: rendered text, computed visibility,
  * bounding boxes, the input's own classes and value, the recorded callbacks.
@@ -20,13 +20,7 @@ import { open, LABEL } from '../helpers.mjs';
 import { readState } from '../lib/state.mjs';
 import { expectedMerged } from '../lib/format.mjs';
 import { dragHandleTo } from '../lib/interact.mjs';
-
-/**
- * Exact rendered text of one element, polled so it outlasts the 300 ms idle render tick.
- * toHaveText() would collapse whitespace runs, and the merged label below is built around
- * a separator made of spaces.
- */
-const labelText = (page, selector) => expect.poll(() => page.locator(selector).evaluate((el) => el.textContent));
+import { labelText } from '../lib/labels.mjs';
 
 /** The skin-classed outer container. A plain `.irs` matches two spans per instance: the
  * container and the inner span base_html nests inside it. Only the container is a direct
@@ -114,9 +108,12 @@ test.describe(`rendering (${LABEL})`, () => {
     // merged label", and decorate_both: "When the from and to value labels merge into
     // one". Far apart the two labels stand on their own; dragged together they are
     // replaced by the merged one.
+    // The merged label is read with labelText() (exact textContent) rather than
+    // toHaveText(), which would collapse the spaces of the separator.
     // Mutation caught: drawLabels() -> the overlap test `if (this.labels.p_from_left +
     // this.labels.p_from_fake >= this.labels.p_to_left)` becomes `<`, and the two states
-    // swap: the far-apart pair shows the merged label and the close pair shows neither.
+    // swap: the far-apart pair shows the merged label, and the close pair shows the from
+    // and to labels (the else branch) instead of the merged one.
     test('the from and to labels merge into one when the handles come together (Settings: values_separator, decorate_both)', async ({ page }) => {
         const config = { type: 'double', min: 0, max: 100, from: 10, to: 90 };
         await open(page, config);
@@ -193,8 +190,10 @@ test.describe(`rendering (${LABEL})`, () => {
     //
     // The default half of the pair is what makes this a test of the option rather than of
     // the layout: turning force_edges off has to bring the overhang back.
-    // Mutation caught: checkEdges() -> `if (!this.options.force_edges)` becomes
-    // `if (true)`, so the clamp never runs and the two force_edges rows see the overhang.
+    // Mutations caught, both on checkEdges()'s first line: `if (!this.options.force_edges)`
+    // becomes `if (true)`, so the clamp never runs and the two force_edges true rows see
+    // the overhang; it becomes `if (false)`, so the clamp always runs and the two
+    // force_edges false rows lose theirs.
     for (const force_edges of [false, true]) {
         test(`force_edges ${force_edges} at the left edge (Settings: force_edges)`, async ({ page }) => {
             await open(page, { min: 0, max: 100, from: 0, prefix: 'Value: ', force_edges });

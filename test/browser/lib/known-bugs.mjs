@@ -192,11 +192,13 @@ function valuesUnreadableAtInit(ctx) {
  * rounded onto the wrong side of themselves.
  *
  * readme note "step_from_min": "A value that does not sit on the scale is moved to the
- * nearest point that does." Which way that move goes decides whether the limit holds. On
- * min 0.5 with step 1 the scale is 0.5, 2, 3 ... (readme note "step"), so a from_min of 2.4
- * lands on 2, below the limit and against the readme; a from_min of 2.9 lands on 3, above it
- * and perfectly legal (m061). A maximum limit is the mirror: the crossing is the one that
- * rounds up.
+ * nearest point that does." That sentence is written for the step_from_min scale; for the
+ * plain step scale the readme states no such rule, but the plugin rounds a limit onto that
+ * scale the same way, to the nearest point. Which way that move goes decides whether the
+ * limit holds. On min 0.5 with step 1 the plain scale is 0.5, 2, 3 ... (readme note
+ * "step"), so a from_min of 2.4 lands on 2, below the limit and against the readme; a
+ * from_min of 2.9 lands on 3, above it and perfectly legal (m061). A maximum limit is the
+ * mirror: the crossing is the one that rounds up.
  *
  * @param {object} cfg
  * @returns {Array<{handle: string, key: string, side: number}>}

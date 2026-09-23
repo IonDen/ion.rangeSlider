@@ -1,21 +1,22 @@
 /**
- * #877 browser suite -- Task 13: the value grid.
+ * #877 browser suite -- Task 12: the value grid.
  *
- * readme Settings rows grid, grid_margin, grid_num, grid_snap and prettify_grid, plus the
- * "values" note ("The grid gets one labelled tick per entry") and the "prettify_grid"
- * note. The grid_num row carries the two numbers these rows turn on: "Number of grid units
- * the value range is cut into, at most 50. A labelled tick mark sits at each unit
- * boundary, with smaller unlabelled ticks between them (up to 28 units)."
+ * readme Settings rows grid, grid_margin, grid_num and grid_snap. The grid_num row carries
+ * the two numbers these rows turn on: "Number of grid units the value range is cut into,
+ * at most 50. A labelled tick mark sits at each unit boundary, with smaller unlabelled
+ * ticks between them (up to 28 units)."
  *
  * The grid is built once, in appendGrid(), and only re-measured afterwards, so every row
  * here reads the markup of a freshly built slider.
  *
- * Repeated ticks on a range holding fewer steps than grid_num are already covered by the
- * #772 tests in test/browser/features.spec.mjs and are not repeated here.
+ * Covered elsewhere and not repeated here: repeated ticks on a range holding fewer steps
+ * than grid_num (the #772 tests in test/browser/features.spec.mjs), the grid of values
+ * mode (values-mode.spec.mjs) and prettify_grid (prettify.spec.mjs, and the #306 tests in
+ * features.spec.mjs).
  *
- * These are characterization tests of shipped behaviour, so each names in a comment the
- * one-line change to js/ion.rangeSlider.js that reds it. Each was applied live, run,
- * watched red and reverted.
+ * These are characterization tests of shipped behaviour, so each row except the #892 one
+ * names in a comment the one-line change to js/ion.rangeSlider.js that reds it. Each of
+ * those was applied live, run, watched red and reverted.
  */
 import { test, expect } from '@playwright/test';
 import { open, LABEL } from '../helpers.mjs';
@@ -43,8 +44,11 @@ test.describe(`grid (${LABEL})`, () => {
     // readme Settings, grid_num: "Number of grid units the value range is cut into, at
     // most 50." A unit boundary at each end of every unit means one more label than units,
     // and the cap applies to the units, so the most labels a grid can hold is 51.
-    // Mutation caught: appendGrid() -> `if (big_num > 50) big_num = 50` becomes
-    // `if (big_num > 60) big_num = 60`, and the grid_num 60 row reads 61 labels.
+    // Mutations caught, all in appendGrid(): `big_num = o.grid_num` becomes
+    // `big_num = o.grid_num + 1`, and the grid_num 1, 4 and 10 rows read one label too
+    // many; `if (big_num > 50) big_num = 50` becomes `if (big_num > 49) big_num = 49`, and
+    // the grid_num 50 and 60 rows read 50 labels; the same line with 60 in place of 50
+    // lets the grid_num 60 row read 61.
     for (const [grid_num, labels] of [[1, 2], [4, 5], [10, 11], [50, 51], [60, 51]]) {
         test(`grid_num ${grid_num} draws ${labels} labelled ticks (Settings: grid_num)`, async ({ page }) => {
             await open(page, { min: 0, max: 100, from: 10, grid: true, grid_num });
@@ -60,9 +64,11 @@ test.describe(`grid (${LABEL})`, () => {
     // units)". The plugin thins them out as the units multiply, and stops drawing them
     // past 28 units. Both sides of every threshold are pinned so that moving one of them
     // has nowhere to hide.
-    // Mutation caught: appendGrid() -> `if (big_num > 7) small_max = 2;` becomes
-    // `if (big_num > 8) small_max = 2;`, and the grid_num 8 row counts 3 small ticks.
-    for (const [grid_num, small] of [[4, 4], [7, 3], [8, 2], [14, 2], [15, 1], [28, 1], [29, 0]]) {
+    // Mutations caught, one per row, each moving one appendGrid() threshold by one:
+    // `big_num > 4` to `> 3` reds the grid_num 4 row and to `> 5` the grid_num 5 row;
+    // `big_num > 7` to `> 6` reds 7 and to `> 8` reds 8; `big_num > 14` to `> 13` reds 14
+    // and to `> 15` reds 15; `big_num > 28` to `> 27` reds 28 and to `> 29` reds 29.
+    for (const [grid_num, small] of [[4, 4], [5, 3], [7, 3], [8, 2], [14, 2], [15, 1], [28, 1], [29, 0]]) {
         test(`grid_num ${grid_num} puts ${small} small ticks between two labelled ones (Settings: grid_num)`, async ({ page }) => {
             await open(page, { min: 0, max: 100, from: 10, grid: true, grid_num });
 
@@ -107,10 +113,9 @@ test.describe(`grid (${LABEL})`, () => {
     // Endpoints are left out of the check: the first and last labels carry min and max,
     // which the readme documents as the range ends whether or not a whole number of steps
     // reaches them.
-    // Mutation caught: appendGrid() -> `result = this.convertToValue(big_w)` becomes
-    // `result = big_w`, and the labels name percentages instead of values, which is off
-    // the scale in a different way and reds this test for a different reason. This row is
-    // pinned to a filed defect instead, so it is the readme that names the expectation.
+    // No mutation claim: inside test.fail(true) any failure counts as the expected one, so
+    // no change to today's plugin can red this row. It goes red, as an unexpected pass,
+    // the day #892 is fixed; the readme names the expectation.
     test('every labelled tick names a value on the step scale (note "step", Settings: grid_num)', async ({ page }) => {
         test.fail(true, '#892: grid labels name values off the step scale on a range that does not divide');
 
@@ -127,40 +132,18 @@ test.describe(`grid (${LABEL})`, () => {
         expect(offScale).toEqual([]);
     });
 
-    // readme note "values": "The grid gets one labelled tick per entry, up to the 50-unit
-    // cap, because grid_num and grid_snap are set for you." grid_num is left at its
-    // default of 4 here, so a grid that ignored the values would show five ticks counting
-    // by index instead of the five entries.
-    // Mutation caught: appendGrid() -> in the values branch, `result = o.p_values[result]`
-    // becomes `result = this._prettifyGrid(result)`, and the labels read 0 to 4.
-    test('values mode labels one tick per entry (note "values")', async ({ page }) => {
-        await open(page, { values: ['a', 'b', 'c', 'd', 'e'], grid: true });
-
-        const state = await readState(page);
-        expect(state.grid.texts).toEqual(['a', 'b', 'c', 'd', 'e']);
-    });
-
-    // readme note "prettify_grid": "Formats the grid labels only." The value, min and max
-    // labels on the same page have to come through untouched, which is what separates this
-    // row from the prettify spec's coverage of the formatting chain itself.
-    // Mutation caught: appendGrid() -> `result = this._prettifyGrid(result)` becomes
-    // `result = this._prettify(result)`, and the grid labels lose their brackets.
-    test('prettify_grid formats the grid labels and nothing else (note "prettify_grid")', async ({ page }) => {
-        await open(page, "{min:0,max:100,from:50,grid:true,grid_num:4,prettify_grid:function(n){return '<'+n+'>';}}");
-
-        const state = await readState(page);
-        expect(state.grid.texts).toEqual(['<0>', '<25>', '<50>', '<75>', '<100>']);
-        expect(state.labels.single.text).toBe('50');
-        expect(state.labels.min.text).toBe('0');
-        expect(state.labels.max.text).toBe('100');
-    });
+    // One labelled tick per values entry (note "values"): see values-mode.spec.mjs.
+    // prettify_grid on the grid labels only: see prettify.spec.mjs and features.spec.mjs (#306).
 
     // readme Settings, grid_margin: "Add a grid margin on the left and right, half a
     // handle wide, so the first and last grid labels line up with the handle centers."
     // With from on min the handle sits at the start of the track, so its centre is the
     // place the first tick is supposed to meet.
-    // Mutation caught: calcGridMargin() -> drop the `if (!this.options.grid_margin)
-    // return;` guard, and the grid_margin false row gets the inset grid as well.
+    // Mutations caught, both in calcGridMargin(): drop the `if (!this.options.grid_margin)
+    // return;` guard, and the grid_margin false row gets the inset grid as well;
+    // `this.coords.grid_gap = this.toFixed((this.coords.p_handle / 2) - 0.1)` takes the
+    // whole `p_handle` instead of half, and the grid_margin true row's first tick moves
+    // about half a handle (7.4 px) right of the handle's centre.
     for (const grid_margin of [true, false]) {
         test(`grid_margin ${grid_margin} places the grid against the handle centre or the container edge (Settings: grid_margin)`, async ({ page }) => {
             await open(page, { min: 0, max: 100, from: 0, grid: true, grid_num: 4, grid_margin });
@@ -197,14 +180,16 @@ test.describe(`grid (${LABEL})`, () => {
 
     // Characterization: the readme lets a grid be cut into 50 units whatever the container
     // is wide, and the plugin keeps the result readable by hiding labels that would run
-    // into their neighbours. Which labels survive is a question of measured text width, so
-    // the row compares two widths instead of pinning a set: the same grid on a narrower
-    // container has to keep fewer labels. The first label is never a candidate for hiding.
-    // At 300 px the last label is hidden as well, which is left unasserted because the
-    // text metrics behind it differ between engines.
+    // into their neighbours. The first label is never a candidate for hiding. The last one
+    // is, and whether it survives follows from the geometry rather than from engine text
+    // metrics: calcGridCollision()'s second pass (step 4) checks label 50 ("100") against
+    // label 48 ("96"), two grid units (4 % of the grid) away. The check measures the
+    // labels as a share of the container, so the two collide once their widths add up to
+    // more than 8 % of it: 24 px at 300 px, 48 px at 600 px. "96" and "100" together are
+    // about 37 px wide, so the last label is hidden at 300 px and kept at 600 px.
     // Mutation caught: calcGridCollision() -> the else branch `label.style.visibility =
-    // "hidden"` becomes `"visible"`, and both widths show all 51 labels.
-    test('a grid too dense for its container hides labels (characterization)', async ({ page }) => {
+    // "hidden"` becomes `"visible"`, and both widths show all 51 labels, "100" included.
+    test('a grid too dense for its container hides labels, the last one at 300 px (characterization)', async ({ page }) => {
         const config = { min: 0, max: 100, from: 10, grid: true, grid_num: 50 };
 
         await open(page, config, { width: '300' });
@@ -218,6 +203,8 @@ test.describe(`grid (${LABEL})`, () => {
         expect(narrow.visibleTexts.length).toBeLessThan(narrow.texts.length);
         expect(narrow.visibleTexts.length).toBeLessThan(wide.visibleTexts.length);
         expect(narrow.visibleTexts[0]).toBe('0');
+        expect(narrow.visibleTexts).not.toContain('100');
         expect(wide.visibleTexts[0]).toBe('0');
+        expect(wide.visibleTexts[wide.visibleTexts.length - 1]).toBe('100');
     });
 });
