@@ -181,12 +181,13 @@ test.describe(`grid (${LABEL})`, () => {
     // Characterization: the readme lets a grid be cut into 50 units whatever the container
     // is wide, and the plugin keeps the result readable by hiding labels that would run
     // into their neighbours. The first label is never a candidate for hiding. The last one
-    // is, and whether it survives follows from the geometry rather than from engine text
-    // metrics: calcGridCollision()'s second pass (step 4) checks label 50 ("100") against
-    // label 48 ("96"), two grid units (4 % of the grid) away. The check measures the
-    // labels as a share of the container, so the two collide once their widths add up to
-    // more than 8 % of it: 24 px at 300 px, 48 px at 600 px. "96" and "100" together are
-    // about 37 px wide, so the last label is hidden at 300 px and kept at 600 px.
+    // is, and whether it survives depends on the label widths: calcGridCollision()'s
+    // second pass (step 4) checks label 50 ("100") against label 48 ("96"), two grid units
+    // (4 % of the grid) away. The check measures the labels as a share of the container,
+    // so the two collide once their widths add up to more than 8 % of it: 24 px at 300 px,
+    // 48 px at 600 px. "96" and "100" together measure about 37 px, well between those two
+    // limits, which is why the row holds on every engine: the last label is hidden at
+    // 300 px and kept at 600 px.
     // Mutation caught: calcGridCollision() -> the else branch `label.style.visibility =
     // "hidden"` becomes `"visible"`, and both widths show all 51 labels, "100" included.
     test('a grid too dense for its container hides labels, the last one at 300 px (characterization)', async ({ page }) => {

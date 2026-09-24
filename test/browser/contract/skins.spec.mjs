@@ -60,25 +60,32 @@ test.describe(`skins (${LABEL})`, () => {
             expect(Math.abs(box.width - width)).toBeLessThanOrEqual(1);
         });
 
-        // Mutation caught: convertToRealPercent() -> `var full = 100 -
-        // this.coords.p_handle;` becomes `var full = 100;`, dropping the handle-width
+        // Mutation caught (the rows that expect 50): convertToRealPercent() -> `var full =
+        // 100 - this.coords.p_handle;` becomes `var full = 100;`, dropping the handle-width
         // correction, and on jQuery 3.7.1 every skin lands short of 50 by an amount that
         // grows with its handle: 49 for flat, modern, sharp and square, 48 for big and round.
         //
-        // The square skin on jQuery 3.0.x and 3.1.x: those builds report the rotated handle
-        // as about 22.6 px wide, the plugin takes that width out of the track while the
-        // handle is laid out 16 px wide, and a drag to the middle of the track reports 51.
-        // That is a quirk of those jQuery builds, documented rather than fixed: #903 adds the
-        // readme note. The expected failure pins the documented quirk on those two builds
-        // only. If they ever stop showing it, the row reds as an unexpected pass, and the
-        // readme note would then be wrong.
-        test(`skin ${skin} keeps a drag to the middle of the track on 50 (Settings: skin)`, async ({ page }) => {
+        // Characterization of the square skin on jQuery 3.0.x and 3.1.x: those builds measure
+        // the square handle with its rotation included, about 22.6 px, while it is laid out
+        // 16 px wide. The plugin takes the wider figure out of the track, and a drag to the
+        // middle of the 600 px track reports 51. The readme's "Known differences between
+        // jQuery builds" note (#903) states exactly that, so the row pins the documented 51
+        // on those two builds and 50 on every other. If those builds ever stop showing it,
+        // the row reds, and the readme note would then be wrong.
+        // Mutation caught (the rows that expect 51): calcHandlePercent() ->
+        // `this.coords.w_handle = this.$cache.s_single.outerWidth(false);` becomes
+        // `this.coords.w_handle = this.$cache.s_single[0].offsetWidth;`, a read that ignores
+        // transforms, and jQuery 3.0.0 and 3.1.1 land on 50.
+        const dragTitle = skin === 'square'
+            ? 'skin square keeps a drag to the middle of the track on 50, and on the documented 51 with jQuery 3.0.x and 3.1.x (Settings: skin; #903)'
+            : `skin ${skin} keeps a drag to the middle of the track on 50 (Settings: skin)`;
+        test(dragTitle, async ({ page }) => {
             await open(page, { skin, min: 0, max: 100, from: 10 });
             const env = await readEnv(page);
-            test.fail(skin === 'square' && /^3\.[01]\./.test(env.jquery), '#903: jQuery 3.0.x and 3.1.x include the square handle\'s rotation in its width, so a drag to the middle lands on 51 (documented, not fixed)');
+            const quirk = skin === 'square' && /^3\.[01]\./.test(env.jquery);
 
             await dragHandleTo(page, 'single', 0.5);
-            await expect(page.locator('#slider')).toHaveValue('50');
+            await expect(page.locator('#slider')).toHaveValue(quirk ? '51' : '50');
         });
     }
 });

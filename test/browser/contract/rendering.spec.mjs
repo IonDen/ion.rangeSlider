@@ -104,17 +104,21 @@ test.describe(`rendering (${LABEL})`, () => {
         expect(numberOf(second.container.classes)).toBe(numberOf(first.container.classes) + 1);
     });
 
-    // readme Settings, values_separator: "Separator between the from and to values in the
-    // merged label", and decorate_both: "When the from and to value labels merge into
-    // one". Far apart the two labels stand on their own; dragged together they are
-    // replaced by the merged one.
+    // Characterization: the readme speaks of the merged label (values_separator: "Separator
+    // between the from and to values in the merged label"; decorate_both: "When the from
+    // and to value labels merge into one") but states no rule for when it replaces the two
+    // value labels. This row leaves both options at their defaults, and the merged text it
+    // expects is built from those defaults (the default separator, both values decorated).
+    // What it pins is the switch itself: far apart the from and to labels stand on their
+    // own; dragged together until the from label reaches the to label, both give way to
+    // the merged one.
     // The merged label is read with labelText() (exact textContent) rather than
     // toHaveText(), which would collapse the spaces of the separator.
     // Mutation caught: drawLabels() -> the overlap test `if (this.labels.p_from_left +
     // this.labels.p_from_fake >= this.labels.p_to_left)` becomes `<`, and the two states
     // swap: the far-apart pair shows the merged label, and the close pair shows the from
     // and to labels (the else branch) instead of the merged one.
-    test('the from and to labels merge into one when the handles come together (Settings: values_separator, decorate_both)', async ({ page }) => {
+    test('the from and to labels give way to the merged label once they overlap (characterization of the overlap switch)', async ({ page }) => {
         const config = { type: 'double', min: 0, max: 100, from: 10, to: 90 };
         await open(page, config);
 
