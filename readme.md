@@ -43,6 +43,13 @@ Ion.RangeSlider is a jQuery range slider with one or two handles, six skins, tou
 * [jQuery](http://jquery.com/) 1.8 or newer, up to and including 4.x. The slim builds work too.
 * Nothing else. The plugin runs in Internet Explorer 8+ and every modern browser.
 
+A few older jQuery builds measure the slider differently:
+
+* **jQuery 1.8 to 3.2:** a slider created inside a hidden container (a closed tab, a modal, anything with `display: none`) is first drawn for a 100 px wide track and redrawn at its real width a moment after the container is shown, so the handles can jump once. jQuery 3.3.1 or newer waits until the slider is visible.
+* **jQuery 3.0.x and 3.1.x:** with the `square` skin a drag can land one value off, because these builds include the rotation of its handle in the handle's width. jQuery 3.2.1 or newer measures it correctly.
+
+If you can choose, jQuery 3.3.1 or newer avoids both.
+
 The browser suite runs once a week against 19 jQuery builds: 17 versions from 1.8.3 to 4.0.0 plus the 3.7.1 and 4.0.0 slim builds. Every change runs it against 1.8.3, 3.7.1 and 4.0.0-slim, and once more against the plugin's minified files under 3.7.1.
 
 
