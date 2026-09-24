@@ -47,7 +47,7 @@ The browser suite runs once a week against 19 jQuery builds: 17 versions from 1.
 
 ### Known differences between jQuery builds
 
-* **jQuery 3.0.x and 3.1.x:** these builds measure the `square` skin's handle with its 45-degree rotation included, so they read it as about 23 px wide instead of 16. Values picked with the mouse then land slightly off: on a 600 px wide slider from 0 to 100, a drag of the handle to the middle reports 51, and the error is larger on narrower sliders. jQuery 3.2.1 or newer measures the handle correctly. The other five skins are not affected.
+* **jQuery 3.0.x and 3.1.x:** these builds measure the `square` skin's handle with its 45-degree rotation included, so they read it as about 23 px wide instead of 16. Values picked with the mouse or by touch then land slightly off: on a 600 px wide slider from 0 to 100, a drag of the handle to the middle reports 51, and the error is larger on narrower sliders. jQuery 3.2.1 or newer measures the handle correctly. The other five skins are not affected.
 
 
 ## Install
