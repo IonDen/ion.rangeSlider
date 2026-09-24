@@ -160,7 +160,7 @@ test.describe(`callbacks (${LABEL})`, () => {
     // all (its Callback data example is a double slider, and the settings table marks `to`
     // as double type only), so this row asks for the shape the object takes after update()
     // from the first callback on.
-    test('the onStart payload of a single slider carries exactly the documented keys (Callback data)', async ({ page }) => {
+    test('the onStart payload of a single slider already carries the keys it has after update() (Callback data list)', async ({ page }) => {
         test.fail(true, "unfiled: a single slider's callback data gains to_pretty only after the first update() or reset()");
         await open(page, "{ min: 0, max: 100, from: 20, "
             + "onStart: function (d) { window.__keys = Object.keys(d).sort(); } }");

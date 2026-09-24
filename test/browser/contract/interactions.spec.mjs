@@ -157,10 +157,10 @@ test.describe(`interactions (${LABEL})`, () => {
     // ---- A click on the track ------------------------------------------------------------
     // readme Settings, onFinish, counts a click on the track as an interaction, and
     // smoke.spec.mjs holds a click on a single slider moving the handle to the clicked value.
-    // In double type the readme does not say which handle moves; the plugin takes the one on
-    // the clicked side of the point halfway between the two. The first two rows are clear
-    // of that point, the third sits on it.
-    // Mutation caught (all three rows): chooseHandle() -> `if (real_x >= m_point) {` becomes
+    // In double type the readme does not say which handle moves; the plugin compares the
+    // click with the point halfway between the two, on two scales that disagree (see the tie
+    // row and the expected failure after it). The two rows below are clear of that point.
+    // Mutation caught (these two rows and the tie row): chooseHandle() -> `if (real_x >= m_point) {` becomes
     // `if (real_x < m_point) {`, and each click moves the other handle, which then stops on
     // the first: "20;20", "80;80" and "20;50".
     const CLICKS = [
@@ -193,7 +193,7 @@ test.describe(`interactions (${LABEL})`, () => {
     });
 
     // The same scale mix away from the tie, where it grows with the handle's share of the
-    // track. The readme names no rule for which handle a click moves; chooseHandle()'s own
+    // track and with the distance of the midpoint from min. The readme names no rule for which handle a click moves; chooseHandle()'s own
     // JSDoc does: "Find closest handle to pointer click". On a 300 px track the 16 px handle
     // takes 5.33 of 100, so a click on 93 reaches chooseHandle() as about 88 (93 x 0.9467),
     // below the midpoint of 80 and 100, 90. The click is 7 from to and 13 from from, and
