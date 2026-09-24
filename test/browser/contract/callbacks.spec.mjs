@@ -1,5 +1,5 @@
 /**
- * #877 browser suite -- Task 15: the callbacks, per interaction path, and what they carry.
+ * #877 browser suite -- the callbacks, per interaction path, and what they carry.
  *
  * The oracle is readme.md: the settings rows for onStart, onChange, onFinish, onUpdate,
  * onInit and scope, and the "Callback data" block (its field list and its comments). The
@@ -152,12 +152,16 @@ test.describe(`callbacks (${LABEL})`, () => {
         expect(await page.evaluate(() => window.__keys)).toEqual(DOCUMENTED_KEYS);
     });
 
-    // The same list on a single slider. The payload of a single slider carries to,
-    // to_percent, to_value, to_min and to_max, but no to_pretty until the first update() or
-    // reset() writes one, so onStart, onChange and onFinish hand out seventeen of the
-    // eighteen documented keys.
+    // The same list on a single slider. What is certain is that the object changes shape
+    // during the slider's life: onStart, onChange and onFinish hand out seventeen keys, and
+    // the first update() or reset() adds to_pretty, which every later callback carries. A
+    // single slider already sends every other to field (to, to_percent, to_value, to_min and
+    // to_max). The readme does not settle whether a single slider should carry to fields at
+    // all (its Callback data example is a double slider, and the settings table marks `to`
+    // as double type only), so this row asks for the shape the object takes after update()
+    // from the first callback on.
     test('the onStart payload of a single slider carries exactly the documented keys (Callback data)', async ({ page }) => {
-        test.fail(true, 'unfiled: a single slider sends no to_pretty until the first update() or reset()');
+        test.fail(true, "unfiled: a single slider's callback data gains to_pretty only after the first update() or reset()");
         await open(page, "{ min: 0, max: 100, from: 20, "
             + "onStart: function (d) { window.__keys = Object.keys(d).sort(); } }");
         expect(await page.evaluate(() => window.__keys)).toEqual(DOCUMENTED_KEYS);

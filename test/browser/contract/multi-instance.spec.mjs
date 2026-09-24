@@ -1,5 +1,5 @@
 /**
- * #877 browser suite -- Task 14: two sliders on one page.
+ * #877 browser suite -- two sliders on one page.
  *
  * Every instance keeps its own state, binds its own events under its own namespace
  * (`.irs_N`, N being the instance number the container carries as js-irs-N) and runs its

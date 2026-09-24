@@ -1,5 +1,5 @@
 /**
- * #877 browser suite -- Task 16: the public methods update(), reset() and destroy(), and a
+ * #877 browser suite -- the public methods update(), reset() and destroy(), and a
  * second ionRangeSlider() call on an input that already has a slider.
  *
  * The oracle is the closing paragraph of the readme's "Public methods" section: "update()
@@ -223,8 +223,11 @@ test.describe(`methods (${LABEL})`, () => {
 
     // "can be initialized again": a new call builds a new slider on the same input, with
     // its own instance number (the js-irs-N class) above the first one's. Given no from of
-    // its own, it starts on the value the input holds, 30 (readme Settings,
-    // input_values_separator: the input's value sets from).
+    // its own, it starts on 30, and two routes lead there today: the input's value, "30",
+    // and the pair the destroyed slider left in the input's jQuery data, which the
+    // constructor reads the way it reads data-from. The data cache is the one that decides:
+    // with the input's value emptied before the new call, the slider still starts on 30.
+    // The expected-failure row below shows the same cache overriding a from the call gives.
     // Mutation caught: destroy() -> drop `$.data(this.input, "ionRangeSlider", null);`, and
     // the new call finds the old handle and builds nothing.
     // Mutation caught: $.fn.ionRangeSlider -> `plugin_count++` becomes `plugin_count`, and
@@ -255,7 +258,8 @@ test.describe(`methods (${LABEL})`, () => {
 
         await page.evaluate(() => { jQuery('#slider').ionRangeSlider({ min: 0, max: 100, from: 70 }); });
         await expect(page.locator(CONTAINER)).toHaveCount(1);
-        await expect(page.locator('#slider')).toHaveValue('70');
+        await page.waitForTimeout(400);   // outlast the idle render tick, then read once
+        expect(await page.locator('#slider').inputValue()).toBe('70');
     });
 
     // readme Settings, disable: "Disable the slider and the input"; after destroy() the
@@ -267,18 +271,25 @@ test.describe(`methods (${LABEL})`, () => {
 
         await call(page, 'destroy');
         await expect(page.locator(CONTAINER)).toHaveCount(0);
-        await expect(page.locator('#slider')).toBeEnabled();
+        await page.waitForTimeout(400);   // outlast the idle render tick, then read once
+        expect(await page.locator('#slider').evaluate((el) => el.disabled)).toBe(false);
     });
 
     // ---- A second ionRangeSlider() call ------------------------------------------------
     // readme: "Calling $("#range").ionRangeSlider() a second time on an input that already
-    // has a slider does nothing."
+    // has a slider does nothing." The input's value would not notice a second slider: it
+    // reads the data("from") the first one wrote (the jQuery data cache the destroy() rows
+    // above describe) over its own from: 90 and starts on 30 as well, and the label line
+    // trips only because its locator then finds two labels. The instance handle and the
+    // container count are the checks that catch the rebuild.
     // Mutation caught: $.fn.ionRangeSlider -> `if (!$.data(this, "ionRangeSlider")) {`
     // becomes `if (true) {`, and the call builds a second slider on the same input: the
-    // wrap holds two containers.
+    // instance handle $.data(input, "ionRangeSlider") is a new object, and the wrap holds
+    // two containers.
     test('a second ionRangeSlider() call on the same input changes nothing (Public methods)', async ({ page }) => {
         await open(page, { min: 0, max: 100, from: 30, step: 1 });
         await page.evaluate(() => { jQuery('#slider').ionRangeSlider({ min: 0, max: 100, from: 90 }); });
+        expect(await page.evaluate(() => jQuery.data(document.getElementById('slider'), 'ionRangeSlider') === window.__irs.slider)).toBe(true);
         await page.waitForTimeout(400);   // outlast the idle render tick before reading an unchanged value
 
         await expect(page.locator(CONTAINER)).toHaveCount(1);
