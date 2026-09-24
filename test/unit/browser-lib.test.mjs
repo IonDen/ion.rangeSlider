@@ -193,9 +193,9 @@ test('builtinPrettify groups the integer part in threes with the separator', () 
 test('expectedLabel applies prefix, postfix, max_postfix and the min/max prefixes in the documented order', () => {
   const cfg = { min: 0, max: 100, step: 1, prettify_enabled: true, prettify_separator: ' ', prefix: '$', postfix: 'k', max_postfix: '+', min_prefix: 'From: ', max_prefix: 'Up to: ' };
   assert.equal(expectedLabel(50, cfg, 'handle'), '$50k');
-  assert.equal(expectedLabel(100, cfg, 'handle'), 'Up to: $100+k');
+  assert.equal(expectedLabel(100, cfg, 'handle'), 'Up to: $100+ k');
   assert.equal(expectedLabel(0, cfg, 'min'), 'From: $0k');
-  assert.equal(expectedLabel(100, cfg, 'max'), 'Up to: $100+k');
+  assert.equal(expectedLabel(100, cfg, 'max'), 'Up to: $100+ k');
 });
 
 // readme "Callback data": "from_pretty": "10 000" is "FROM formatted (values mode: the
@@ -223,21 +223,24 @@ test('expectedPretty formats a value for its surface and never decorates it', ()
 });
 
 // #884. readme settings table: max_postfix "Postfix for the maximum value only:
-// 0 - 100+"; postfix "Postfix for values: 100k". Neither row asks for a separator
-// between the two, so the oracle writes max_postfix and postfix one after the other
-// and nothing else: a postfix that already begins with a space carries the only space
-// ("100+ years"), and one that does not is joined tight ("100+k"). The plugin inserts a
-// space of its own, which is issue #884 -- the extra space is the defect, so the oracle
-// must not encode it or the matrix could never see it.
-// Bug caught: putting the plugin's separator back into decorate(), which would predict
-// "100+  years" for the site's own age demo and pass the label the readme calls wrong.
-test('decorate: max_postfix runs straight into postfix, with no separator of its own', () => {
+// 0 - 100+"; postfix "Postfix for values: 100k". The two are separated by one space,
+// and a postfix that already opens with whitespace brings its own: "100+ k" and
+// "100+ years". That single space is what issue #884 asks for ("insert the separator
+// only when the postfix does not already begin with whitespace"), so only the doubled
+// space of a postfix like " years" is the defect -- which is the one line of this test
+// the plugin disagrees with today.
+// Bug caught: writing the separator unconditionally, which predicts "100+  years" for
+// the site's own age demo and would make the matrix agree with the defect; or dropping
+// it altogether, which predicts "100+k" for a plain postfix and reds a label the
+// issue's fix leaves exactly as it is.
+test('decorate: one space joins max_postfix to a postfix that does not bring its own', () => {
   const spaced = { min: 0, max: 100, prefix: 'Age: ', postfix: ' years', max_postfix: '+' };
   assert.equal(decorate('100', 100, spaced, 'handle'), 'Age: 100+ years');
   assert.equal(decorate('21', 21, spaced, 'handle'), 'Age: 21 years');
 
   const tight = { min: 0, max: 100, postfix: 'k', max_postfix: '+' };
-  assert.equal(decorate('100', 100, tight, 'handle'), '100+k');
+  assert.equal(decorate('100', 100, tight, 'handle'), '100+ k');
+  assert.equal(decorate('21', 21, tight, 'handle'), '21k');
 
   // max_postfix alone is unchanged: it only ever appended itself.
   assert.equal(decorate('100', 100, { min: 0, max: 100, max_postfix: '+' }, 'handle'), '100+');

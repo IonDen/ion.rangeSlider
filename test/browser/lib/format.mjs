@@ -132,13 +132,14 @@ export function expectedPretty(value, cfg, surface) {
  * "Postfix for values: 100k"; max_postfix "Postfix for the maximum value only:
  * 0 - 100+".
  *
- * max_postfix and postfix are written one after the other, with nothing between them:
- * neither row asks for a separator, so "100+" followed by "k" is "100+k" and a postfix
- * that already opens with a space carries the only space ("100+ years"). The plugin
- * inserts a space of its own there, which doubles the space of the site's own age demo
- * (postfix " years") -- issue #884. Encoding that space here would make the oracle agree
- * with the defect and hide it from the matrix, so this function stays on the readme's
- * side and the register carries the bug.
+ * A max_postfix and a postfix on the same label are separated by ONE space, and a postfix
+ * that already opens with whitespace brings its own: "100+" followed by "k" reads
+ * "100+ k", and followed by " years" it reads "100+ years". That is the rule issue #884
+ * asks for -- insert the separator only when the postfix does not already begin with
+ * whitespace -- so the plain-postfix case is exactly what the plugin renders today and
+ * only the doubled space of the age demo (postfix " years") is the defect the register
+ * carries. Predicting "100+k" instead would call a healthy label wrong and leave that
+ * matrix cell red for as long as the option pair exists.
  *
  * Two points the readme leaves open, pinned here as characterization of the shipped
  * behaviour (the readme never shows the decorations combined):
@@ -163,7 +164,10 @@ export function decorate(text, value, cfg, surface) {
     else if (cfg.max_prefix && value === max) out += cfg.max_prefix;
     if (cfg.prefix) out += cfg.prefix;
     out += text;
-    if (cfg.max_postfix && value === max) out += cfg.max_postfix;
+    if (cfg.max_postfix && value === max) {
+        out += cfg.max_postfix;
+        if (cfg.postfix && !/^\s/.test(cfg.postfix)) out += ' ';
+    }
     if (cfg.postfix) out += cfg.postfix;
     return out;
 }
