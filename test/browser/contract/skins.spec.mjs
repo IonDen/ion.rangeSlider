@@ -68,11 +68,14 @@ test.describe(`skins (${LABEL})`, () => {
         // The square skin on jQuery 3.0.x and 3.1.x: those builds report the rotated handle
         // as about 22.6 px wide, the plugin takes that width out of the track while the
         // handle is laid out 16 px wide, and a drag to the middle of the track reports 51.
-        // Not filed yet; the row expects that failure on those two builds only.
+        // That is a quirk of those jQuery builds, documented rather than fixed: #903 adds the
+        // readme note. The expected failure pins the documented quirk on those two builds
+        // only. If they ever stop showing it, the row reds as an unexpected pass, and the
+        // readme note would then be wrong.
         test(`skin ${skin} keeps a drag to the middle of the track on 50 (Settings: skin)`, async ({ page }) => {
             await open(page, { skin, min: 0, max: 100, from: 10 });
             const env = await readEnv(page);
-            test.fail(skin === 'square' && /^3\.[01]\./.test(env.jquery), 'unfiled: the square skin on jQuery 3.0.x and 3.1.x lands a drag to the middle of the track on 51');
+            test.fail(skin === 'square' && /^3\.[01]\./.test(env.jquery), '#903: jQuery 3.0.x and 3.1.x include the square handle\'s rotation in its width, so a drag to the middle lands on 51 (documented, not fixed)');
 
             await dragHandleTo(page, 'single', 0.5);
             await expect(page.locator('#slider')).toHaveValue('50');
