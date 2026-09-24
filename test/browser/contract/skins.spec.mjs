@@ -14,7 +14,8 @@
  * of a skin's handle: an edited @handle_width, a border added outside box-sizing, a
  * dropped transform. The drag row catches a mismatch between the handle as drawn and the
  * width jQuery reports for it, such as a transform or a margin that one of the two sees
- * and the other does not.
+ * and the other does not, except where the readme documents one: the square skin on
+ * jQuery 3.0.x and 3.1.x, which that row pins.
  *
  * The widths below are measured through getBoundingClientRect(). They are the
  * @handle_width of each less/skins/<skin>.less, except for square (see its entry).
