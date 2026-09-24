@@ -241,10 +241,20 @@ export const INVARIANTS = [
         id: 'scale',
         readme: 'note "step": "Every value is min plus a whole number of steps, rounded to the decimals of step ... a negative min keeps its decimals instead"; note "step_from_min"',
         check(ctx) {
-            // The rule applies to what an INTERACTION produced. validate() clamps but
-            // never step-snaps, so a starting value off the grid is documented
-            // behaviour (see the #742 fix, which removed the focus-synthesized click
-            // that used to snap it); only a value this stage moved is judged.
+            // The rule applies to what an INTERACTION produced, so only a value this
+            // stage moved is judged. The readme's "step" note covers the starting from
+            // and to as well, and the plugin keeps a starting value off the scale until
+            // the first interaction instead of moving it onto one, which is filed as
+            // #900: the opening stage is left out here because of that defect, not
+            // because the readme allows it. Fixing #900 does not lift the exclusion by
+            // itself: three guards keep an untouched starting value out of this rule
+            // (`!isInteraction(ctx)` and `!ctx.prev` in the return below, and the
+            // `value === before[name]` skip in the loop), and they stay until they are
+            // removed by hand. The #900 test.fail in the option routes spec is what will
+            // prompt that: it turns into an unexpected pass the day the fix lands.
+            // History: the plugin rendered an off-scale starting value as given at init
+            // before #742 too; what the #742 fix removed is the focus-synthesized click
+            // that used to snap such a value onto the scale on the first focus.
             if (!alive(ctx) || !isInteraction(ctx) || !ctx.prev) return [];
             const { cfg, stage } = ctx;
             const { min, step } = rangeOf(cfg);
