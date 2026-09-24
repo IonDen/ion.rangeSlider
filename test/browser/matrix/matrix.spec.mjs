@@ -278,17 +278,28 @@ for (const entry of configs.filter((c) => c.id)) {
 
     // The probe in ../lib/env.mjs stands in for the slider, and the register trusts its answer
     // for every cell built hidden. So on those entries, still at S0 and before the reveal, the
-    // slider's own .irs is measured the same way and the two must agree: a probe that drifted
-    // from the slider would hand the register the wrong side of the jQuery 3.3 split without
-    // a word. This is a harness check that reads the page, not a register predicate (the
-    // predicates never read the outcome), and it runs before the S0 judgement so that a
-    // disagreement is the first failure the cell reports.
+    // inner .irs the plugin measures its track on is measured the same way and the two must
+    // agree: a probe that drifted from the slider would hand the register the wrong side of the
+    // jQuery 3.3 split without a word. This is a harness check that reads the page, not a
+    // register predicate (the predicates never read the outcome), and it runs before the S0
+    // judgement so that a disagreement is the first failure the cell reports.
+    //
+    // A bare '.irs' would return the OUTER container span (irs irs--<skin> js-irs-N), which
+    // comes first in document order; the plugin reads its width off the inner span
+    // ($cache.rs = $cache.cont.find(".irs")). The fixture carries one slider on these entries,
+    // so '.irs .irs' is that inner span. An empty match reads as null (jQuery 1.8) or
+    // undefined (3.x), and null === 0 is false, so without the type check an empty match
+    // would pass the parity check on a build that measures a hidden track as more than 0 px.
     if (hiddenAtInit) {
-      const sliderWidth = await page.evaluate(() => jQuery('.irs').outerWidth(false));
+      const sliderWidth = await page.evaluate(() => jQuery('.irs .irs').outerWidth(false));
+      expect(
+        typeof sliderWidth,
+        `S0: jQuery ${env.jquery}: the inner .irs the plugin measures its track on was not measured (read ${sliderWidth})`
+      ).toBe('number');
       expect(
         sliderWidth === 0,
         `S0: jQuery ${env.jquery}: the probe says a hidden track measures ${env.hiddenTrackMeasuresZero ? '0 px' : 'more than 0 px'}, `
-          + `the slider's own .irs measures ${sliderWidth} px`
+          + `the slider's inner .irs measures ${sliderWidth} px`
       ).toBe(env.hiddenTrackMeasuresZero);
     }
 
