@@ -1095,6 +1095,16 @@
                 return;
             }
 
+            // #890: block keeps mouse and touch off the slider with its mask, but
+            // the track stays focusable and keeps this handler, so a blocked
+            // slider must drop the press here or the keyboard still moves it.
+            // Read on every press, so update({block: ...}) takes effect at
+            // once. Returning before preventDefault() leaves the key to the
+            // page, as a slider with keyboard: false does.
+            if (this.options.block) {
+                return;
+            }
+
             switch (e.which) {
                 case 83: // S
                 case 65: // A

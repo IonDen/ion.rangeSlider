@@ -513,13 +513,14 @@ function payloadStage(ctx) {
     // carries no recorder, so nothing of that slider's own callbacks is recorded either.
     if (stage === 'S9') return false;
     if (stage === 'S0' || stage === 'S6' || stage === 'S7') return true;  // onStart/onInit, onUpdate
+    // A disabled or blocked slider is silent to every interaction: the mask swallows the
+    // mouse, and neither answers the keyboard (a disabled slider binds no key handler, and
+    // block drops every press since #890).
+    if (isInert(ctx.cfg)) return false;
     // A key press on a slider whose keyboard the interval-drag bug killed (#891) is dropped
     // whole, callbacks included, so there is no payload for any field of it to be wrong in.
     if (isKeyStage(ctx) && intervalKeyboardIsDead(ctx.cfg)) return false;
-    if (!isInert(ctx.cfg)) return true;                             // a live slider reports every interaction
-    // An inert slider is silent under the mouse; a blocked one still answers the
-    // keyboard, which is bug #890 and the only payload it produces.
-    return !!ctx.cfg.block && isKeyStage(ctx);
+    return true;                                                    // a live slider reports every interaction
 }
 
 /** Are the payload's *_pretty fields numbers rather than formatted text? */
@@ -536,14 +537,16 @@ function prettyFieldsAreNumbers(cfg) {
  * Is the keyboard dead after the track click (#891)?
  *
  * It takes a click that reaches the plugin: the click is what leaves the interval path
- * in charge, and on an inert slider the mask swallows it, so a blocked slider keeps the
- * ordinary key path (and bug #890 with it).
+ * in charge. On an inert slider the mask swallows the click, and the keyboard is silent
+ * there anyway (a disabled slider binds no key handler, and block drops every press since
+ * #890), so this only describes the configuration the bug needs; the callers rule an
+ * inert slider out on their own (isInert), before they ask.
  *
  * @param {object} cfg
  * @returns {boolean}
  */
 function intervalKeyboardIsDead(cfg) {
-    return isDouble(cfg) && !!cfg.drag_interval && !!(cfg.from_fixed || cfg.to_fixed) && !isInert(cfg);
+    return isDouble(cfg) && !!cfg.drag_interval && !!(cfg.from_fixed || cfg.to_fixed);
 }
 
 /** @type {Array<{issue: number, title: string, matches: (ctx: object, id: string) => boolean}>} */
@@ -685,28 +688,6 @@ export const KNOWN_BUGS = [
         // payloads carry the text from the start, so nothing is claimed there (builtBlind).
         matches(ctx, id) {
             return id === 'callbacks' && stageOf(ctx) === 'S0' && builtBlind(ctx);
-        }
-    },
-
-    {
-        issue: 890,
-        title: 'block leaves the keyboard working, so a blocked slider still changes value',
-        what: /must not fire on a disabled or blocked slider|changed its (from|to) value/,
-        // The mask swallows the mouse but the track keeps its tabindex, so every key
-        // stage of a blocked slider reports callbacks it should not (and moves the value
-        // when nothing else holds it). A blocked slider whose keyboard the interval-drag
-        // bug already killed (#891) reports nothing at all, so there is no failure there.
-        matches(ctx, id) {
-            const cfg = ctx.cfg;
-            if (!cfg.block || cfg.disable) return false;
-            if (!isKeyStage(ctx) || intervalKeyboardIsDead(cfg)) return false;
-            if (id === 'callbacks') return true;
-            // The inert rule only fires when the press actually moved the value, which
-            // the configuration alone cannot say (a fixed handle or a limit may hold it).
-            // The stage's own promise carries it, and it survives a fix: once block stops
-            // answering the keyboard the callbacks half above reds as "no longer
-            // reproduces", so the retirement of this entry does not depend on this line.
-            return id === 'inert' && !!promised(ctx).changed;
         }
     },
 
@@ -955,8 +936,9 @@ export const KNOWN_BUGS = [
                 // moving handle at all) never leaves one, so there is nothing to excuse.
                 if (!conflict.limitBroken) return false;
                 // It goes out on the first stage that drives it and stays out: before
-                // that -- a blocked slider under the mouse, m019 and m083 through S1 to
-                // S3 -- the rule passes and must not be annotated away.
+                // that the rule passes and must not be annotated away. A blocked slider
+                // (m019, m083) is driven by no stage at all -- the mask swallows the
+                // mouse and block drops every key press (#890) -- so it passes throughout.
                 const own = limitWindow(conflict.handle, cfg);
                 const before = valuesOf(ctx.prev)[conflict.handle];
                 const alreadyOut = isNum(before) && (before < own.lo - EPS || before > own.hi + EPS);

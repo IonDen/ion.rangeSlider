@@ -427,26 +427,33 @@ test("the init payload of m018 is split between #897 and #889 by the message", (
     assert.equal(answers(shown, 'S0', 'callbacks', prettyFailure('onStart', 'min_pretty', '-50', '-50')), 889);
 });
 
-// ------------------------------------------------------------- #890 block and the keys
+// ------------------------------------------------ a blocked slider and the keys (#890)
 
-// block masks the mouse but leaves the track focusable, so the arrow keys still move the
-// value and fire the full callback set on a slider that should be inert.
-test('#890 matches the key stages of a blocked slider, never a disabled one', () => {
-    const blocked = { min: 0, max: 100, from: 30, step: 1, block: true };
-    assert.equal(hit(blocked, 'S4a', 'callbacks'), 890);
-    assert.equal(hit(blocked, 'S4a', 'inert', { expectations: { key: '+', changed: true } }), 890);
-    assert.equal(hit(blocked, 'S4a', 'inert', { expectations: { key: '+', changed: false } }), null, 'a press that moved nothing leaves the inert rule passing');
-    assert.equal(hit(blocked, 'S1', 'callbacks'), null, 'the mask does stop the mouse');
+// Since #890 block drops every key press, as disable always has (a disabled slider binds
+// no key handler), so a blocked slider records nothing at a key stage and the matrix finds
+// nothing wrong there. The register has to say the same: an entry that still claimed such a
+// stage would be reported as "no longer reproduces" and red the cell. m019 is that case in
+// the matrix: blocked with prettify off, so #889 claims every stage that records a payload,
+// and before the fix the four key stages were among them.
+// Bug caught: payloadStage() still counting a blocked slider's key stage as one that records
+// a payload (its old last line, `return !!ctx.cfg.block && isKeyStage(ctx);`), which lets
+// #889 claim the silent key stages and reds m019 from S4a to S4d.
+test('a blocked slider is silent to the keyboard, so no entry claims its key stages (#890)', () => {
+    const blocked = { min: 0, max: 100, from: 30, step: 1, block: true, prettify_enabled: false };
+    assert.deepEqual(allHits(blocked), ['S0/callbacks=#889', 'S6/callbacks=#883', 'S7/callbacks=#883']);
+    // A disabled slider is claimed at the same stages, plus the input destroy() leaves
+    // disabled (#886).
+    const disabled = { min: 0, max: 100, from: 30, step: 1, disable: true, prettify_enabled: false };
+    assert.deepEqual(allHits(disabled), ['S0/callbacks=#889', 'S6/callbacks=#883', 'S7/callbacks=#883', 'S8/destroy=#886']);
 
-    const disabled = { min: 0, max: 100, from: 30, step: 1, disable: true };
-    assert.equal(hit(disabled, 'S4a', 'callbacks'), null);
-    assert.equal(hit(disabled, 'S4a', 'inert', { expectations: { key: '+', changed: true } }), null);
+    // Judged as the matrix judges a key stage the slider did not answer: no failure, and no
+    // entry left over to be retired.
+    const silent = { prev: prevOf(30), expectations: { key: '+', changed: false } };
+    assert.deepEqual(judgeStage([], ctxOf(blocked, 'S4a', silent), []), { real: [], annotations: [] });
 
-    // The interval-drag bug needs a track click that reaches the plugin, and the mask
-    // swallows it, so a blocked slider keeps the ordinary key path and this bug with it
-    // (every blocked drag_interval entry of the matrix fires its onFinish at S4a).
-    const alsoBlocked = { type: 'double', min: 0, max: 100, from: 30, to: 70, step: 1, block: true, drag_interval: true, from_fixed: true };
-    assert.equal(hit(alsoBlocked, 'S4a', 'callbacks'), 890);
+    // Control: without block the same slider records its payload at the press, and #889
+    // claims it there, so the empty key stages above are block's doing.
+    assert.equal(hit({ ...blocked, block: false }, 'S4a', 'callbacks'), 889);
 });
 
 // -------------------------------------------------- #888 hidden container in values mode
@@ -610,10 +617,14 @@ test('#891 matches the key stages of a drag_interval slider whose bar the click 
     // dropped press unexplained and the cell red.
     assert.equal(answers(dead, 'S4a', 'callbacks', 'callbacks: an interaction ends with exactly one onFinish (expected 1, got 0) after S4a', onBar), 891);
 
-    // An inert slider never gets the click that arms the interval path, so its keyboard
-    // stays ordinary: that is #890's case, not this one.
+    // An inert slider never gets the click that arms the interval path, and it is silent to
+    // the keyboard anyway (block drops every press since #890): its press owes no onFinish,
+    // so there is nothing for this entry to answer.
+    // Bug caught: dropping `|| isInert(cfg)` from this entry's predicate, which claims the
+    // key stages of a blocked drag_interval slider with a fixed handle whose pair spans the
+    // click, and reds them as "no longer reproduces".
     const blocked = { type: 'double', min: 0, max: 100, from: 30, to: 70, step: 1, drag_interval: true, to_fixed: true, block: true };
-    assert.notEqual(hit(blocked, 'S4a', 'callbacks', onBar), 891);
+    assert.equal(hit(blocked, 'S4a', 'callbacks', onBar), null);
 });
 
 // ------------------------------------------------------------- #892 grid off the scale
@@ -847,11 +858,15 @@ test('#894 matches the handle limit a conflicting interval pushes the handle pas
     // Once out, the handle stays out: a later stage that moves nothing still reports it.
     assert.equal(hit(pushedUp, 'S3', 'limits', { prev: prevOf(66, 70), expectations: { click: true, changed: false } }), 894);
     assert.equal(hit(pushedUp, 'S5', 'limits', { prev: prevOf(66, 70), expectations: { bar: true, changed: false } }), 894);
-    // Before the first stage that drives the handle there is nothing to excuse: a blocked
-    // slider keeps its starting value through every mouse stage, inside its own limit.
+    // Before the first stage that drives the handle there is nothing to excuse, and on a
+    // blocked slider no stage does: the mask swallows the mouse and block drops every key
+    // press (#890), so the handle keeps its starting value inside its own limit (m019, m083).
+    // Bug caught at the key stage: a predicate that still takes a key press to drive a
+    // blocked handle (`|| isKeyStage(ctx)` beside the stage's own promise), which claims
+    // the four key stages of m019 and m083 and reds them as "no longer reproduces".
     const blocked = { ...pushedUp, block: true };
     assert.equal(hit(blocked, 'S1', 'limits', { prev: prevOf(30, 70), expectations: { changed: false, handle: 'from' } }), null);
-    assert.equal(hit(blocked, 'S4a', 'limits', { prev: prevOf(30, 70), expectations: { key: '+', changed: true } }), 894, 'the keyboard still moves a blocked handle (#890), and the conflict pushes it out');
+    assert.equal(hit(blocked, 'S4a', 'limits', { prev: prevOf(30, 70), expectations: { key: '+', changed: false } }), null, 'block drops the key press, so the handle is never pushed out');
 
     // The interval itself holds once the handle has been pushed, so that rule passes and
     // must not be excused here.
