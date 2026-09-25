@@ -6,8 +6,14 @@ const texts = (s) => s.$cache.grid.find('.irs-grid-text').map(function () { retu
 const warnings = (window) => { const seen = []; window.console.warn = (m) => seen.push(String(m)); return seen; };
 
 // Red first. Mutation this catches: the "below 1 -> 4" branch dropped; grid_num 0 prints one "NaN" label.
+// Captures console.warn via the 4th `setup` argument (matching the other grid_num tests below) so the
+// fallback's warning does not leak into test output, and asserts exactly one was recorded. Mutation this
+// reds: the console.warn call in validate() removed (0 warnings recorded, not 1).
 test('grid_num 0 falls back to the documented default 4', (t) => {
-  assert.deepEqual(texts(createSlider(t, '<input>', { min: 0, max: 100, grid: true, grid_num: 0 }).slider), ['0', '25', '50', '75', '100']);
+  let seen;
+  const { slider } = createSlider(t, '<input>', { min: 0, max: 100, grid: true, grid_num: 0 }, (window) => { seen = warnings(window); });
+  assert.deepEqual(texts(slider), ['0', '25', '50', '75', '100']);
+  assert.equal(seen.filter((m) => /^grid_num:/.test(m)).length, 1);
 });
 
 // Red first. Mutations this catches: `o.grid_num = 4;` removed from the fallback ("abc" yields no ticks); the
