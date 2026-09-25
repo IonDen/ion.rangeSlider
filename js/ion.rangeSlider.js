@@ -2650,6 +2650,8 @@
          * @returns {*} the formatter's answer; undefined when the option is not a function or throws
          */
         _tryGridFormatter: function (option_name, num) {
+            var detail;
+
             if (typeof this.options[option_name] !== "function") {
                 return undefined;
             }
@@ -2658,7 +2660,16 @@
                 return this.options[option_name](num);
             } catch (e) {
                 if (!this.grid_formatter_warned && typeof console !== "undefined" && console.warn) {
-                    console.warn(option_name + ": the function threw (" + e + "), so this grid label falls back to " +
+                    // #906: building the warning text must not itself throw -- a thrown value with no
+                    // string form (e.g. Object.create(null), which has no toString) would otherwise
+                    // escape this catch and break the very slider this fallback exists to keep alive.
+                    detail = "";
+                    try {
+                        detail = " (" + e + ")";
+                    } catch (x) {
+                        detail = "";
+                    }
+                    console.warn(option_name + ": the function threw" + detail + ", so this grid label falls back to " +
                         (option_name === "prettify_grid" ? "prettify and then to " : "") + "the built-in formatting");
                     this.grid_formatter_warned = true;
                 }
@@ -3014,9 +3025,12 @@
 
             if (o.grid_snap) {
                 big_num = (o.max - o.min) / o.step;
-                // #906: 2.7 / 0.3 is 9.000000000000002 in binary floats; a count within 1e-9 of a whole number
-                // is that whole number.
-                if (Math.abs(big_num - Math.round(big_num)) <= 1e-9 * Math.max(1, big_num)) {
+                // #906: 2.7 / 0.3 is 9.000000000000002 in binary floats; a count within 1e-9 of a whole
+                // number is that whole number -- but only a whole number of at least 1. A range far
+                // smaller than one step (e.g. max - min 1e-10 with step 1) rounds to 0, which must stay
+                // fractional so the even split below still draws the two edge ticks (0% and 100%) instead
+                // of dividing by a zero unit count and printing a single "NaN" tick.
+                if (Math.round(big_num) >= 1 && Math.abs(big_num - Math.round(big_num)) <= 1e-9 * Math.max(1, big_num)) {
                     big_num = Math.round(big_num);
                 }
             }
