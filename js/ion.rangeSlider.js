@@ -206,6 +206,8 @@
         this.coincident_key_pending = false;
         // #906: an invalid grid_num warns once per slider, although validate() runs again on every update().
         this.grid_num_warned = false;
+        // #906: a grid formatter that throws warns once per grid build; appendGrid() resets this.
+        this.grid_formatter_warned = false;
 
         options = options || {};
 
@@ -2596,7 +2598,7 @@
          * `prettify` option (and, through it, the built-in thousands-
          * separator formatting) via _prettify(). prettify_enabled: false
          * disables this surface too, same as the default prettify.
-         * @param {string} option_name "prettify_grid" or "prettify_min_max"
+         * @param {string} option_name "prettify_min_max" (the grid has its own chain, _prettifyGrid())
          * @param {number} num
          * @returns {string|number}
          */
@@ -2613,13 +2615,55 @@
         },
 
         /**
-         * Format a number for the grid tick labels, falling back to the
-         * shared `prettify` option when prettify_grid is unset (#306).
+         * Format a number for the grid tick labels (#306): prettify_grid, then the shared prettify, then the
+         * built-in formatting. #906: a formatter that returns undefined or null, or throws, hands the label on
+         * to the next one in that chain, and a throw warns once per grid build; "" is an answer and blanks the
+         * label. prettify_enabled: false returns the number, as on every other surface. The min and max labels
+         * keep _prettifySurface(), without this guard.
          * @param {number} num
          * @returns {string|number}
          */
         _prettifyGrid: function (num) {
-            return this._prettifySurface("prettify_grid", num);
+            var text;
+
+            if (!this.options.prettify_enabled) {
+                return num;
+            }
+
+            text = this._tryGridFormatter("prettify_grid", num);
+            if (text === undefined || text === null) {
+                text = this._tryGridFormatter("prettify", num);
+            }
+            if (text === undefined || text === null) {
+                text = this.prettify(num);
+            }
+
+            return text;
+        },
+
+        /**
+         * Call one formatter option for a grid label (#906). It is called as a method of the options object,
+         * as _prettifySurface() calls it, so a formatter that reads `this` sees the same object. A throw
+         * becomes undefined, so the label falls back, plus one console warning per grid build.
+         * @param {string} option_name "prettify_grid" or "prettify"
+         * @param {number} num
+         * @returns {*} the formatter's answer; undefined when the option is not a function or throws
+         */
+        _tryGridFormatter: function (option_name, num) {
+            if (typeof this.options[option_name] !== "function") {
+                return undefined;
+            }
+
+            try {
+                return this.options[option_name](num);
+            } catch (e) {
+                if (!this.grid_formatter_warned && typeof console !== "undefined" && console.warn) {
+                    console.warn(option_name + ": the function threw (" + e + "), so this grid label falls back to " +
+                        (option_name === "prettify_grid" ? "prettify and then to " : "") + "the built-in formatting");
+                    this.grid_formatter_warned = true;
+                }
+                return undefined;
+            }
         },
 
         /**
@@ -3030,7 +3074,7 @@
                 kept = 0,
                 html = '';
 
-
+            this.grid_formatter_warned = false;
 
             this.calcGridMargin();
 

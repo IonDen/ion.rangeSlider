@@ -260,7 +260,9 @@ test.describe(`feature and bugfix coverage (${LABEL})`, () => {
     // fallback in _prettifyGrid()/_prettifyMinMax() skip the shared
     // `prettify` option when the surface option is unset (e.g. falling
     // straight to the built-in thousands-separator formatter instead of
-    // this._prettify()) -- the grid/min/max labels would then read plain
+    // the shared `prettify`: this._tryGridFormatter("prettify", num) in
+    // _prettifyGrid(), this._prettify() in _prettifySurface() for min/max)
+    // -- the grid/min/max labels would then read plain
     // "0"/"50"/"100" instead of "L0"/"L50"/"L100".
     test('fallback: only prettify set -- grid and min/max both use it, same as before #306 (#306)', async ({ page }) => {
       const configStr = "{ min: 0, max: 100, from: 50, grid: true, grid_num: 1, "

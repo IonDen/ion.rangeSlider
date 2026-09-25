@@ -95,3 +95,59 @@ test('grid_snap counts 2.7 / 0.3 as exactly 9 units', (t) => {
   assert.deepEqual(texts(createSlider(t, '<input>', { min: 0, max: 2.7, step: 0.3, grid: true, grid_snap: true }).slider),
     ['0', '0.3', '0.6', '0.9', '1.2', '1.5', '1.8', '2.1', '2.4', '2.7']);
 });
+
+// Mutation this catches: either undefined/null check in _prettifyGrid() narrowed to undefined alone; the labels
+// then read "null" or skip prettify.
+test('a formatter that returns undefined or null hands the grid label on: prettify_grid to prettify to built-in', (t) => {
+  for (const nothing of [undefined, null]) {
+    const grid = (options) => texts(createSlider(t, '<input>', Object.assign({ min: 0, max: 1000, grid: true }, options)).slider);
+    assert.deepEqual(grid({ prettify_grid: () => nothing }), ['0', '250', '500', '750', '1 000']);
+    assert.deepEqual(grid({ prettify_grid: () => nothing, prettify: (n) => 'p' + n }), ['p0', 'p250', 'p500', 'p750', 'p1000']);
+    assert.deepEqual(grid({ prettify: () => nothing }), ['0', '250', '500', '750', '1 000']);
+  }
+});
+
+// Mutation this catches: the try/catch in _tryGridFormatter() removed; the throw escapes the constructor.
+test('a prettify_grid that throws gets the built-in formatting and one warning naming prettify_grid', (t) => {
+  let seen;
+  const { slider } = createSlider(t, '<input>', { min: 0, max: 100, grid: true, prettify_grid: () => { throw new Error('boom'); } },
+    (window) => { seen = warnings(window); });
+  assert.deepEqual(texts(slider), ['0', '25', '50', '75', '100']);
+  assert.equal(seen.filter((m) => /^prettify_grid:/.test(m)).length, 1);
+});
+
+// Mutation this catches: the warning always naming prettify_grid, or prettify's throw on the grid path escaping.
+// from: 0 keeps the value label and the min and max labels (their prettify calls are not guarded) off 50, so only
+// the 50 tick meets the throw.
+test('a prettify that throws for one grid value builds the slider, that label falls back, the warning names prettify', (t) => {
+  let seen;
+  const { slider } = createSlider(t, '<input>', {
+    min: 0, max: 100, from: 0, grid: true,
+    prettify: (n) => { if (n === 50) throw new Error('x'); return String(n); }
+  }, (window) => { seen = warnings(window); });
+  assert.deepEqual(texts(slider), ['0', '25', '50', '75', '100']);
+  assert.equal(seen.filter((m) => /^prettify:/.test(m)).length, 1);
+});
+
+// Mutation this catches: the `this.grid_formatter_warned = false;` reset removed from appendGrid() (the rebuild
+// after update() stays silent).
+test('the formatter warning comes once per grid build: update() rebuilds and warns again', (t) => {
+  let seen;
+  const { slider } = createSlider(t, '<input>', { min: 0, max: 100, grid: true, prettify_grid: () => { throw new Error('boom'); } },
+    (window) => { seen = warnings(window); });
+  slider.update({ from: 10 });
+  assert.equal(seen.filter((m) => /^prettify_grid:/.test(m)).length, 2);
+});
+
+// Pins behaviour. Mutation this catches: "" treated as a failure.
+test('a prettify_grid that returns "" still blanks the label', (t) => {
+  const s = createSlider(t, '<input>', { min: 0, max: 100, grid: true, prettify_grid: (n) => (n === 50 ? '' : String(n)) }).slider;
+  assert.deepEqual(texts(s), ['0', '25', '', '75', '100']);
+});
+
+// Pins behaviour. Mutation this catches: the formatter called as a plain function (`var fn = ...; fn(num)`), which
+// loses the options object as `this`; a formatter reading this.grid_num then throws and falls back.
+test('a grid formatter is still called with the options object as this', (t) => {
+  const s = createSlider(t, '<input>', { min: 0, max: 100, grid: true, prettify_grid: function (n) { return this.grid_num + ':' + n; } }).slider;
+  assert.deepEqual(texts(s), ['4:0', '4:25', '4:50', '4:75', '4:100']);
+});
