@@ -168,9 +168,8 @@ test.describe(`callbacks (${LABEL})`, () => {
     });
 
     // readme "Callback data", from_value and to_value: "the entry at this index when values
-    // is used (null until the first update() or reset() on a slider without values, then
-    // undefined)". Before any update() both fields are null, on onStart and on the
-    // callbacks of a drag.
+    // is used (null on a slider without values)". Before any update() both fields are null,
+    // on onStart and on the callbacks of a drag.
     // Mutation caught: the constructor's result object -> `from_value: null,` becomes
     // `from_value: undefined,`, and every payload reports from_value undefined.
     test('from_value and to_value are null before the first update() on a slider without values (Callback data)', async ({ page }) => {
@@ -185,13 +184,13 @@ test.describe(`callbacks (${LABEL})`, () => {
         expect(kinds.filter((k) => !k.endsWith(':null/null'))).toEqual([]);
     });
 
-    // The same comment, second half: after update() both fields are undefined, on the
-    // onUpdate payload and on every callback after it. The readme documents this, so the row
-    // asserts it; #883 is the issue that would change the behaviour, and the readme with it.
-    // Mutation caught: updateFrom() -> `if (this.options.values) {` becomes `if
-    // (this.options.values.length) {`, which leaves from_value null through update(), and the
-    // onUpdate payload reports "null/undefined".
-    test('from_value and to_value are undefined after update() on a slider without values (Callback data)', async ({ page }) => {
+    // The same comment holds after update(): both fields stay null on the onUpdate payload
+    // and on every callback after it. Until #883 update() turned them undefined for good,
+    // and this row asserted that.
+    // Mutation caught: updateFrom() -> `if (this.options.values.length) {` becomes `if
+    // (this.options.values) {`, which reads from_value out of the empty values array a
+    // slider without values holds, and the onUpdate payload reports "undefined/null".
+    test('from_value and to_value stay null after update() on a slider without values (Callback data, #883)', async ({ page }) => {
         await open(page, { type: 'double', min: 0, max: 100, from: 20, to: 80, step: 1 });
         await page.evaluate(() => window.__irs.slider.update({ from: 30 }));
         await expect(page.locator('#slider')).toHaveValue('30;80');
@@ -202,9 +201,9 @@ test.describe(`callbacks (${LABEL})`, () => {
 
         const kinds = await valueKinds(page);
         expect(kinds[0]).toBe('onStart:null/null');
-        expect(kinds[1]).toBe('onUpdate:undefined/undefined');
-        expect(kinds.slice(1).filter((k) => !k.endsWith(':undefined/undefined'))).toEqual([]);
-        expect(kinds).toContain('onChange:undefined/undefined');
+        expect(kinds[1]).toBe('onUpdate:null/null');
+        expect(kinds).toContain('onChange:null/null');
+        expect(kinds.filter((k) => !k.endsWith(':null/null'))).toEqual([]);
     });
 
     // ---- scope ---------------------------------------------------------------------------
