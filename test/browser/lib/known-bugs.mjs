@@ -589,19 +589,6 @@ export const KNOWN_BUGS = [
         }
     },
 
-    {
-        issue: 883,
-        title: 'from_value and to_value turn undefined after the first update() or reset()',
-        what: /from_value|to_value/,
-        // Every slider without a values array, at S6 and S7: the onUpdate payload carries
-        // undefined where the readme documents null, and the field stays that way.
-        matches(ctx, id) {
-            if (id !== 'callbacks') return false;
-            const stage = stageOf(ctx);
-            return (stage === 'S6' || stage === 'S7') && !isValuesMode(ctx.cfg);
-        }
-    },
-
     // The two interval entries overlap once a gap is open: this one names the cause
     // (the top edge the scale cannot reach), so it is asked first.
     {
