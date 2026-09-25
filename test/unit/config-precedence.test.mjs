@@ -9,10 +9,15 @@ test('input value sets from/to, JS options override it, data-* override JS optio
   assert.equal(slider.options.max, 500);    // data-max beats the JS option
 });
 
-test('data-values is split on commas; an input value is looked up in the JS values array', (t) => {
+// #880: data-values overrides the JS values array, so the slider holds ['a', 'b', 'c'] and
+// the input value is looked up there. This test used to expect 0: the lookup searched
+// ['x'], found nothing and clamped -1 to min, while the slider held the data-values list.
+// Mutation: `!config_from_data.values &&` dropped from the constructor's `js_values` --
+// ['x'] is searched again and the slider starts on 0.
+test('data-values is split on commas; an input value is looked up in the data-values list the slider holds', (t) => {
   const { slider } = createSlider(t, '<input value="b" data-values="a,b,c">', { values: ['x'] });
   assert.deepEqual(plain(slider.options.values), ['a', 'b', 'c']);
-  assert.equal(slider.options.from, 0);     // 'b' is not in ['x'] → index -1 → clamped to min
+  assert.equal(slider.options.from, 1);     // 'b' is entry 1 of the data-values list
 });
 
 test('data-prettify-all-values maps to prettify_all_values (#276)', (t) => {

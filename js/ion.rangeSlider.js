@@ -463,18 +463,20 @@
         if (val !== undefined && val !== "") {
             val = val.split(config_from_data.input_values_separator || options.input_values_separator || ";");
 
-            // #880 and the data-values case: in values mode each half of the
-            // input value names an entry by its text, so it is looked up as
-            // text before the numeric conversion below, which turns "20" into
-            // a number that an array of strings never holds (#880). Without a
-            // JS values array the entries come from data-values (the data-values
-            // case), split on its commas and trimmed only when values_raw is on.
-            // With values_raw off a number-like entry is also matched by the
-            // text of the number validate() will hold it as. values_raw is
-            // resolved as after the data-* merge: data-values-raw before the JS
-            // option. A half that names no entry keeps the lookup below,
-            // unchanged.
-            js_values = !!(options.values && options.values.length);
+            // #880, and values given through data-values: in values mode each
+            // half of the input value names an entry of the list the slider
+            // will hold. data-values wins the merge below, so its list is
+            // searched when given and the JS values array only otherwise; the
+            // old lookup further down reads the JS array only when it is that
+            // list. Each half is looked up as text before the numeric conversion
+            // below, which turns "20" into a number that an array of strings
+            // never holds (#880). data-values entries are split on its commas
+            // and trimmed only when values_raw is on. With values_raw off a
+            // number-like entry is also matched by the text of the number
+            // validate() will hold it as. values_raw is resolved as after the
+            // data-* merge: data-values-raw before the JS option. A half that
+            // names no entry falls back to the lookup below.
+            js_values = !config_from_data.values && !!(options.values && options.values.length);
             raw_values = config_from_data.values_raw !== undefined ? config_from_data.values_raw : options.values_raw;
             if (js_values) {
                 entries = options.values;
@@ -2676,13 +2678,15 @@
 
         /**
          * Find the values entry that one half of the input value names
-         * (#880 and the data-values case): the entry as the slider will hold
-         * it. First the entry whose text equals the half as written, so "20"
-         * finds the string "20" and the number 20 alike; then, with values_raw
-         * off, the entry whose number has that text, as validate() will hold
-         * it, so "20" also finds "20.0" and " 20". An entry written exactly as
-         * the half wins over one that only holds the same number. Called from
-         * the constructor, before validate() converts number-like entries.
+         * (#880, and values given through data-values): the entry as the
+         * slider will hold it. First the entry whose text equals the half as
+         * written, so "20" finds the string "20" and the number 20 alike; then,
+         * with values_raw off, the entry whose number has that text, as
+         * validate() will hold it, so "20" also finds "20.0" and " 20". An
+         * entry written exactly as the half wins over one that only holds the
+         * same number, and an entry with no visible text is never matched by
+         * its number. Called from the constructor, before validate() converts
+         * number-like entries.
          *
          * @param text {String|undefined} one half of the input value
          * @param entries {Array|undefined} the JS values array, or the data-values list split on its commas
@@ -2709,10 +2713,16 @@
 
             if (as_numbers) {
                 for (i = 0; i < entries.length; i++) {
-                    // the same conversion validate() applies with values_raw off
-                    number = +entries[i];
-                    if (!isNaN(number) && String(number) === text) {
-                        return i;
+                    entry = entries[i];
+                    // Only numbers and strings with visible text: validate()
+                    // holds an empty or blank entry as 0, but "0" must not land
+                    // on the empty entry a trailing comma leaves.
+                    if (typeof entry === "number" || (typeof entry === "string" && /\S/.test(entry))) {
+                        // the same conversion validate() applies with values_raw off
+                        number = +entry;
+                        if (!isNaN(number) && String(number) === text) {
+                            return i;
+                        }
                     }
                 }
             }

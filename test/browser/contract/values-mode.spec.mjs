@@ -148,9 +148,10 @@ test.describe(`values mode (${LABEL})`, () => {
 
     // readme "Settings", from: the input's own value attribute is the third route into
     // from, and in values mode "the value is looked up as an index".
-    // Mutation caught: constructor -> `js_values = !!(options.values && options.values.length)`
-    // becomes `js_values = false` -- neither the text lookup nor the one after it reads the
-    // values array, "c" is read as a number, and the slider starts on the first entry.
+    // Mutation caught: constructor -> `js_values = !config_from_data.values &&
+    // !!(options.values && options.values.length)` becomes `js_values = false` -- neither
+    // the text lookup nor the one after it reads the values array, "c" is read as a
+    // number, and the slider starts on the first entry.
     // (Since #880 the text lookup finds "c" on its own, so breaking only the older
     // `options.values.indexOf(val[0])` line no longer reds this.)
     test('the input value attribute names the entry the slider starts on (Settings: from)', async ({ page }) => {
@@ -172,9 +173,9 @@ test.describe(`values mode (${LABEL})`, () => {
         expect(await payload(page, 'onStart')).toMatchObject({ from: 1 });
     });
 
-    // The data-values case: the entries come from the data-values attribute instead of
-    // the values option, and the input value names its entries all the same, both halves
-    // in double type.
+    // Values given through data-values: the entries come from the data-values attribute
+    // instead of the values option, and the input value names its entries all the same,
+    // both halves in double type.
     // Mutation caught: constructor -> the data-values branch of the lookup removed -- the
     // halves are read as numbers, come out NaN, and the slider starts on "a" and "d".
     test('the input value attribute names entries of data-values too (Settings: from, values)', async ({ page }) => {

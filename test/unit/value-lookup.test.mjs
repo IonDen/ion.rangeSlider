@@ -2,13 +2,13 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createSlider } from './helpers.mjs';
 
-// #880 and the data-values case: in values mode the input's value attribute names the
-// entry the slider starts on (readme settings table, input_values_separator:
+// #880, and values given through data-values: in values mode the input's value attribute
+// names the entry the slider starts on (readme settings table, input_values_separator:
 // `<input value="25;42">`; the constructor looks each half up in the values). The lookup
 // converted a number-like half to a number before searching, so "20" was never found
 // among the strings ['10', '20', '30'] (#880), and it searched only the JavaScript
-// `values`, so with the entries in `data-values` it found nothing at all (the data-values
-// case, not filed yet). In both cases the handle fell back to the first entry.
+// `values`, so with the values given through `data-values` it found nothing at all. In
+// both cases the handle fell back to the first entry.
 //
 // jsdom has no layout (see helpers.mjs): the start is read from result.from/to, which
 // the constructor fills from the validated options, and from_value/to_value only after
@@ -82,12 +82,12 @@ test('an input value names an entry of a letter array, as before', (t) => {
     assert.equal(start.from_value, 'c');
 });
 
-// --------------------------------------------------------- the data-values case
+// ------------------------------------------------ values given through data-values
 
 // RED before the fix: from 0 (single) and 0/3 (double) -- the text became NaN.
 // Mutation: the data-values branch removed from the constructor's lookup (no entries to
 // search without a JS values array).
-test('the data-values case: an input value names an entry of data-values', (t) => {
+test('values given through data-values: an input value names an entry of data-values', (t) => {
     const { slider } = createSlider(t, '<input value="c" data-values="a,b,c,d">', {});
     const start = started(slider);
     assert.equal(start.from, 2);
@@ -95,7 +95,7 @@ test('the data-values case: an input value names an entry of data-values', (t) =
 });
 
 // Mutation: the to half not looked up (`to_index = -1`) -- to falls back to the last entry.
-test('the data-values case: both halves of a double input value name their entries', (t) => {
+test('values given through data-values: both halves of a double input value name their entries', (t) => {
     const { slider } = createSlider(t, '<input value="b;c" data-values="a,b,c,d" data-type="double">', {});
     const start = started(slider);
     assert.deepEqual([start.from, start.to], [1, 2]);
@@ -105,7 +105,7 @@ test('the data-values case: both halves of a double input value name their entri
 // RED before the fix: from 2 -- the number 20 was taken as an index and clamped to the
 // last entry, "30".
 // Mutation: the data-values branch removed.
-test('the data-values case: an input value names a number-like data-values entry', (t) => {
+test('values given through data-values: an input value names a number-like data-values entry', (t) => {
     const { slider } = createSlider(t, '<input value="20" data-values="10,20,30">', {});
     const start = started(slider);
     assert.equal(start.from, 1);
@@ -116,22 +116,71 @@ test('the data-values case: an input value names a number-like data-values entry
 // is on." The lookup compares with the trimmed entry the slider will hold.
 // RED before the fix: from 0.
 // Mutation: the trim dropped from findValueIndex() -- " b" is not "b".
-test('the data-values case: with data-values-raw on, the input value names the trimmed entry', (t) => {
+test('values given through data-values: with data-values-raw on, the input value names the trimmed entry', (t) => {
     const { slider } = createSlider(t, '<input value="b" data-values="a, b, c" data-values-raw="true">', {});
     const start = started(slider);
     assert.equal(start.from, 1);
     assert.equal(start.from_value, 'b');
 });
 
+// Characterization, green on master and before this change. readme note "values_raw":
+// spaces around the commas in data-values are trimmed only while values_raw is on. With
+// it off the slider holds " b" with its space (validate() converts only number-like
+// entries) and writes " b" back, so "b" names no entry and falls back to the first one.
+// Mutation: the trim applied whatever values_raw says (`trim_entries = raw_values` made
+// `trim_entries = true`) -- "b" finds the trimmed " b" at index 1.
+test('values given through data-values: with values_raw off, the spaced entries are compared untrimmed', (t) => {
+    const { slider } = createSlider(t, '<input value="b" data-values="a, b, c">', {});
+    assert.equal(slider.result.from, 0);
+});
+
+// Characterization, green on master and before this change: data-values-raw="false"
+// overrides a JS values_raw: true (data-* wins the merge), so the entries stay untrimmed
+// and "b" names no entry, as in the test above.
+// Mutation: values_raw read JS first (`raw_values = options.values_raw !== undefined ?
+// options.values_raw : config_from_data.values_raw`) -- the trim runs and "b" is found at 1.
+test('values given through data-values: data-values-raw="false" beats a JS values_raw: true for the lookup', (t) => {
+    const { slider } = createSlider(t, '<input value="b" data-values="a, b, c" data-values-raw="false">', { values_raw: true });
+    assert.equal(slider.result.from, 0);
+});
+
 // values_raw resolves in the usual order: a JS values_raw: true applies to data-values
 // when no data-values-raw attribute says otherwise, and the trim then follows it.
 // Mutation: values_raw read from data-values-raw alone (`raw_values =
 // config_from_data.values_raw`, the `: options.values_raw` half dropped).
-test('the data-values case: a JS values_raw option trims the data-values entries for the lookup too', (t) => {
+test('values given through data-values: a JS values_raw option trims the data-values entries for the lookup too', (t) => {
     const { slider } = createSlider(t, '<input value="b" data-values="a, b, c">', { values_raw: true });
     const start = started(slider);
     assert.equal(start.from, 1);
     assert.equal(start.from_value, 'b');
+});
+
+// ------------------------------------------ both lists: the one the slider holds
+
+// With both a JS values array and data-values the slider holds the data-values list
+// (data-* attributes override JS options), so that is the list the input value names.
+// RED before this change: [2, 2] and [3, 3] -- the lookup searched the JS array ("20" is
+// its entry 3, clamped to the last data-values entry; "c" is its entry 3) and applied the
+// JS index to the data-values list.
+// Mutation: `!config_from_data.values &&` dropped from `js_values` -- the JS array is
+// searched again whenever it is given.
+test('with both a JS values array and data-values, the input value is looked up in data-values', (t) => {
+    const numbers = createSlider(t, '<input value="20" data-values="10,20,30">', { values: ['q', 'r', 'c', '20'] }).slider;
+    assert.equal(numbers.result.from, 1);
+
+    const letters = createSlider(t, '<input value="c" data-values="a,b,c,d">', { values: ['x', 'y', 'z', 'c', 'w'] }).slider;
+    assert.equal(letters.result.from, 2);
+});
+
+// The old lookup that runs for a half the new one did not find must read the same list:
+// "y" is an entry of the JS array only, so it names nothing the slider holds and falls
+// back as it does with data-values alone (read as a number: NaN, the first entry).
+// RED before this change: 1 -- the old lookup found "y" at index 1 of the JS array.
+// Mutation: the fallback's condition set back to `options.values && options.values.length`
+// (instead of `js_values`) -- indexOf runs on the JS array and returns 1.
+test('with both lists, a value found only in the JS values array names no entry', (t) => {
+    const { slider } = createSlider(t, '<input value="y" data-values="a,b,c,d">', { values: ['x', 'y', 'z'] });
+    assert.equal(slider.result.from, 0);
 });
 
 // ------------------------------------- values_raw off: the entry as the slider holds it
@@ -188,6 +237,50 @@ test('with values_raw on, "20" does not name the entry "20.0": the number form i
 test('with values_raw off, an entry written exactly as the input value wins over an earlier one holding the same number', (t) => {
     const { slider } = createSlider(t, '<input value="20">', { values: ['20.0', '20', '30'] });
     assert.equal(started(slider).from, 1);
+});
+
+// An entry with no visible text (the empty entry a trailing comma in data-values leaves,
+// or '' in a JS array) is not matched by the number form, although validate() would hold
+// it as 0: "0" names no entry there and starts where master starts, on the first entry
+// (the old lookup's `val[0] && ...` guard turns the number 0 into index 0).
+// RED before this change: 2 and 1 -- the number form matched the empty entry as 0.
+// Mutation: the visible-text guard removed from the number form (`if (typeof entry ===
+// "number" || ...)` made `if (true)`).
+test('with values_raw off, "0" does not name an empty entry', (t) => {
+    const data = createSlider(t, '<input value="0" data-values="a,b,">', {}).slider;
+    assert.equal(data.result.from, 0);
+
+    const js = createSlider(t, '<input value="0">', { values: ['a', '', 'c'] }).slider;
+    assert.equal(js.result.from, 0);
+});
+
+// --------------------------------------------------------- double type and separators
+
+// The exact #880 shape in double type: both halves name number-like string entries.
+// RED on master: [0, 0] -- neither half was found, from fell to 0 and to to -1, clamped.
+// Mutation: the to half not looked up (`to_index = -1`) -- to falls back to -1, and the
+// pair collapses onto the first entry.
+test('#880 in double type: value="20;40" names both entries', (t) => {
+    const { slider } = createSlider(t, '<input value="20;40">', { type: 'double', values: ['10', '20', '30', '40'] });
+    assert.deepEqual([slider.result.from, slider.result.to], [1, 3]);
+});
+
+// readme settings table, input_values_separator: the input value is split on it.
+// RED on master: [0, 0].
+// Mutation: the split ignores data-input-values-separator (`config_from_data.
+// input_values_separator ||` dropped) -- "20|40" stays one half and names no entry.
+test('#880 in double type with data-input-values-separator="|": value="20|40" names both entries', (t) => {
+    const { slider } = createSlider(t, '<input value="20|40" data-input-values-separator="|">', { type: 'double', values: ['10', '20', '30', '40'] });
+    assert.deepEqual([slider.result.from, slider.result.to], [1, 3]);
+});
+
+// Characterization, green on master and before this change: an empty half names nothing,
+// even with an empty entry in the list; it takes the old lookup, whose `val[0] && ...`
+// guard leaves "" and validate() reads it as 0.
+// Mutation: `!text` dropped from findValueIndex()'s guard -- "" finds the empty entry at 1.
+test('an empty half of the input value does not name an empty entry', (t) => {
+    const { slider } = createSlider(t, '<input value=";b">', { type: 'double', values: ['a', '', 'b'] });
+    assert.deepEqual([slider.result.from, slider.result.to], [0, 2]);
 });
 
 // --------------------------------------------------------- names no entry
