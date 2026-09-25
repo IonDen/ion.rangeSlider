@@ -204,6 +204,11 @@
         // re-resolved on every key press while the pair stays coincident
         // and cleared once a press moves a value, see moveByKey().
         this.coincident_key_pending = false;
+        // #886: the input's own disabled property, read before the first
+        // build. append() overwrites it on every build (update() and reset()
+        // included) and destroy() puts this value back, unless the page has
+        // changed the property itself since the last build.
+        this.input_disabled = input.disabled;
         // #906: an invalid grid_num warns once per slider, although validate() runs again on every update().
         this.grid_num_warned = false;
         // #906: a grid formatter that throws warns once per grid build; appendGrid() resets this.
@@ -3409,6 +3414,22 @@
 
             this.toggleInput();
             this.$cache.input.prop("readonly", false);
+            // #886: hand the input back enabled or disabled as it was before
+            // the slider was built, but only while the plugin's own last
+            // write (disabled exactly when disable is on) is still in place:
+            // a disabled state the page set itself since then is the page's.
+            // The order matters: this reads this.options, which destroy()
+            // nulls last; nulling it before this line would throw here.
+            if (this.$cache.input[0].disabled === !!this.options.disable) {
+                this.$cache.input[0].disabled = this.input_disabled;
+            }
+            // #911: writeToInput() keeps from and to in the input's jQuery
+            // data, and the constructor reads that data the way it reads
+            // data-from and data-to, so a slider built on this input later
+            // would start on them. With the entries gone, .data() reads a
+            // real data-from or data-to attribute again.
+            this.$cache.input.removeData("from");
+            this.$cache.input.removeData("to");
             $.data(this.input, "ionRangeSlider", null);
 
             this.remove();

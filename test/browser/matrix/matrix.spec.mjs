@@ -244,11 +244,33 @@ for (const entry of configs.filter((c) => c.id)) {
     const hiddenAtInit = !!(entry.extra && entry.extra.hidden === '1');
     if (hiddenAtInit) testInfo.annotations.push({ type: 'container', description: 'built hidden: the labels rule is not checked at S0' });
 
-    // One thing the register's predicates need that the option set alone cannot carry:
-    // the container the slider was built in. It is configuration in the readme's sense
-    // (the readme documents the hidden container under onInit), and a bug that only
-    // happens in a hidden container can only be recognised by it.
+    // Two things the register's predicates need that the option set alone cannot carry:
+    // the container the slider was built in, and the input's value attribute. Both are
+    // configuration in the readme's sense (it documents the hidden container under
+    // onInit, and the value attribute in the input_values_separator row). A bug that only
+    // happens in a hidden container can only be recognised by the first. The second says
+    // where the build after destroy() (S9) reopens: a from/to placed through the value
+    // attribute is read back off the input's value, which by then holds the pair reset()
+    // left at S7, while one placed through the JS config or data-* is handed over again as
+    // at S0 (the register's rebuiltPair(), #911). The entry's `effective` config carries
+    // the from/to either way, so only this field tells the two routes apart.
     if (hiddenAtInit) cfg.__hidden_at_init = true;
+    if (entry.attrs && typeof entry.attrs.value === 'string') {
+      // rebuiltPair() models ONE route per entry: a value-attribute entry reopens on the
+      // input's value at S9 for both handles. An entry that also placed a from or to through
+      // the JS config or a data-from/data-to attribute would reopen on that handle's
+      // configured value instead, and the register would judge S9 against the wrong pair
+      // without a word. No generated entry does that today; this makes one that does fail
+      // loudly instead.
+      const alsoPlaced = [];
+      if (entry.config && ('from' in entry.config || 'to' in entry.config)) alsoPlaced.push('the JS config');
+      if ('data-from' in entry.attrs || 'data-to' in entry.attrs) alsoPlaced.push('a data-from/data-to attribute');
+      if (alsoPlaced.length) {
+        throw new Error(`matrix ${entry.id}: from/to placed through the input's value attribute AND ${alsoPlaced.join(' and ')}; `
+          + 'rebuiltPair() in ../lib/known-bugs.mjs assumes one route per entry, so S9 would be judged against the wrong pair');
+      }
+      cfg.__value_attr = entry.attrs.value;
+    }
 
     let prev = null;
     /**
@@ -393,11 +415,13 @@ for (const entry of configs.filter((c) => c.id)) {
     // anything destroy() left behind (the instance handle above all) makes this call a
     // silent no-op, and the slider never comes back.
     //
-    // It does not come back on the configured from/to, though: data beats the JS options
-    // in the readme's resolution order, and the jQuery data writeToInput() put on the
-    // input is still there once destroy() has run, so the second build opens on the pair
-    // reset() left at S7. The container is visible by now whatever the entry was built
-    // in, so this build renders straight away.
+    // It comes back where a fresh build of the entry opens. destroy() leaves no from or to
+    // behind in the input's jQuery data (#911), so the entry's own from/to -- the config
+    // literal handed over again, or the data-* attributes the input still carries -- win
+    // over the input's value as they did at S0. Only an entry that places its handles
+    // through the value attribute, or not at all, reopens on the input's value, which is the
+    // pair reset() left at S7 (the register's rebuiltPair() says which). The container is
+    // visible by now whatever the entry was built in, so this build renders straight away.
     await page.evaluate((config) => {
       const el = document.getElementById('slider');
       // eval, like the fixture's own config parsing: the literal can carry a prettify

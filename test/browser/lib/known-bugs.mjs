@@ -23,11 +23,13 @@
  * `matches` receives the same ctx the invariants get ({ state, cfg, stage, prev,
  * expectations, env }) plus the failing invariant id. What a predicate may read:
  *
- *   - `cfg`, the option set the plugin was built with, including the field
+ *   - `cfg`, the option set the plugin was built with, including the two fields
  *     matrix.spec.mjs adds for the register: `__hidden_at_init` (the fixture built the
- *     slider inside a display:none container). It is configuration -- the readme
- *     documents the hidden container as a way to build a slider -- and cannot be read
- *     off the option set alone.
+ *     slider inside a display:none container) and `__value_attr` (the input carried this
+ *     value attribute, which is how the entry placed its from/to; rebuiltPair() reads it).
+ *     Both are configuration -- the readme documents the hidden container and the value
+ *     attribute as ways to build a slider -- and neither can be read off the option set
+ *     alone.
  *   - `stage`, and `expectations`, the stage's own promise.
  *   - `prev`, the state the stage STARTED from.
  *   - `env`, the environment the run is in (./env.mjs): today, whether the jQuery build
@@ -104,11 +106,15 @@ function aimedByStage(ctx) {
  * S1) and carried back OUT of it by the next one (m063 at S5), and a predicate that reads only
  * where the handle started gets both ends wrong.
  *
+ * S9 moves nothing: it builds the slider a second time, and its clamps run on the pair that
+ * build is handed (rebuiltPair), not on the one the destroyed slider left.
+ *
  * @param {object} ctx
  * @returns {{from: number|null, to: number|null}}
  */
 function valuesUnderStage(ctx) {
     const cfg = ctx.cfg;
+    if (stageOf(ctx) === 'S9') return rebuiltPair(ctx);
     const before = stageOf(ctx) === 'S0' ? {} : valuesOf(ctx.prev);
     const values = {
         from: isNum(before.from) ? before.from : cfg.from,
@@ -253,6 +259,39 @@ function startingPair(cfg) {
         return onScale(held, cfg) ? held : nearestOnScale(held, cfg);
     };
     return { from: clamp(cfg.from, 'from'), to: clamp(cfg.to, 'to') };
+}
+
+/**
+ * The pair S9's second build is handed, before validate() runs on it.
+ *
+ * matrix.spec.mjs calls ionRangeSlider() on the destroyed input again with the entry's own
+ * config literal, and the input still carries the entry's data-* attributes. Its value is the
+ * pair reset() left at S7, which is also what the S8 state read off it (`prev` here).
+ * destroy() leaves no from or to behind in the input's jQuery data (#911), so the second build
+ * resolves its pair the way the first one did: a from/to the configuration gives -- the JS
+ * config or a data-* attribute -- wins over the input's value, and the handle is handed the
+ * value S0 was handed; a handle the value attribute placed, or nothing placed, is handed the
+ * input's value. Every matrix entry places its from and to through one route, so the value
+ * attribute (`__value_attr`) says which of the two applies. In values mode the input's value
+ * names entries, not indexes, and the second build looks them up in the values array once
+ * more; since #914 that lookup finds the entry the input names, numeric-looking strings
+ * included, so the handle is handed the index the S8 state read off the input.
+ *
+ * Like S0's configured pair, this is what the build is GIVEN; startingPair() says where
+ * validate() leaves it.
+ *
+ * @param {object} ctx
+ * @returns {{from: number|null, to: number|null}}
+ */
+function rebuiltPair(ctx) {
+    const cfg = ctx.cfg;
+    const before = valuesOf(ctx.prev);
+    const configured = typeof cfg.__value_attr !== 'string';
+    const pick = (handle) => {
+        if (configured && isNum(cfg[handle])) return cfg[handle];
+        return isNum(before[handle]) ? before[handle] : null;
+    };
+    return { from: pick('from'), to: pick('to') };
 }
 
 /** Does the config carry an interval limit at all? */
@@ -571,7 +610,9 @@ export const KNOWN_BUGS = [
             // the configured pair).
             // Where the handles stand while this stage's clamp runs: the handle need not
             // START inside the limit (m063's S1 drag aims below an off-scale from_min), and
-            // one that started inside can be carried back out (m063's S5 bar drag).
+            // one that started inside can be carried back out (m063's S5 bar drag). At S9 it
+            // is the pair the second build is handed, which for most entries is the
+            // configured one again.
             return pushedIntoAnOffScaleLimit(valuesUnderStage(ctx), cfg);
         }
     },
@@ -609,8 +650,9 @@ export const KNOWN_BUGS = [
         title: 'min_interval and max_interval are not applied at init or by update()',
         what: /closed past min_interval|opened past max_interval/,
         // validate() clamps from/to against the per-handle limits but never against the
-        // interval limits, so the starting pair (S0) and the pair update() leaves behind
-        // (S6, and S7, where reset() rebuilds from the very same options) can break them.
+        // interval limits, so the starting pair (S0), the pair update() leaves behind
+        // (S6, and S7, where reset() rebuilds from the very same options) and the pair the
+        // second build after destroy() is handed (S9, see rebuiltPair) can break them.
         // The violation then SURVIVES every stage that does not move a handle -- a
         // disabled, blocked or fixed slider carries it to the end of the run -- which is
         // why the pair the stage started from is read here. A stage that does move a
@@ -631,6 +673,12 @@ export const KNOWN_BUGS = [
             if (stage === 'S0') {
                 const start = startingPair(cfg);
                 return breaksInterval(gapBetween(start.from, start.to), cfg);
+            }
+            // A second build, not a stage the violation survives into: validate() runs on the
+            // pair it is handed exactly as it ran on the configured pair at S0.
+            if (stage === 'S9') {
+                const rebuilt = startingPair({ ...cfg, ...rebuiltPair(ctx) });
+                return breaksInterval(gapBetween(rebuilt.from, rebuilt.to), cfg);
             }
             if (stage === 'S6') return breaksInterval(gapBetween(midValue(cfg), valuesOf(ctx.prev).to), cfg);
             const before = valuesOf(ctx.prev);
@@ -746,17 +794,6 @@ export const KNOWN_BUGS = [
     },
 
     {
-        issue: 886,
-        title: 'destroy() leaves the input disabled when the slider was built with disable',
-        what: /must leave the input enabled/,
-        // S8 only, and only for disable: nothing undoes the input's disabled property, so
-        // the field stays out of form submission for good.
-        matches(ctx, id) {
-            return id === 'destroy' && stageOf(ctx) === 'S8' && !!ctx.cfg.disable;
-        }
-    },
-
-    {
         issue: 893,
         title: 'a key press skips a value on a scale whose reported values are rounded',
         what: /key press must move/,
@@ -825,14 +862,17 @@ export const KNOWN_BUGS = [
             const stage = stageOf(ctx);
             if (stage === 'S8') return false;
             // S0, S7 and S9 all show a pair the slider was BUILT with rather than one a
-            // handle was dragged to: the configured from/to at init, and the pair reset()
-            // restored (which the second build then reads back off the input) after that.
-            // The grid is the exception -- it is drawn across the whole range whatever the
-            // handles do.
+            // handle was dragged to: the configured from/to at init, the pair reset()
+            // restored at S7, and at S9 the pair the second build after destroy() is handed
+            // (rebuiltPair) -- the configured one again for an entry that sets from/to, the
+            // one reset() left, read off the input's value, for an entry that sets none
+            // (n041). The grid is the exception -- it is drawn across the whole range
+            // whatever the handles do.
             if (id !== 'grid' && (stage === 'S0' || stage === 'S7' || stage === 'S9')) {
-                const before = valuesOf(ctx.prev);
-                const shown = stage === 'S0' ? [cfg.from, cfg.to] : [before.from, before.to];
-                return shown.some((value) => separatorSplitsFraction(value, cfg));
+                const shown = stage === 'S0' ? { from: cfg.from, to: cfg.to }
+                    : stage === 'S9' ? rebuiltPair(ctx)
+                        : valuesOf(ctx.prev);
+                return [shown.from, shown.to].some((value) => separatorSplitsFraction(value, cfg));
             }
             return true;
         }

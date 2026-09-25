@@ -97,7 +97,7 @@ const allHits = (cfg, over) => {
 // Bug caught: an entry filed without its issue number or its one-line title, which would
 // annotate a matrix cell with nothing a reader could look up.
 test('every register entry carries an issue number, a title, a predicate and a message pattern', () => {
-    assert.equal(KNOWN_BUGS.length, 16);
+    assert.equal(KNOWN_BUGS.length, 15);
     const issues = KNOWN_BUGS.map((bug) => bug.issue);
     assert.deepEqual(issues, [...new Set(issues)], 'an issue must have one entry');
     for (const bug of KNOWN_BUGS) {
@@ -254,6 +254,28 @@ test('#882 stops claiming once the bar drag carries the handle out of the limit'
     assert.equal(hit({ ...cfg, block: true }, 'S5', 'limits', s5(0.2, 0.5)), 882);
 });
 
+// S9 builds the slider a second time on the destroyed input, and destroy() leaves no from or to
+// behind (#911), so the configured from -- the JS config or a data-* attribute -- wins over the
+// input's value there: the rebuild is handed the pair S0 was handed, whatever reset() left at S7.
+// Only an entry that places its handles through the value attribute, or not at all, is handed
+// the input's value, which is that S7 pair.
+// Bug caught: judging S9 by the pair the stage started from, which claims a rebuild that reopens
+// clear of the limit (and reds the cell as "no longer reproduces") and misses one that reopens
+// inside it.
+test('#882 judges the second build after destroy() by the pair it is handed', () => {
+    const into = { min: 0.5, max: 10.5, step: 1, from: 1.5, from_min: 2.4 };
+    const crossed = 'limits: from passed below from_min (expected ">= 2.4", got 2) after S9';
+    assert.equal(answers(into, 'S9', 'limits', crossed, { prev: prevOf(6) }), 882, 'handed the configured 1.5, into the limit');
+
+    const clear = { ...into, from: 6 };
+    assert.equal(hit(clear, 'S9', 'limits', { prev: prevOf(2) }), null, 'handed the configured 6, though reset() left 2');
+
+    // Through the value attribute the rebuild is handed the input's value instead.
+    const viaValue = { ...clear, __value_attr: '6' };
+    assert.equal(hit(viaValue, 'S9', 'limits', { prev: prevOf(2) }), 882);
+    assert.equal(hit(viaValue, 'S9', 'limits', { prev: prevOf(6) }), null);
+});
+
 // ------------------------------------------------------------ #885 intervals at init
 
 // min_interval / max_interval are applied by the interaction paths only: the starting
@@ -295,6 +317,35 @@ test('#885 matches a starting pair that breaks its own interval, not one that re
     const updated = { type: 'double', min: 0, max: 100, step: 1, from: 10, to: 90, min_interval: 30 };
     assert.equal(hit(updated, 'S6', 'intervals', { prev: prevOf(10, 60) }), 885, 'mid 50 against a to of 60 leaves 10');
     assert.equal(hit(updated, 'S6', 'intervals', { prev: prevOf(10, 90) }), null, 'mid 50 against a to of 90 leaves 40');
+});
+
+// S9 is a second build, so validate() runs on the pair it is handed and skips the intervals
+// exactly as it did at S0. With nothing left behind by destroy() (#911) that pair is the
+// configured one for an entry that sets its from/to through the JS config or data-* attributes,
+// and the input's value -- the pair reset() left at S7 -- for one that sets them through the
+// value attribute.
+// Bug caught: judging S9 by the pair the stage started from, which leaves m028 red (its
+// configured pair is 40 wide on a locked 20, the pair reset() left is 20) and retires #885 on
+// m007-like cells (the configured pair holds, the pair reset() left does not).
+test('#885 judges the second build after destroy() by the pair it opens on', () => {
+    const m028 = { type: 'double', min: -50, max: 50, step: 5, from: -20, to: 20, from_min: -38, min_interval: 20, max_interval: 20 };
+    const opened = 'intervals: the handles opened past max_interval (expected "<= 20", got 40) after S9';
+    assert.equal(answers(m028, 'S9', 'intervals', opened, { prev: prevOf(0, 20) }), 885);
+
+    const holds = { type: 'double', min: 0, max: 100, step: 1, from: 20, to: 60, min_interval: 20 };
+    assert.equal(hit(holds, 'S9', 'intervals', { prev: prevOf(50, 60) }), null, 'reopens on 20 and 60, not on the 50 and 60 reset() left');
+
+    // Through the value attribute the rebuild reopens on the input's value.
+    const viaValue = { ...holds, __value_attr: '20;60' };
+    assert.equal(hit(viaValue, 'S9', 'intervals', { prev: prevOf(50, 60) }), 885);
+    assert.equal(hit(viaValue, 'S9', 'intervals', { prev: prevOf(20, 60) }), null);
+
+    // The pair is judged where validate() leaves it, not as handed: from_min lifts the handed
+    // from of 10 to 30, which leaves a gap of 10 against a min_interval of 20. The handed pair,
+    // 10 and 40, holds the interval.
+    // Bug caught: the S9 branch judging the bare rebuiltPair(ctx) instead of
+    // startingPair({ ...cfg, ...rebuiltPair(ctx) }), which misses the clamp.
+    assert.equal(hit({ type: 'double', min: 0, max: 100, step: 1, from: 10, to: 40, from_min: 30, min_interval: 20 }, 'S9', 'intervals', { prev: prevOf(50, 90) }), 885);
 });
 
 // -------------------------------------------------------- #889 pretty fields as numbers
@@ -420,10 +471,10 @@ test("the init payload of m018 is split between #897 and #889 by the message", (
 test('a blocked slider is silent to the keyboard, so no entry claims its key stages (#890)', () => {
     const blocked = { min: 0, max: 100, from: 30, step: 1, block: true, prettify_enabled: false };
     assert.deepEqual(allHits(blocked), ['S0/callbacks=#889', 'S6/callbacks=#889', 'S7/callbacks=#889']);
-    // A disabled slider is claimed at the same stages, plus the input destroy() leaves
-    // disabled (#886).
+    // A disabled slider is claimed at the same stages and no others: destroy() hands its
+    // input back enabled (#886).
     const disabled = { min: 0, max: 100, from: 30, step: 1, disable: true, prettify_enabled: false };
-    assert.deepEqual(allHits(disabled), ['S0/callbacks=#889', 'S6/callbacks=#889', 'S7/callbacks=#889', 'S8/destroy=#886']);
+    assert.deepEqual(allHits(disabled), ['S0/callbacks=#889', 'S6/callbacks=#889', 'S7/callbacks=#889']);
 
     // Judged as the matrix judges a key stage the slider did not answer: no failure, and no
     // entry left over to be retired.
@@ -532,15 +583,15 @@ test('#885 matches the S0 interval of an m025-like hidden slider only on a build
 });
 
 /**
- * m024's effective configuration (configs.json), with the field matrix.spec.mjs adds for the
- * register: a values array of numeric-looking strings, a from_min of 2.4 that sits off the
- * index scale, blocked, and built hidden.
+ * m024's effective configuration (configs.json), with the two fields matrix.spec.mjs adds for
+ * the register: a values array of numeric-looking strings, a value attribute naming two of
+ * them, a from_min of 2.4 that sits off the index scale, blocked, and built hidden.
  */
 const M024 = {
     values: ['10', '20', '30', '40', '50'], type: 'double', from: 1, to: 3, from_min: 2.4,
     max_interval: 6, from_fixed: true, drag_interval: true, grid: true, grid_margin: false,
     __prettify_src: 'function (n) { return n + "x"; }', force_edges: true, block: true, skin: 'round',
-    __hidden_at_init: true
+    __value_attr: '20;40', __hidden_at_init: true
 };
 
 // On a build that renders a slider built hidden at init, m024's from handle is clamped onto
@@ -627,22 +678,6 @@ test('#892 matches a grid whose boundaries fall between scale points', () => {
     assert.equal(hit(stepTwo, 'S8', 'grid'), null, 'a destroyed slider draws no grid');
 });
 
-// ------------------------------------------------------- #886 destroy leaves it disabled
-
-// readme "Public methods": after destroy() the input is back to normal. A slider built
-// with disable: true leaves it disabled for good.
-test('#886 matches destroy() on a slider built disabled', () => {
-    const disabled = { min: 0, max: 100, from: 30, step: 1, disable: true };
-    assert.equal(hit(disabled, 'S8', 'destroy'), 886);
-    assert.equal(hit(disabled, 'S0', 'destroy'), null, 'nothing is destroyed at init');
-
-    const blocked = { min: 0, max: 100, from: 30, step: 1, block: true };
-    assert.equal(hit(blocked, 'S8', 'destroy'), null, 'block never touches the input');
-
-    const plain = { min: 0, max: 100, from: 30, step: 1 };
-    assert.equal(hit(plain, 'S8', 'destroy'), null);
-});
-
 // ------------------------------------------------ #893 a key press on a rounded scale
 
 // With min 0.5 and step 1 the reported values (0.5, 2, 3 ...) sit half a step off the
@@ -717,6 +752,26 @@ test('#887 matches a scale fine enough to put four decimals in a label', () => {
     assert.equal(hit(tiny, 'S0', 'callbacks'), null, 'the payload starts on 0, which formats correctly');
     assert.equal(hit(tiny, 'S8', 'callbacks'), null, 'destroy() records no payload');
     assert.equal(hit(coarse, 'S1', 'callbacks'), null);
+});
+
+// S9 shows the pair the second build is handed: with nothing left behind by destroy() (#911),
+// the configured from for an entry that sets one, and the input's value -- the pair reset()
+// left at S7 -- for one that sets none (n041) or sets it through the value attribute.
+// Bug caught: reading S9 off the pair reset() left whatever the entry configures, which claims
+// a rebuild that reopens on a cleanly formatted configured value and misses one that reopens on
+// a split fraction.
+test('#887 judges the second build after destroy() by the pair it is handed', () => {
+    const tiny = { min: 0, max: 0.001, step: 0.0001, from: 0 };
+    assert.equal(hit(tiny, 'S9', 'labels', { prev: prevOf(0.0005) }), null, 'reopens on the configured 0');
+    const split = { ...tiny, from: 0.0005 };
+    const text = 'labels: the single value label text (expected "0.0005", got "0.0 005") after S9';
+    assert.equal(answers(split, 'S9', 'labels', text, { prev: prevOf(0) }), 887, 'reopens on the configured 0.0005');
+
+    // n041 sets no from at all, so the rebuild reads the input's value.
+    const n041 = { min: 0, max: 0.001, step: 0.0001 };
+    assert.equal(hit(n041, 'S9', 'labels', { prev: prevOf(0.0005) }), 887);
+    assert.equal(hit(n041, 'S9', 'labels', { prev: prevOf(0) }), null);
+    assert.equal(hit({ ...split, __value_attr: '0' }, 'S9', 'labels', { prev: prevOf(0) }), null, 'the value attribute route reads the input too');
 });
 
 // ------------------------------------- #879 a whole-interval move against a handle limit
@@ -966,7 +1021,7 @@ test('#898 matches the track click of a coincident drag_interval pair, not a pai
         min: 0, max: 1000000, step: 1000, type: 'double', from: 300000, to: 700000,
         from_min: 2400, max_interval: 6000, drag_interval: true, grid: true, grid_margin: false,
         prettify_separator: ',', decorate_both: false, values_separator: ' to ', skin: 'square',
-        __hidden_at_init: true
+        __hidden_at_init: true, __value_attr: '300000;700000'
     };
     const coincident = { prev: prevOf(700000, 700000), expectations: { click: true, changed: true } };
     assert.equal(hit(m080, 'S3', 'labels', coincident), 898);
@@ -1035,45 +1090,49 @@ test('#898 answers for the hidden labels, never for the text of one that is draw
 // ones that are still real and the annotations for the ones a filed bug covers, and it fails
 // when a registered entry stops reproducing.
 
-const DISABLED = { min: 0, max: 100, from: 30, step: 1, disable: true };
-const DESTROY_FAILURE = {
-    id: 'destroy',
-    message: 'destroy: destroy() must leave the input enabled (expected false, got true) after S8'
+// The worked example is #896 on n038's shape: a slider whose min equals max ends the S1 drag
+// without the onFinish the readme promises. The entry claims that one callbacks line at the
+// interaction stages and nothing else, so at S1 it is the only entry this configuration
+// carries.
+const ONE_VALUE = { min: 50, max: 50, from: 50, step: 1 };
+const ONFINISH_FAILURE = {
+    id: 'callbacks',
+    message: 'callbacks: an interaction ends with exactly one onFinish (expected 1, got 0) after S1'
 };
 
 // Bug caught: judgeStage reporting a failure a filed bug already covers, which would leave the
 // matrix red on every known bug and make the suite unrunnable.
 test('judgeStage annotates a failure its register entry was filed for', () => {
-    const { real, annotations } = judgeStage([DESTROY_FAILURE], ctxOf(DISABLED, 'S8'), []);
+    const { real, annotations } = judgeStage([ONFINISH_FAILURE], ctxOf(ONE_VALUE, 'S1'), []);
     assert.deepEqual(real, []);
     assert.equal(annotations.length, 1);
-    assert.equal(annotations[0].issue, 886);
-    assert.equal(annotations[0].id, 'destroy');
-    assert.equal(annotations[0].stage, 'S8');
-    assert.equal(annotations[0].message, DESTROY_FAILURE.message);
+    assert.equal(annotations[0].issue, 896);
+    assert.equal(annotations[0].id, 'callbacks');
+    assert.equal(annotations[0].stage, 'S1');
+    assert.equal(annotations[0].message, ONFINISH_FAILURE.message);
 });
 
 // Bug caught: judgeStage staying silent when a bug is fixed, so the register would keep
 // excusing a cell that is healthy again and nobody would retire the entry.
 test('judgeStage reports a register entry that no longer reproduces', () => {
-    const { real, annotations } = judgeStage([], ctxOf(DISABLED, 'S8'), []);
+    const { real, annotations } = judgeStage([], ctxOf(ONE_VALUE, 'S1'), []);
     assert.deepEqual(annotations, []);
     assert.equal(real.length, 1);
-    assert.equal(real[0].id, 'destroy');
-    assert.match(real[0].message, /#886 no longer reproduces/);
+    assert.equal(real[0].id, 'callbacks');
+    assert.match(real[0].message, /#896 no longer reproduces/);
 
     // A rule the stage did not check at all (no oracle for it) cannot be retired on.
-    assert.deepEqual(judgeStage([], ctxOf(DISABLED, 'S8'), ['destroy']), { real: [], annotations: [] });
+    assert.deepEqual(judgeStage([], ctxOf(ONE_VALUE, 'S1'), ['callbacks']), { real: [], annotations: [] });
 });
 
 // Bug caught: judgeStage matching on the invariant id alone -- a second, unrelated failure of
 // the same rule on a configuration that carries a filed bug would be annotated away with it.
 test('judgeStage keeps a failure whose message the entry was not filed for', () => {
     const other = {
-        id: 'destroy',
-        message: 'destroy: destroy() must remove the slider container (expected false, got true) after S8'
+        id: 'callbacks',
+        message: 'callbacks: onChange fires only on a value change (expected 0, got 1) after S1'
     };
-    const { real, annotations } = judgeStage([DESTROY_FAILURE, other], ctxOf(DISABLED, 'S8'), []);
+    const { real, annotations } = judgeStage([ONFINISH_FAILURE, other], ctxOf(ONE_VALUE, 'S1'), []);
     assert.equal(annotations.length, 1);
     assert.deepEqual(real, [other]);
 
