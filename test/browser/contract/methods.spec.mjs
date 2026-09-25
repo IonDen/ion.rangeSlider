@@ -223,11 +223,10 @@ test.describe(`methods (${LABEL})`, () => {
 
     // "can be initialized again": a new call builds a new slider on the same input, with
     // its own instance number (the js-irs-N class) above the first one's. Given no from of
-    // its own, it starts on 30, and two routes lead there today: the input's value, "30",
-    // and the pair the destroyed slider left in the input's jQuery data, which the
-    // constructor reads the way it reads data-from. The data cache is the one that decides:
-    // with the input's value emptied before the new call, the slider still starts on 30.
-    // The expected-failure row below shows the same cache overriding a from the call gives.
+    // its own, it starts on 30, the value the destroyed slider left in the input, which the
+    // constructor reads as the starting value when the call gives none. The pair the
+    // destroyed slider kept in the input's jQuery data is gone (#911, the row below), so the
+    // input's value is the only route to 30.
     // Mutation caught: destroy() -> drop `$.data(this.input, "ionRangeSlider", null);`, and
     // the new call finds the old handle and builds nothing.
     // Mutation caught: $.fn.ionRangeSlider -> `plugin_count++` becomes `plugin_count`, and
@@ -247,39 +246,60 @@ test.describe(`methods (${LABEL})`, () => {
 
     // The new slider is given a from of its own. The settings table lets a JS option win over
     // the input's value, and only a data-* attribute win over the JS option; the input carries
-    // no data-from. The destroyed slider's pair is still in the input's jQuery data, though
-    // (writeToInput() stores it there and destroy() does not clear it), and the constructor
-    // reads that data the way it reads data-from, so the new slider starts on 30.
+    // no data-from. writeToInput() keeps the current pair in the input's jQuery data, which
+    // the constructor reads the way it reads data-from, and destroy() clears it (#911), so
+    // the new slider starts on the 70 it is given, not on the destroyed slider's 30. The new
+    // slider is built only after the idle tick the destroyed one still had pending, so a tick
+    // that wrote the pair back after destroy() would be read as data-from here.
+    // Mutation caught: destroy() -> drop `this.$cache.input.removeData("from");`, and the new
+    // slider starts on 30.
+    // Mutation caught: updateScene() -> `if (!this.options) {` also runs
+    // `this.$cache.input.data("from", this.result.from);` (a late tick writing the pair back),
+    // and the new slider starts on 30.
     test('a slider built after destroy() starts on the from it is given (Public methods: destroy, Settings: from)', async ({ page }) => {
-        test.fail(true, "#911: a slider built after destroy() starts on the destroyed slider's from and to, not the ones it is given");
         await open(page, { min: 0, max: 100, from: 30, step: 1 });
         await call(page, 'destroy');
         await expect(page.locator(CONTAINER)).toHaveCount(0);
+        await page.waitForTimeout(400);   // outlast the idle tick the destroyed slider had pending
 
         await page.evaluate(() => { jQuery('#slider').ionRangeSlider({ min: 0, max: 100, from: 70 }); });
         await expect(page.locator(CONTAINER)).toHaveCount(1);
-        await page.waitForTimeout(400);   // outlast the idle render tick, then read once
-        expect(await page.locator('#slider').inputValue()).toBe('70');
+        await expect(page.locator('#slider')).toHaveValue('70');
+        await expect(page.locator('#wrap .irs-single')).toHaveText('70');
     });
 
     // readme Settings, disable: "Disable the slider and the input"; after destroy() the
-    // input is "back to normal", so enabled again and submitted with its form.
+    // input is "back to normal", so enabled again, sent with its form and open to typing
+    // (#886). The checks run after the idle tick the destroyed slider still had pending, so a
+    // tick that disabled the input again would not go unnoticed. toBeEditable() comes before
+    // fill() so that a field that cannot be typed into fails an assertion instead of holding
+    // fill() until the test times out.
+    // Mutation caught: destroy() -> drop `this.$cache.input[0].disabled = this.input_disabled;`,
+    // and the input stays disabled.
+    // Mutation caught: updateScene() -> `if (!this.options) {` also runs
+    // `this.$cache.input[0].disabled = true;` (a late tick disabling it again), and the input
+    // is disabled by the time it is checked.
+    // Mutation caught: destroy() -> drop `this.$cache.input.prop("readonly", false);`, and the
+    // input is enabled but cannot be typed into.
     test('destroy() re-enables an input the slider disabled (Public methods: destroy, Settings: disable)', async ({ page }) => {
-        test.fail(true, '#886: destroy() leaves the input disabled when the slider was built with disable');
         await open(page, { min: 0, max: 100, from: 30, step: 1, disable: true });
         await expect(page.locator('#slider')).toBeDisabled();
 
         await call(page, 'destroy');
         await expect(page.locator(CONTAINER)).toHaveCount(0);
-        await page.waitForTimeout(400);   // outlast the idle render tick, then read once
-        expect(await page.locator('#slider').evaluate((el) => el.disabled)).toBe(false);
+        await page.waitForTimeout(400);   // outlast the idle tick the destroyed slider had pending
+        await expect(page.locator('#slider')).toBeEnabled();
+        await expect(page.locator('#slider')).toBeEditable();
+        await page.locator('#slider').fill('55');
+        await expect(page.locator('#slider')).toHaveValue('55');
     });
 
     // ---- A second ionRangeSlider() call ------------------------------------------------
     // readme: "Calling $("#range").ionRangeSlider() a second time on an input that already
     // has a slider does nothing." The input's value would not notice a second slider: it
-    // reads the data("from") the first one wrote (the jQuery data cache the destroy() rows
-    // above describe) over its own from: 90 and starts on 30 as well, and the label line
+    // reads the data("from") the first one, still alive, keeps on the input (the jQuery data
+    // cache that destroy() clears since #911, see the rows above) over its own from: 90 and
+    // starts on 30 as well, and the label line
     // trips only because its locator then finds two labels. The instance handle and the
     // container count are the checks that catch the rebuild.
     // Mutation caught: $.fn.ionRangeSlider -> `if (!$.data(this, "ionRangeSlider")) {`
