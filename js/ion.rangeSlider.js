@@ -204,6 +204,10 @@
         // re-resolved on every key press while the pair stays coincident
         // and cleared once a press moves a value, see moveByKey().
         this.coincident_key_pending = false;
+        // #906: an invalid grid_num warns once per slider, although validate() runs again on every update().
+        this.grid_num_warned = false;
+        // #906: a grid formatter that throws warns once per grid build; appendGrid() resets this.
+        this.grid_formatter_warned = false;
 
         options = options || {};
 
@@ -2594,7 +2598,7 @@
          * `prettify` option (and, through it, the built-in thousands-
          * separator formatting) via _prettify(). prettify_enabled: false
          * disables this surface too, same as the default prettify.
-         * @param {string} option_name "prettify_grid" or "prettify_min_max"
+         * @param {string} option_name "prettify_min_max" (the grid has its own chain, _prettifyGrid())
          * @param {number} num
          * @returns {string|number}
          */
@@ -2611,13 +2615,66 @@
         },
 
         /**
-         * Format a number for the grid tick labels, falling back to the
-         * shared `prettify` option when prettify_grid is unset (#306).
+         * Format a number for the grid tick labels (#306): prettify_grid, then the shared prettify, then the
+         * built-in formatting. #906: a formatter that returns undefined or null, or throws, hands the label on
+         * to the next one in that chain, and a throw warns once per grid build; "" is an answer and blanks the
+         * label. prettify_enabled: false returns the number, as on every other surface. The min and max labels
+         * keep _prettifySurface(), without this guard.
          * @param {number} num
          * @returns {string|number}
          */
         _prettifyGrid: function (num) {
-            return this._prettifySurface("prettify_grid", num);
+            var text;
+
+            if (!this.options.prettify_enabled) {
+                return num;
+            }
+
+            text = this._tryGridFormatter("prettify_grid", num);
+            if (text === undefined || text === null) {
+                text = this._tryGridFormatter("prettify", num);
+            }
+            if (text === undefined || text === null) {
+                text = this.prettify(num);
+            }
+
+            return text;
+        },
+
+        /**
+         * Call one formatter option for a grid label (#906). It is called as a method of the options object,
+         * as _prettifySurface() calls it, so a formatter that reads `this` sees the same object. A throw
+         * becomes undefined, so the label falls back, plus one console warning per grid build.
+         * @param {string} option_name "prettify_grid" or "prettify"
+         * @param {number} num
+         * @returns {*} the formatter's answer; undefined when the option is not a function or throws
+         */
+        _tryGridFormatter: function (option_name, num) {
+            var detail;
+
+            if (typeof this.options[option_name] !== "function") {
+                return undefined;
+            }
+
+            try {
+                return this.options[option_name](num);
+            } catch (e) {
+                if (!this.grid_formatter_warned && typeof console !== "undefined" && console.warn) {
+                    // #906: building the warning text must not itself throw -- a thrown value with no
+                    // string form (e.g. Object.create(null), which has no toString) would otherwise
+                    // escape this catch and break the very slider this fallback exists to keep alive.
+                    detail = "";
+                    try {
+                        detail = " (" + e + ")";
+                    } catch (x) {
+                        detail = "";
+                    }
+                    console.warn(option_name + ": the function threw" + detail + ", so this grid label falls back to " +
+                        (option_name === "prettify_grid" ? "prettify and then to " : "") + "the built-in formatting");
+                    this.grid_formatter_warned = true;
+                }
+                return undefined;
+            }
         },
 
         /**
@@ -2651,6 +2708,7 @@
                 vl = v.length,
                 value,
                 prettify_option_name,
+                grid_num_given,
                 i;
 
             if (typeof o.min === "string") o.min = +o.min;
@@ -2664,7 +2722,27 @@
             if (typeof o.to_min === "string") o.to_min = +o.to_min;
             if (typeof o.to_max === "string") o.to_max = +o.to_max;
 
+            // #906: grid_num becomes a whole number of at least 1. +Infinity means the 50-unit cap; a number
+            // is rounded first; anything that rounds below 1, and anything that is not a number (NaN, null, a
+            // boolean), falls back to the documented default 4, with one warning per slider when the grid is on
+            // and grid_num decides the unit count (values mode and grid_snap decide it themselves). A value
+            // above 50 is kept as given and capped where the grid is built, so options.grid_num reads back what
+            // the user set. NaN and -Infinity fail the ">= 1" test by themselves. The warning prints the value
+            // as given, before the string conversion ("abc", not NaN).
+            grid_num_given = o.grid_num;
             if (typeof o.grid_num === "string") o.grid_num = +o.grid_num;
+            if (o.grid_num === Number.POSITIVE_INFINITY) {
+                o.grid_num = 50;
+            } else if (typeof o.grid_num === "number" && Math.round(o.grid_num) >= 1) {
+                o.grid_num = Math.round(o.grid_num);
+            } else {
+                if (o.grid && !o.values.length && !o.grid_snap && !this.grid_num_warned &&
+                    typeof console !== "undefined" && console.warn) {
+                    console.warn("grid_num: " + grid_num_given + " is not a whole number of at least 1, using 4");
+                    this.grid_num_warned = true;
+                }
+                o.grid_num = 4;
+            }
 
             // prettify, prettify_grid and prettify_min_max (#306) may each be given
             // as the name of a global function instead of a function reference
@@ -2913,6 +2991,82 @@
         // =============================================================================================================
         // Grid
 
+        /**
+         * The grid's big ticks, as appendGrid() renders them (#906): for each tick its position (`left`,
+         * percent of the grid), the value it names (the entry index in values mode), how many small ticks go
+         * before it (`small`) and the position those small ticks are measured from (`prev`), plus the rule
+         * that chose them: 0 for a zero range (min equal to max), which gets one tick at 0% naming min;
+         * otherwise "even", the even split into grid_num units (grid_snap: one unit per step), at most 50
+         * units.
+         * @returns {{rule: (number|string), ticks: Array}}
+         */
+        calcGridTicks: function () {
+            var o = this.options;
+
+            // Rule 0: a zero range (min equal to max after validate(), which also clamps a max below min to
+            // min, or a one-entry values array) gets one tick naming min, and nothing divides by the range.
+            if (o.max === o.min) {
+                return { rule: 0, ticks: [{ left: 0, value: o.min, small: 0, prev: 0 }] };
+            }
+
+            return { rule: "even", ticks: this._gridTicksEven() };
+        },
+
+        /**
+         * The even split into grid_num units (grid_snap: one unit per step), at most 50 units.
+         * @returns {Array} [{left, value, small, prev}]
+         */
+        _gridTicksEven: function () {
+            var o = this.options,
+                big_num = o.grid_num,
+                big_p, big_w, i,
+                small_max,
+                ticks = [];
+
+            if (o.grid_snap) {
+                big_num = (o.max - o.min) / o.step;
+                // #906: 2.7 / 0.3 is 9.000000000000002 in binary floats; a count within 1e-9 of a whole
+                // number is that whole number -- but only a whole number of at least 1. A range far
+                // smaller than one step (e.g. max - min 1e-10 with step 1) rounds to 0, which must stay
+                // fractional so the even split below still draws the two edge ticks (0% and 100%) instead
+                // of dividing by a zero unit count and printing a single "NaN" tick.
+                if (Math.round(big_num) >= 1 && Math.abs(big_num - Math.round(big_num)) <= 1e-9 * Math.max(1, big_num)) {
+                    big_num = Math.round(big_num);
+                }
+            }
+
+            if (big_num > 50) big_num = 50;
+            big_p = this.toFixed(100 / big_num);
+            small_max = this._gridSmallMax(big_num);
+
+            for (i = 0; i < big_num + 1; i++) {
+                big_w = this.toFixed(big_p * i);
+                if (big_w > 100) {
+                    big_w = 100;
+                }
+                ticks.push({ left: big_w, value: this.convertToValue(big_w), small: small_max, prev: big_p * (i - 1) });
+            }
+
+            return ticks;
+        },
+
+        /**
+         * How many small ticks go between two big ticks on a grid of this many units: 4, fewer as the units
+         * multiply, none past 28 units.
+         * @param {number} units
+         * @returns {number}
+         */
+        _gridSmallMax: function (units) {
+            var small_max = 4;
+
+            if (units > 4) small_max = 3;
+            if (units > 7) small_max = 2;
+            if (units > 14) small_max = 1;
+            if (units > 28) small_max = 0;
+
+            return small_max;
+        },
+
         appendGrid: function () {
             if (!this.options.grid) {
                 return;
@@ -2921,13 +3075,9 @@
             var o = this.options,
                 i, z,
 
-                total = o.max - o.min,
-                big_num = o.grid_num,
-                big_p = 0,
+                r,
                 big_w = 0,
 
-                small_max = 4,
-                local_small_max,
                 small_p,
                 small_w = 0,
 
@@ -2938,44 +3088,20 @@
                 kept = 0,
                 html = '';
 
-
+            this.grid_formatter_warned = false;
 
             this.calcGridMargin();
 
-            if (o.grid_snap) {
-                big_num = total / o.step;
-            }
+            r = this.calcGridTicks();
 
-            if (big_num > 50) big_num = 50;
-            big_p = this.toFixed(100 / big_num);
-
-            if (big_num > 4) {
-                small_max = 3;
-            }
-            if (big_num > 7) {
-                small_max = 2;
-            }
-            if (big_num > 14) {
-                small_max = 1;
-            }
-            if (big_num > 28) {
-                small_max = 0;
-            }
-
-            for (i = 0; i < big_num + 1; i++) {
-                local_small_max = small_max;
+            for (i = 0; i < r.ticks.length; i++) {
+                big_w = r.ticks[i].left;
+                this.coords.big[i] = big_w;
                 pols[i] = '';
 
-                big_w = this.toFixed(big_p * i);
+                small_p = (big_w - r.ticks[i].prev) / (r.ticks[i].small + 1);
 
-                if (big_w > 100) {
-                    big_w = 100;
-                }
-                this.coords.big[i] = big_w;
-
-                small_p = (big_w - (big_p * (i - 1))) / (local_small_max + 1);
-
-                for (z = 1; z <= local_small_max; z++) {
+                for (z = 1; z <= r.ticks[i].small; z++) {
                     if (big_w === 0) {
                         break;
                     }
@@ -2987,7 +3113,7 @@
 
                 pols[i] += '<span class="irs-grid-pol" style="left: ' + big_w + '%"></span>';
 
-                result = this.convertToValue(big_w);
+                result = r.ticks[i].value;
                 if (o.values.length) {
                     result = o.p_values[result];
                 } else {
@@ -2997,14 +3123,15 @@
                 lefts[i] = big_w;
                 texts[i] = String(result);
             }
-            this.coords.big_num = Math.ceil(big_num + 1);
+            this.coords.big_num = r.ticks.length;
 
             // #772: a range holding fewer steps than grid_num can snap two
             // neighbouring ticks to the same value; equal neighbouring
             // labels are shown once. The first tick always keeps its label,
             // and the last tick (exactly max) keeps its own rather than an
-            // earlier twin, unless every label is equal (min === max), where
-            // only the first stays. Compared as strings so a custom prettify_grid that
+            // earlier twin, unless every label is equal (a prettify_grid that
+            // maps every value to one text), where only the first stays.
+            // Compared as strings so a custom prettify_grid that
             // maps two values to one text is deduplicated the same way.
             // Values mode is exempt: each tick is a real values entry, so a
             // duplicate entry or a merging prettify is the user's own data.

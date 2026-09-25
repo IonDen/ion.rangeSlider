@@ -68,8 +68,8 @@ test.describe(`prettify (${LABEL})`, () => {
     }
 
     // readme Settings, prettify_enabled: the row that turns the formatting off.
-    // Mutation caught: _prettify() and _prettifySurface() -> `return num;` in the disabled
-    // branch becomes `return num + 1;` -- every label is off by one.
+    // Mutation caught: _prettify(), _prettifySurface() and _prettifyGrid() -> `return num;`
+    // in the disabled branch becomes `return num + 1;` -- every label is off by one.
     test('prettify_enabled off leaves every label unformatted (Settings: prettify_enabled)', async ({ page }) => {
         const config = { min: 0, max: 20000, from: 10000, prettify_enabled: false, grid: true, grid_num: 2 };
         await open(page, config);
@@ -93,8 +93,9 @@ test.describe(`prettify (${LABEL})`, () => {
     // readme note "prettify": "A function that receives a number and returns the string to
     // show." With neither per-surface option set it formats all three surfaces.
     // Mutation caught: _prettify() -> drop the `this.options.prettify &&
-    // typeof ... === "function"` branch -- every surface falls back to the built-in
-    // formatting and the labels read "50", "0", "100".
+    // typeof ... === "function"` branch -- the value, min and max labels fall back
+    // to the built-in formatting and read "50", "0", "100" (the grid has its own
+    // chain since #906, _prettifyGrid(), and keeps "0x", "50x", "100x").
     test('a custom prettify formats the value, min, max and grid labels (note "prettify")', async ({ page }) => {
         const config = { min: 0, max: 100, from: 50, grid: true, grid_num: 2, __prettify: (n) => n + 'x' };
         await open(page, "{min: 0, max: 100, from: 50, grid: true, grid_num: 2, prettify: function (n) { return n + 'x'; }}");
@@ -107,8 +108,8 @@ test.describe(`prettify (${LABEL})`, () => {
     });
 
     // readme note "prettify_grid": "Formats the grid labels only."
-    // Mutation caught: _prettifyGrid() -> `return this._prettifySurface("prettify_grid", num);`
-    // becomes `return this._prettify(num);` -- the grid falls back to prettify and its ticks
+    // Mutation caught: _prettifyGrid() -> `text = this._tryGridFormatter("prettify_grid", num);`
+    // becomes `text = undefined;` -- the grid falls back to prettify and its ticks
     // read "P0", "P50", "P100".
     test('prettify_grid formats the grid labels only (note "prettify_grid")', async ({ page }) => {
         const config = { min: 0, max: 100, from: 50, grid: true, grid_num: 2, __prettify: (n) => 'P' + n, __prettify_grid: (n) => 'G' + n };

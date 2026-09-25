@@ -178,7 +178,7 @@ Or use `data-*` attributes on the input:
 | `keyboard` | `data-keyboard` | `true` | boolean | Keyboard controls. Left: ←, ↓, A, S. Right: →, ↑, W, D |
 | `grid` | `data-grid` | `false` | boolean | Show the value grid below the slider |
 | `grid_margin` | `data-grid-margin` | `true` | boolean | Add a grid margin on the left and right, half a handle wide, so the first and last grid labels line up with the handle centers |
-| `grid_num` | `data-grid-num` | `4` | number | Number of grid units the value range is cut into, at most 50. A labelled tick mark sits at each unit boundary, with smaller unlabelled ticks between them (up to 28 units). Ignored when `grid_snap` is on or `values` is used |
+| `grid_num` | `data-grid-num` | `4` | number | Number of grid units the value range is cut into, at most 50. A labelled tick mark sits at each unit boundary, with smaller unlabelled ticks between them (up to 28 units). A fraction is rounded to the nearest whole number; if that is below 1, or the value is not a number, the grid uses 4. Ignored when `grid_snap` is on or `values` is used |
 | `grid_snap` | `data-grid-snap` | `false` | boolean | Use one grid unit per step instead of `grid_num`. Still capped at 50 units |
 | `hide_min_max` | `data-hide-min-max` | `false` | boolean | Hide the min and max labels |
 | `hide_from_to` | `data-hide-from-to` | `false` | boolean | Hide the from and to value labels |
@@ -233,7 +233,7 @@ A string is read as the name of a global function (`window[name]`); a name that 
 
 #### prettify_grid
 
-Formats the grid labels only. When it is not set, the grid labels fall back to `prettify`, and then to the built-in number formatting. It takes a function or a global name exactly like `prettify`, and it does not apply in `values` mode.
+Formats the grid labels only. When it is not set, the grid labels fall back to `prettify`, and then to the built-in number formatting. It takes a function or a global name exactly like `prettify`, and it does not apply in `values` mode. If it returns nothing (`undefined` or `null`) or throws, that label falls back the same way, to `prettify` and then to the built-in formatting.
 
 #### prettify_min_max
 
