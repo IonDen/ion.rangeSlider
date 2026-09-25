@@ -97,7 +97,7 @@ const allHits = (cfg, over) => {
 // Bug caught: an entry filed without its issue number or its one-line title, which would
 // annotate a matrix cell with nothing a reader could look up.
 test('every register entry carries an issue number, a title, a predicate and a message pattern', () => {
-    assert.equal(KNOWN_BUGS.length, 18);
+    assert.equal(KNOWN_BUGS.length, 16);
     const issues = KNOWN_BUGS.map((bug) => bug.issue);
     assert.deepEqual(issues, [...new Set(issues)], 'an issue must have one entry');
     for (const bug of KNOWN_BUGS) {
@@ -419,11 +419,11 @@ test("the init payload of m018 is split between #897 and #889 by the message", (
 // #889 claim the silent key stages and reds m019 from S4a to S4d.
 test('a blocked slider is silent to the keyboard, so no entry claims its key stages (#890)', () => {
     const blocked = { min: 0, max: 100, from: 30, step: 1, block: true, prettify_enabled: false };
-    assert.deepEqual(allHits(blocked), ['S0/callbacks=#889', 'S6/callbacks=#883', 'S7/callbacks=#883']);
+    assert.deepEqual(allHits(blocked), ['S0/callbacks=#889', 'S6/callbacks=#889', 'S7/callbacks=#889']);
     // A disabled slider is claimed at the same stages, plus the input destroy() leaves
     // disabled (#886).
     const disabled = { min: 0, max: 100, from: 30, step: 1, disable: true, prettify_enabled: false };
-    assert.deepEqual(allHits(disabled), ['S0/callbacks=#889', 'S6/callbacks=#883', 'S7/callbacks=#883', 'S8/destroy=#886']);
+    assert.deepEqual(allHits(disabled), ['S0/callbacks=#889', 'S6/callbacks=#889', 'S7/callbacks=#889', 'S8/destroy=#886']);
 
     // Judged as the matrix judges a key stage the slider did not answer: no failure, and no
     // entry left over to be retired.
