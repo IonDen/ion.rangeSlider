@@ -204,7 +204,7 @@ test.describe(`interactions (${LABEL})`, () => {
     // becomes `this.target = this.chooseHandle(this.convertToRealPercent(handle_x));`, the
     // input reads "80;93", and Playwright reports the row "expected to fail, but passed".
     test('a track click nearer the to handle moves the to handle (chooseHandle(): closest handle)', async ({ page }) => {
-        test.fail(true, 'unfiled: a click on the track of a double slider can move the handle that is farther from the click');
+        test.fail(true, '#910: a click on the track of a double slider can move the handle that is farther from the click');
         await open(page, { type: 'double', min: 0, max: 100, from: 80, to: 100, step: 1 }, { width: '300' });
         await clickTrackAt(page, 0.93);
         await page.waitForTimeout(400);   // outlast the idle render tick, then read once

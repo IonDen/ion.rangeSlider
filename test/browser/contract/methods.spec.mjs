@@ -251,7 +251,7 @@ test.describe(`methods (${LABEL})`, () => {
     // (writeToInput() stores it there and destroy() does not clear it), and the constructor
     // reads that data the way it reads data-from, so the new slider starts on 30.
     test('a slider built after destroy() starts on the from it is given (Public methods: destroy, Settings: from)', async ({ page }) => {
-        test.fail(true, 'unfiled: a slider built after destroy() starts on the old from and to, not the ones it is given');
+        test.fail(true, "#911: a slider built after destroy() starts on the destroyed slider's from and to, not the ones it is given");
         await open(page, { min: 0, max: 100, from: 30, step: 1 });
         await call(page, 'destroy');
         await expect(page.locator(CONTAINER)).toHaveCount(0);
