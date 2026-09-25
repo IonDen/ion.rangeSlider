@@ -44,7 +44,7 @@ test.describe(`grid (${LABEL})`, () => {
     // readme Settings, grid_num: "Number of grid units the value range is cut into, at
     // most 50." A unit boundary at each end of every unit means one more label than units,
     // and the cap applies to the units, so the most labels a grid can hold is 51.
-    // Mutations caught, all in appendGrid(): `big_num = o.grid_num` becomes
+    // Mutations caught, all in _gridTicksEven(): `big_num = o.grid_num` becomes
     // `big_num = o.grid_num + 1`, and the grid_num 1, 4 and 10 rows read one label too
     // many; `if (big_num > 50) big_num = 50` becomes `if (big_num > 49) big_num = 49`, and
     // the grid_num 50 and 60 rows read 50 labels; the same line with 60 in place of 50
@@ -64,10 +64,10 @@ test.describe(`grid (${LABEL})`, () => {
     // units)". The plugin thins them out as the units multiply, and stops drawing them
     // past 28 units. Both sides of every threshold are pinned so that moving one of them
     // has nowhere to hide.
-    // Mutations caught, one per row, each moving one appendGrid() threshold by one:
-    // `big_num > 4` to `> 3` reds the grid_num 4 row and to `> 5` the grid_num 5 row;
-    // `big_num > 7` to `> 6` reds 7 and to `> 8` reds 8; `big_num > 14` to `> 13` reds 14
-    // and to `> 15` reds 15; `big_num > 28` to `> 27` reds 28 and to `> 29` reds 29.
+    // Mutations caught, one per row, each moving one _gridSmallMax() threshold by one:
+    // `units > 4` to `> 3` reds the grid_num 4 row and to `> 5` the grid_num 5 row;
+    // `units > 7` to `> 6` reds 7 and to `> 8` reds 8; `units > 14` to `> 13` reds 14
+    // and to `> 15` reds 15; `units > 28` to `> 27` reds 28 and to `> 29` reds 29.
     for (const [grid_num, small] of [[4, 4], [5, 3], [7, 3], [8, 2], [14, 2], [15, 1], [28, 1], [29, 0]]) {
         test(`grid_num ${grid_num} puts ${small} small ticks between two labelled ones (Settings: grid_num)`, async ({ page }) => {
             await open(page, { min: 0, max: 100, from: 10, grid: true, grid_num });
@@ -77,7 +77,7 @@ test.describe(`grid (${LABEL})`, () => {
     }
 
     // readme Settings, grid_snap: "Use one grid unit per step instead of grid_num."
-    // Mutation caught: appendGrid() -> `big_num = total / o.step` becomes
+    // Mutation caught: _gridTicksEven() -> `big_num = (o.max - o.min) / o.step` becomes
     // `big_num = o.grid_num`, and the grid falls back to five labels counting by 25.
     test('grid_snap puts one labelled tick on every step (Settings: grid_snap)', async ({ page }) => {
         await open(page, { min: 0, max: 100, from: 10, step: 10, grid: true, grid_snap: true });
@@ -92,8 +92,8 @@ test.describe(`grid (${LABEL})`, () => {
     // That last label names a value the step scale does not hold, but it is the one value
     // off the scale the slider can still reach (a drag to the far end lands on 100), so it
     // is recorded here rather than counted against the readme.
-    // Mutation caught: the same `big_num = total / o.step` -> `big_num = o.grid_num` as
-    // above, which replaces the whole list with five labels counting by 25.
+    // Mutation caught: the same `big_num = (o.max - o.min) / o.step` -> `big_num = o.grid_num`
+    // as above, which replaces the whole list with five labels counting by 25.
     test('grid_snap on a step that leaves a remainder labels the steps and then max (characterization)', async ({ page }) => {
         await open(page, { min: 0, max: 100, from: 7, step: 7, grid: true, grid_snap: true });
 

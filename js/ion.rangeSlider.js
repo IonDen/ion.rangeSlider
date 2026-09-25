@@ -2913,6 +2913,65 @@
         // =============================================================================================================
         // Grid
 
+        /**
+         * The grid's big ticks, as appendGrid() renders them (#906): for each tick its position (`left`,
+         * percent of the grid), the value it names (the entry index in values mode), how many small ticks go
+         * before it (`small`) and the position those small ticks are measured from (`prev`), plus the rule
+         * that chose them. "even" is the even split into grid_num units (grid_snap: one unit per step), at
+         * most 50 units.
+         * @returns {{rule: (number|string), ticks: Array}}
+         */
+        calcGridTicks: function () {
+            return { rule: "even", ticks: this._gridTicksEven() };
+        },
+
+        /**
+         * The even split into grid_num units (grid_snap: one unit per step), at most 50 units.
+         * @returns {Array} [{left, value, small, prev}]
+         */
+        _gridTicksEven: function () {
+            var o = this.options,
+                big_num = o.grid_num,
+                big_p, big_w, i,
+                small_max,
+                ticks = [];
+
+            if (o.grid_snap) {
+                big_num = (o.max - o.min) / o.step;
+            }
+
+            if (big_num > 50) big_num = 50;
+            big_p = this.toFixed(100 / big_num);
+            small_max = this._gridSmallMax(big_num);
+
+            for (i = 0; i < big_num + 1; i++) {
+                big_w = this.toFixed(big_p * i);
+                if (big_w > 100) {
+                    big_w = 100;
+                }
+                ticks.push({ left: big_w, value: this.convertToValue(big_w), small: small_max, prev: big_p * (i - 1) });
+            }
+
+            return ticks;
+        },
+
+        /**
+         * How many small ticks go between two big ticks on a grid of this many units: 4, fewer as the units
+         * multiply, none past 28 units.
+         * @param {number} units
+         * @returns {number}
+         */
+        _gridSmallMax: function (units) {
+            var small_max = 4;
+
+            if (units > 4) small_max = 3;
+            if (units > 7) small_max = 2;
+            if (units > 14) small_max = 1;
+            if (units > 28) small_max = 0;
+
+            return small_max;
+        },
+
         appendGrid: function () {
             if (!this.options.grid) {
                 return;
@@ -2921,13 +2980,9 @@
             var o = this.options,
                 i, z,
 
-                total = o.max - o.min,
-                big_num = o.grid_num,
-                big_p = 0,
+                r,
                 big_w = 0,
 
-                small_max = 4,
-                local_small_max,
                 small_p,
                 small_w = 0,
 
@@ -2942,40 +2997,16 @@
 
             this.calcGridMargin();
 
-            if (o.grid_snap) {
-                big_num = total / o.step;
-            }
+            r = this.calcGridTicks();
 
-            if (big_num > 50) big_num = 50;
-            big_p = this.toFixed(100 / big_num);
-
-            if (big_num > 4) {
-                small_max = 3;
-            }
-            if (big_num > 7) {
-                small_max = 2;
-            }
-            if (big_num > 14) {
-                small_max = 1;
-            }
-            if (big_num > 28) {
-                small_max = 0;
-            }
-
-            for (i = 0; i < big_num + 1; i++) {
-                local_small_max = small_max;
+            for (i = 0; i < r.ticks.length; i++) {
+                big_w = r.ticks[i].left;
+                this.coords.big[i] = big_w;
                 pols[i] = '';
 
-                big_w = this.toFixed(big_p * i);
+                small_p = (big_w - r.ticks[i].prev) / (r.ticks[i].small + 1);
 
-                if (big_w > 100) {
-                    big_w = 100;
-                }
-                this.coords.big[i] = big_w;
-
-                small_p = (big_w - (big_p * (i - 1))) / (local_small_max + 1);
-
-                for (z = 1; z <= local_small_max; z++) {
+                for (z = 1; z <= r.ticks[i].small; z++) {
                     if (big_w === 0) {
                         break;
                     }
@@ -2987,7 +3018,7 @@
 
                 pols[i] += '<span class="irs-grid-pol" style="left: ' + big_w + '%"></span>';
 
-                result = this.convertToValue(big_w);
+                result = r.ticks[i].value;
                 if (o.values.length) {
                     result = o.p_values[result];
                 } else {
@@ -2997,7 +3028,7 @@
                 lefts[i] = big_w;
                 texts[i] = String(result);
             }
-            this.coords.big_num = Math.ceil(big_num + 1);
+            this.coords.big_num = r.ticks.length;
 
             // #772: a range holding fewer steps than grid_num can snap two
             // neighbouring ticks to the same value; equal neighbouring
