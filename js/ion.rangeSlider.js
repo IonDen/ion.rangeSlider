@@ -296,7 +296,7 @@
         var $inp = this.$cache.input,
             val = $inp.prop("value"),
             config, config_from_data, prop, i,
-            js_values, entries, trim_entries, from_index, to_index;
+            js_values, raw_values, entries, trim_entries, from_index, to_index;
 
         // default config
         config = {
@@ -468,19 +468,22 @@
             // text before the numeric conversion below, which turns "20" into
             // a number that an array of strings never holds (#880). Without a
             // JS values array the entries come from data-values (the data-values
-            // case), split on its commas and trimmed only when values_raw is on,
-            // data-values-raw deciding before the JS option as in the trim
-            // after the data-* merge. A half that names no entry keeps the
-            // lookup below, unchanged.
+            // case), split on its commas and trimmed only when values_raw is on.
+            // With values_raw off a number-like entry is also matched by the
+            // text of the number validate() will hold it as. values_raw is
+            // resolved as after the data-* merge: data-values-raw before the JS
+            // option. A half that names no entry keeps the lookup below,
+            // unchanged.
             js_values = !!(options.values && options.values.length);
+            raw_values = config_from_data.values_raw !== undefined ? config_from_data.values_raw : options.values_raw;
             if (js_values) {
                 entries = options.values;
             } else if (config_from_data.values) {
                 entries = config_from_data.values;
-                trim_entries = config_from_data.values_raw !== undefined ? config_from_data.values_raw : options.values_raw;
+                trim_entries = raw_values;
             }
-            from_index = this.findValueIndex(val[0], entries, trim_entries);
-            to_index = this.findValueIndex(val[1], entries, trim_entries);
+            from_index = this.findValueIndex(val[0], entries, trim_entries, !raw_values);
+            to_index = this.findValueIndex(val[1], entries, trim_entries, !raw_values);
 
             if (val[0] && val[0] == +val[0]) {
                 val[0] = +val[0];
@@ -2673,18 +2676,22 @@
 
         /**
          * Find the values entry that one half of the input value names
-         * (#880 and the data-values case): the first entry whose text equals
-         * the half as written, so "20" finds the string "20" and the number
-         * 20 alike. Called from the constructor, before validate() converts
-         * number-like entries, so the entries are compared as text.
+         * (#880 and the data-values case): the entry as the slider will hold
+         * it. First the entry whose text equals the half as written, so "20"
+         * finds the string "20" and the number 20 alike; then, with values_raw
+         * off, the entry whose number has that text, as validate() will hold
+         * it, so "20" also finds "20.0" and " 20". An entry written exactly as
+         * the half wins over one that only holds the same number. Called from
+         * the constructor, before validate() converts number-like entries.
          *
          * @param text {String|undefined} one half of the input value
          * @param entries {Array|undefined} the JS values array, or the data-values list split on its commas
          * @param trim {Boolean} compare each entry trimmed, as values_raw trims data-values
+         * @param as_numbers {Boolean} values_raw is off: also compare the text of each number-like entry's number
          * @returns {Number} the entry's index, or -1 when there is no text, no entries, or no entry with that text
          */
-        findValueIndex: function (text, entries, trim) {
-            var entry, i;
+        findValueIndex: function (text, entries, trim, as_numbers) {
+            var entry, number, i;
 
             if (!text || !entries) {
                 return -1;
@@ -2697,6 +2704,16 @@
                 }
                 if (entry === text) {
                     return i;
+                }
+            }
+
+            if (as_numbers) {
+                for (i = 0; i < entries.length; i++) {
+                    // the same conversion validate() applies with values_raw off
+                    number = +entries[i];
+                    if (!isNaN(number) && String(number) === text) {
+                        return i;
+                    }
                 }
             }
 

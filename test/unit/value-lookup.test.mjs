@@ -24,8 +24,8 @@ function started(slider) {
 // ------------------------------------------------------------------- #880
 
 // RED before the fix: from 0, the first entry.
-// Mutation: the text lookup removed (findValueIndex() returns -1 at once) -- the half
-// is converted to the number 20, which ['10', '20', '30'] does not hold.
+// Mutation: the lookup removed (findValueIndex() returns -1 at once) -- the half is
+// converted to the number 20, which ['10', '20', '30'] does not hold.
 test('#880: an input value names a number-like string entry', (t) => {
     const { slider } = createSlider(t, '<input value="20">', { values: ['10', '20', '30'] });
     const start = started(slider);
@@ -57,13 +57,19 @@ test('an input value names an entry of a number array, as before', (t) => {
 // RED before the fix: from 0. The old lookup read "0" as the number 0 and its
 // `val[0] && ...` guard then took that 0 for the index, so the entry 0 was never found
 // unless it was the first one -- the same gap as #880, on a number array.
+// With values_raw off the number-form pass finds 0 as well, so the values_raw: true half
+// (text pass only) is the one that carries the mutation.
 // Mutation: `String()` dropped from findValueIndex() (`entry = entries[i]`) -- the number
-// 0 no longer equals the text "0" and the old lookup's short-circuit starts on -10.
+// 0 no longer equals the text "0", and with values_raw on the old lookup's short-circuit
+// starts on -10.
 test('#880: an input value of "0" names the entry 0 wherever it sits in a number array', (t) => {
     const { slider } = createSlider(t, '<input value="0">', { values: [-10, -5, 0, 5, 10] });
     const start = started(slider);
     assert.equal(start.from, 2);
     assert.equal(start.from_value, 0);
+
+    const raw = createSlider(t, '<input value="0">', { values: [-10, -5, 0, 5, 10], values_raw: true }).slider;
+    assert.equal(raw.result.from, 2);
 });
 
 // Characterization: green before the fix too, found by the text comparison and by the
@@ -119,12 +125,69 @@ test('the data-values case: with data-values-raw on, the input value names the t
 
 // values_raw resolves in the usual order: a JS values_raw: true applies to data-values
 // when no data-values-raw attribute says otherwise, and the trim then follows it.
-// Mutation: the trim flag read from data-values-raw alone (`: options.values_raw` dropped).
+// Mutation: values_raw read from data-values-raw alone (`raw_values =
+// config_from_data.values_raw`, the `: options.values_raw` half dropped).
 test('the data-values case: a JS values_raw option trims the data-values entries for the lookup too', (t) => {
     const { slider } = createSlider(t, '<input value="b" data-values="a, b, c">', { values_raw: true });
     const start = started(slider);
     assert.equal(start.from, 1);
     assert.equal(start.from_value, 'b');
+});
+
+// ------------------------------------- values_raw off: the entry as the slider holds it
+
+// With values_raw off, validate() holds a number-like entry as a number (readme note
+// "values_raw": "20.0" becomes 20), and that number is what the slider writes into the
+// input. The input value names such an entry by the number's text too, compared after
+// the text as written.
+
+// RED before this change: from 2 -- " 20" is not "20" as text, and the old lookup then
+// reads "20" as the index 20, clamped to the last entry.
+// Mutation: the number-form comparison removed from findValueIndex() (its `if
+// (as_numbers)` made `if (false)`) -- " 20" is found by neither pass.
+test('#880: with values_raw off, "20" names a data-values entry written " 20", which the slider holds as 20', (t) => {
+    const { slider } = createSlider(t, '<input value="20" data-values="10, 20, 30">', {});
+    const start = started(slider);
+    assert.equal(start.from, 1);
+    assert.equal(start.from_value, 20);
+});
+
+// The round trip: a slider moved onto "20.0" writes 20 into the input (the entry as it
+// holds it), and a slider built from that markup must start on the same entry. jsdom has
+// no layout, so update({from}) moves the handle; it writes the input the way a drag does
+// (writeToInput(), values branch).
+// RED before this change: the rebuilt slider starts on 0 -- "20" is not "20.0" as text,
+// and the old lookup's number 20 is not in an array of strings.
+// Mutation: the number-form comparison removed, as above.
+test('#880: with values_raw off, the value the slider writes for "20.0" rebuilds it on the same entry', (t) => {
+    const values = ['10', '20.0', '30'];
+    const first = createSlider(t, '<input>', { values });
+    first.slider.update({ from: 1 });
+    const written = first.$input.val();
+    assert.equal(written, '20');
+
+    const rebuilt = createSlider(t, `<input value="${written}">`, { values }).slider;
+    assert.equal(rebuilt.result.from, 1);
+});
+
+// Characterization, green before and after this change. With values_raw on the slider
+// holds "20.0" exactly as written and writes "20.0" back, so "20" names no entry; the half
+// falls back as before (the old lookup's number 20 is not in the array: the first entry).
+// Only values_raw off turns "20.0" into 20, so only then may the number form match.
+// Mutation: the number-form comparison run whatever values_raw says (`as_numbers` passed
+// as true) -- "20" finds "20.0" at index 1.
+test('with values_raw on, "20" does not name the entry "20.0": the number form is not compared', (t) => {
+    const { slider } = createSlider(t, '<input value="20">', { values: ['10', '20.0', '30'], values_raw: true });
+    assert.equal(started(slider).from, 0);
+});
+
+// An entry written exactly as the input value wins over one that only holds the same
+// number: the text pass runs over every entry before the number form is tried.
+// Mutation: the text pass disabled (`if (entry === text)` made `if (false)`) -- the number
+// form answers alone and finds "20.0" at index 0.
+test('with values_raw off, an entry written exactly as the input value wins over an earlier one holding the same number', (t) => {
+    const { slider } = createSlider(t, '<input value="20">', { values: ['20.0', '20', '30'] });
+    assert.equal(started(slider).from, 1);
 });
 
 // --------------------------------------------------------- names no entry

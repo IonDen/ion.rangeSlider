@@ -127,16 +127,6 @@ test('a plain healthy slider matches only the bug every slider without values ca
     ]);
     // In values mode even that one is gone.
     assert.deepEqual(allHits({ values: [10, 20, 30], from: 1 }), []);
-
-    // So it is for a double slider that starts from the input's value attribute on
-    // numeric-looking string entries, with a from_min and a min_interval (m064's shape):
-    // the lookup finds both entries since #880 was fixed, and nothing may claim the slider.
-    // Bug caught: a register entry kept for a fixed bug -- the retired #880 entry claims
-    // this slider's bounds and intervals at every stage but S8.
-    assert.deepEqual(allHits({
-        type: 'double', values: ['10', '20', '30', '40', '50'], from: 1, to: 3,
-        from_min: 1, min_interval: 2, __value_attr: '20;40'
-    }), []);
 });
 
 // ------------------------------------------------------------------ the script
@@ -556,15 +546,15 @@ test('#885 matches the S0 interval of an m025-like hidden slider only on a build
 });
 
 /**
- * m024's effective configuration (configs.json), with the two fields matrix.spec.mjs adds for
- * the register: a values array of numeric-looking strings, a value attribute naming two of
- * them, a from_min of 2.4 that sits off the index scale, blocked, and built hidden.
+ * m024's effective configuration (configs.json), with the field matrix.spec.mjs adds for the
+ * register: a values array of numeric-looking strings, a from_min of 2.4 that sits off the
+ * index scale, blocked, and built hidden.
  */
 const M024 = {
     values: ['10', '20', '30', '40', '50'], type: 'double', from: 1, to: 3, from_min: 2.4,
     max_interval: 6, from_fixed: true, drag_interval: true, grid: true, grid_margin: false,
     __prettify_src: 'function (n) { return n + "x"; }', force_edges: true, block: true, skin: 'round',
-    __value_attr: '20;40', __hidden_at_init: true
+    __hidden_at_init: true
 };
 
 // On a build that renders a slider built hidden at init, m024's from handle is clamped onto
@@ -983,7 +973,7 @@ test('#898 matches the track click of a coincident drag_interval pair, not a pai
         min: 0, max: 1000000, step: 1000, type: 'double', from: 300000, to: 700000,
         from_min: 2400, max_interval: 6000, drag_interval: true, grid: true, grid_margin: false,
         prettify_separator: ',', decorate_both: false, values_separator: ' to ', skin: 'square',
-        __hidden_at_init: true, __value_attr: '300000;700000'
+        __hidden_at_init: true
     };
     const coincident = { prev: prevOf(700000, 700000), expectations: { click: true, changed: true } };
     assert.equal(hit(m080, 'S3', 'labels', coincident), 898);

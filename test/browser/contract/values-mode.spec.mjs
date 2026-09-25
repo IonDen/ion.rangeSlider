@@ -163,9 +163,9 @@ test.describe(`values mode (${LABEL})`, () => {
     // The same route with numeric-looking entries. The readme draws no distinction
     // between a string array and a numeric-looking one, so the lookup finds "20" at
     // index 1 here exactly as it finds "c" above (#880).
-    // Mutation caught: constructor -> findValueIndex() returns -1 at once (the text
-    // lookup removed) -- "20" is converted to the number 20, which the array of strings
-    // does not hold, and the slider starts on "10".
+    // Mutation caught: constructor -> findValueIndex() returns -1 at once (the lookup
+    // removed) -- "20" is converted to the number 20, which the array of strings does
+    // not hold, and the slider starts on "10".
     test('the input value attribute names a numeric-looking entry too (Settings: from)', async ({ page }) => {
         await open(page, { values: ['10', '20', '30'] }, { attrs: JSON.stringify({ value: '20' }) });
         await expect(page.locator('#slider')).toHaveValue('20');

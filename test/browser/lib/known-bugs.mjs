@@ -23,12 +23,11 @@
  * `matches` receives the same ctx the invariants get ({ state, cfg, stage, prev,
  * expectations, env }) plus the failing invariant id. What a predicate may read:
  *
- *   - `cfg`, the option set the plugin was built with, including the two fields
+ *   - `cfg`, the option set the plugin was built with, including the field
  *     matrix.spec.mjs adds for the register: `__hidden_at_init` (the fixture built the
- *     slider inside a display:none container) and `__value_attr` (the input carried this
- *     value attribute). Both are configuration -- the readme documents the hidden
- *     container and the value attribute as ways to build a slider -- and neither can be
- *     read off the option set alone.
+ *     slider inside a display:none container). It is configuration -- the readme
+ *     documents the hidden container as a way to build a slider -- and cannot be read
+ *     off the option set alone.
  *   - `stage`, and `expectations`, the stage's own promise.
  *   - `prev`, the state the stage STARTED from.
  *   - `env`, the environment the run is in (./env.mjs): today, whether the jQuery build
