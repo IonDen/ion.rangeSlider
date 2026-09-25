@@ -148,8 +148,11 @@ test.describe(`values mode (${LABEL})`, () => {
 
     // readme "Settings", from: the input's own value attribute is the third route into
     // from, and in values mode "the value is looked up as an index".
-    // Mutation caught: constructor -> `config.from = val[0] && options.values.indexOf(val[0])`
-    // becomes `config.from = null` -- the slider starts on the first entry instead of "c".
+    // Mutation caught: constructor -> `js_values = !!(options.values && options.values.length)`
+    // becomes `js_values = false` -- neither the text lookup nor the one after it reads the
+    // values array, "c" is read as a number, and the slider starts on the first entry.
+    // (Since #880 the text lookup finds "c" on its own, so breaking only the older
+    // `options.values.indexOf(val[0])` line no longer reds this.)
     test('the input value attribute names the entry the slider starts on (Settings: from)', async ({ page }) => {
         await open(page, { values: ['a', 'b', 'c', 'd'] }, { attrs: JSON.stringify({ value: 'c' }) });
         await expect(page.locator('#slider')).toHaveValue('c');
@@ -158,13 +161,27 @@ test.describe(`values mode (${LABEL})`, () => {
     });
 
     // The same route with numeric-looking entries. The readme draws no distinction
-    // between a string array and a numeric-looking one, so the lookup should find "20"
-    // at index 1 here exactly as it finds "c" above.
+    // between a string array and a numeric-looking one, so the lookup finds "20" at
+    // index 1 here exactly as it finds "c" above (#880).
+    // Mutation caught: constructor -> findValueIndex() returns -1 at once (the text
+    // lookup removed) -- "20" is converted to the number 20, which the array of strings
+    // does not hold, and the slider starts on "10".
     test('the input value attribute names a numeric-looking entry too (Settings: from)', async ({ page }) => {
-        test.fail(true, '#880: an input value that names a numeric-looking entry is never found, so the slider starts at index 0');
         await open(page, { values: ['10', '20', '30'] }, { attrs: JSON.stringify({ value: '20' }) });
         await expect(page.locator('#slider')).toHaveValue('20');
         expect(await payload(page, 'onStart')).toMatchObject({ from: 1 });
+    });
+
+    // The data-values case: the entries come from the data-values attribute instead of
+    // the values option, and the input value names its entries all the same, both halves
+    // in double type.
+    // Mutation caught: constructor -> the data-values branch of the lookup removed -- the
+    // halves are read as numbers, come out NaN, and the slider starts on "a" and "d".
+    test('the input value attribute names entries of data-values too (Settings: from, values)', async ({ page }) => {
+        const attrs = { value: 'b;c', 'data-values': 'a,b,c,d', 'data-type': 'double' };
+        await open(page, {}, { attrs: JSON.stringify(attrs) });
+        await expect(page.locator('#slider')).toHaveValue('b;c');
+        expect(await payload(page, 'onStart')).toMatchObject({ from: 1, to: 2, from_value: 'b', to_value: 'c' });
     });
 
     // The round trip the input is meant to provide: the plugin writes the entry into the

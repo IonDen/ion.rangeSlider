@@ -295,7 +295,8 @@
          */
         var $inp = this.$cache.input,
             val = $inp.prop("value"),
-            config, config_from_data, prop, i;
+            config, config_from_data, prop, i,
+            js_values, entries, trim_entries, from_index, to_index;
 
         // default config
         config = {
@@ -462,6 +463,25 @@
         if (val !== undefined && val !== "") {
             val = val.split(config_from_data.input_values_separator || options.input_values_separator || ";");
 
+            // #880 and the data-values case: in values mode each half of the
+            // input value names an entry by its text, so it is looked up as
+            // text before the numeric conversion below, which turns "20" into
+            // a number that an array of strings never holds (#880). Without a
+            // JS values array the entries come from data-values (the data-values
+            // case), split on its commas and trimmed only when values_raw is on,
+            // data-values-raw deciding before the JS option as in the trim
+            // after the data-* merge. A half that names no entry keeps the
+            // lookup below, unchanged.
+            js_values = !!(options.values && options.values.length);
+            if (js_values) {
+                entries = options.values;
+            } else if (config_from_data.values) {
+                entries = config_from_data.values;
+                trim_entries = config_from_data.values_raw !== undefined ? config_from_data.values_raw : options.values_raw;
+            }
+            from_index = this.findValueIndex(val[0], entries, trim_entries);
+            to_index = this.findValueIndex(val[1], entries, trim_entries);
+
             if (val[0] && val[0] == +val[0]) {
                 val[0] = +val[0];
             }
@@ -469,12 +489,19 @@
                 val[1] = +val[1];
             }
 
-            if (options && options.values && options.values.length) {
+            if (js_values) {
                 config.from = val[0] && options.values.indexOf(val[0]);
                 config.to = val[1] && options.values.indexOf(val[1]);
             } else {
                 config.from = val[0] && +val[0];
                 config.to = val[1] && +val[1];
+            }
+
+            if (from_index !== -1) {
+                config.from = from_index;
+            }
+            if (to_index !== -1) {
+                config.to = to_index;
             }
         }
 
@@ -2642,6 +2669,38 @@
             }
 
             return this.toFixed(left);
+        },
+
+        /**
+         * Find the values entry that one half of the input value names
+         * (#880 and the data-values case): the first entry whose text equals
+         * the half as written, so "20" finds the string "20" and the number
+         * 20 alike. Called from the constructor, before validate() converts
+         * number-like entries, so the entries are compared as text.
+         *
+         * @param text {String|undefined} one half of the input value
+         * @param entries {Array|undefined} the JS values array, or the data-values list split on its commas
+         * @param trim {Boolean} compare each entry trimmed, as values_raw trims data-values
+         * @returns {Number} the entry's index, or -1 when there is no text, no entries, or no entry with that text
+         */
+        findValueIndex: function (text, entries, trim) {
+            var entry, i;
+
+            if (!text || !entries) {
+                return -1;
+            }
+
+            for (i = 0; i < entries.length; i++) {
+                entry = String(entries[i]);
+                if (trim) {
+                    entry = entry.replace(/^\s+|\s+$/g, "");
+                }
+                if (entry === text) {
+                    return i;
+                }
+            }
+
+            return -1;
         },
 
         validate: function () {
