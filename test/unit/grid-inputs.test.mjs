@@ -53,17 +53,36 @@ test('an invalid grid_num warns once per slider, not on every update()', (t) => 
   assert.equal(seen.filter((m) => /grid_num/.test(m)).length, 1);
 });
 
-// Pins behaviour. Mutation this catches: the warning ignoring the mode (values mode and grid_snap set the units).
-test('no grid_num warning in values mode or under grid_snap', (t) => {
-  let a, b;
+// Pins behaviour. Mutation this catches: the warning ignoring the mode (values mode and grid_snap set the
+// units) or, for the third slider, `o.grid &&` dropped from the warning condition (grid: false would still warn).
+test('no grid_num warning in values mode, under grid_snap, or with the grid off', (t) => {
+  let a, b, c;
   createSlider(t, '<input>', { values: ['a', 'b'], grid: true, grid_num: -4 }, (window) => { a = warnings(window); });
   createSlider(t, '<input>', { min: 0, max: 10, grid: true, grid_snap: true, grid_num: -4 }, (window) => { b = warnings(window); });
-  assert.equal(a.concat(b).filter((m) => /grid_num/.test(m)).length, 0);
+  createSlider(t, '<input>', { min: 0, max: 10, grid: false, grid_num: -4 }, (window) => { c = warnings(window); });
+  assert.equal(a.concat(b).concat(c).filter((m) => /grid_num/.test(m)).length, 0);
 });
 
 // Pins behaviour. Mutation this catches: a value above 50 clamped in validate() (options.grid_num would read 50).
 test('grid_num above 50 reads back as given', (t) => {
   assert.equal(createSlider(t, '<input>', { min: 0, max: 100, grid: true, grid_num: 60 }).slider.options.grid_num, 60);
+});
+
+// Mutation this catches: the `typeof o.grid_num === "number"` guard dropped from validate() -- Math.round(true)
+// is 1, so grid_num: true would become 1 unit (2 labels) instead of falling back to the documented default 4.
+test('grid_num true is not a number and falls back to 4', (t) => {
+  const { slider } = createSlider(t, '<input>', { min: 0, max: 100, grid: true, grid_num: true }, (window) => { warnings(window); });
+  assert.deepEqual(texts(slider), ['0', '25', '50', '75', '100']);
+  assert.equal(slider.options.grid_num, 4);
+});
+
+// Mutation this catches: the `o.grid_num === Number.POSITIVE_INFINITY` check widened to
+// `Math.abs(o.grid_num) === Infinity` -- grid_num: -Infinity would then become the 50-unit cap (51 labels)
+// instead of falling back to 4.
+test('grid_num -Infinity is not the 50-unit cap and falls back to 4', (t) => {
+  const { slider } = createSlider(t, '<input>', { min: 0, max: 100, grid: true, grid_num: -Infinity }, (window) => { warnings(window); });
+  assert.deepEqual(texts(slider), ['0', '25', '50', '75', '100']);
+  assert.equal(slider.options.grid_num, 4);
 });
 
 // Mutation this catches: rule 0 removed from calcGridTicks(); grid_snap on 5..5 prints "NaN", 5..5 prints five
@@ -94,6 +113,42 @@ test('calcGridTicks() gives a zero range exactly one tick at 0% naming min, as r
 test('grid_snap counts 2.7 / 0.3 as exactly 9 units', (t) => {
   assert.deepEqual(texts(createSlider(t, '<input>', { min: 0, max: 2.7, step: 0.3, grid: true, grid_snap: true }).slider),
     ['0', '0.3', '0.6', '0.9', '1.2', '1.5', '1.8', '2.1', '2.4', '2.7']);
+});
+
+// Golden regression (#906), pinned to master's own output (computed on 25efb76 with
+// `git show 25efb76:js/ion.rangeSlider.js`): a range far smaller than one step makes the raw unit count round
+// to 0, not to a whole number close to itself, so it must stay fractional and fall through to the even split's
+// two edge ticks (0% and 100%, labelled min and max) instead of dividing by a zero unit count. Before this fix
+// both configs collapsed to one tick labelled "NaN". Mutation this catches: the "Math.round(big_num) >= 1 &&"
+// guard dropped from the tolerance check in _gridTicksEven().
+test('grid_snap tolerance only snaps to a whole unit count of at least 1, matching master', (t) => {
+  assert.deepEqual(
+    texts(createSlider(t, '<input>', { min: 0.3, max: 0.1 + 0.2, step: 0.01, grid: true, grid_snap: true }).slider),
+    ['0.3', '0.30 000 000 000 000 004']
+  );
+  assert.deepEqual(
+    texts(createSlider(t, '<input>', { min: 0, max: 1e-10, step: 1, grid: true, grid_snap: true }).slider),
+    ['0', '1e-10']
+  );
+});
+
+// Mutation this catches: `Math.abs` dropped from the tolerance check in _gridTicksEven() -- 100 / 6 is
+// 16.666666666666668 units, and without Math.abs the negative difference from 17 (-0.333...) passes the
+// one-sided "<=" check against a tiny positive threshold, wrongly snapping to 17 whole units.
+test('grid_snap tolerance holds from both sides: a count comfortably short of the next whole number', (t) => {
+  assert.deepEqual(
+    texts(createSlider(t, '<input>', { min: 0, max: 100, step: 6, grid: true, grid_snap: true }).slider),
+    ['0', '6', '12', '18', '24', '30', '36', '42', '48', '54', '60', '66', '72', '78', '84', '90', '96', '100']
+  );
+});
+
+// Mutation this catches: the tolerance widened from 1e-9 to 1e-3 -- 4.001 / 1 is 4.001 units, outside the real
+// tolerance but inside a widened one, which would wrongly snap to 4 units and lose the '4' tick.
+test('grid_snap tolerance does not widen past 1e-9: a count genuinely short of the next whole number', (t) => {
+  assert.deepEqual(
+    texts(createSlider(t, '<input>', { min: 0, max: 4.001, step: 1, grid: true, grid_snap: true }).slider),
+    ['0', '1', '2', '3', '4', '4.001']
+  );
 });
 
 // Mutation this catches: either undefined/null check in _prettifyGrid() narrowed to undefined alone; the labels
@@ -150,4 +205,26 @@ test('a prettify_grid that returns "" still blanks the label', (t) => {
 test('a grid formatter is still called with the options object as this', (t) => {
   const s = createSlider(t, '<input>', { min: 0, max: 100, grid: true, prettify_grid: function (n) { return this.grid_num + ':' + n; } }).slider;
   assert.deepEqual(texts(s), ['4:0', '4:25', '4:50', '4:75', '4:100']);
+});
+
+// Mutation this catches: the try around the detail (`" (" + e + ")"`) removed from _tryGridFormatter() -- a
+// thrown value with no string form (Object.create(null) has no toString or valueOf) then throws while the
+// warning message itself is being built, escaping the constructor instead of falling back.
+test('a prettify_grid that throws a value with no string form still falls back', (t) => {
+  const { slider } = createSlider(t, '<input>', {
+    min: 0, max: 100, grid: true,
+    prettify_grid: function () { throw Object.create(null); }
+  }, (window) => { warnings(window); });
+  assert.deepEqual(texts(slider), ['0', '25', '50', '75', '100']);
+});
+
+// Mutation this catches: the `typeof console !== "undefined"` guard removed from _tryGridFormatter() (throwing
+// prettify_grid) or from the grid_num warning in validate() (grid_num: 0) -- either one, with no console object
+// present, throws a ReferenceError building the warning instead of silently skipping it and falling back.
+test('a slider with no console object still builds when grid_num and a formatter both need to warn', (t) => {
+  const { slider } = createSlider(t, '<input>', {
+    min: 0, max: 100, grid: true, grid_num: 0,
+    prettify_grid: function () { throw new Error('x'); }
+  }, (window) => { delete window.console; });
+  assert.deepEqual(texts(slider), ['0', '25', '50', '75', '100']);
 });
