@@ -244,13 +244,11 @@ for (const entry of configs.filter((c) => c.id)) {
     const hiddenAtInit = !!(entry.extra && entry.extra.hidden === '1');
     if (hiddenAtInit) testInfo.annotations.push({ type: 'container', description: 'built hidden: the labels rule is not checked at S0' });
 
-    // Two things the register's predicates need that the option set alone cannot carry:
-    // the container the slider was built in, and the input's value attribute. Both are
-    // configuration in the readme's sense (it documents the hidden container under
-    // onInit and the value attribute under config resolution), and a bug that only
-    // happens on one of those routes can only be recognised by them.
+    // One thing the register's predicates need that the option set alone cannot carry:
+    // the container the slider was built in. It is configuration in the readme's sense
+    // (the readme documents the hidden container under onInit), and a bug that only
+    // happens in a hidden container can only be recognised by it.
     if (hiddenAtInit) cfg.__hidden_at_init = true;
-    if (entry.attrs && typeof entry.attrs.value === 'string') cfg.__value_attr = entry.attrs.value;
 
     let prev = null;
     /**
