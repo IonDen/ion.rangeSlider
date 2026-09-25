@@ -730,9 +730,8 @@ test('callbacks: an update stage gives exactly one onUpdate and no onChange', ()
 });
 
 // readme "Callback data": "from_value": null, "the entry at this index when values
-// is used". The parenthetical in that block records today's behaviour, where the
-// field turns undefined after the first update() on a slider without values; this
-// invariant reports it, so the matrix surfaces it as a finding.
+// is used (null on a slider without values)", at every stage, update() and reset()
+// included (#883).
 // Bug caught: from_value carrying a value on a slider that has no values array.
 test('callbacks: from_value and to_value must each be null without values, at every stage', () => {
     const prev = base({ events: INIT_EVENTS });

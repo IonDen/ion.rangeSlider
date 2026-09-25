@@ -114,18 +114,12 @@ test('every register entry carries an issue number, a title, a predicate and a m
 // Bug caught: a predicate that forgot to check its own option (e.g. `id === 'limits'`
 // alone), which would annotate away every failure of a healthy slider.
 //
-// The two callbacks lines that remain are #883, which every slider without a values
-// array carries: update() and reset() turn from_value and to_value undefined whatever
-// else the configuration holds, so a plain slider is expected to match exactly there and
-// nowhere else.
-test('a plain healthy slider matches only the bug every slider without values carries', () => {
-    assert.deepEqual(allHits({ min: 0, max: 100, from: 30, step: 1, grid: true }), [
-        'S6/callbacks=#883', 'S7/callbacks=#883'
-    ]);
-    assert.deepEqual(allHits({ type: 'double', min: 0, max: 100, from: 20, to: 60, step: 1 }), [
-        'S6/callbacks=#883', 'S7/callbacks=#883'
-    ]);
-    // In values mode even that one is gone.
+// No entry matches a plain slider at any stage, single, double or in values mode. Until
+// #883 was fixed, every slider without a values array matched its S6 and S7 callbacks
+// lines.
+test('a plain healthy slider matches no entry at any stage', () => {
+    assert.deepEqual(allHits({ min: 0, max: 100, from: 30, step: 1, grid: true }), []);
+    assert.deepEqual(allHits({ type: 'double', min: 0, max: 100, from: 20, to: 60, step: 1 }), []);
     assert.deepEqual(allHits({ values: [10, 20, 30], from: 1 }), []);
 });
 
@@ -258,21 +252,6 @@ test('#882 stops claiming once the bar drag carries the handle out of the limit'
     // A fixed handle or an inert slider gets no bar drag at all, so the handle stays put.
     assert.equal(hit({ ...cfg, from_fixed: true }, 'S5', 'limits', s5(0.2, 0.5)), 882);
     assert.equal(hit({ ...cfg, block: true }, 'S5', 'limits', s5(0.2, 0.5)), 882);
-});
-
-// ------------------------------------------------------- #883 from_value after update
-
-// readme "Callback data": from_value is null without a values array; after the first
-// update() or reset() it comes back undefined instead.
-test('#883 matches the update and reset stages of a slider without values', () => {
-    const plain = { min: 0, max: 100, from: 30, step: 1 };
-    assert.equal(hit(plain, 'S6', 'callbacks'), 883);
-    assert.equal(hit(plain, 'S7', 'callbacks'), 883);
-    assert.equal(hit(plain, 'S1', 'callbacks'), null, 'a drag does not turn the field undefined');
-
-    // In values mode the field carries the entry and is never dropped.
-    const values = { values: [10, 20, 30], from: 1 };
-    assert.equal(hit(values, 'S6', 'callbacks'), null);
 });
 
 // ------------------------------------------------------------ #885 intervals at init
@@ -942,9 +921,8 @@ test('#896 matches the interaction stages of a slider with no range, not one wit
     assert.equal(hit(degenerate, 'S1', 'callbacks'), 896);
     assert.equal(hit(degenerate, 'S3', 'callbacks'), 896);
     assert.equal(hit(degenerate, 'S0', 'callbacks'), null, 'init is not an interaction');
-    // S6 is update(), which is not an interaction: the entry that answers there is #883,
-    // the from_value every slider without a values array loses.
-    assert.equal(hit(degenerate, 'S6', 'callbacks'), 883);
+    // S6 is update(), which is not an interaction, and no entry answers there.
+    assert.equal(hit(degenerate, 'S6', 'callbacks'), null, 'update() is not an interaction');
     assert.equal(hit(degenerate, 'S1', 'bounds'), null, 'every other rule stays armed');
 
     const withRange = { min: 5, max: 6 };

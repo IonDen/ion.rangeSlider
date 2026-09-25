@@ -3053,8 +3053,16 @@
 
             this.result.from_min = this.options.from_min;
             this.result.from_max = this.options.from_max;
-            if (this.options.values) {
+
+            // #883: validate() leaves an empty values array on a slider
+            // without values, which a bare truthiness check lets through, and
+            // an entry read from it is undefined. Without values from_value
+            // is null, as the constructor's result object starts it, also
+            // when update() has just switched values mode off.
+            if (this.options.values.length) {
                 this.result.from_value = this.options.values[this.result.from];
+            } else {
+                this.result.from_value = null;
             }
         },
 
@@ -3071,8 +3079,12 @@
 
             this.result.to_min = this.options.to_min;
             this.result.to_max = this.options.to_max;
-            if (this.options.values) {
+
+            // #883: see updateFrom(); without values to_value is null.
+            if (this.options.values.length) {
                 this.result.to_value = this.options.values[this.result.to];
+            } else {
+                this.result.to_value = null;
             }
         },
 

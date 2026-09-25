@@ -252,12 +252,12 @@ All callbacks receive the same object as their first argument. The plugin reuses
     "max": 100000,              // MAX value
     "from": 10000,              // FROM value
     "from_percent": 10,         // FROM value in percent
-    "from_value": null,         // the entry at this index when values is used (null until the first update() or reset() on a slider without values, then undefined)
+    "from_value": null,         // the entry at this index when values is used (null on a slider without values)
     "from_min": null,           // FROM minimum limit (null if unset)
     "from_max": null,           // FROM maximum limit (null if unset)
     "to": 90000,                // TO value
     "to_percent": 90,           // TO value in percent
-    "to_value": null,           // the entry at this index when values is used (null until the first update() or reset() on a slider without values, then undefined)
+    "to_value": null,           // the entry at this index when values is used (null on a slider without values)
     "to_min": null,             // TO minimum limit (null if unset)
     "to_max": null,             // TO maximum limit (null if unset)
     "min_pretty": "0",          // MIN formatted

@@ -744,10 +744,9 @@ export const INVARIANTS = [
                 }
 
                 if (!isValuesMode(cfg)) {
-                    // readme "Callback data": "from_value": null without a values array.
-                    // The parenthetical there records that the field turns undefined
-                    // after the first update() or reset(); this rule reports that, so
-                    // the matrix surfaces it instead of blessing it.
+                    // readme "Callback data": "from_value": null without a values array
+                    // ("null on a slider without values"), at every stage, update() and
+                    // reset() included (#883).
                     if (entry.from_value !== null) msgs.push(report('callbacks', `${where}: from_value without a values array`, null, entry.from_value, stage));
                     if (entry.to_value !== null) msgs.push(report('callbacks', `${where}: to_value without a values array`, null, entry.to_value, stage));
                 } else {
