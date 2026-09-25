@@ -97,7 +97,7 @@ const allHits = (cfg, over) => {
 // Bug caught: an entry filed without its issue number or its one-line title, which would
 // annotate a matrix cell with nothing a reader could look up.
 test('every register entry carries an issue number, a title, a predicate and a message pattern', () => {
-    assert.equal(KNOWN_BUGS.length, 19);
+    assert.equal(KNOWN_BUGS.length, 18);
     const issues = KNOWN_BUGS.map((bug) => bug.issue);
     assert.deepEqual(issues, [...new Set(issues)], 'an issue must have one entry');
     for (const bug of KNOWN_BUGS) {
@@ -127,6 +127,16 @@ test('a plain healthy slider matches only the bug every slider without values ca
     ]);
     // In values mode even that one is gone.
     assert.deepEqual(allHits({ values: [10, 20, 30], from: 1 }), []);
+
+    // So it is for a double slider that starts from the input's value attribute on
+    // numeric-looking string entries, with a from_min and a min_interval (m064's shape):
+    // the lookup finds both entries since #880 was fixed, and nothing may claim the slider.
+    // Bug caught: a register entry kept for a fixed bug -- the retired #880 entry claims
+    // this slider's bounds and intervals at every stage but S8.
+    assert.deepEqual(allHits({
+        type: 'double', values: ['10', '20', '30', '40', '50'], from: 1, to: 3,
+        from_min: 1, min_interval: 2, __value_attr: '20;40'
+    }), []);
 });
 
 // ------------------------------------------------------------------ the script
@@ -696,60 +706,6 @@ test('#893 matches a key press on a scale whose reported values are off the grid
     assert.equal(hit(mild, 'S4b', 'keys', { prev: prevOf(5), expectations: { key: '+', changed: true } }), null);
 
     assert.equal(hit(rounded, 'S1', 'keys', { prev: prevOf(7) }), null, 'a drag is not a key press');
-});
-
-// --------------------------------------- #880 the value attribute in a string values array
-
-// The input's value attribute is looked up in the values array before the array's own
-// numeric conversion runs, so a numeric-looking string entry can never be named. Both
-// handles fall back to the first entry; what the matrix can SEE is the crossing a
-// from_min then opens by lifting `from` above the `to` that fell to entry 0. Without
-// that limit the slider is silently wrong -- two handles on the first entry, an input
-// that reads back as valid -- and no invariant can report it.
-test('#880 matches the crossing a fallen-back value attribute leaves behind', () => {
-    const strings = { type: 'double', values: ['10', '20', '30', '40', '50'], from: 1, to: 3, from_min: 1, __value_attr: '20;40' };
-    assert.equal(hit(strings, 'S0', 'bounds'), 880);
-    assert.equal(hit(strings, 'S0', 'input'), null, 'the input reads back a real entry, so that rule passes');
-    // The crossing stands until a stage moves a handle: a blocked or fixed slider
-    // carries it to the end of the run, a `to` drag repairs it.
-    assert.equal(hit(strings, 'S1', 'bounds', { prev: prevOf(1, 0), expectations: { changed: false } }), 880);
-    assert.equal(hit(strings, 'S2', 'bounds', { prev: prevOf(1, 0), expectations: { changed: true } }), null, 'a stage that moves a handle writes a real index');
-    assert.equal(hit(strings, 'S2', 'bounds', { prev: prevOf(1, 3), expectations: { changed: false } }), null, 'nothing to excuse once the pair is in order');
-
-    const numbers = { type: 'double', values: [10, 20, 30, 40, 50], from: 1, to: 3, from_min: 1, __value_attr: '20;40' };
-    assert.equal(hit(numbers, 'S0', 'bounds'), null, 'a number array is found by the lookup');
-
-    const jsRoute = { type: 'double', values: ['10', '20', '30', '40', '50'], from: 1, to: 3, from_min: 1 };
-    assert.equal(hit(jsRoute, 'S0', 'bounds'), null, 'the JS route never goes through the lookup');
-
-    const noLimit = { type: 'double', values: ['10', '20', '30', '40', '50'], from: 1, to: 3, __value_attr: '20;40' };
-    assert.equal(hit(noLimit, 'S0', 'bounds'), null, 'without from_min both handles land on entry 0 and nothing is reportable');
-
-    // A values-mode slider built hidden on a jQuery build that measures a hidden track as zero
-    // (the default env here) reports no pair at all at S0 (#888), so the bounds rule reports a
-    // missing number there, never a crossing -- this entry must not claim it (m024), or it
-    // would look as if the crossing had stopped reproducing.
-    const hidden = { ...strings, __hidden_at_init: true };
-    const entry880 = KNOWN_BUGS.find((bug) => bug.issue === 880);
-    assert.equal(entry880.matches(ctxOf(hidden, 'S0'), 'bounds'), false);
-    assert.equal(entry880.matches(ctxOf(strings, 'S0'), 'bounds'), true, 'a visible slider still reports the crossing');
-
-    // m024 itself, on each side of the jQuery 3.3 split. Where the hidden track measures as
-    // non-zero the slider reports its pair at init, crossing included, as it does built
-    // visible, and this entry claims it.
-    // Bug caught: #880 keying on __hidden_at_init where it calls valuesUnreadableAtInit(),
-    // which leaves m024's S0 crossing on jQuery 1.8.3 unexplained and the cell red.
-    assert.equal(hit(M024, 'S0', 'bounds', { env: SIGHTED }), 880);
-    assert.equal(entry880.matches(ctxOf(M024, 'S0', { env: SIGHTED }), 'bounds'), true);
-    assert.equal(entry880.matches(ctxOf(M024, 'S0', { env: BLIND }), 'bounds'), false);
-
-    // A crossed pair has a negative gap, so an interval limit is broken along with the
-    // ordering; that is the same fallen-back lookup, not a second bug.
-    const withInterval = { ...strings, min_interval: 2 };
-    assert.equal(hit(withInterval, 'S0', 'intervals'), 880);
-    assert.equal(hit(strings, 'S0', 'intervals'), null, 'no interval option, nothing to excuse');
-    const withMaxInterval = { ...strings, max_interval: 6 };
-    assert.equal(hit(withMaxInterval, 'S0', 'intervals'), null, 'a negative gap never exceeds a max_interval, so that rule passes');
 });
 
 // ------------------------------------------- #887 the separator inside the fraction

@@ -178,7 +178,7 @@ function builtBlind(ctx) {
  * as zero (3.3 and later) reports nothing at all -- its input is empty and its from/to are
  * null (#888) -- so every rule that judges a VALUE passes there and must not be excused by
  * another entry. On an older build the same slider reports at init the pair a visible one
- * does, and the entries written for that pair (#880, #882, #885) apply to it unchanged.
+ * does, and the entries written for that pair (#882, #885) apply to it unchanged.
  *
  * @param {object} ctx
  * @returns {boolean}
@@ -547,21 +547,6 @@ function intervalKeyboardIsDead(cfg) {
     return isDouble(cfg) && !!cfg.drag_interval && !!(cfg.from_fixed || cfg.to_fixed) && !isInert(cfg);
 }
 
-/** Does the input's value attribute name entries the plugin's lookup cannot find? */
-function valueAttrLookupFails(cfg) {
-    if (typeof cfg.__value_attr !== 'string' || !isValuesMode(cfg)) return false;
-    // The constructor turns each half of the attribute into a number when it looks
-    // numeric, then looks THAT up in the values array exactly as the caller passed it:
-    // a numeric-looking string entry is never found and the handle falls back.
-    return [cfg.from, cfg.to].some((index) => {
-        if (!Number.isInteger(index) || index < 0 || index >= cfg.values.length) return false;
-        const entry = cfg.values[index];
-        if (typeof entry === 'number') return false;
-        const text = String(entry).trim();
-        return text !== '' && Number.isFinite(Number(text));
-    });
-}
-
 /** @type {Array<{issue: number, title: string, matches: (ctx: object, id: string) => boolean}>} */
 export const KNOWN_BUGS = [
     {
@@ -849,44 +834,6 @@ export const KNOWN_BUGS = [
                 const overshoot = start + 2 * direction * step;
                 return overshoot >= stops.lo - EPS && overshoot <= stops.hi + EPS;
             });
-        }
-    },
-
-    {
-        issue: 880,
-        title: 'the input value attribute cannot name a numeric-looking values entry',
-        what: /handles crossed|closed past min_interval/,
-        // m024 and m064: the lookup misses, both handles fall back, and from_min then
-        // lifts `from` above the `to` that fell to the first entry -- the crossing the
-        // bounds rule reports. It stands until a stage actually moves a handle (m064's
-        // `to` drag repairs it; m024 is blocked and carries it to the end), so the
-        // crossing the stage started from and the stage's own promise decide. Without a
-        // from_min the two handles land on the same entry and nothing is reportable: the
-        // slider is silently wrong, which is the finding the issue carries but no
-        // invariant can see.
-        matches(ctx, id) {
-            // A crossed pair has a NEGATIVE gap, so it breaks a min_interval along with
-            // the ordering (both are the fallen-back lookup, not a second bug) -- and it
-            // can never break a max_interval, which no negative gap exceeds.
-            if (id !== 'bounds' && id !== 'intervals') return false;
-            const cfg = ctx.cfg;
-            if (id === 'intervals' && !(isNum(cfg.min_interval) && cfg.min_interval > 0)) return false;
-            if (!valueAttrLookupFails(cfg) || !isDouble(cfg) || !isNum(cfg.from_min) || !(cfg.from_min > 0)) return false;
-            // On a jQuery build that measures a hidden track as zero (3.3 and later) a
-            // values-mode slider built hidden reports no pair at all at init (#888), so the
-            // bounds rule reports a missing number there rather than a crossing -- m024, where
-            // this entry would otherwise look as if the crossing had stopped reproducing. On
-            // an older build m024 reports the crossing at init as it would built visible.
-            if (valuesUnreadableAtInit(ctx)) return false;
-            const stage = stageOf(ctx);
-            if (stage === 'S0') return true;
-            if (stage === 'S8') return false;
-            const before = valuesOf(ctx.prev);
-            // A slider built hidden on a jQuery build that measures a hidden track as zero
-            // reports no pair at S0; the crossing is there all the same, which is what the
-            // "unknown counts as crossed" branch says.
-            const startedCrossed = isNum(before.from) && isNum(before.to) ? before.to < before.from - EPS : true;
-            return startedCrossed && !promised(ctx).changed;
         }
     },
 
