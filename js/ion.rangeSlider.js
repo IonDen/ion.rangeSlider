@@ -204,6 +204,8 @@
         // re-resolved on every key press while the pair stays coincident
         // and cleared once a press moves a value, see moveByKey().
         this.coincident_key_pending = false;
+        // #906: an invalid grid_num warns once per slider, although validate() runs again on every update().
+        this.grid_num_warned = false;
 
         options = options || {};
 
@@ -2651,6 +2653,7 @@
                 vl = v.length,
                 value,
                 prettify_option_name,
+                grid_num_given,
                 i;
 
             if (typeof o.min === "string") o.min = +o.min;
@@ -2664,7 +2667,27 @@
             if (typeof o.to_min === "string") o.to_min = +o.to_min;
             if (typeof o.to_max === "string") o.to_max = +o.to_max;
 
+            // #906: grid_num becomes a whole number of at least 1. +Infinity means the 50-unit cap; a number
+            // is rounded first; anything that rounds below 1, and anything that is not a number (NaN, null, a
+            // boolean), falls back to the documented default 4, with one warning per slider when the grid is on
+            // and grid_num decides the unit count (values mode and grid_snap decide it themselves). A value
+            // above 50 is kept as given and capped where the grid is built, so options.grid_num reads back what
+            // the user set. NaN and -Infinity fail the ">= 1" test by themselves. The warning prints the value
+            // as given, before the string conversion ("abc", not NaN).
+            grid_num_given = o.grid_num;
             if (typeof o.grid_num === "string") o.grid_num = +o.grid_num;
+            if (o.grid_num === Number.POSITIVE_INFINITY) {
+                o.grid_num = 50;
+            } else if (typeof o.grid_num === "number" && Math.round(o.grid_num) >= 1) {
+                o.grid_num = Math.round(o.grid_num);
+            } else {
+                if (o.grid && !o.values.length && !o.grid_snap && !this.grid_num_warned &&
+                    typeof console !== "undefined" && console.warn) {
+                    console.warn("grid_num: " + grid_num_given + " is not a whole number of at least 1, using 4");
+                    this.grid_num_warned = true;
+                }
+                o.grid_num = 4;
+            }
 
             // prettify, prettify_grid and prettify_min_max (#306) may each be given
             // as the name of a global function instead of a function reference
