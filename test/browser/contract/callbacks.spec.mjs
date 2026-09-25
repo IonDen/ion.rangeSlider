@@ -206,6 +206,30 @@ test.describe(`callbacks (${LABEL})`, () => {
         expect(kinds.filter((k) => !k.endsWith(':null/null'))).toEqual([]);
     });
 
+    // The same comment for a slider that update() takes out of values mode: from then on it
+    // is a slider without values, so onUpdate and every later callback carry null, not the
+    // last entry. Before #883 was fixed they carried undefined.
+    // Mutation caught: updateFrom() -> the null branch (`} else { this.result.from_value =
+    // null; }`) deleted, and from_value keeps the entry "b": the onUpdate payload reports
+    // "string/null".
+    test('from_value and to_value turn null when update() leaves values mode (Callback data, #883)', async ({ page }) => {
+        await open(page, { type: 'double', values: ['a', 'b', 'c', 'd', 'e'], from: 1, to: 3 });
+        await expect(page.locator('#slider')).toHaveValue('b;d');
+        await page.evaluate(() => window.__irs.slider.update({ values: [], min: 0, max: 100, from: 20, to: 80 }));
+        await expect(page.locator('#slider')).toHaveValue('20;80');
+        await page.waitForTimeout(400);
+        await dragHandleTo(page, 'from', 0.4);
+        await expect(page.locator('#slider')).toHaveValue('40;80');
+        await expect.poll(() => typesAfter(page, 0).then((t) => t.at(-1))).toBe('onFinish');
+
+        const kinds = await valueKinds(page);
+        // Guard: the values-mode start carried entries, or a kept entry could not show.
+        expect(kinds[0]).toBe('onStart:string/string');
+        expect(kinds[1]).toBe('onUpdate:null/null');
+        expect(kinds).toContain('onChange:null/null');
+        expect(kinds.slice(1).filter((k) => !k.endsWith(':null/null'))).toEqual([]);
+    });
+
     // ---- scope ---------------------------------------------------------------------------
     // readme Settings, scope: "Scope for callbacks". Every callback runs with the scope
     // object as `this`: onStart and onInit at init, onChange and onFinish on a drag, onUpdate

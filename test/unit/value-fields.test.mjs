@@ -32,6 +32,8 @@ const VALUES = {
   single: { type: 'single', values: ENTRIES, from: 1 },
   double: { type: 'double', values: ENTRIES, from: 1, to: 3 }
 };
+// to_value of each VALUES slider after an update() that keeps its `to`.
+const LAST_TO = { single: 'e', double: 'd' };
 
 /** Callbacks that copy what each handler saw, in firing order. */
 function recorder() {
@@ -143,8 +145,8 @@ for (const type of TYPES) {
   });
 
   // A slider that leaves values mode through update() is a slider without values from
-  // then on, and its fields go back to null instead of keeping the last entry. Red before
-  // the fix (undefined, read from the new empty array).
+  // then on, and its fields go back to null; before the fix they came back undefined, and
+  // a fix without the null branch would keep the last entry.
   // Mutation caught: the null branch removed from updateFrom() (`} else {
   // this.result.from_value = null; }` deleted), and from_value keeps "b"; the same
   // deletion in updateTo() leaves to_value on the entry it held. This is the only row
@@ -157,7 +159,12 @@ for (const type of TYPES) {
     // leaves them null (calc() bails), so an update() writes them first.
     slider.update({ from: 1 });
     assert.equal(rec.events.at(-1).from_value, 'b', 'setup: values mode must report the entry first');
-    assert.notEqual(rec.events.at(-1).to_value, null, 'setup: to_value must hold an entry first');
+    // The entry at `to`: 3 on the double slider, and max (4) on a single one, which
+    // validate() gives the `to` it was never set. The single half relies on updateTo()
+    // filling a single slider's to_value after an update: until then it is null (the
+    // values-mode twin of #909). If that ever changes, this guard fires first, and the
+    // double row still covers updateTo()'s null branch.
+    assert.equal(rec.events.at(-1).to_value, LAST_TO[type], 'setup: to_value must hold its entry first');
     const n = rec.events.length;
 
     slider.update({ values: [], min: 0, max: 100, from: 40, to: 70 });
