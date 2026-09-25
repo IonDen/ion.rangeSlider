@@ -372,11 +372,13 @@ test.describe(`option routes (${LABEL})`, () => {
         await expect(page.locator('#slider')).toHaveValue('20');
     });
 
-    // readme Settings, block: "Block the slider but keep the input enabled." A blocked
-    // slider still answers the arrow keys, so the value a form submits can change under a
-    // user who was told the slider is blocked.
+    // readme Settings, block: "Block the slider but keep the input enabled." The mask keeps
+    // the mouse off the handles and, since #890, key() drops every press while block is on:
+    // the track can still be focused, but the arrow keys no longer change the value a form
+    // submits.
+    // Mutation: key(), `if (this.options.block)` -> `if (false)` -> the two presses move
+    // the handle and the input reads "32".
     test('block stops the keyboard too (Settings: block)', async ({ page }) => {
-        test.fail(true, '#890: block leaves the keyboard working, so a blocked slider still changes value');
         await open(page, { min: 0, max: 100, from: 30, step: 1, block: true });
         await focusTrack(page);
         await pressKeys(page, ['ArrowRight', 'ArrowRight']);
