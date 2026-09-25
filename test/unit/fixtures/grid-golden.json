@@ -1,0 +1,4343 @@
+{
+ "__master": "25efb762121f0b3ba23d879649887f30e2be1c34",
+ "0..100 default": [
+  {
+   "cls": "irs-grid-pol",
+   "left": "0%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-0",
+   "left": "0%",
+   "html": "0"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "20%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "15%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "10%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "25%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-1",
+   "left": "25%",
+   "html": "25"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "45%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "40%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "35%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "30%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "50%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-2",
+   "left": "50%",
+   "html": "50"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "70%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "65%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "60%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "55%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "75%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-3",
+   "left": "75%",
+   "html": "75"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "95%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "90%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "85%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "80%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "100%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-4",
+   "left": "100%",
+   "html": "100"
+  }
+ ],
+ "0..100 gn 3": [
+  {
+   "cls": "irs-grid-pol",
+   "left": "0%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-0",
+   "left": "0%",
+   "html": "0"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "26.666666666666668%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "20%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "13.333333333333336%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "6.666666666666668%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "33.333333333333336%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-1",
+   "left": "33.333333333333336%",
+   "html": "33"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "60.00000000000001%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "53.333333333333336%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "46.66666666666667%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "40%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "66.66666666666667%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-2",
+   "left": "66.66666666666667%",
+   "html": "67"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "93.33333333333333%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "86.66666666666667%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "80%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "73.33333333333334%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "100%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-3",
+   "left": "100%",
+   "html": "100"
+  }
+ ],
+ "0..100 gn 10": [
+  {
+   "cls": "irs-grid-pol",
+   "left": "0%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-0",
+   "left": "0%",
+   "html": "0"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "6.666666666666666%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "3.333333333333333%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "10%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-1",
+   "left": "10%",
+   "html": "10"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "16.666666666666668%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "13.333333333333332%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "20%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-2",
+   "left": "20%",
+   "html": "20"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "26.666666666666668%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "23.333333333333332%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "30%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-3",
+   "left": "30%",
+   "html": "30"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "36.666666666666664%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "33.333333333333336%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "40%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-4",
+   "left": "40%",
+   "html": "40"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "46.666666666666664%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "43.333333333333336%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "50%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-5",
+   "left": "50%",
+   "html": "50"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "56.666666666666664%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "53.333333333333336%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "60%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-6",
+   "left": "60%",
+   "html": "60"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "66.66666666666667%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "63.333333333333336%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "70%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-7",
+   "left": "70%",
+   "html": "70"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "76.66666666666667%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "73.33333333333333%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "80%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-8",
+   "left": "80%",
+   "html": "80"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "86.66666666666667%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "83.33333333333333%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "90%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-9",
+   "left": "90%",
+   "html": "90"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "96.66666666666667%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "93.33333333333333%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "100%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-10",
+   "left": "100%",
+   "html": "100"
+  }
+ ],
+ "0..100 gn 40": [
+  {
+   "cls": "irs-grid-pol",
+   "left": "0%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-0",
+   "left": "0%",
+   "html": "0"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "2.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-1",
+   "left": "2.5%",
+   "html": "3"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-2",
+   "left": "5%",
+   "html": "5"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "7.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-3",
+   "left": "7.5%",
+   "html": "8"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "10%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-4",
+   "left": "10%",
+   "html": "10"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "12.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-5",
+   "left": "12.5%",
+   "html": "13"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "15%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-6",
+   "left": "15%",
+   "html": "15"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "17.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-7",
+   "left": "17.5%",
+   "html": "18"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "20%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-8",
+   "left": "20%",
+   "html": "20"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "22.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-9",
+   "left": "22.5%",
+   "html": "23"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "25%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-10",
+   "left": "25%",
+   "html": "25"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "27.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-11",
+   "left": "27.5%",
+   "html": "28"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "30%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-12",
+   "left": "30%",
+   "html": "30"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "32.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-13",
+   "left": "32.5%",
+   "html": "33"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "35%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-14",
+   "left": "35%",
+   "html": "35"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "37.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-15",
+   "left": "37.5%",
+   "html": "38"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "40%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-16",
+   "left": "40%",
+   "html": "40"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "42.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-17",
+   "left": "42.5%",
+   "html": "43"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "45%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-18",
+   "left": "45%",
+   "html": "45"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "47.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-19",
+   "left": "47.5%",
+   "html": "48"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "50%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-20",
+   "left": "50%",
+   "html": "50"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "52.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-21",
+   "left": "52.5%",
+   "html": "53"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "55%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-22",
+   "left": "55%",
+   "html": "55"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "57.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-23",
+   "left": "57.5%",
+   "html": "58"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "60%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-24",
+   "left": "60%",
+   "html": "60"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "62.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-25",
+   "left": "62.5%",
+   "html": "63"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "65%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-26",
+   "left": "65%",
+   "html": "65"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "67.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-27",
+   "left": "67.5%",
+   "html": "68"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "70%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-28",
+   "left": "70%",
+   "html": "70"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "72.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-29",
+   "left": "72.5%",
+   "html": "73"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "75%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-30",
+   "left": "75%",
+   "html": "75"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "77.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-31",
+   "left": "77.5%",
+   "html": "78"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "80%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-32",
+   "left": "80%",
+   "html": "80"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "82.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-33",
+   "left": "82.5%",
+   "html": "83"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "85%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-34",
+   "left": "85%",
+   "html": "85"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "87.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-35",
+   "left": "87.5%",
+   "html": "88"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "90%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-36",
+   "left": "90%",
+   "html": "90"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "92.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-37",
+   "left": "92.5%",
+   "html": "93"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "95%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-38",
+   "left": "95%",
+   "html": "95"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "97.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-39",
+   "left": "97.5%",
+   "html": "98"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "100%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-40",
+   "left": "100%",
+   "html": "100"
+  }
+ ],
+ "0..100 gn 50": [
+  {
+   "cls": "irs-grid-pol",
+   "left": "0%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-0",
+   "left": "0%",
+   "html": "0"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "2%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-1",
+   "left": "2%",
+   "html": "2"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "4%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-2",
+   "left": "4%",
+   "html": "4"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "6%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-3",
+   "left": "6%",
+   "html": "6"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "8%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-4",
+   "left": "8%",
+   "html": "8"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "10%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-5",
+   "left": "10%",
+   "html": "10"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "12%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-6",
+   "left": "12%",
+   "html": "12"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "14%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-7",
+   "left": "14%",
+   "html": "14"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "16%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-8",
+   "left": "16%",
+   "html": "16"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "18%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-9",
+   "left": "18%",
+   "html": "18"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "20%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-10",
+   "left": "20%",
+   "html": "20"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "22%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-11",
+   "left": "22%",
+   "html": "22"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "24%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-12",
+   "left": "24%",
+   "html": "24"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "26%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-13",
+   "left": "26%",
+   "html": "26"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "28%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-14",
+   "left": "28%",
+   "html": "28"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "30%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-15",
+   "left": "30%",
+   "html": "30"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "32%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-16",
+   "left": "32%",
+   "html": "32"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "34%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-17",
+   "left": "34%",
+   "html": "34"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "36%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-18",
+   "left": "36%",
+   "html": "36"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "38%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-19",
+   "left": "38%",
+   "html": "38"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "40%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-20",
+   "left": "40%",
+   "html": "40"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "42%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-21",
+   "left": "42%",
+   "html": "42"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "44%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-22",
+   "left": "44%",
+   "html": "44"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "46%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-23",
+   "left": "46%",
+   "html": "46"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "48%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-24",
+   "left": "48%",
+   "html": "48"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "50%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-25",
+   "left": "50%",
+   "html": "50"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "52%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-26",
+   "left": "52%",
+   "html": "52"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "54%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-27",
+   "left": "54%",
+   "html": "54"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "56%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-28",
+   "left": "56%",
+   "html": "56"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "58%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-29",
+   "left": "58%",
+   "html": "58"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "60%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-30",
+   "left": "60%",
+   "html": "60"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "62%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-31",
+   "left": "62%",
+   "html": "62"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "64%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-32",
+   "left": "64%",
+   "html": "64"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "66%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-33",
+   "left": "66%",
+   "html": "66"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "68%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-34",
+   "left": "68%",
+   "html": "68"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "70%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-35",
+   "left": "70%",
+   "html": "70"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "72%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-36",
+   "left": "72%",
+   "html": "72"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "74%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-37",
+   "left": "74%",
+   "html": "74"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "76%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-38",
+   "left": "76%",
+   "html": "76"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "78%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-39",
+   "left": "78%",
+   "html": "78"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "80%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-40",
+   "left": "80%",
+   "html": "80"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "82%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-41",
+   "left": "82%",
+   "html": "82"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "84%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-42",
+   "left": "84%",
+   "html": "84"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "86%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-43",
+   "left": "86%",
+   "html": "86"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "88%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-44",
+   "left": "88%",
+   "html": "88"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "90%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-45",
+   "left": "90%",
+   "html": "90"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "92%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-46",
+   "left": "92%",
+   "html": "92"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "94%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-47",
+   "left": "94%",
+   "html": "94"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "96%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-48",
+   "left": "96%",
+   "html": "96"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "98%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-49",
+   "left": "98%",
+   "html": "98"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "100%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-50",
+   "left": "100%",
+   "html": "100"
+  }
+ ],
+ "0..24 gn 3": [
+  {
+   "cls": "irs-grid-pol",
+   "left": "0%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-0",
+   "left": "0%",
+   "html": "0"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "26.666666666666668%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "20%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "13.333333333333336%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "6.666666666666668%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "33.333333333333336%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-1",
+   "left": "33.333333333333336%",
+   "html": "8"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "60.00000000000001%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "53.333333333333336%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "46.66666666666667%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "40%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "66.66666666666667%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-2",
+   "left": "66.66666666666667%",
+   "html": "16"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "93.33333333333333%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "86.66666666666667%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "80%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "73.33333333333334%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "100%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-3",
+   "left": "100%",
+   "html": "24"
+  }
+ ],
+ "-39.9..111 step 0.1 gn 4 (#760)": [
+  {
+   "cls": "irs-grid-pol",
+   "left": "0%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-0",
+   "left": "0%",
+   "html": "-39.9"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "20%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "15%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "10%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "25%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-1",
+   "left": "25%",
+   "html": "-2.2"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "45%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "40%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "35%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "30%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "50%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-2",
+   "left": "50%",
+   "html": "35.6"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "70%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "65%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "60%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "55%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "75%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-3",
+   "left": "75%",
+   "html": "73.3"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "95%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "90%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "85%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "80%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "100%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-4",
+   "left": "100%",
+   "html": "111"
+  }
+ ],
+ "-39.9..111 step 1 gn 4": [
+  {
+   "cls": "irs-grid-pol",
+   "left": "0%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-0",
+   "left": "0%",
+   "html": "-39.9"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "20%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "15%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "10%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "25%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-1",
+   "left": "25%",
+   "html": "-1.9"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "45%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "40%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "35%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "30%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "50%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-2",
+   "left": "50%",
+   "html": "35.1"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "70%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "65%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "60%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "55%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "75%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-3",
+   "left": "75%",
+   "html": "73.1"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "95%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "90%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "85%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "80%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "100%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-4",
+   "left": "100%",
+   "html": "111"
+  }
+ ],
+ "0..100 step 7 grid_snap (short capped last unit)": [
+  {
+   "cls": "irs-grid-pol",
+   "left": "0%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-0",
+   "left": "0%",
+   "html": "0"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "3.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "7%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-1",
+   "left": "7%",
+   "html": "7"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "10.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "14%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-2",
+   "left": "14%",
+   "html": "14"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "17.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "21%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-3",
+   "left": "21%",
+   "html": "21"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "24.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "28%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-4",
+   "left": "28%",
+   "html": "28"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "31.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "35%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-5",
+   "left": "35%",
+   "html": "35"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "38.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "42%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-6",
+   "left": "42%",
+   "html": "42"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "45.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "49%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-7",
+   "left": "49%",
+   "html": "49"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "52.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "56%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-8",
+   "left": "56%",
+   "html": "56"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "59.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "63%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-9",
+   "left": "63%",
+   "html": "63"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "66.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "70%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-10",
+   "left": "70%",
+   "html": "70"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "73.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "77%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-11",
+   "left": "77%",
+   "html": "77"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "80.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "84%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-12",
+   "left": "84%",
+   "html": "84"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "87.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "91%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-13",
+   "left": "91%",
+   "html": "91"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "94.5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "98%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-14",
+   "left": "98%",
+   "html": "98"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "99%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "100%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-15",
+   "left": "100%",
+   "html": "100"
+  }
+ ],
+ "0..100 step 10 grid_snap": [
+  {
+   "cls": "irs-grid-pol",
+   "left": "0%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-0",
+   "left": "0%",
+   "html": "0"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "6.666666666666666%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "3.333333333333333%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "10%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-1",
+   "left": "10%",
+   "html": "10"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "16.666666666666668%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "13.333333333333332%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "20%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-2",
+   "left": "20%",
+   "html": "20"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "26.666666666666668%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "23.333333333333332%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "30%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-3",
+   "left": "30%",
+   "html": "30"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "36.666666666666664%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "33.333333333333336%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "40%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-4",
+   "left": "40%",
+   "html": "40"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "46.666666666666664%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "43.333333333333336%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "50%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-5",
+   "left": "50%",
+   "html": "50"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "56.666666666666664%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "53.333333333333336%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "60%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-6",
+   "left": "60%",
+   "html": "60"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "66.66666666666667%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "63.333333333333336%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "70%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-7",
+   "left": "70%",
+   "html": "70"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "76.66666666666667%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "73.33333333333333%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "80%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-8",
+   "left": "80%",
+   "html": "80"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "86.66666666666667%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "83.33333333333333%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "90%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-9",
+   "left": "90%",
+   "html": "90"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "96.66666666666667%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "93.33333333333333%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "100%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-10",
+   "left": "100%",
+   "html": "100"
+  }
+ ],
+ "0..99 grid_snap": [
+  {
+   "cls": "irs-grid-pol",
+   "left": "0%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-0",
+   "left": "0%",
+   "html": "0"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "2%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-1",
+   "left": "2%",
+   "html": "2"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "4%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-2",
+   "left": "4%",
+   "html": "4"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "6%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-3",
+   "left": "6%",
+   "html": "6"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "8%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-4",
+   "left": "8%",
+   "html": "8"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "10%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-5",
+   "left": "10%",
+   "html": "10"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "12%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-6",
+   "left": "12%",
+   "html": "12"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "14%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-7",
+   "left": "14%",
+   "html": "14"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "16%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-8",
+   "left": "16%",
+   "html": "16"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "18%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-9",
+   "left": "18%",
+   "html": "18"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "20%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-10",
+   "left": "20%",
+   "html": "20"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "22%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-11",
+   "left": "22%",
+   "html": "22"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "24%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-12",
+   "left": "24%",
+   "html": "24"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "26%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-13",
+   "left": "26%",
+   "html": "26"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "28%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-14",
+   "left": "28%",
+   "html": "28"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "30%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-15",
+   "left": "30%",
+   "html": "30"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "32%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-16",
+   "left": "32%",
+   "html": "32"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "34%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-17",
+   "left": "34%",
+   "html": "34"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "36%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-18",
+   "left": "36%",
+   "html": "36"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "38%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-19",
+   "left": "38%",
+   "html": "38"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "40%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-20",
+   "left": "40%",
+   "html": "40"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "42%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-21",
+   "left": "42%",
+   "html": "42"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "44%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-22",
+   "left": "44%",
+   "html": "44"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "46%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-23",
+   "left": "46%",
+   "html": "46"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "48%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-24",
+   "left": "48%",
+   "html": "48"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "50%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-25",
+   "left": "50%",
+   "html": "50"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "52%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-26",
+   "left": "52%",
+   "html": "51"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "54%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-27",
+   "left": "54%",
+   "html": "53"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "56%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-28",
+   "left": "56%",
+   "html": "55"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "58%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-29",
+   "left": "58%",
+   "html": "57"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "60%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-30",
+   "left": "60%",
+   "html": "59"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "62%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-31",
+   "left": "62%",
+   "html": "61"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "64%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-32",
+   "left": "64%",
+   "html": "63"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "66%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-33",
+   "left": "66%",
+   "html": "65"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "68%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-34",
+   "left": "68%",
+   "html": "67"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "70%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-35",
+   "left": "70%",
+   "html": "69"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "72%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-36",
+   "left": "72%",
+   "html": "71"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "74%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-37",
+   "left": "74%",
+   "html": "73"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "76%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-38",
+   "left": "76%",
+   "html": "75"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "78%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-39",
+   "left": "78%",
+   "html": "77"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "80%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-40",
+   "left": "80%",
+   "html": "79"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "82%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-41",
+   "left": "82%",
+   "html": "81"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "84%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-42",
+   "left": "84%",
+   "html": "83"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "86%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-43",
+   "left": "86%",
+   "html": "85"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "88%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-44",
+   "left": "88%",
+   "html": "87"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "90%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-45",
+   "left": "90%",
+   "html": "89"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "92%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-46",
+   "left": "92%",
+   "html": "91"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "94%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-47",
+   "left": "94%",
+   "html": "93"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "96%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-48",
+   "left": "96%",
+   "html": "95"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "98%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-49",
+   "left": "98%",
+   "html": "97"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "100%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-50",
+   "left": "100%",
+   "html": "99"
+  }
+ ],
+ "values x5": [
+  {
+   "cls": "irs-grid-pol",
+   "left": "0%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-0",
+   "left": "0%",
+   "html": "a"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "20%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "15%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "10%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "25%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-1",
+   "left": "25%",
+   "html": "b"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "45%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "40%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "35%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "30%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "50%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-2",
+   "left": "50%",
+   "html": "c"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "70%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "65%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "60%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "55%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "75%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-3",
+   "left": "75%",
+   "html": "d"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "95%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "90%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "85%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "80%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "100%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-4",
+   "left": "100%",
+   "html": "e"
+  }
+ ],
+ "values x12": [
+  {
+   "cls": "irs-grid-pol",
+   "left": "0%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-0",
+   "left": "0%",
+   "html": "Jan"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "6.0606060606060606%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "3.0303030303030303%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "9.090909090909092%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-1",
+   "left": "9.090909090909092%",
+   "html": "Feb"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "15.151515151515152%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "12.121212121212121%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "18.181818181818183%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-2",
+   "left": "18.181818181818183%",
+   "html": "Mar"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "24.242424242424242%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "21.212121212121215%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "27.272727272727273%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-3",
+   "left": "27.272727272727273%",
+   "html": "Apr"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "33.333333333333336%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "30.303030303030305%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "36.36363636363637%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-4",
+   "left": "36.36363636363637%",
+   "html": "May"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "42.42424242424243%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "39.3939393939394%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "45.45454545454546%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-5",
+   "left": "45.45454545454546%",
+   "html": "Jun"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "51.515151515151516%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "48.48484848484849%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "54.54545454545455%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-6",
+   "left": "54.54545454545455%",
+   "html": "Jul"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "60.60606060606061%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "57.57575757575758%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "63.63636363636364%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-7",
+   "left": "63.63636363636364%",
+   "html": "Aug"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "69.6969696969697%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "66.66666666666667%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "72.72727272727273%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-8",
+   "left": "72.72727272727273%",
+   "html": "Sep"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "78.7878787878788%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "75.75757575757576%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "81.81818181818183%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-9",
+   "left": "81.81818181818183%",
+   "html": "Oct"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "87.87878787878789%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "84.84848484848486%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "90.90909090909092%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-10",
+   "left": "90.90909090909092%",
+   "html": "Nov"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "96.96969696969697%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "93.93939393939395%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "100%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-11",
+   "left": "100%",
+   "html": "Dec"
+  }
+ ],
+ "values x60": [
+  {
+   "cls": "irs-grid-pol",
+   "left": "0%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-0",
+   "left": "0%",
+   "html": "1 970"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "2%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-1",
+   "left": "2%",
+   "html": "1 971"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "4%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-2",
+   "left": "4%",
+   "html": "1 972"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "6%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-3",
+   "left": "6%",
+   "html": "1 974"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "8%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-4",
+   "left": "8%",
+   "html": "1 975"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "10%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-5",
+   "left": "10%",
+   "html": "1 976"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "12%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-6",
+   "left": "12%",
+   "html": "1 977"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "14%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-7",
+   "left": "14%",
+   "html": "1 978"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "16%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-8",
+   "left": "16%",
+   "html": "1 979"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "18%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-9",
+   "left": "18%",
+   "html": "1 981"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "20%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-10",
+   "left": "20%",
+   "html": "1 982"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "22%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-11",
+   "left": "22%",
+   "html": "1 983"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "24%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-12",
+   "left": "24%",
+   "html": "1 984"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "26%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-13",
+   "left": "26%",
+   "html": "1 985"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "28%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-14",
+   "left": "28%",
+   "html": "1 987"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "30%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-15",
+   "left": "30%",
+   "html": "1 988"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "32%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-16",
+   "left": "32%",
+   "html": "1 989"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "34%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-17",
+   "left": "34%",
+   "html": "1 990"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "36%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-18",
+   "left": "36%",
+   "html": "1 991"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "38%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-19",
+   "left": "38%",
+   "html": "1 992"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "40%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-20",
+   "left": "40%",
+   "html": "1 994"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "42%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-21",
+   "left": "42%",
+   "html": "1 995"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "44%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-22",
+   "left": "44%",
+   "html": "1 996"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "46%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-23",
+   "left": "46%",
+   "html": "1 997"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "48%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-24",
+   "left": "48%",
+   "html": "1 998"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "50%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-25",
+   "left": "50%",
+   "html": "2 000"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "52%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-26",
+   "left": "52%",
+   "html": "2 001"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "54%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-27",
+   "left": "54%",
+   "html": "2 002"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "56%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-28",
+   "left": "56%",
+   "html": "2 003"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "58%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-29",
+   "left": "58%",
+   "html": "2 004"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "60%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-30",
+   "left": "60%",
+   "html": "2 005"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "62%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-31",
+   "left": "62%",
+   "html": "2 007"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "64%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-32",
+   "left": "64%",
+   "html": "2 008"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "66%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-33",
+   "left": "66%",
+   "html": "2 009"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "68%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-34",
+   "left": "68%",
+   "html": "2 010"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "70%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-35",
+   "left": "70%",
+   "html": "2 011"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "72%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-36",
+   "left": "72%",
+   "html": "2 012"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "74%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-37",
+   "left": "74%",
+   "html": "2 014"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "76%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-38",
+   "left": "76%",
+   "html": "2 015"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "78%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-39",
+   "left": "78%",
+   "html": "2 016"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "80%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-40",
+   "left": "80%",
+   "html": "2 017"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "82%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-41",
+   "left": "82%",
+   "html": "2 018"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "84%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-42",
+   "left": "84%",
+   "html": "2 020"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "86%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-43",
+   "left": "86%",
+   "html": "2 021"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "88%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-44",
+   "left": "88%",
+   "html": "2 022"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "90%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-45",
+   "left": "90%",
+   "html": "2 023"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "92%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-46",
+   "left": "92%",
+   "html": "2 024"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "94%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-47",
+   "left": "94%",
+   "html": "2 025"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "96%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-48",
+   "left": "96%",
+   "html": "2 027"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "98%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-49",
+   "left": "98%",
+   "html": "2 028"
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "100%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-50",
+   "left": "100%",
+   "html": "2 029"
+  }
+ ],
+ "1000..1000000 step 1000 gn 3": [
+  {
+   "cls": "irs-grid-pol",
+   "left": "0%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-0",
+   "left": "0%",
+   "html": "1 000"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "26.666666666666668%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "20%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "13.333333333333336%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "6.666666666666668%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "33.333333333333336%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-1",
+   "left": "33.333333333333336%",
+   "html": "334 000"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "60.00000000000001%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "53.333333333333336%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "46.66666666666667%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "40%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "66.66666666666667%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-2",
+   "left": "66.66666666666667%",
+   "html": "667 000"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "93.33333333333333%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "86.66666666666667%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "80%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "73.33333333333334%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "100%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-3",
+   "left": "100%",
+   "html": "1 000 000"
+  }
+ ],
+ "0..100 step 5 gn 4": [
+  {
+   "cls": "irs-grid-pol",
+   "left": "0%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-0",
+   "left": "0%",
+   "html": "0"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "20%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "15%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "10%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "25%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-1",
+   "left": "25%",
+   "html": "25"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "45%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "40%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "35%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "30%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "50%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-2",
+   "left": "50%",
+   "html": "50"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "70%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "65%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "60%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "55%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "75%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-3",
+   "left": "75%",
+   "html": "75"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "95%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "90%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "85%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "80%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "100%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-4",
+   "left": "100%",
+   "html": "100"
+  }
+ ],
+ "0..1000 step 25 gn 4": [
+  {
+   "cls": "irs-grid-pol",
+   "left": "0%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-0",
+   "left": "0%",
+   "html": "0"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "20%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "15%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "10%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "25%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-1",
+   "left": "25%",
+   "html": "250"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "45%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "40%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "35%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "30%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "50%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-2",
+   "left": "50%",
+   "html": "500"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "70%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "65%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "60%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "55%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "75%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-3",
+   "left": "75%",
+   "html": "750"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "95%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "90%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "85%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "80%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "100%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-4",
+   "left": "100%",
+   "html": "1 000"
+  }
+ ],
+ "0..10000000 step 1 gn 4 (large S)": [
+  {
+   "cls": "irs-grid-pol",
+   "left": "0%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-0",
+   "left": "0%",
+   "html": "0"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "20%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "15%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "10%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "25%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-1",
+   "left": "25%",
+   "html": "2 500 000"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "45%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "40%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "35%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "30%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "50%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-2",
+   "left": "50%",
+   "html": "5 000 000"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "70%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "65%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "60%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "55%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "75%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-3",
+   "left": "75%",
+   "html": "7 500 000"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "95%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "90%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "85%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "80%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "100%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-4",
+   "left": "100%",
+   "html": "10 000 000"
+  }
+ ],
+ "double 0..100 gn 5": [
+  {
+   "cls": "irs-grid-pol",
+   "left": "0%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-0",
+   "left": "0%",
+   "html": "0"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "15%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "10%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "20%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-1",
+   "left": "20%",
+   "html": "20"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "35%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "30%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "25%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "40%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-2",
+   "left": "40%",
+   "html": "40"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "55%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "50%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "45%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "60%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-3",
+   "left": "60%",
+   "html": "60"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "75%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "70%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "65%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "80%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-4",
+   "left": "80%",
+   "html": "80"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "95%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "90%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "85%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "100%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-5",
+   "left": "100%",
+   "html": "100"
+  }
+ ],
+ "prettify_grid markup": [
+  {
+   "cls": "irs-grid-pol",
+   "left": "0%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-0",
+   "left": "0%",
+   "html": "<b>0</b>"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "20%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "15%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "10%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "5%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "25%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-1",
+   "left": "25%",
+   "html": "<b>25</b>"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "45%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "40%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "35%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "30%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "50%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-2",
+   "left": "50%",
+   "html": "<b>50</b>"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "70%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "65%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "60%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "55%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "75%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-3",
+   "left": "75%",
+   "html": "<b>75</b>"
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "95%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "90%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "85%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol small",
+   "left": "80%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-pol",
+   "left": "100%",
+   "html": ""
+  },
+  {
+   "cls": "irs-grid-text js-grid-text-4",
+   "left": "100%",
+   "html": "<b>100</b>"
+  }
+ ]
+}
