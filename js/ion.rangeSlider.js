@@ -2940,11 +2940,20 @@
          * The grid's big ticks, as appendGrid() renders them (#906): for each tick its position (`left`,
          * percent of the grid), the value it names (the entry index in values mode), how many small ticks go
          * before it (`small`) and the position those small ticks are measured from (`prev`), plus the rule
-         * that chose them. "even" is the even split into grid_num units (grid_snap: one unit per step), at
-         * most 50 units.
+         * that chose them: 0 for a zero range (min equal to max), which gets one tick at 0% naming min;
+         * otherwise "even", the even split into grid_num units (grid_snap: one unit per step), at most 50
+         * units.
          * @returns {{rule: (number|string), ticks: Array}}
          */
         calcGridTicks: function () {
+            var o = this.options;
+
+            // Rule 0: a zero range (min equal to max after validate(), which also clamps a max below min to
+            // min, or a one-entry values array) gets one tick naming min, and nothing divides by the range.
+            if (o.max === o.min) {
+                return { rule: 0, ticks: [{ left: 0, value: o.min, small: 0, prev: 0 }] };
+            }
+
             return { rule: "even", ticks: this._gridTicksEven() };
         },
 
@@ -2961,6 +2970,11 @@
 
             if (o.grid_snap) {
                 big_num = (o.max - o.min) / o.step;
+                // #906: 2.7 / 0.3 is 9.000000000000002 in binary floats; a count within 1e-9 of a whole number
+                // is that whole number.
+                if (Math.abs(big_num - Math.round(big_num)) <= 1e-9 * Math.max(1, big_num)) {
+                    big_num = Math.round(big_num);
+                }
             }
 
             if (big_num > 50) big_num = 50;
@@ -3057,8 +3071,9 @@
             // neighbouring ticks to the same value; equal neighbouring
             // labels are shown once. The first tick always keeps its label,
             // and the last tick (exactly max) keeps its own rather than an
-            // earlier twin, unless every label is equal (min === max), where
-            // only the first stays. Compared as strings so a custom prettify_grid that
+            // earlier twin, unless every label is equal (a prettify_grid that
+            // maps every value to one text), where only the first stays.
+            // Compared as strings so a custom prettify_grid that
             // maps two values to one text is deduplicated the same way.
             // Values mode is exempt: each tick is a real values entry, so a
             // duplicate entry or a merging prettify is the user's own data.

@@ -65,3 +65,33 @@ test('no grid_num warning in values mode or under grid_snap', (t) => {
 test('grid_num above 50 reads back as given', (t) => {
   assert.equal(createSlider(t, '<input>', { min: 0, max: 100, grid: true, grid_num: 60 }).slider.options.grid_num, 60);
 });
+
+// Mutation this catches: rule 0 removed from calcGridTicks(); grid_snap on 5..5 prints "NaN", 5..5 prints five
+// ticks, and a max below min (clamped to min) does the same.
+test('a zero range draws one tick with the min label', (t) => {
+  assert.deepEqual(texts(createSlider(t, '<input>', { min: 5, max: 5, grid: true, grid_snap: true }).slider), ['5']);
+  assert.deepEqual(texts(createSlider(t, '<input>', { min: 5, max: 5, grid: true }).slider), ['5']);
+  assert.deepEqual(texts(createSlider(t, '<input>', { min: 5, max: 2, grid: true }).slider), ['5']);
+});
+
+// Mutation this catches: rule 0 not covering values mode; a one-entry array prints "undefined".
+test('a one-entry values array draws one tick with the entry', (t) => {
+  assert.deepEqual(texts(createSlider(t, '<input>', { values: ['only'], grid: true }).slider), ['only']);
+});
+
+// Mutation this catches: rule 0 removed (5..5 gives five ticks, the one-entry array one tick at NaN).
+test('calcGridTicks() gives a zero range exactly one tick at 0% naming min, as rule 0', (t) => {
+  for (const [options, value] of [[{ min: 5, max: 5, grid: true }, 5], [{ values: ['only'], grid: true }, 0]]) {
+    const r = createSlider(t, '<input>', options).slider.calcGridTicks();
+    assert.equal(r.rule, 0);
+    assert.equal(r.ticks.length, 1);
+    assert.ok(Number.isFinite(r.ticks[0].left) && Number.isFinite(r.ticks[0].value));
+    assert.deepEqual([r.ticks[0].left, r.ticks[0].value], [0, value]);
+  }
+});
+
+// Mutation this catches: the tolerance dropped; 2.7 / 0.3 is 9.000000000000002 units with a blank twin tick.
+test('grid_snap counts 2.7 / 0.3 as exactly 9 units', (t) => {
+  assert.deepEqual(texts(createSlider(t, '<input>', { min: 0, max: 2.7, step: 0.3, grid: true, grid_snap: true }).slider),
+    ['0', '0.3', '0.6', '0.9', '1.2', '1.5', '1.8', '2.1', '2.4', '2.7']);
+});
