@@ -274,7 +274,8 @@
             big: [],
             big_w: [],
             big_p: [],
-            big_x: []
+            big_x: [],
+            big_empty: []
         };
 
         // storage for labels measure variables
@@ -801,6 +802,7 @@
             this.coords.big_w = [];
             this.coords.big_p = [];
             this.coords.big_x = [];
+            this.coords.big_empty = [];
 
             cancelAnimationFrame(this.raf_id);
         },
@@ -3293,35 +3295,57 @@
 
         calcGridLabels: function () {
             var i, label, start = [], finish = [],
-                num = this.coords.big_num;
+                num = this.coords.big_num,
+                first = -1,
+                last = -1,
+                // #906: the box the labels' CSS percentages resolve against is the grid element, which
+                // calcGridMargin() makes (100 - p_handle)% of the slider wide when grid_margin is on. Label
+                // widths, starts, finishes and the force_edges bounds are all measured in it.
+                grid_w = this.options.grid_margin ? this.coords.w_rs * (100 - this.coords.p_handle) / 100 : this.coords.w_rs,
+                edge;
+
+            // Not laid out (a hidden container on jQuery 3.3 or later), or a track narrower than a handle: the
+            // relayout after the reveal or the resize runs this again.
+            if (!(grid_w > 0)) {
+                return;
+            }
+            edge = this.options.grid_margin ? this.coords.grid_gap * this.coords.w_rs / grid_w : 0;
 
             for (i = 0; i < num; i++) {
                 this.coords.big_w[i] = this.$cache.grid_labels[i].outerWidth(false);
-                this.coords.big_p[i] = this.toFixed(this.coords.big_w[i] / this.coords.w_rs * 100);
+                this.coords.big_p[i] = this.toFixed(this.coords.big_w[i] / grid_w * 100);
                 this.coords.big_x[i] = this.toFixed(this.coords.big_p[i] / 2);
+                // #906: a label with no text is empty, even when it holds markup.
+                this.coords.big_empty[i] = this.$cache.grid_labels[i].text() === "";
 
                 start[i] = this.toFixed(this.coords.big[i] - this.coords.big_x[i]);
                 finish[i] = this.toFixed(start[i] + this.coords.big_p[i]);
-            }
 
-            if (this.options.force_edges) {
-                if (start[0] < -this.coords.grid_gap) {
-                    start[0] = -this.coords.grid_gap;
-                    finish[0] = this.toFixed(start[0] + this.coords.big_p[0]);
-
-                    this.coords.big_x[0] = this.coords.grid_gap;
-                }
-
-                if (finish[num - 1] > 100 + this.coords.grid_gap) {
-                    finish[num - 1] = 100 + this.coords.grid_gap;
-                    start[num - 1] = this.toFixed(finish[num - 1] - this.coords.big_p[num - 1]);
-
-                    this.coords.big_x[num - 1] = this.toFixed(this.coords.big_p[num - 1] - this.coords.grid_gap);
+                if (!this.coords.big_empty[i]) {
+                    if (first < 0) first = i;
+                    last = i;
                 }
             }
 
-            this.calcGridCollision(2, start, finish);
-            this.calcGridCollision(4, start, finish);
+            // force_edges keeps the first and last non-empty labels inside the container, before the sweep
+            // judges them where they are drawn.
+            if (this.options.force_edges && first >= 0) {
+                if (start[first] < -edge) {
+                    start[first] = -edge;
+                    finish[first] = this.toFixed(start[first] + this.coords.big_p[first]);
+
+                    this.coords.big_x[first] = this.toFixed(this.coords.big[first] + edge);
+                }
+
+                if (finish[last] > 100 + edge) {
+                    finish[last] = 100 + edge;
+                    start[last] = this.toFixed(finish[last] - this.coords.big_p[last]);
+
+                    this.coords.big_x[last] = this.toFixed(this.coords.big[last] - start[last]);
+                }
+            }
+
+            this.calcGridCollision(start, finish);
 
             for (i = 0; i < num; i++) {
                 label = this.$cache.grid_labels[i][0];
@@ -3332,25 +3356,52 @@
             }
         },
 
-        // Collisions Calc Beta
-        // TODO: Refactor then have plenty of time
-        calcGridCollision: function (step, start, finish) {
-            var i, next_i, label,
-                num = this.coords.big_num;
+        /**
+         * #906: one left-to-right sweep over the grid labels. The first non-empty label is always shown; the
+         * last is shown unless it collides with the first; any other label is shown only if it clears the
+         * last shown label to its left and, when the last label is shown, the last label too. "Clears" means
+         * it finishes at or before the other starts. Empty labels take no part. Every label is written on
+         * every pass: "hidden", or "" for a shown one, which clears an earlier "hidden" without an inline
+         * "visible" that would override a site stylesheet hiding a grid label.
+         * @param {Array} start label starts, percent of the grid box
+         * @param {Array} finish label ends, percent of the grid box
+         */
+        calcGridCollision: function (start, finish) {
+            var i, prev,
+                num = this.coords.big_num,
+                empty = this.coords.big_empty,
+                show = [],
+                first = -1,
+                last = -1;
 
-            for (i = 0; i < num; i += step) {
-                next_i = i + (step / 2);
-                if (next_i >= num) {
-                    break;
+            // The same first/last scan as calcGridLabels(): the sweep reads nothing but its arguments and
+            // coords, so it stands on its own.
+            for (i = 0; i < num; i++) {
+                show[i] = false;
+                if (!empty[i]) {
+                    if (first < 0) first = i;
+                    last = i;
+                }
+            }
+
+            if (first >= 0) {
+                show[first] = true;
+                if (last !== first && finish[first] <= start[last]) {
+                    show[last] = true;
                 }
 
-                label = this.$cache.grid_labels[next_i][0];
-
-                if (finish[i] <= start[next_i]) {
-                    label.style.visibility = "visible";
-                } else {
-                    label.style.visibility = "hidden";
+                prev = first;
+                for (i = first + 1; i < last; i++) {
+                    if (empty[i]) continue;
+                    if (finish[prev] <= start[i] && (!show[last] || finish[i] <= start[last])) {
+                        show[i] = true;
+                        prev = i;
+                    }
                 }
+            }
+
+            for (i = 0; i < num; i++) {
+                this.$cache.grid_labels[i][0].style.visibility = show[i] ? "" : "hidden";
             }
         },
 

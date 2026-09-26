@@ -2,7 +2,7 @@
 // in a real browser and driven through one fixed interaction script (S0 init, S1/S2
 // handle drags, S3 track click, S4a to S4d one key press each, S5 bar drag,
 // S6 update(), S7 reset(), S8 destroy(), S9 build it again on the same input), with the
-// fourteen readme invariants of ../lib/invariants.mjs checked after every stage.
+// fifteen readme invariants of ../lib/invariants.mjs checked after every stage.
 //
 // Nothing here carries a per-case expected value: the expectations come from the
 // readme through the invariants and the label/scale oracles, so a failure always names

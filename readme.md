@@ -176,7 +176,7 @@ Or use `data-*` attributes on the input:
 | `prettify_all_values` | `data-prettify-all-values` | `false` | boolean | In `values` mode, also run `prettify` on non-numeric entries |
 | `force_edges` | `data-force-edges` | `false` | boolean | Keep the value labels (shown above each handle), and the first and last grid labels, inside the container instead of letting them overhang its edges |
 | `keyboard` | `data-keyboard` | `true` | boolean | Keyboard controls. Left: ←, ↓, A, S. Right: →, ↑, W, D |
-| `grid` | `data-grid` | `false` | boolean | Show the value grid below the slider |
+| `grid` | `data-grid` | `false` | boolean | Show the value grid below the slider. [See notes](#grid) |
 | `grid_margin` | `data-grid-margin` | `true` | boolean | Add a grid margin on the left and right, half a handle wide, so the first and last grid labels line up with the handle centers |
 | `grid_num` | `data-grid-num` | `4` | number | Number of grid units the value range is cut into, at most 50. A labelled tick mark sits at each unit boundary, with smaller unlabelled ticks between them (up to 28 units). A fraction is rounded to the nearest whole number; if that is below 1, or the value is not a number, the grid uses 4. Ignored when `grid_snap` is on or `values` is used |
 | `grid_snap` | `data-grid-snap` | `false` | boolean | Use one grid unit per step instead of `grid_num`. Still capped at 50 units |
@@ -224,6 +224,10 @@ A numeric-looking entry such as "20.0" is converted to the number 20 unless `val
 By default a numeric-looking entry in `values` is converted to a number, so "20.0" becomes 20 in `from_value` and `to_value`, in the value written to the input and on the label. Turn `values_raw` on to keep the entry exactly as written. Spaces around the commas in `data-values` are trimmed while it is on.
 
 Set it when the slider is created, or pass `values` again in the same `update()` call. Entries that were already converted cannot be restored.
+
+#### grid
+
+The first grid label is always visible, and so is the last unless the two would overlap on a very narrow slider. No two visible grid labels overlap; labels in between are hidden when there is no room. With `force_edges` the first and last grid labels stay inside the container.
 
 #### prettify
 

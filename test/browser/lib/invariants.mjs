@@ -1,5 +1,5 @@
 /**
- * #877 browser suite -- the fourteen readme invariants checked after every stage of
+ * #877 browser suite -- the fifteen readme invariants checked after every stage of
  * the combination matrix.
  *
  * Each entry carries the readme sentence it derives from, so a failure names the
@@ -25,7 +25,8 @@
  *   container { exists, classes[] }
  *   labels { single, from, to, min, max } each { text, visible }
  *   handles { single?, from?, to? }
- *   grid { present, texts[] }
+ *   grid { present, texts[], boxes[] ({ text, left, right, visible }, px), width (px),
+ *     container ({ left, right }, px, or null) }
  *   mask
  *   events[]   the recorded callbacks, in the fixture's entry shape
  *   values { from, to }
@@ -559,6 +560,48 @@ export const INVARIANTS = [
                 const wanted = expectedGridLabel(values[i], cfg);
                 if (text !== wanted) msgs.push(report('grid', `the grid label at unit ${i}`, wanted, text, stage));
             });
+            return msgs;
+        }
+    },
+
+    {
+        id: 'grid-layout',
+        readme: 'note "grid": "The first grid label is always visible, and so is the last unless the two would overlap on a very narrow slider. No two visible grid labels overlap; labels in between are hidden when there is no room. With `force_edges` the first and last grid labels stay inside the container."',
+        check(ctx) {
+            if (!alive(ctx)) return [];
+            const { cfg, stage, state } = ctx;
+            const grid = state.grid || {};
+            // A grid that is not laid out (a slider built hidden on jQuery 3.3 or later, before the reveal) has
+            // nothing to judge.
+            if (!cfg.grid || !grid.present || !(grid.width > 0)) return [];
+            // Empty means no text (textContent), as in the plugin's sweep: a label holding only markup is skipped.
+            const shown = (grid.boxes || []).filter((b) => b.text !== '');
+            if (shown.length < 2) return [];
+            const msgs = [];
+            const first = shown[0];
+            const last = shown[shown.length - 1];
+            // The note lets the last label go only when it would overlap the first (1 px of rendering slack).
+            const edgesCollide = first.right > last.left - 1;
+            if (!first.visible) msgs.push(report('grid-layout', 'the first grid label must be visible', true, false, stage));
+            if (!edgesCollide && !last.visible) msgs.push(report('grid-layout', 'the last grid label must be visible', true, false, stage));
+            const vis = shown.filter((b) => b.visible);
+            for (let i = 1; i < vis.length; i++) {
+                if (vis[i].left < vis[i - 1].right - 1) {
+                    msgs.push(report('grid-layout', 'grid labels overlap', `${vis[i - 1].text} ends before ${vis[i].text}`, `${(vis[i - 1].right - vis[i].left).toFixed(1)} px`, stage));
+                }
+            }
+            // force_edges: the first label (always visible, by the check above) must not start left of the
+            // container, and the last label, only when shown, must not end right of it. A hidden last label is
+            // judged by the visibility check above, not here.
+            if (cfg.force_edges && grid.container) {
+                const container = grid.container;
+                if (first.left < container.left - 1) {
+                    msgs.push(report('grid-layout', 'the first grid label must stay inside the container', `at or right of ${container.left.toFixed(1)} px`, `${first.left.toFixed(1)} px`, stage));
+                }
+                if (last.visible && last.right > container.right + 1) {
+                    msgs.push(report('grid-layout', 'the last grid label must stay inside the container', `at or left of ${container.right.toFixed(1)} px`, `${last.right.toFixed(1)} px`, stage));
+                }
+            }
             return msgs;
         }
     },
