@@ -920,26 +920,6 @@ export const KNOWN_BUGS = [
     },
 
     {
-        issue: 884,
-        title: 'max_postfix followed by a postfix that starts with a space renders two spaces',
-        what: /label text/,
-        // n011 (the site's age demo, postfix " years"), the only matrix entry carrying both
-        // options. The plugin writes its separator whatever the postfix looks like, so a
-        // postfix that already opens with whitespace is shown with two spaces. A postfix
-        // that brings none is a different matter: one space is what the issue's own fix
-        // keeps there ("100+ k"), the label is right today, and claiming it here would
-        // annotate a healthy cell away -- and red this entry as "no longer reproduces" on
-        // any cell where that pair is all there is. Any label carrying the max value shows
-        // the doubled space, the max label included, so every stage that draws a label
-        // reproduces.
-        matches(ctx, id) {
-            const cfg = ctx.cfg;
-            if (id !== 'labels' || stageOf(ctx) === 'S8') return false;
-            return !!cfg.max_postfix && typeof cfg.postfix === 'string' && /^\s/.test(cfg.postfix);
-        }
-    },
-
-    {
         issue: 894,
         title: 'a handle limit and an interval limit that cannot both hold push the handle past its own limit',
         what: /passed (below|above) (from|to)_(min|max)|closed past min_interval|opened past max_interval|key press must move/,

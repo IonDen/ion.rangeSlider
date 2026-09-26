@@ -76,6 +76,61 @@ test('decorate adds prefix, postfix and max_postfix only on the max value', (t) 
   assert.equal(slider.decorate('100', 100), '$100+ k');
 });
 
+// #884: before this fix, decorate() wrote its own separator between max_postfix and
+// postfix unconditionally, so a postfix that already opens with whitespace (the site's
+// age demo, postfix " years") came out with two: "100+  years". The rule the issue
+// asked for is readme.md's max_postfix/postfix pair joined by one space, unless the
+// postfix already brings its own.
+// Mutation caught: drop the `!/^\s/.test(o.postfix)` guard back to an unconditional
+// `decorated += " ";` -- this test reds with '100+  years' (two spaces).
+test('a max_postfix and a postfix that already opens with whitespace get exactly one space between them, brought by the postfix (#884)', (t) => {
+  const { slider } = createSlider(t, '<input>', { min: 0, max: 100, max_postfix: '+', postfix: ' years' });
+  assert.equal(slider.decorate('100', 100), '100+ years');
+});
+
+// Pins the plain-postfix case the #884 fix must leave exactly as it is: no leading
+// whitespace still gets the plugin's own separator space, matching readme's own example
+// ("0 - 100+" / "100k" combined reads "100+ k").
+// Mutation caught: drop the space insertion altogether (e.g. `if (false)` around
+// `decorated += " ";`) -- this test reds with '100+k' (no space).
+test('a max_postfix followed by a plain postfix keeps its own separator space (#884 pin)', (t) => {
+  const { slider } = createSlider(t, '<input>', { min: 0, max: 100, max_postfix: '+', postfix: 'k' });
+  assert.equal(slider.decorate('100', 100), '100+ k');
+});
+
+// A tab is whitespace too -- the fix tests against /^\s/, not a literal space character.
+// Mutation caught: narrowing the guard to `o.postfix.charAt(0) !== ' '` instead of the
+// \s regex -- a tab-led postfix would still gain the plugin's own separator space and
+// this test reds with '100+ \tunits'.
+test('a postfix opening with a tab also brings its own separator, no space added (#884)', (t) => {
+  const { slider } = createSlider(t, '<input>', { min: 0, max: 100, max_postfix: '+', postfix: '\tunits' });
+  assert.equal(slider.decorate('100', 100), '100+\tunits');
+});
+
+// The guard belongs inside the `if (o.max_postfix)` block; without max_postfix a
+// whitespace-leading postfix is untouched by the fix.
+// Mutation caught: moving the guard onto the unconditional `if (o.postfix) { decorated
+// += o.postfix; }` line at the bottom of decorate() -- a whitespace-leading postfix
+// would then be dropped even with no max_postfix, and this test reds with '50' / '100'
+// (the postfix missing) instead of '50 years' / '100 years'.
+test('without max_postfix a whitespace-leading postfix is unchanged (#884)', (t) => {
+  const { slider } = createSlider(t, '<input>', { min: 0, max: 100, postfix: ' years' });
+  assert.equal(slider.decorate('50', 50), '50 years');
+  assert.equal(slider.decorate('100', 100), '100 years');
+});
+
+// Values mode: the max_postfix branch compares `num` against `o.p_values[o.max]`, not
+// `original` -- the last entry needs its own case rather than relying on the numeric
+// branch above.
+// Mutation caught: revert only the values-mode branch's guard to an unconditional
+// `if (o.postfix) { decorated += " "; }` (leaving the numeric branch's guard alone) --
+// this test reds with 'c+  years' (two spaces); no other #884 test is affected.
+test('values mode: max_postfix and a whitespace-leading postfix at the last entry get one space, from the postfix (#884)', (t) => {
+  const { slider } = createSlider(t, '<input>', { values: ['a', 'b', 'c'], max_postfix: '+', postfix: ' years' });
+  const last = slider.options.p_values[slider.options.max];
+  assert.equal(slider.decorate(last), last + '+ years');
+});
+
 test('prettify_grid and prettify_min_max fall back to prettify when unset, and use their own function when set (#306)', (t) => {
   const { slider: shared } = createSlider(t, '<input>', { min: 0, max: 10000000, prettify: (n) => `P:${n}` });
   assert.equal(shared._prettifyGrid(1000), 'P:1000');      // no prettify_grid -> falls back to prettify

@@ -225,14 +225,12 @@ test('expectedPretty formats a value for its surface and never decorates it', ()
 // #884. readme settings table: max_postfix "Postfix for the maximum value only:
 // 0 - 100+"; postfix "Postfix for values: 100k". The two are separated by one space,
 // and a postfix that already opens with whitespace brings its own: "100+ k" and
-// "100+ years". That single space is what issue #884 asks for ("insert the separator
-// only when the postfix does not already begin with whitespace"), so only the doubled
-// space of a postfix like " years" is the defect -- which is the one line of this test
-// the plugin disagrees with today.
+// "100+ years". That single space is what issue #884 asked for ("insert the separator
+// only when the postfix does not already begin with whitespace"), and
+// js/ion.rangeSlider.js's decorate() now carries the same rule.
 // Bug caught: writing the separator unconditionally, which predicts "100+  years" for
-// the site's own age demo and would make the matrix agree with the defect; or dropping
-// it altogether, which predicts "100+k" for a plain postfix and reds a label the
-// issue's fix leaves exactly as it is.
+// the site's own age demo; or dropping it altogether, which predicts "100+k" for a
+// plain postfix and reds a label the issue's fix leaves exactly as it is.
 test('decorate: one space joins max_postfix to a postfix that does not bring its own', () => {
   const spaced = { min: 0, max: 100, prefix: 'Age: ', postfix: ' years', max_postfix: '+' };
   assert.equal(decorate('100', 100, spaced, 'handle'), 'Age: 100+ years');

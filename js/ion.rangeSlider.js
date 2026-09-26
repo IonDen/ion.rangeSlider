@@ -3027,12 +3027,16 @@
             if (o.max_postfix) {
                 if (o.values.length && num === o.p_values[o.max]) {
                     decorated += o.max_postfix;
-                    if (o.postfix) {
+                    // #884: a postfix that already opens with whitespace brings its own
+                    // separator (e.g. postfix: " years"); only a postfix without leading
+                    // whitespace needs the space decorate() inserts here.
+                    if (o.postfix && !/^\s/.test(o.postfix)) {
                         decorated += " ";
                     }
                 } else if (original === o.max) {
                     decorated += o.max_postfix;
-                    if (o.postfix) {
+                    // #884: same rule as above, for the numeric (non-values) branch.
+                    if (o.postfix && !/^\s/.test(o.postfix)) {
                         decorated += " ";
                     }
                 }

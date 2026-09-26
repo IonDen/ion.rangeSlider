@@ -198,8 +198,8 @@ test.describe(`prettify (${LABEL})`, () => {
     // The readme shows max_postfix ("0 - 100+") and postfix ("100k") separately and never
     // combines them, so the join between the two is not a readme promise. The rule comes
     // from #884: one space separates them, unless the postfix already opens with
-    // whitespace. This is the half of the pair the plugin already renders that way, and
-    // #884's fix leaves it untouched, so the test stays green through that fix.
+    // whitespace. This was the half of the pair the plugin already rendered that way, and
+    // #884's fix left it untouched, so the test stayed green through that fix.
     // Mutation caught: decorate() -> drop the `decorated += " ";` line from the numeric
     // (`original === o.max`) branch -- the max label reads "100+k".
     test('a max_postfix followed by a plain postfix keeps one space between them (Settings: max_postfix, postfix)', async ({ page }) => {
@@ -210,9 +210,11 @@ test.describe(`prettify (${LABEL})`, () => {
     });
 
     // The other half of #884's rule: a postfix that already opens with whitespace brings
-    // its own separator, so "100+" followed by " years" should read "100+ years".
+    // its own separator, so "100+" followed by " years" reads "100+ years", not the
+    // doubled "100+  years" the plugin rendered before the fix.
+    // Mutation caught: decorate() -> drop the `!/^\s/.test(o.postfix)` guard back to an
+    // unconditional `decorated += " ";` -- the max label reads "100+  years" again.
     test('a max_postfix followed by a space-prefixed postfix reads as written (Settings: max_postfix, postfix)', async ({ page }) => {
-        test.fail(true, '#884: max_postfix followed by a postfix that starts with a space renders two spaces');
         const config = { min: 0, max: 100, from: 50, max_postfix: '+', postfix: ' years' };
         await open(page, config);
         await labelText(page, '.irs-max').toBe(expectedLabel(100, config, 'max'));
@@ -240,6 +242,24 @@ test.describe(`prettify (${LABEL})`, () => {
             mutation: 'drawLabels(): `this.options.values_separator` -> " — " -> the merged label keeps the default separator',
             config: { type: 'double', min: 0, max: 100, from: 49, to: 51, prefix: '$', values_separator: ' to ' },
             expected: '$49 to $51'
+        },
+        // #884: with `to` sitting on max, the merged pair (decorate_both: false) is
+        // decorated once against `to`, so the same one-space rule applies to the merged
+        // label too.
+        {
+            title: 'a max_postfix and a whitespace-leading postfix decorate the merged pair once, from the to value (Settings: max_postfix, postfix, decorate_both) (#884)',
+            mutation: 'decorate() reverting the numeric-branch guard to an unconditional `decorated += " ";` -> the merged label reads "98 — 100+  years" (extra space); or drawLabels() passing the from value (98) instead of the to value (100) as `original` to the merged decorate() call -> the merged label reads "98 — 100 years" (the "+" disappears)',
+            config: { type: 'double', min: 0, max: 100, from: 98, to: 100, max_postfix: '+', postfix: ' years', decorate_both: false },
+            expected: '98 — 100+ years'
+        },
+        // #884, decorate_both left at its default: from and to are decorated separately,
+        // so only the `to` call (sitting on max) carries max_postfix, and the same rule
+        // applies to it.
+        {
+            title: 'a max_postfix and a whitespace-leading postfix decorate the to value of the merged label, with decorate_both at its default (Settings: max_postfix, postfix) (#884)',
+            mutation: 'decorate() reverting the numeric-branch guard on the `to` call to an unconditional `decorated += " ";` -> the merged label reads "98 years — 100+  years" (extra space)',
+            config: { type: 'double', min: 0, max: 100, from: 98, to: 100, max_postfix: '+', postfix: ' years' },
+            expected: '98 years — 100+ years'
         }
     ];
 
@@ -250,7 +270,7 @@ test.describe(`prettify (${LABEL})`, () => {
             // labels overlap and the plugin shows the merged one instead.
             const state = await readState(page, 1, row.config);
             expect(state.labels.single.visible).toBe(true);
-            await labelText(page, '.irs-single').toBe(expectedMerged(49, 51, row.config));
+            await labelText(page, '.irs-single').toBe(expectedMerged(row.config.from, row.config.to, row.config));
             await labelText(page, '.irs-single').toBe(row.expected);
         });
     }
