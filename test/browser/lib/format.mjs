@@ -135,11 +135,11 @@ export function expectedPretty(value, cfg, surface) {
  * A max_postfix and a postfix on the same label are separated by ONE space, and a postfix
  * that already opens with whitespace brings its own: "100+" followed by "k" reads
  * "100+ k", and followed by " years" it reads "100+ years". That is the rule issue #884
- * asks for -- insert the separator only when the postfix does not already begin with
- * whitespace -- so the plain-postfix case is exactly what the plugin renders today and
- * only the doubled space of the age demo (postfix " years") is the defect the register
- * carries. Predicting "100+k" instead would call a healthy label wrong and leave that
- * matrix cell red for as long as the option pair exists.
+ * asked for -- insert the separator only when the postfix does not already begin with
+ * whitespace -- and js/ion.rangeSlider.js's decorate() carries it too, so both the
+ * plain-postfix case and the whitespace-postfix case are exactly what the plugin renders.
+ * Predicting "100+k" instead would call a healthy label wrong and leave that matrix cell
+ * red for as long as the option pair exists.
  *
  * Two points the readme leaves open, pinned here as characterization of the shipped
  * behaviour (the readme never shows the decorations combined):

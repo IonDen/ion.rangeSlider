@@ -97,7 +97,7 @@ const allHits = (cfg, over) => {
 // Bug caught: an entry filed without its issue number or its one-line title, which would
 // annotate a matrix cell with nothing a reader could look up.
 test('every register entry carries an issue number, a title, a predicate and a message pattern', () => {
-    assert.equal(KNOWN_BUGS.length, 15);
+    assert.equal(KNOWN_BUGS.length, 14);
     const issues = KNOWN_BUGS.map((bug) => bug.issue);
     assert.deepEqual(issues, [...new Set(issues)], 'an issue must have one entry');
     for (const bug of KNOWN_BUGS) {
@@ -851,30 +851,6 @@ test('#881 matches an interval slider whose to handle rests on an unreachable ma
     assert.equal(hit(noInterval, 'S1', 'intervals', s1), null);
 
     assert.equal(hit(offScaleTop, 'S0', 'intervals'), null, 'the starting pair is a matter for #885');
-});
-
-// --------------------------------------------- #884 max_postfix run into a postfix
-
-// The plugin writes a space of its own between max_postfix and postfix. One space is what
-// the fix asks for, so a plain postfix ("100+ k") is already right and only a postfix that
-// opens with whitespace of its own comes out doubled -- the site's age demo, postfix
-// " years". Claiming the plain pair as well would annotate a healthy label away and, on the
-// day the register line is written for a cell that never fails, red it as "no longer
-// reproduces".
-test('#884 matches a postfix that brings its own space after max_postfix', () => {
-    const spaced = { min: 0, max: 100, from: 21, prefix: 'Age: ', postfix: ' years', max_postfix: '+' };
-    assert.equal(hit(spaced, 'S0', 'labels'), 884);
-
-    const plain = { min: 0, max: 100, from: 21, postfix: 'k', max_postfix: '+' };
-    assert.equal(hit(plain, 'S0', 'labels'), null, 'one space is what the label should carry');
-
-    const maxOnly = { min: 0, max: 100, from: 21, max_postfix: '+' };
-    assert.equal(hit(maxOnly, 'S0', 'labels'), null);
-
-    const postfixOnly = { min: 0, max: 100, from: 21, postfix: ' years' };
-    assert.equal(hit(postfixOnly, 'S0', 'labels'), null);
-
-    assert.equal(hit(spaced, 'S8', 'labels'), null, 'a destroyed slider draws no label');
 });
 
 // ------------------------- #894 a handle limit and an interval that cannot both hold
