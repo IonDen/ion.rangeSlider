@@ -178,19 +178,13 @@ test.describe(`grid (${LABEL})`, () => {
         });
     }
 
-    // Characterization: the readme lets a grid be cut into 50 units whatever the container
-    // is wide, and the plugin keeps the result readable by hiding labels that would run
-    // into their neighbours. The first label is never a candidate for hiding. The last one
-    // is, and whether it survives depends on the label widths: calcGridCollision()'s
-    // second pass (step 4) checks label 50 ("100") against label 48 ("96"), two grid units
-    // (4 % of the grid) away. The check measures the labels as a share of the container,
-    // so the two collide once their widths add up to more than 8 % of it: 24 px at 300 px,
-    // 48 px at 600 px. "96" and "100" together measure about 37 px, well between those two
-    // limits, which is why the row holds on every engine: the last label is hidden at
-    // 300 px and kept at 600 px.
-    // Mutation caught: calcGridCollision() -> the else branch `label.style.visibility =
-    // "hidden"` becomes `"visible"`, and both widths show all 51 labels, "100" included.
-    test('a grid too dense for its container hides labels, the last one at 300 px (characterization)', async ({ page }) => {
+    // Flipped by the grid guardrails (#906): the readme's grid note says the first grid label is always visible,
+    // and so is the last unless the two would overlap on a very narrow slider; labels in between are hidden when
+    // there is no room. A grid of 50 units hides labels in between at 300 px, fewer at 600 px, and keeps "0" and
+    // "100" at both widths.
+    // Mutation caught: calcGridCollision() without its "keep the last label" branch -- "100" is hidden at both
+    // widths.
+    test('a grid too dense for its container hides labels in between and keeps the first and last (note "grid")', async ({ page }) => {
         const config = { min: 0, max: 100, from: 10, grid: true, grid_num: 50 };
 
         await open(page, config, { width: '300' });
@@ -204,7 +198,7 @@ test.describe(`grid (${LABEL})`, () => {
         expect(narrow.visibleTexts.length).toBeLessThan(narrow.texts.length);
         expect(narrow.visibleTexts.length).toBeLessThan(wide.visibleTexts.length);
         expect(narrow.visibleTexts[0]).toBe('0');
-        expect(narrow.visibleTexts).not.toContain('100');
+        expect(narrow.visibleTexts[narrow.visibleTexts.length - 1]).toBe('100');
         expect(wide.visibleTexts[0]).toBe('0');
         expect(wide.visibleTexts[wide.visibleTexts.length - 1]).toBe('100');
     });

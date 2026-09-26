@@ -106,6 +106,18 @@ export async function readState(page, n = 1, cfg) {
     const texts = gridTextEls.map((el) => el.textContent);
     const visibleTexts = gridTextEls.filter(visible).map((el) => el.textContent);
     const pols = cont ? cont.querySelectorAll('.irs-grid-pol').length : 0;
+    const gridEl = cont ? cont.querySelector('.irs-grid') : null;
+    const boxes = gridTextEls.map((el) => {
+      const r = el.getBoundingClientRect();
+      return { text: el.textContent, left: r.left, right: r.right, visible: visible(el) };
+    });
+    // #906 force_edges: the container the labels must stay inside is $cache.rs -- the inner,
+    // unclassed '.irs' that calcGridLabels() measures as coords.w_rs -- not the outer,
+    // skin-classed cont span a bare '.irs' query would find first. calcGridMargin() insets the
+    // narrower '.irs-grid' box inside it by grid_gap when grid_margin is on, but never touches
+    // coords.w_rs or this element, so the container is the same box either way.
+    const rsEl = cont ? cont.querySelector('.irs') : null;
+    const rsBox = rsEl ? rsEl.getBoundingClientRect() : null;
 
     const lineEl = cont && cont.querySelector('.irs-line');
     const barEl = cont && cont.querySelector('.irs-bar');
@@ -148,7 +160,11 @@ export async function readState(page, n = 1, cfg) {
       line: box(lineEl),
       bar: box(barEl),
       shadows: shadows,
-      grid: { present: pols > 0 || texts.length > 0, texts: texts, visibleTexts: visibleTexts, pols: pols },
+      grid: {
+        present: pols > 0 || texts.length > 0, texts: texts, visibleTexts: visibleTexts, pols: pols,
+        boxes: boxes, width: gridEl ? gridEl.getBoundingClientRect().width : 0,
+        container: rsBox ? { left: rsBox.left, right: rsBox.right } : null
+      },
       mask: !!(cont && cont.querySelector('.irs-disable-mask'))
     };
   }, { wrapSel, inputSel });

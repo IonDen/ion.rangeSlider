@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { INVARIANTS, checkInvariants } from '../browser/lib/invariants.mjs';
 import { KNOWN_BUGS, matchKnownBug } from '../browser/lib/known-bugs.mjs';
 
-// #877: the fourteen readme invariants, fed hand-built State objects. Every failing
+// #877: the fifteen readme invariants, fed hand-built State objects. Every failing
 // fixture below is a state a one-line plugin change could really produce, and the
 // matching passing fixture is the state the readme promises instead, so each test
 // names the bug it catches in its comment.
@@ -94,10 +94,10 @@ const INIT_EVENTS = [cb('onStart'), cb('onInit')];
 // judgeStage() in test/browser/lib/known-bugs.mjs iterates this exact id list to retire
 // register entries, so a renamed or dropped invariant must be visible here.
 // Bug caught: exporting twelve invariants, or one without its readme citation.
-test('INVARIANTS carries the fourteen documented ids, each with a readme citation', () => {
+test('INVARIANTS carries the fifteen documented ids, each with a readme citation', () => {
     assert.deepEqual(INVARIANTS.map((i) => i.id), [
         'bounds', 'scale', 'limits', 'intervals', 'fixed', 'input', 'labels',
-        'grid', 'dom', 'callbacks', 'keys', 'inert', 'destroy', 'reinit'
+        'grid', 'grid-layout', 'dom', 'callbacks', 'keys', 'inert', 'destroy', 'reinit'
     ]);
     for (const inv of INVARIANTS) {
         assert.equal(typeof inv.check, 'function', `${inv.id} needs a check()`);
@@ -616,6 +616,75 @@ test('grid: every label of a non-dividing range is checked, not just the ends', 
 
     const wrongEnd = base({ grid: { present: true, texts: ['0', '33', '67', '99'], visibleTexts: [], pols: 16 } });
     assert.ok(ids(ctxOf(wrongEnd, cfg, 'S0')).includes('grid'));
+});
+
+// ---------------------------------------------------------------- grid-layout
+
+// readme note "grid": the first label always visible, the last unless it would overlap the first, no overlaps.
+// `container` defaults to a box far wider than any fixture's boxes, so a state built without
+// naming one never triggers the force_edges checks below even under a mutation that judges
+// containment unconditionally -- only the four force_edges tests pass a narrower one.
+const gridLayoutState = (boxes, width = 600, container = { left: -1e6, right: 1e6 }) =>
+    base({ grid: { present: true, texts: boxes.map((b) => b.text), boxes, width, container } });
+const gridLayoutFindings = (state, cfg) =>
+    checkInvariants(ctxOf(state, { grid: true, min: 0, max: 100, step: 1, ...cfg }, 'S1')).filter((f) => f.id === 'grid-layout');
+
+// Bug caught: the sweep dropping the max label (calcGridCollision() without its "keep the last label" branch).
+test('grid-layout: a hidden last label is a finding', () => {
+    const f = gridLayoutFindings(gridLayoutState([{ text: '0', left: 0, right: 10, visible: true }, { text: '100', left: 590, right: 610, visible: false }]));
+    assert.ok(f.some((x) => /last grid label must be visible/.test(x.message)));
+});
+// Bug caught: two visible labels drawn over each other (the sweep without its right-neighbour comparison).
+test('grid-layout: two overlapping visible labels are a finding', () => {
+    const f = gridLayoutFindings(gridLayoutState([{ text: '0', left: 0, right: 30, visible: true }, { text: '50', left: 20, right: 40, visible: true },
+        { text: '100', left: 590, right: 610, visible: true }]));
+    assert.ok(f.some((x) => /grid labels overlap/.test(x.message)));
+});
+// Bug caught in the invariant itself: no exception for a first and last label that overlap each other, where the
+// note lets the last one go.
+test('grid-layout: first and last colliding with each other is not a finding', () => {
+    assert.equal(gridLayoutFindings(gridLayoutState([{ text: 'aaaa', left: 0, right: 70, visible: true }, { text: 'bbbb', left: 50, right: 110, visible: false }], 100)).length, 0);
+});
+// Bug caught in the invariant itself: judging a grid that is not laid out (a hidden container on jQuery 3.3+).
+test('grid-layout: a 0 px wide grid is not judged', () => {
+    assert.equal(gridLayoutFindings(gridLayoutState([{ text: '0', left: 0, right: 0, visible: false }, { text: '100', left: 0, right: 0, visible: false }], 0)).length, 0);
+});
+// Bugs caught: the first label hidden (the sweep starting from the second non-empty label); and in the invariant
+// itself, an empty box taken as the first label (the `text !== ''` filter removed from `shown`: the hidden empty
+// box then reads as a hidden first label, one finding where there should be none).
+test('grid-layout: a hidden first label is a finding; empty labels are skipped', () => {
+    const f = gridLayoutFindings(gridLayoutState([{ text: '', left: 0, right: 0, visible: false }, { text: '10', left: 50, right: 60, visible: false },
+        { text: '100', left: 590, right: 610, visible: true }]));
+    assert.ok(f.some((x) => /first grid label must be visible/.test(x.message)));
+    assert.equal(gridLayoutFindings(gridLayoutState([{ text: '', left: 0, right: 0, visible: false }, { text: '10', left: 50, right: 60, visible: true },
+        { text: '100', left: 590, right: 610, visible: true }])).length, 0);
+});
+// #906 fix wave: force_edges promises the first and last grid labels stay inside the container (grid.container,
+// the box $cache.rs measures, captured next to grid.width in state.mjs). container is {left:0, right:600} here.
+// Bug caught: the `first.left < container.left - 1` check dropped from the force_edges block.
+test('grid-layout: force_edges on, the first label overhangs the container, is a finding', () => {
+    const state = gridLayoutState([{ text: '0', left: -5, right: 10, visible: true }, { text: '100', left: 590, right: 600, visible: true }], 600, { left: 0, right: 600 });
+    const f = gridLayoutFindings(state, { force_edges: true });
+    assert.ok(f.some((x) => /first grid label must stay inside the container/.test(x.message)));
+});
+// Bug caught: the `last.right > container.right + 1` check dropped from the force_edges block.
+test('grid-layout: force_edges on, the visible last label overhangs the container, is a finding', () => {
+    const state = gridLayoutState([{ text: '0', left: 0, right: 10, visible: true }, { text: '100', left: 590, right: 620, visible: true }], 600, { left: 0, right: 600 });
+    const f = gridLayoutFindings(state, { force_edges: true });
+    assert.ok(f.some((x) => /last grid label must stay inside the container/.test(x.message)));
+});
+// Bug caught: the `cfg.force_edges` guard dropped, judging containment even when the option is off.
+test('grid-layout: overhanging labels are not a finding without force_edges', () => {
+    const state = gridLayoutState([{ text: '0', left: -5, right: 10, visible: true }, { text: '100', left: 590, right: 620, visible: true }], 600, { left: 0, right: 600 });
+    const f = gridLayoutFindings(state, {});
+    assert.equal(f.filter((x) => /stay inside the container/.test(x.message)).length, 0);
+});
+// Bug caught: the `last.visible &&` guard dropped, judging a hidden last label's position instead of leaving it
+// to the visibility check above.
+test('grid-layout: force_edges does not judge a hidden last label', () => {
+    const state = gridLayoutState([{ text: '0', left: 0, right: 10, visible: true }, { text: '100', left: 590, right: 620, visible: false }], 600, { left: 0, right: 600 });
+    const f = gridLayoutFindings(state, { force_edges: true });
+    assert.equal(f.filter((x) => /last grid label must stay inside the container/.test(x.message)).length, 0);
 });
 
 // ------------------------------------------------------------------------ dom
