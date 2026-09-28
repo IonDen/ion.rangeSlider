@@ -56,7 +56,7 @@
  */
 
 import { isValuesMode, nearestOnScale, onScale, rangeOf, scaleDecimals, scalePoint } from './scale.mjs';
-import { builtinPrettify, valuesEntry } from './format.mjs';
+import { builtinPrettify } from './format.mjs';
 import { keyStops, INVARIANTS } from './invariants.mjs';
 // Where the fixed interaction script aims: the same numbers matrix.spec.mjs drives the
 // slider with. A predicate that has to say "this stage pushes the handle into its own
@@ -683,16 +683,6 @@ function payloadStage(ctx) {
     return true;                                                    // a live slider reports every interaction
 }
 
-/** Are the payload's *_pretty fields numbers rather than formatted text? */
-function prettyFieldsAreNumbers(cfg) {
-    if (cfg.prettify_enabled !== false) return false;
-    if (!isValuesMode(cfg)) return true;
-    // In values mode the fields carry the entries, which are only numbers when the
-    // entries themselves are (a string array formats to text with prettify off).
-    const last = cfg.values.length - 1;
-    return typeof valuesEntry(cfg, 0) === 'number' || typeof valuesEntry(cfg, last) === 'number';
-}
-
 /**
  * Is the keyboard dead after the track click (#891)?
  *
@@ -763,28 +753,6 @@ export const KNOWN_BUGS = [
             // From there the gap stands while nothing moves a handle; a stage that does
             // move one re-applies the clamp and the rule passes again.
             return breaksInterval(gapBetween(before.from, before.to), cfg) && !promised(ctx).changed;
-        }
-    },
-
-    {
-        issue: 889,
-        title: 'the *_pretty callback fields come back as numbers with prettify_enabled off',
-        // The number is what this entry speaks for: `got 0`, `got -50`, never `got undefined`.
-        // On a jQuery build that measures a hidden track as zero (3.3 and later) a slider
-        // built hidden drops its two handle fields at init instead of turning them into
-        // numbers (#897), and there the five entries that are built hidden AND with prettify
-        // off (m018, m019, m065, m067, m068) report both at S0 -- a pattern wide enough to
-        // cover "got undefined" would swallow the missing text along with the numbers and
-        // leave #897 looking as if it had never reproduced. On an older build those five
-        // render at init, their handle fields come back as numbers too, and all four are
-        // this entry's.
-        what: /_pretty must be the formatted [a-z]+ value \(expected .*, got -?\d/,
-        // Every stage that records a payload on a slider with prettify_enabled: false and
-        // numeric values behind it. _prettify() returns its argument unchanged there, so
-        // the "formatted" half of every pair is the raw number the readme shows as text.
-        matches(ctx, id) {
-            if (id !== 'callbacks') return false;
-            return prettyFieldsAreNumbers(ctx.cfg) && payloadStage(ctx);
         }
     },
 
@@ -1128,8 +1096,9 @@ export const KNOWN_BUGS = [
  * The register entry that covers this failure, if any.
  *
  * With a message, an entry answers only when its `what` pattern covers that message: two
- * entries can match the same configuration and rule (m065 carries both #889 and #891 on the
- * callbacks rule), and the message is what tells them apart. Without one the question is the
+ * entries can match the same configuration and rule (a values-mode slider built hidden
+ * carries both #888 and #897 on the callbacks rule at S0), and the message is what tells
+ * them apart. Without one the question is the
  * weaker "does any entry claim this configuration and rule at all", which is what the
  * retirement check in judgeStage() asks.
  *
