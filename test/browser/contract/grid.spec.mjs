@@ -4,19 +4,22 @@
  * readme Settings rows grid, grid_margin, grid_num and grid_snap. The grid_num row carries
  * the two numbers these rows turn on: "Number of grid units the value range is cut into,
  * at most 50. A labelled tick mark sits at each unit boundary, with smaller unlabelled
- * ticks between them (up to 28 units)."
+ * ticks between them (up to 28 units)." Since #906 the row adds that the grid may use
+ * fewer or more units so that every labelled tick names a value the handle can reach. The
+ * rows here that count units use 0 to 100 with step 1, whose even split already names
+ * reachable values, so the counts hold.
  *
  * The grid is built once, in appendGrid(), and only re-measured afterwards, so every row
  * here reads the markup of a freshly built slider.
  *
- * Covered elsewhere and not repeated here: repeated ticks on a range holding fewer steps
- * than grid_num (the #772 tests in test/browser/features.spec.mjs), the grid of values
- * mode (values-mode.spec.mjs) and prettify_grid (prettify.spec.mjs, and the #306 tests in
- * features.spec.mjs).
+ * Covered elsewhere and not repeated here: a range holding fewer steps than grid_num, which
+ * gets one tick per step, and a prettify_grid that repeats a label (the #772 tests in
+ * test/browser/features.spec.mjs), the grid of values mode (values-mode.spec.mjs) and
+ * prettify_grid (prettify.spec.mjs, and the #306 tests in features.spec.mjs).
  *
- * These are characterization tests of shipped behaviour, so each row except the #892 one
- * names in a comment the one-line change to js/ion.rangeSlider.js that reds it. Each of
- * those was applied live, run, watched red and reverted.
+ * These are characterization tests of shipped behaviour, so each row names in a comment
+ * the one-line change to js/ion.rangeSlider.js that reds it. Each of those was applied
+ * live, run, watched red and reverted.
  */
 import { test, expect } from '@playwright/test';
 import { open, LABEL } from '../helpers.mjs';
@@ -78,7 +81,8 @@ test.describe(`grid (${LABEL})`, () => {
 
     // readme Settings, grid_snap: "Use one grid unit per step instead of grid_num."
     // Mutation caught: _gridTicksEven() -> `big_num = (o.max - o.min) / o.step` becomes
-    // `big_num = o.grid_num`, and the grid falls back to five labels counting by 25.
+    // `big_num = (o.max - o.min) / (2 * o.step)`: rule 1 keeps that coarser even split,
+    // and the grid reads 0, 20, 40, 60, 80, 100.
     test('grid_snap puts one labelled tick on every step (Settings: grid_snap)', async ({ page }) => {
         await open(page, { min: 0, max: 100, from: 10, step: 10, grid: true, grid_snap: true });
 
@@ -92,8 +96,9 @@ test.describe(`grid (${LABEL})`, () => {
     // That last label names a value the step scale does not hold, but it is the one value
     // off the scale the slider can still reach (a drag to the far end lands on 100), so it
     // is recorded here rather than counted against the readme.
-    // Mutation caught: the same `big_num = (o.max - o.min) / o.step` -> `big_num = o.grid_num`
-    // as above, which replaces the whole list with five labels counting by 25.
+    // Mutation caught: the same `big_num = (o.max - o.min) / o.step` ->
+    // `big_num = (o.max - o.min) / (2 * o.step)` as above, which leaves every other step:
+    // 0, 14, 28 ... 98, 100.
     test('grid_snap on a step that leaves a remainder labels the steps and then max (characterization)', async ({ page }) => {
         await open(page, { min: 0, max: 100, from: 7, step: 7, grid: true, grid_snap: true });
 
@@ -104,32 +109,15 @@ test.describe(`grid (${LABEL})`, () => {
         ]);
     });
 
-    // readme note "step": "Every value is `min` plus a whole number of steps". readme
-    // Settings, grid_num: "A labelled tick mark sits at each unit boundary." A slider on 0
-    // to 10 with step 2 holds 0, 2, 4, 6, 8 and 10, so cutting it into four units puts two
-    // of the five labels on values the slider cannot reach: the grid reads 0, 3, 5, 8, 10
-    // while a drag to the first quarter lands on 2.
-    //
-    // Endpoints are left out of the check: the first and last labels carry min and max,
-    // which the readme documents as the range ends whether or not a whole number of steps
-    // reaches them.
-    // No mutation claim: inside test.fail(true) any failure counts as the expected one, so
-    // no change to today's plugin can red this row. It goes red, as an unexpected pass,
-    // the day #892 is fixed; the readme names the expectation.
+    // readme note "step": "Every value is `min` plus a whole number of steps". readme Settings, grid_num (since #906):
+    // the grid may use fewer or more units so that every labelled tick names a value the handle can reach. A slider
+    // on 0 to 10 with step 2 holds 0, 2, 4, 6, 8 and 10; four units would label 3, 5 and 8, values it cannot reach
+    // (#892), so the grid uses five units of one step.
+    // Mutation caught: rule 5 deleted from calcGridTicks() -- the labels go back to 0, 3, 5, 8, 10.
     test('every labelled tick names a value on the step scale (note "step", Settings: grid_num)', async ({ page }) => {
-        test.fail(true, '#892: grid labels name values off the step scale on a range that does not divide');
+        await open(page, { min: 0, max: 10, from: 0, step: 2, grid: true, grid_num: 4 });
 
-        const min = 0;
-        const step = 2;
-        await open(page, { min, max: 10, from: 0, step, grid: true, grid_num: 4 });
-
-        const texts = (await readState(page)).grid.texts;
-        const interior = texts.slice(1, -1);
-        const offScale = interior.filter((text) => {
-            const steps = (Number(text) - min) / step;
-            return steps !== Math.round(steps);
-        });
-        expect(offScale).toEqual([]);
+        expect((await readState(page)).grid.texts).toEqual(['0', '2', '4', '6', '8', '10']);
     });
 
     // One labelled tick per values entry (note "values"): see values-mode.spec.mjs.

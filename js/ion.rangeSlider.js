@@ -3114,21 +3114,390 @@
          * The grid's big ticks, as appendGrid() renders them (#906): for each tick its position (`left`,
          * percent of the grid), the value it names (the entry index in values mode), how many small ticks go
          * before it (`small`) and the position those small ticks are measured from (`prev`), plus the rule
-         * that chose them: 0 for a zero range (min equal to max), which gets one tick at 0% naming min;
-         * otherwise "even", the even split into grid_num units (grid_snap: one unit per step), at most 50
-         * units.
+         * that chose them.
+         *
+         * Terms: step index m stands for the handle position m * p_step and for the value the handle reports
+         * there, _gridValueAt(m). s_last is the last step index inside the value range. The scale is the
+         * values at 0 .. s_last, plus max; max is off the scale when the value at s_last is not max. A tick's
+         * resting position is convertToPercent(value), where the handle stands on that value. t is grid_num
+         * capped at 50, and a unit is 100 / t percent. Positions compare with a 1e-9 tolerance, and a tick
+         * naming max sits at exactly 100%. The scale is never built: the rules evaluate a few step indices
+         * next to each tick, at most 808 convertToValue() calls per build, however many steps the range holds.
+         *
+         * The first rule that applies chooses the ticks:
+         *   0: a zero range (min equal to max): one tick at 0% naming min.
+         *   "even": more than 2^53 steps, or p_step rounded to 0: the scale cannot be evaluated, so the even
+         *      split into grid_num units stays, unchecked.
+         *   1: the even split into grid_num units (grid_snap: one unit per step), at most 50 units, is kept
+         *      when every tick names a distinct scale value within 1% of the track of its resting position.
+         *   3: t at least s_last: one tick per step; max off the scale replaces the last tick when the
+         *      remainder is under half a step, otherwise it follows as a tail tick (always a tail when s_last
+         *      is 0, a step wider than the range).
+         *   4: every even-split tick within a tenth of a unit of a scale point: t units, the first tick on min
+         *      and the last on max, each interior tick on its nearest scale point, or on a rounder one (more
+         *      trailing zeros) within one step and 1% of the track.
+         *   5: n units, n the divisor of s_last nearest t between max(2, ceil(t / 2)) and min(2t, 50), ties
+         *      going to more units; when none qualifies, k = max(round(s_last / t), ceil(s_last / 50)) steps
+         *      per unit, with a remainder under k / 2 folded into the previous unit. Max off the scale
+         *      replaces the last tick when the remainder is under half a unit, otherwise it is a tail tick.
+         *   2: grid_snap (the branch also checks values mode, but rule 1 above already keeps every
+         *      values-mode grid, so that check is never reached): one tick per step up to 50 steps; past
+         *      that, k steps per unit, k the first divisor of s_last between c and 2c (c = ceil(s_last / 50),
+         *      or ceil(s_last / 49) when max is off the scale), else k = c with a remainder under k / 2
+         *      folded into the previous unit. Max off the scale is a tail tick.
+         * In every rule a tail that would make a 51st unit replaces the last regular tick instead, and a tick
+         * naming the same value as the tick before it is dropped.
          * @returns {{rule: (number|string), ticks: Array}}
          */
         calcGridTicks: function () {
-            var o = this.options;
+            var o = this.options,
+                even, info, s_last, t, rem, n, k;
 
-            // Rule 0: a zero range (min equal to max after validate(), which also clamps a max below min to
-            // min, or a one-entry values array) gets one tick naming min, and nothing divides by the range.
+            // Rule 0.
             if (o.max === o.min) {
                 return { rule: 0, ticks: [{ left: 0, value: o.min, small: 0, prev: 0 }] };
             }
 
-            return { rule: "even", ticks: this._gridTicksEven() };
+            even = this._gridTicksEven();
+
+            // The "even" guard: more than 2^53 steps, or p_step rounded to 0.
+            if (!(this.coords.p_step > 0) || 100 / this.coords.p_step > 9007199254740991) {
+                return { rule: "even", ticks: even };
+            }
+
+            info = this._gridScaleInfo();
+            s_last = info.s_last;
+
+            // Rule 1.
+            if (this._gridIsTruthful(even, info)) {
+                return { rule: 1, ticks: even };
+            }
+
+            // Rule 2.
+            if (o.values.length || o.grid_snap) {
+                k = s_last <= 50 ? 1 : this._gridStrideStep(s_last, info.max_off ? 49 : 50);
+                return { rule: 2, ticks: this._gridTicksFrom(info, this._gridStride(s_last, k), k, "tail") };
+            }
+
+            t = Math.min(o.grid_num, 50);
+            rem = o.max - this._gridValueAt(s_last);
+
+            // Rule 3.
+            if (t >= s_last) {
+                return {
+                    rule: 3,
+                    ticks: this._gridTicksFrom(info, this._gridStride(s_last, 1), 1, rem < o.step / 2 ? "replace" : "tail")
+                };
+            }
+
+            // Rule 4.
+            if (even.length === t + 1 && this._gridCanSnap(even, info, t)) {
+                return { rule: 4, ticks: this._gridSnap(even, info, t) };
+            }
+
+            // Rule 5.
+            n = this._gridPickUnits(s_last, t);
+            k = n ? s_last / n : Math.max(Math.round(s_last / t), Math.ceil(s_last / 50));
+            return {
+                rule: 5,
+                ticks: this._gridTicksFrom(info, this._gridStride(s_last, k), k, rem < k * o.step / 2 ? "replace" : "tail")
+            };
+        },
+
+        /**
+         * #906: the last step index inside the value range (s_last) and whether max is off the step scale,
+         * decided from the converted value. Constant time: the scale itself is never built.
+         * @returns {{s_last: number, max_off: boolean}}
+         */
+        _gridScaleInfo: function () {
+            var p = this.coords.p_step,
+                limit = 100 * (1 + 1e-9),
+                s_last = Math.floor(100 / p),
+                i;
+
+            // Math.floor already lands within a step of the answer. The loops are bounded because past 2^53
+            // steps s_last + 1 === s_last (calcGridTicks() does not call this then).
+            for (i = 0; i < 3 && (s_last + 1) * p <= limit; i++) s_last++;
+            for (i = 0; i < 3 && s_last > 0 && s_last * p > limit; i++) s_last--;
+
+            return { s_last: s_last, max_off: this._gridValueAt(s_last) !== this.options.max };
+        },
+
+        /**
+         * #906: the value the handle reports at step index m.
+         * @param {number} m
+         * @returns {number}
+         */
+        _gridValueAt: function (m) {
+            return this.convertToValue(this.calcWithStep(m * this.coords.p_step));
+        },
+
+        /**
+         * #906: whether v is a value the handle can rest on: max, or the value at a step index next to v's
+         * position. The offsets are tried nearest first (0, -1, +1, -2, +2), so a value on its own index costs
+         * one conversion. The loop runs over offsets, not indexes, because past 2^53 m + 1 === m.
+         * @param {number} v
+         * @param {{s_last: number}} info
+         * @returns {boolean}
+         */
+        _gridOnScale: function (v, info) {
+            var offsets = [0, -1, 1, -2, 2],
+                m0, m, j;
+
+            if (v === this.options.max) return true;
+            m0 = Math.round(this.convertToPercent(v) / this.coords.p_step);
+            for (j = 0; j < offsets.length; j++) {
+                m = m0 + offsets[j];
+                if (m >= 0 && m <= info.s_last && this._gridValueAt(m) === v) return true;
+            }
+            return false;
+        },
+
+        /**
+         * #906 rule 1's test: every tick names a scale value, no two ticks name the same value, and every tick
+         * is within 1% of the track of its value's resting position. The duplicate check is defensive: two
+         * neighbouring ticks are a unit (2% of the track or more) apart, so two that name one value fail the
+         * 1% check as well.
+         * @param {Array} ticks
+         * @param {{s_last: number}} info
+         * @returns {boolean}
+         */
+        _gridIsTruthful: function (ticks, info) {
+            var i, v;
+
+            for (i = 0; i < ticks.length; i++) {
+                v = ticks[i].value;
+                if (i && v === ticks[i - 1].value) return false;
+                if (!this._gridOnScale(v, info)) return false;
+                if (Math.abs(ticks[i].left - this.convertToPercent(v)) > 1 + 1e-9) return false;
+            }
+            return true;
+        },
+
+        /**
+         * #906: step indexes 0, k, 2k, ..., s_last; a remainder shorter than k / 2 is folded into the previous
+         * unit, a longer one becomes a unit of its own.
+         * @param {number} s_last
+         * @param {number} k steps per unit
+         * @returns {Array}
+         */
+        _gridStride: function (s_last, k) {
+            var q = Math.floor(s_last / k),
+                r = s_last - q * k,
+                idx = [],
+                j;
+
+            if (r === 0) {
+                for (j = 0; j <= q; j++) idx.push(j * k);
+            } else if (r < k / 2) {
+                for (j = 0; j < q; j++) idx.push(j * k);
+                idx.push(s_last);
+            } else {
+                for (j = 0; j <= q; j++) idx.push(j * k);
+                idx.push(s_last);
+            }
+            return idx;
+        },
+
+        /**
+         * #906: ticks at the given step indexes, each at its resting position. When max is off the scale it
+         * replaces the last tick ("replace") or follows it as a tail tick ("tail"); a tail after 50 regular
+         * units would make a 51st, so it replaces instead. A unit of u steps, where a regular unit has k, gets
+         * min(small_max, round(small_max * u / k)) small ticks: a short tail gets fewer. A tick naming the same
+         * value as the one before it is dropped.
+         * @param {{s_last: number, max_off: boolean}} info
+         * @param {Array} idx step indexes
+         * @param {number} k steps in a regular unit
+         * @param {string} max_mode "replace" or "tail"
+         * @returns {Array} [{left, value, small, prev}]
+         */
+        _gridTicksFrom: function (info, idx, k, max_mode) {
+            var o = this.options,
+                pts = [],
+                ticks = [],
+                i, left, small_max;
+
+            for (i = 0; i < idx.length; i++) {
+                pts.push({ value: this._gridValueAt(idx[i]), steps: idx[i] });
+            }
+            if (max_mode === "tail" && idx.length > 50) {
+                max_mode = "replace";
+            }
+            if (info.max_off) {
+                // A lone tick (s_last 0: a step wider than the range) is min itself and is never replaced.
+                if (max_mode === "replace" && idx.length > 1) {
+                    pts[pts.length - 1] = { value: o.max, steps: pts[pts.length - 1].steps };
+                } else {
+                    pts.push({ value: o.max, steps: idx[idx.length - 1] + (o.max - pts[pts.length - 1].value) / o.step });
+                }
+            }
+
+            small_max = this._gridSmallMax(pts.length - 1);
+            for (i = 0; i < pts.length; i++) {
+                if (ticks.length && ticks[ticks.length - 1].value === pts[i].value) continue;
+                left = pts[i].value === o.max ? 100 : this.convertToPercent(pts[i].value);
+                if (left > 100) left = 100;
+                ticks.push({
+                    left: left,
+                    value: pts[i].value,
+                    small: i ? Math.min(small_max, Math.round(small_max * (pts[i].steps - pts[i - 1].steps) / k)) : small_max,
+                    prev: ticks.length ? ticks[ticks.length - 1].left : 0
+                });
+            }
+            return ticks;
+        },
+
+        /**
+         * #906 rule 5's unit count: the divisor of s_last nearest t between max(2, ceil(t / 2)) (ceil(t / 2)
+         * when s_last is 1) and min(2t, 50), ties going to more units; 0 when none qualifies. At most 50 tries.
+         * @param {number} s_last
+         * @param {number} t
+         * @returns {number}
+         */
+        _gridPickUnits: function (s_last, t) {
+            var lo = s_last >= 2 ? Math.max(2, Math.ceil(t / 2)) : Math.ceil(t / 2),
+                hi = Math.min(2 * t, 50),
+                best = 0,
+                n;
+
+            for (n = lo; n <= hi; n++) {
+                if (s_last % n !== 0) continue;
+                if (!best || Math.abs(n - t) < Math.abs(best - t) || (Math.abs(n - t) === Math.abs(best - t) && n > best)) {
+                    best = n;
+                }
+            }
+            return best;
+        },
+
+        /**
+         * #906 rule 2's steps per unit past 50 steps: the first divisor of s_last between c and 2c
+         * (c = ceil(s_last / cap)), found by trying unit counts n = s_last / d, at most about 50 of them;
+         * c itself when none divides.
+         * @param {number} s_last
+         * @param {number} cap 50, or 49 when a tail tick must still fit
+         * @returns {number}
+         */
+        _gridStrideStep: function (s_last, cap) {
+            var c = Math.ceil(s_last / cap),
+                n;
+
+            for (n = Math.floor(s_last / c); n >= Math.ceil(s_last / (2 * c)); n--) {
+                if (n > 0 && s_last % n === 0) return s_last / n;
+            }
+            return c;
+        },
+
+        /**
+         * #906: the scale points next to a grid position: the step indexes within 2 of it, plus max when max
+         * is off the scale, each with its resting position (capped at 100).
+         * @param {number} left percent
+         * @param {{s_last: number, max_off: boolean}} info
+         * @returns {Array} [{value, rest}]
+         */
+        _gridNearPoints: function (left, info) {
+            var m0 = Math.round(left / this.coords.p_step),
+                out = [],
+                m, v, r, j;
+
+            for (j = -2; j <= 2; j++) {
+                m = m0 + j;
+                if (m < 0 || m > info.s_last) continue;
+                v = this._gridValueAt(m);
+                r = this.convertToPercent(v);
+                out.push({ value: v, rest: r > 100 ? 100 : r });
+            }
+            if (info.max_off) {
+                out.push({ value: this.options.max, rest: 100 });
+            }
+            return out;
+        },
+
+        /**
+         * #906 rule 4's condition: every even-split tick within a tenth of a unit of a scale point.
+         * @param {Array} ticks the even split
+         * @param {{s_last: number, max_off: boolean}} info
+         * @param {number} t
+         * @returns {boolean}
+         */
+        _gridCanSnap: function (ticks, info, t) {
+            var unit = 100 / t,
+                i, j, pts, best;
+
+            for (i = 0; i < ticks.length; i++) {
+                pts = this._gridNearPoints(ticks[i].left, info);
+                best = Number.POSITIVE_INFINITY;
+                for (j = 0; j < pts.length; j++) {
+                    best = Math.min(best, Math.abs(pts[j].rest - ticks[i].left));
+                }
+                if (best > unit / 10 + 1e-9) return false;
+            }
+            return true;
+        },
+
+        /**
+         * #906 rule 4: t units; the first tick on min and the last on max; each interior tick on its nearest
+         * scale point, or on a rounder one within one step and 1% of the track of the even-split tick. Every
+         * unit gets small_max small ticks. _gridCanSnap() has already found a candidate for every tick.
+         * @param {Array} ticks the even split
+         * @param {{s_last: number, max_off: boolean}} info
+         * @param {number} t
+         * @returns {Array} [{left, value, small, prev}]
+         */
+        _gridSnap: function (ticks, info, t) {
+            var o = this.options,
+                unit = 100 / t,
+                small_max = this._gridSmallMax(t),
+                out = [],
+                i, j, d, pts, near, round, cand, v, left;
+
+            for (i = 0; i < ticks.length; i++) {
+                if (i === 0) {
+                    v = o.min;
+                } else if (i === ticks.length - 1) {
+                    v = o.max;
+                } else {
+                    pts = this._gridNearPoints(ticks[i].left, info);
+                    near = null;
+                    round = null;
+                    for (j = 0; j < pts.length; j++) {
+                        d = Math.abs(pts[j].rest - ticks[i].left);
+                        if (d > unit / 10 + 1e-9) continue;
+                        cand = { x: pts[j].value, d: d, r: this._gridRoundness(pts[j].value) };
+                        if (!near || cand.d < near.d || (cand.d === near.d && cand.x < near.x)) {
+                            near = cand;
+                        }
+                        if (d <= 1 + 1e-9 && d <= this.coords.p_step + 1e-9 && (!round || cand.r > round.r ||
+                            (cand.r === round.r && (cand.d < round.d || (cand.d === round.d && cand.x < round.x))))) {
+                            round = cand;
+                        }
+                    }
+                    v = round && round.r > near.r ? round.x : near.x;
+                }
+                if (out.length && out[out.length - 1].value === v) continue;
+                left = v === o.max ? 100 : this.convertToPercent(v);
+                if (left > 100) left = 100;
+                out.push({ left: left, value: v, small: small_max, prev: out.length ? out[out.length - 1].left : 0 });
+            }
+            return out;
+        },
+
+        /**
+         * #906: how round a number is, the largest k in -20..20 with |x| a whole multiple of 10^k (Infinity for
+         * 0, -21 when none): rule 4 prefers a rounder scale point.
+         * @param {number} x
+         * @returns {number}
+         */
+        _gridRoundness: function (x) {
+            var a = Math.abs(x),
+                k, q, r;
+
+            if (a === 0) return Number.POSITIVE_INFINITY;
+            for (k = 20; k >= -20; k--) {
+                q = a / Math.pow(10, k);
+                r = Math.round(q);
+                if (r !== 0 && Math.abs(q - r) < 1e-9 * Math.max(1, q)) return k;
+            }
+            return -21;
         },
 
         /**
@@ -3244,14 +3613,13 @@
             }
             this.coords.big_num = r.ticks.length;
 
-            // #772: a range holding fewer steps than grid_num can snap two
-            // neighbouring ticks to the same value; equal neighbouring
-            // labels are shown once. The first tick always keeps its label,
-            // and the last tick (exactly max) keeps its own rather than an
-            // earlier twin, unless every label is equal (a prettify_grid that
-            // maps every value to one text), where only the first stays.
-            // Compared as strings so a custom prettify_grid that
-            // maps two values to one text is deduplicated the same way.
+            // #772: equal neighbouring labels are shown once. Since #906 no two
+            // ticks name the same value, so a repeat comes from a custom
+            // prettify_grid that maps two values to one text; the labels are
+            // compared as strings for that reason. The first tick always keeps
+            // its label, and the last tick (exactly max) keeps its own rather
+            // than an earlier twin, unless every label is equal (a prettify_grid
+            // that maps every value to one text), where only the first stays.
             // Values mode is exempt: each tick is a real values entry, so a
             // duplicate entry or a merging prettify is the user's own data.
             if (!o.values.length) {

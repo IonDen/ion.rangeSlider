@@ -105,6 +105,10 @@ export async function readState(page, n = 1, cfg) {
     const gridTextEls = cont ? Array.prototype.slice.call(cont.querySelectorAll('.irs-grid-text')) : [];
     const texts = gridTextEls.map((el) => el.textContent);
     const visibleTexts = gridTextEls.filter(visible).map((el) => el.textContent);
+    // #906: the grid rule judges each tick (the big .irs-grid-pol marks, not the small in-between
+    // marks) by its inline left (percent) and the text of the matching .irs-grid-text.
+    const ticks = cont ? Array.prototype.slice.call(cont.querySelectorAll('.irs-grid-pol:not(.small)'))
+      .map((el, i) => ({ left: parseFloat(el.style.left), text: texts[i] })) : [];
     const pols = cont ? cont.querySelectorAll('.irs-grid-pol').length : 0;
     const gridEl = cont ? cont.querySelector('.irs-grid') : null;
     const boxes = gridTextEls.map((el) => {
@@ -162,7 +166,7 @@ export async function readState(page, n = 1, cfg) {
       shadows: shadows,
       grid: {
         present: pols > 0 || texts.length > 0, texts: texts, visibleTexts: visibleTexts, pols: pols,
-        boxes: boxes, width: gridEl ? gridEl.getBoundingClientRect().width : 0,
+        ticks: ticks, boxes: boxes, width: gridEl ? gridEl.getBoundingClientRect().width : 0,
         container: rsBox ? { left: rsBox.left, right: rsBox.right } : null
       },
       mask: !!(cont && cont.querySelector('.irs-disable-mask'))

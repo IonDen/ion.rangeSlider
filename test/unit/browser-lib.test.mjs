@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { onScale, scaleDecimals, nearestOnScale, scalePoint } from '../browser/lib/scale.mjs';
+import { onScale, scaleDecimals, nearestOnScale, scalePoint, scaleNear, restingPercent } from '../browser/lib/scale.mjs';
 import { builtinPrettify, decorate, expectedGridLabel, expectedLabel, expectedMerged, expectedPretty, valuesEntry } from '../browser/lib/format.mjs';
 
 // #877: unit tests for the browser suite's readme-derived oracles. The oracle for
@@ -168,6 +168,20 @@ test('nearestOnScale returns a point onScale accepts, negative min included', ()
   const frac = { min: 0.3, max: 1.3, step: 0.25 };
   assert.equal(nearestOnScale(0.5, frac), 0.55);
   assert.equal(onScale(nearestOnScale(0.5, frac), frac), true);
+});
+
+// #906: the scale points the grid rule compares a tick's label with. Bug caught: a window of one step, or max
+// left out (a tail tick at max would then read as off the scale).
+test('scaleNear gives the scale points within two steps of a position, then max', () => {
+  assert.deepEqual(scaleNear(25, { min: 0, max: 100, step: 10 }), [10, 20, 30, 40, 50, 100]);
+  assert.deepEqual(scaleNear(100, { min: 0, max: 105, step: 10 }), [90, 100, 105]);
+  assert.deepEqual(scaleNear(50, { values: ['a', 'b', 'c', 'd', 'e'] }), [0, 1, 2, 3, 4]);
+});
+
+// Bug caught: values mode measured by value instead of by index, or the position taken from 0 instead of min.
+test('restingPercent measures from min, and by index in values mode', () => {
+  assert.equal(restingPercent(3, { values: ['a', 'b', 'c', 'd', 'e'] }), 75);
+  assert.equal(restingPercent(2, { min: 0.5, max: 10.5, step: 1 }), 15);
 });
 
 // --------------------------------------------------------------- format.mjs

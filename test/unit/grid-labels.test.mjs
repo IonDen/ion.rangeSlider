@@ -2,32 +2,32 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { createSlider } from './helpers.mjs';
 
-// #772: appendGrid() places grid_num + 1 evenly spaced big ticks and labels
-// each with convertToValue(big_w), which snaps the tick's percent to the
-// step grid. When the range holds fewer steps than grid_num, two
-// neighbouring ticks snap to the same value and the same label text is
-// emitted twice (min: 1, max: 4, grid_num left at its default of 4 renders
-// ["1","2","3","3","4"]). The fix keeps every `.irs-grid-pol` mark and
-// `.irs-grid-text` span (so tick count and position are unchanged) and, in a
-// pass after the tick loop, blanks the text of a label that repeats the last
-// kept one; a repeat landing on the last tick (exactly max) keeps that tick's
-// label and blanks the earlier twin instead. Values mode is left untouched.
+// #772: a range holding fewer steps than grid_num used to snap two
+// neighbouring ticks to the same value, and the same label text was emitted
+// twice (min: 1, max: 4 rendered ["1","2","3","3","4"]). The fix blanked a
+// label that repeats the last kept one, in a pass after the tick loop; a
+// repeat landing on the last tick (exactly max) keeps that tick's label and
+// blanks the earlier twin instead. Since #906 (rule 3) such a range gets one
+// tick per step, so the pass only meets a custom prettify_grid that maps two
+// values to one text. Values mode is left untouched.
 
 function gridTexts(slider) {
   return slider.$cache.grid.find('.irs-grid-text').map(function () { return this.textContent; }).get();
 }
 
-// Mutation this catches: dropping the "equals previous label" guard in
-// appendGrid()'s tick loop -- the third and fourth ticks would both render
-// "3" instead of the fourth one going blank.
-test('a range with fewer steps than grid_num blanks the repeated label instead of showing it twice (#772)', (t) => {
+// Flipped by the grid guardrails (#906 rule 3): a range holding fewer steps
+// than grid_num gets one tick per step, so no two ticks name the same value
+// and nothing is blanked (before #906: ['1', '2', '3', '', '4']). Mutation
+// this catches: rule 3 deleted from calcGridTicks() -- the five evenly spaced
+// ticks and the blanked twin come back.
+test('a range with fewer steps than grid_num gets one tick per step, none repeated (#772, #906)', (t) => {
   const { slider } = createSlider(t, '<input>', {
     min: 1, max: 4, from: 1, to: 4, hide_min_max: true, grid: true
   });
 
-  assert.deepEqual(gridTexts(slider), ['1', '2', '3', '', '4']);
-  assert.equal(slider.$cache.grid.find('.irs-grid-text').length, 5);
-  assert.equal(slider.coords.big_num, 5);
+  assert.deepEqual(gridTexts(slider), ['1', '2', '3', '4']);
+  assert.equal(slider.$cache.grid.find('.irs-grid-text').length, 4);
+  assert.equal(slider.coords.big_num, 4);
 });
 
 // Pin: a range wide enough that no two big ticks ever snap to the same
@@ -40,13 +40,15 @@ test('a default 0-100 grid with no repeated ticks renders unchanged (#772)', (t)
   assert.deepEqual(gridTexts(slider), ['0', '25', '50', '75', '100']);
 });
 
-// Pin: min: 1, max: 7 (grid_num stays at its default of 4) already renders
-// uneven tick spacing on 2.4.1 -- inherent to a non-snapped grid, not part
-// of this fix -- but none of its five ticks repeat, so the fix must leave
-// it untouched. Same over-eager-guard mutation as above catches this.
-test('a range with uneven but non-repeating ticks renders unchanged (#772)', (t) => {
+// Flipped by the grid guardrails (#906 rule 5): min: 1, max: 7 (grid_num at
+// its default of 4) holds six steps; the even split's boundaries 2.5 and 5.5
+// fall between steps, and its ticks labelled 3 and 6 sat 8.3% of the track
+// from where the handle stops on them, so the grid uses three units of two
+// steps (before #906: ['1', '3', '4', '6', '7']). Mutation this catches:
+// rule 5 deleted from calcGridTicks() -- the even split comes back.
+test('a range that does not divide into grid_num units gets even units of whole steps (#772, #906)', (t) => {
   const { slider } = createSlider(t, '<input>', { min: 1, max: 7, grid: true });
-  assert.deepEqual(gridTexts(slider), ['1', '3', '4', '6', '7']);
+  assert.deepEqual(gridTexts(slider), ['1', '3', '5', '7']);
 });
 
 // Pin: snapped ticks are one step apart, so the guard never triggers here
@@ -60,42 +62,44 @@ test('grid_snap: true is unaffected (#772)', (t) => {
 });
 
 // A custom prettify_grid can map two distinct values to the same text (here,
-// rounding down to the nearest even number: the reporter's raw tick values
-// 1, 2, 3, 3, 4 become "0", "2", "2", "2", "4"). The guard must compare the
-// label strings produced after prettify_grid runs, not the raw values from
-// convertToValue. Mutation this catches: comparing the pre-prettify numeric
-// value instead of the post-prettify label string -- under that mutation the
-// third tick's raw value (3) differs from the second's (2), so it keeps its
-// "2" label instead of blanking, ['0','2','2','','4']; the fixed output
-// compares strings and blanks two ticks, ['0','2','','','4'].
+// rounding down to the nearest even number: the tick values 1, 2, 3, 4 -- one
+// per step since #906 rule 3 -- become "0", "2", "2", "4"). The guard must
+// compare the label strings produced after prettify_grid runs, not the raw
+// values. Mutation this catches: comparing the pre-prettify numeric value
+// instead of the post-prettify label string -- the third tick's raw value (3)
+// differs from the second's (2), so it keeps its "2" label,
+// ['0','2','2','4'], where the string comparison blanks it, ['0','2','','4'].
+// (Before #906, with five ticks: ['0','2','','','4'].)
 test('a custom prettify_grid that maps two values to the same text also gets deduplicated (#772)', (t) => {
   const { slider } = createSlider(t, '<input>', {
     min: 1, max: 4, from: 1, to: 4, grid: true,
     prettify_grid: function (num) { return String(num - (num % 2)); }
   });
-  assert.deepEqual(gridTexts(slider), ['0', '2', '', '', '4']);
+  assert.deepEqual(gridTexts(slider), ['0', '2', '', '4']);
 });
 
-// Pin: min: 1, max: 2 repeats its tick value three times running into the
-// last tick, which is exactly max -- the fix keeps the first label ("1")
-// and the last label ("2"), blanking every repeat in between. Mutation this
-// catches: dropping the last-tick branch (the `i === texts.length - 1 &&
-// kept !== 0` check) -- the last tick would blank like the rest,
-// ['1','','2','',''], losing the right-edge label entirely.
-test('a run of repeats ending on the last tick keeps the first and the last label (#772)', (t) => {
+// Flipped by the grid guardrails (#906 rule 3): min: 1, max: 2 is one step,
+// so the grid is its two values (before #906: ['1', '', '', '', '2']).
+// Mutation this catches: rule 3 deleted from calcGridTicks().
+test('a one-step range shows min and max, nothing repeated (#772, #906)', (t) => {
   const { slider } = createSlider(t, '<input>', { min: 1, max: 2, grid: true });
-  assert.deepEqual(gridTexts(slider), ['1', '', '', '', '2']);
+  assert.deepEqual(gridTexts(slider), ['1', '2']);
 });
 
-// Pin: min: 1, max: 3 repeats twice, with the second repeat landing on the
-// last tick -- the fix drops the earlier repeat but keeps the last tick's
-// label ("3") since it is the true max, rather than treating the two
-// repeats identically. Mutation this catches: dropping the last-tick
-// branch -- the last tick would blank instead of its earlier twin,
-// ['1','2','','3',''].
+// Retargeted by the grid guardrails (#906): since rule 3 no two ticks name the
+// same value, so only a prettify_grid that merges texts can land a repeat on
+// the last tick. n + n % 2 maps the ticks 1, 2, 3, 4 to "2", "2", "4", "4":
+// the dedup pass keeps the last tick's "4" (it is max) and blanks its earlier
+// twin. (Before #906 the grid had five ticks here, ['2','','','','4'].)
+// Mutation this catches: dropping the last-tick branch (the
+// `i === texts.length - 1 && kept !== 0` check) -- the last tick would blank
+// instead of its earlier twin, ['2','','4',''].
 test('a repeat that lands on the last tick keeps that tick over its earlier twin (#772)', (t) => {
-  const { slider } = createSlider(t, '<input>', { min: 1, max: 3, grid: true });
-  assert.deepEqual(gridTexts(slider), ['1', '2', '', '', '3']);
+  const { slider } = createSlider(t, '<input>', {
+    min: 1, max: 4, grid: true,
+    prettify_grid: function (n) { return String(n + n % 2); }
+  });
+  assert.deepEqual(gridTexts(slider), ['2', '', '', '4']);
 });
 
 // Pin: values mode is exempt from the dedup pass -- each entry is a real

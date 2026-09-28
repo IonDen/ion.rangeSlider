@@ -178,8 +178,8 @@ Or use `data-*` attributes on the input:
 | `keyboard` | `data-keyboard` | `true` | boolean | Keyboard controls. Left: ←, ↓, A, S. Right: →, ↑, W, D |
 | `grid` | `data-grid` | `false` | boolean | Show the value grid below the slider. [See notes](#grid) |
 | `grid_margin` | `data-grid-margin` | `true` | boolean | Add a grid margin on the left and right, half a handle wide, so the first and last grid labels line up with the handle centers |
-| `grid_num` | `data-grid-num` | `4` | number | Number of grid units the value range is cut into, at most 50. A labelled tick mark sits at each unit boundary, with smaller unlabelled ticks between them (up to 28 units). A fraction is rounded to the nearest whole number; if that is below 1, or the value is not a number, the grid uses 4. Ignored when `grid_snap` is on or `values` is used |
-| `grid_snap` | `data-grid-snap` | `false` | boolean | Use one grid unit per step instead of `grid_num`. Still capped at 50 units |
+| `grid_num` | `data-grid-num` | `4` | number | Number of grid units the value range is cut into, at most 50. A labelled tick mark sits at each unit boundary, with smaller unlabelled ticks between them (up to 28 units). The grid may use fewer or more units than this so that every labelled tick names a value the handle can reach: 1 to 4 with `grid_num: 50` gives 3 units, and 0 to 100 with `step: 10` and the default 4 gives 5. A fraction is rounded to the nearest whole number; if that is below 1, or the value is not a number, the grid uses 4. Ignored when `grid_snap` is on or `values` is used |
+| `grid_snap` | `data-grid-snap` | `false` | boolean | Use one grid unit per step instead of `grid_num`. Past 50 steps the grid still has at most 50 units, and each labelled tick names a value the handle can reach |
 | `hide_min_max` | `data-hide-min-max` | `false` | boolean | Hide the min and max labels |
 | `hide_from_to` | `data-hide-from-to` | `false` | boolean | Hide the from and to value labels |
 | `prefix` | `data-prefix` | `""` | string | Prefix for values: **$**100 |
@@ -215,7 +215,7 @@ Put the starting `from` and `to`, the per-handle limits (`from_min`, `from_max`,
 
 #### values
 
-The slider works on array indexes instead of numbers: whatever you pass for `min`, `max` and `step` is replaced by 0, `values.length - 1` and 1. The grid gets one labelled tick per entry, up to the 50-unit cap, because `grid_num` and `grid_snap` are set for you.
+The slider works on array indexes instead of numbers: whatever you pass for `min`, `max` and `step` is replaced by 0, `values.length - 1` and 1. The grid gets one labelled tick per entry, up to the 50-unit cap, because `grid_num` and `grid_snap` are set for you. Past 51 entries the 51 grid labels each name an entry, and the entries skipped between them are not evenly spread.
 
 A numeric-looking entry such as "20.0" is converted to the number 20 unless `values_raw` is on.
 
@@ -228,6 +228,10 @@ Set it when the slider is created, or pass `values` again in the same `update()`
 #### grid
 
 The first grid label is always visible, and so is the last unless the two would overlap on a very narrow slider. No two visible grid labels overlap; labels in between are hidden when there is no room. With `force_edges` the first and last grid labels stay inside the container.
+
+Every labelled tick names a value the handle can reach and sits where the handle stops on that value, so `grid_num` works as a target (see its row). When `min` is off the step scale (`min: 0.5, step: 1`) the ticks follow where the handle stops and can look slightly uneven; `step_from_min` gives an even grid.
+
+Grid labels are HTML: markup that `prettify_grid` or `prettify` returns, or that a `values` entry holds, is rendered, not escaped.
 
 #### prettify
 

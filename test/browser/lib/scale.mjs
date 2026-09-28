@@ -192,3 +192,42 @@ export function nearestOnScale(value, cfg) {
     }
     return best;
 }
+
+/**
+ * #906: the scale points around a grid position, for the matrix's grid rule: the points at the whole-step counts
+ * within K_WINDOW of the position (percent of the value range) that lie inside the range, then max. In values mode
+ * the indexes themselves.
+ *
+ * On a half-tie range (e.g. min 0.5, max 7000.5, step 1000) float noise can make the plugin's own value at a
+ * step differ from this scale model's scalePoint() by one unit, so this check can misjudge such a grid; no
+ * configuration in the matrix has one.
+ *
+ * @param {number} percent
+ * @param {object} cfg
+ * @returns {number[]}
+ */
+export function scaleNear(percent, cfg) {
+    const { min, max, step } = rangeOf(cfg);
+    if (!(step > 0) || !(max > min)) return [min];
+    const estimate = Math.round(((percent / 100) * (max - min)) / step);
+    const out = [];
+    for (let k = Math.max(0, estimate - K_WINDOW); k <= estimate + K_WINDOW; k++) {
+        const point = scalePoint(k, cfg);
+        if (point <= max) out.push(point);
+    }
+    if (out[out.length - 1] !== max) out.push(max);
+    return out;
+}
+
+/**
+ * #906: where the handle stands on a value, in percent of the value range (values mode: by index), the position a
+ * grid tick naming that value must sit at.
+ *
+ * @param {number} value
+ * @param {object} cfg
+ * @returns {number}
+ */
+export function restingPercent(value, cfg) {
+    const { min, max } = rangeOf(cfg);
+    return max > min ? ((value - min) / (max - min)) * 100 : 0;
+}
