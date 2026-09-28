@@ -68,12 +68,13 @@ test.describe(`step_from_min coverage (${LABEL})`, () => {
   // option has to reach them too. Against 2.4.2 the labels read "2.6" and
   // "7.4" (rounded to the step's one decimal) where this config's own scale
   // has 2.75 and 7.25. One-line bug this catches: reading the option only on
-  // the handle path.
+  // the handle path. Flipped by the grid guardrails (#906 rule 5): the fourth
+  // label is 7.75 (before #906: 7.25).
   test('grid labels follow the min-anchored scale (#869)', async ({ page }) => {
     await open(page, { type: 'single', min: 0.25, max: 9.75, step: 0.5, grid: true, step_from_min: true });
 
     const texts = await page.locator('.irs-grid-text').allTextContents();
-    expect(texts).toEqual(['0.25', '2.75', '5.25', '7.25', '9.75']);
+    expect(texts).toEqual(['0.25', '2.75', '5.25', '7.75', '9.75']);
   });
 
   // B5. The default-off twin of B1: characterization of today's behavior,

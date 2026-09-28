@@ -7,10 +7,10 @@
  *
  * An entry is:
  *   {
- *     issue: 892,                                   // the filed GitHub issue number
- *     title: 'grid labels name values off the step scale',   // one line, in the glossary's words
- *     what: /grid label at unit/,                   // the failure MESSAGE this bug produces
- *     matches(ctx, id) { return id === 'grid' && gridBoundariesOffScale(ctx.cfg); }
+ *     issue: 887,                                   // the filed GitHub issue number
+ *     title: 'the built-in thousands separator is inserted into the fractional part',   // one line, in the glossary's words
+ *     what: /label text|grid label at|_pretty must be/,   // the failure MESSAGES this bug produces
+ *     matches(ctx, id) { return id === 'labels' && builtinFormattingActive(ctx.cfg) && scaleDecimals(ctx.cfg) >= 4; }
  *   }
  *
  * `what` is the second half of the entry and is not optional: `matches` says which
@@ -57,7 +57,7 @@
 
 import { isValuesMode, nearestOnScale, onScale, rangeOf, scaleDecimals, scalePoint } from './scale.mjs';
 import { builtinPrettify, valuesEntry } from './format.mjs';
-import { gridUnits, keyStops, INVARIANTS } from './invariants.mjs';
+import { keyStops, INVARIANTS } from './invariants.mjs';
 // Where the fixed interaction script aims: the same numbers matrix.spec.mjs drives the
 // slider with. A predicate that has to say "this stage pushes the handle into its own
 // limit" can only say it from those, and reading them from the script is what keeps the
@@ -490,35 +490,6 @@ function reportedValuesOffGrid(cfg) {
     return Math.abs(scalePoint(1, cfg) - (min + step)) >= step / 2 - EPS;
 }
 
-/**
- * Does a grid unit boundary fall between two scale points?
- *
- * readme settings table, grid_num: "A labelled tick mark sits at each unit boundary",
- * and note "step": every value is min plus whole steps. The plugin rounds a boundary to
- * the DECIMALS of step instead of snapping it onto the step scale, so the two agree on a
- * range that divides into whole steps and part ways on one that does not (0 to 10 with
- * step 2 and four units: the boundary at 2.5 is labelled 3, a value the handle cannot
- * take). Only the inner boundaries are checked: the first is min and the last is max.
- *
- * @param {object} cfg
- * @returns {boolean}
- */
-function gridBoundariesOffScale(cfg) {
-    if (!cfg.grid || isValuesMode(cfg)) return false;
-    // step_from_min removes the rounding from the scale altogether (every value is min
-    // plus whole steps), and the plugin's boundaries land on it: the seven step_from_min
-    // entries of the matrix all label their grid the way the readme says.
-    if (cfg.step_from_min) return false;
-    const { min, max } = rangeOf(cfg);
-    const units = gridUnits(cfg);
-    const decimals = scaleDecimals(cfg);
-    for (let i = 1; i < units; i++) {
-        const raw = min + (i * (max - min)) / units;
-        if (+raw.toFixed(decimals) !== nearestOnScale(raw, cfg)) return true;
-    }
-    return false;
-}
-
 /** Is the built-in number formatting the one drawing this config's labels? */
 function builtinFormattingActive(cfg) {
     if (cfg.prettify_enabled === false) return false;
@@ -778,18 +749,6 @@ export const KNOWN_BUGS = [
             const clicked = clickedValue(cfg);
             return isNum(before.from) && isNum(before.to)
                 && clicked >= before.from - EPS && clicked <= before.to + EPS;
-        }
-    },
-
-    {
-        issue: 892,
-        title: 'grid labels name values off the step scale on a range that does not divide',
-        what: /grid label at unit/,
-        // n008 (the site's 1000 to 1000000 step 1000 demo) and n034 (0 to 10 step 2): the
-        // grid is built once at init and redrawn unchanged, so every stage but the
-        // destroyed one shows the same wrong labels.
-        matches(ctx, id) {
-            return id === 'grid' && stageOf(ctx) !== 'S8' && gridBoundariesOffScale(ctx.cfg);
         }
     },
 

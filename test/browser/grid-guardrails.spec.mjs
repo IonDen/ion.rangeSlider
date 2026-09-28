@@ -170,3 +170,75 @@ test.describe(`grid guardrails: readable labels (${LABEL})`, () => {
     await expectReadable(page, '0', '96');
   });
 });
+
+test.describe(`grid guardrails: the site's date demo (${LABEL})`, () => {
+  // tsToDate formats in the browser's time zone: UTC makes the labels the same on every machine and in CI.
+  test.use({ timezoneId: 'UTC' });
+
+  // demo_advanced.html's demo_4 with its own tsToDate and lang (min and max are its dateToTS(new Date(2018, 10, 1))
+  // and dateToTS(new Date(2018, 11, 1)) in UTC). The labels were captured from master before the tick rules: the grid
+  // is truthful, so rule 1 keeps it. Mutation that reds it: the sweep letting two labels overlap. Speed is not judged
+  // here: call budgets do that (test/unit/grid-ticks.test.mjs), never a timeout.
+  test('the timestamp demo keeps its labels and none overlap', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.lang = 'en-US';
+      window.tsToDate = function (ts) {
+        var d = new Date(ts);
+        return d.toLocaleDateString(lang, { year: 'numeric', month: 'long', day: 'numeric' });
+      };
+    });
+    await open(page, '{ type: "double", force_edges: true, grid: true, grid_num: 2, min: 1541030400000, max: 1543622400000, from: 1541635200000, to: 1542931200000, prettify: tsToDate }');
+    await page.waitForTimeout(400);
+    expect(await gridTexts(page)).toEqual(['November 1, 2018', 'November 16, 2018', 'December 1, 2018']);
+    await expectReadable(page, 'November 1, 2018', 'December 1, 2018');
+  });
+});
+
+test.describe(`grid guardrails: reachable labels (${LABEL})`, () => {
+  // Mutation that reds it: rule 5 deleted from calcGridTicks() (the labels go back to 0, 25, 50, 75, 100).
+  test('0..100 step 10 labels 0, 20, 40, 60, 80, 100', async ({ page }) => {
+    await open(page, { min: 0, max: 100, from: 0, step: 10, grid: true });
+    expect(await gridTexts(page)).toEqual(['0', '20', '40', '60', '80', '100']);
+  });
+
+  // On an uneven scale (min 0.5, step 1) the handle stops on 5 at 45% (4.5 of the range's 10), while the even split
+  // into these five units puts the tick labelled 5 at 40%. (On 0..100 step 10 the two coincide, so that grid cannot
+  // tell them apart.) Mutations that red it: rule 5 deleted (the labels go back to 0.5, 3, 6, 8, 10.5), or a rule
+  // placing ticks at the step position instead of the resting position (`left = pts[i].value === o.max ? 100 :
+  // pts[i].steps * this.coords.p_step` in _gridTicksFrom: the tick of 5 sits 5% of the grid box left of the handle,
+  // about 29 px on the fixture's 600 px slider with the flat skin).
+  test('0.5..10.5 labels 0.5, 3, 5, 7, 9, 10.5, and the tick of 5 sits where the handle stops on 5', async ({ page }) => {
+    await open(page, { min: 0.5, max: 10.5, from: 0.5, step: 1, grid: true });
+    expect(await gridTexts(page)).toEqual(['0.5', '3', '5', '7', '9', '10.5']);
+    await page.evaluate(() => window.__irs.slider.update({ from: 5 }));
+    await page.waitForTimeout(400);
+    const gap = await page.evaluate(() => {
+      const centre = (el) => { const r = el.getBoundingClientRect(); return r.left + r.width / 2; };
+      const tick = document.querySelectorAll('#wrap .irs-grid-pol:not(.small)')[2];   // the tick labelled 5
+      return centre(tick) - centre(document.querySelector('#wrap .irs-handle.single'));
+    });
+    expect(Math.abs(gap)).toBeLessThanOrEqual(1);
+  });
+
+  // The site demo (demo.html, demo_7). Mutation that reds it: rule 4 deleted from calcGridTicks() (the demo falls to
+  // rule 5: 1 000, 334 000, 667 000, 1 000 000).
+  test('the site demo 1 000 to 1 000 000 step 1 000 labels round quarters', async ({ page }) => {
+    await open(page, { min: 1000, max: 1000000, from: 100000, step: 1000, grid: true });
+    expect(await gridTexts(page)).toEqual(['1 000', '250 000', '500 000', '750 000', '1 000 000']);
+  });
+
+  // The call budget in the browser, on the rule-4 path (the most conversions of any rule), with the built file the
+  // cell loads. Mutation that reds it: a rule looping over the 1.4 million steps (thousands of calls).
+  test('a huge rule-4 grid stays within a call budget in the browser', async ({ page }) => {
+    await open(page, { min: 0, max: 10000000, step: 7, grid_num: 4 });
+    const calls = await page.evaluate(() => {
+      const slider = window.__irs.slider, proto = Object.getPrototypeOf(slider), real = proto.convertToValue;
+      let n = 0;
+      proto.convertToValue = function () { n++; return real.apply(this, arguments); };
+      try { slider.update({ grid: true }); } finally { proto.convertToValue = real; }
+      return n;
+    });
+    expect(calls).toBeLessThan(2000);
+    expect(await gridTexts(page)).toEqual(['0', '2 500 001', '5 000 002', '7 500 003', '10 000 000']);
+  });
+});

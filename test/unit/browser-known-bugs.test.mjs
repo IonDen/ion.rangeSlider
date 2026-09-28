@@ -97,7 +97,7 @@ const allHits = (cfg, over) => {
 // Bug caught: an entry filed without its issue number or its one-line title, which would
 // annotate a matrix cell with nothing a reader could look up.
 test('every register entry carries an issue number, a title, a predicate and a message pattern', () => {
-    assert.equal(KNOWN_BUGS.length, 14);
+    assert.equal(KNOWN_BUGS.length, 13);
     const issues = KNOWN_BUGS.map((bug) => bug.issue);
     assert.deepEqual(issues, [...new Set(issues)], 'an issue must have one entry');
     for (const bug of KNOWN_BUGS) {
@@ -655,27 +655,6 @@ test('#891 matches the key stages of a drag_interval slider whose bar the click 
     // click, and reds them as "no longer reproduces".
     const blocked = { type: 'double', min: 0, max: 100, from: 30, to: 70, step: 1, drag_interval: true, to_fixed: true, block: true };
     assert.equal(hit(blocked, 'S4a', 'callbacks', onBar), null);
-});
-
-// ------------------------------------------------------------- #892 grid off the scale
-
-// A grid boundary is rounded to the decimals of step instead of being snapped onto the
-// step scale, so a tick names a value the handle can never rest on.
-test('#892 matches a grid whose boundaries fall between scale points', () => {
-    const siteDemo = { grid: true, min: 1000, max: 1000000, from: 100000, step: 1000, prettify_enabled: true };
-    assert.equal(hit(siteDemo, 'S0', 'grid'), 892);
-
-    const stepTwo = { type: 'double', min: 0, max: 10, from: 4, to: 6, grid: true, step: 2 };
-    assert.equal(hit(stepTwo, 'S0', 'grid'), 892);
-
-    // A range that divides into whole steps labels every boundary with a real value.
-    const dividing = { grid: true, min: 0, max: 100, from: 30, step: 1 };
-    assert.equal(hit(dividing, 'S0', 'grid'), null);
-
-    const noGrid = { min: 0, max: 10, from: 4, step: 2 };
-    assert.equal(hit(noGrid, 'S0', 'grid'), null);
-
-    assert.equal(hit(stepTwo, 'S8', 'grid'), null, 'a destroyed slider draws no grid');
 });
 
 // ------------------------------------------------ #893 a key press on a rounded scale

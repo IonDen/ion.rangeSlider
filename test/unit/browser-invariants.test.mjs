@@ -502,21 +502,13 @@ test('labels: min and max follow hide_min_max, and a visible min label must read
 
 // ----------------------------------------------------------------------- grid
 
-// readme settings table: grid "Show the value grid below the slider"; grid_num
-// "Number of grid units the value range is cut into, at most 50".
-// Bug caught: appendGrid drawing grid_num labels instead of grid_num + 1.
-test('grid: the default four units give five labels at the unit boundaries', () => {
-    const cfg = { min: 0, max: 100, step: 1, grid: true };
-    const texts = ['0', '25', '50', '75', '100'];
-    const good = base({ grid: { present: true, texts, visibleTexts: texts, pols: 21 } });
-    assert.ok(!ids(ctxOf(good, cfg, 'S0')).includes('grid'));
-
-    const short = base({ grid: { present: true, texts: texts.slice(1), visibleTexts: texts.slice(1), pols: 21 } });
-    assert.ok(ids(ctxOf(short, cfg, 'S0')).includes('grid'));
-
-    const skewed = base({ grid: { present: true, texts: ['0', '26', '50', '75', '100'], visibleTexts: [], pols: 21 } });
-    assert.ok(ids(ctxOf(skewed, cfg, 'S0')).includes('grid'));
-});
+// #906: the grid rule judges each tick by properties (the State's grid.ticks: inline left in percent, and text):
+// its label names a scale value near it, it sits within 1% of that value's resting position, no two ticks name
+// one value, the first tick is min and the last is max, at most 50 units, at least two on a range of two steps.
+const T = (pairs) => pairs.map(([left, text]) => ({ left, text }));
+const gridState = (ticks) => base({ grid: { present: true, texts: ticks.map((k) => k.text), visibleTexts: [], pols: ticks.length, ticks } });
+const gridMsgs = (ticks, cfg) => checkInvariants(ctxOf(gridState(ticks), { grid: true, min: 0, max: 100, step: 10, ...cfg }, 'S0'))
+    .filter((f) => f.id === 'grid').map((f) => f.message);
 
 // Bug caught: rendering the grid without the grid option, or swallowing it with it.
 test('grid: present only with grid: true', () => {
@@ -524,98 +516,77 @@ test('grid: present only with grid: true', () => {
     assert.ok(ids(ctxOf(base(), { ...SINGLE, grid: true }, 'S0')).includes('grid'));
 });
 
-// readme settings table: grid_snap "Use one grid unit per step instead of grid_num.
-// Still capped at 50 units".
-// Bug caught: keeping grid_num while grid_snap is on.
-test('grid: grid_snap gives one unit per step, capped at 50', () => {
-    const snap = { min: 0, max: 100, step: 10, grid: true, grid_snap: true };
-    const texts = ['0', '10', '20', '30', '40', '50', '60', '70', '80', '90', '100'];
-    assert.ok(!ids(ctxOf(base({ grid: { present: true, texts, visibleTexts: texts, pols: 11 } }), snap, 'S0')).includes('grid'));
-
-    const capped = { min: 0, max: 500, step: 1, grid: true, grid_snap: true };
-    const capTexts = Array.from({ length: 51 }, (_, i) => String(i * 10));
-    assert.ok(!ids(ctxOf(base({ grid: { present: true, texts: capTexts, visibleTexts: capTexts, pols: 51 } }), capped, 'S0')).includes('grid'));
-    assert.ok(ids(ctxOf(base({ grid: { present: true, texts: capTexts.slice(0, 50), visibleTexts: [], pols: 51 } }), capped, 'S0')).includes('grid'));
+// Bug caught (each test: that one check removed from the grid rule).
+test('grid: a label off the scale is a finding', () =>
+    assert.ok(gridMsgs(T([[0, '0'], [25, '25'], [100, '100']])).some((m) => /grid label at tick 1/.test(m))));
+test('grid: a tick 2% from its resting position is a finding, with grid_margin on or off', () => {
+    for (const grid_margin of [true, false]) {
+        assert.ok(gridMsgs(T([[0, '0'], [22, '20'], [100, '100']]), { grid_margin }).some((m) => /sits where the handle rests/.test(m)));
+    }
 });
+test('grid: two ticks naming the same value are a finding', () =>
+    assert.ok(gridMsgs(T([[0, '0'], [20, '20'], [20.5, '20'], [100, '100']])).some((m) => /no two grid ticks/.test(m))));
+test('grid: a first tick other than min and a last tick other than max are findings', () => {
+    const m = gridMsgs(T([[10, '10'], [90, '90']]));
+    assert.ok(m.some((x) => /first grid tick is min/.test(x)) && m.some((x) => /last grid tick is max/.test(x)));
+});
+test('grid: 51 units is a finding', () =>
+    assert.ok(gridMsgs(Array.from({ length: 52 }, (_, i) => ({ left: i * 100 / 51, text: '' })), { step: 1 }).some((m) => /at most 50/.test(m))));
+test('grid: one unit on a range of two or more steps is a finding (not when grid_num rounds to 1)', () => {
+    assert.ok(gridMsgs(T([[0, '0'], [100, '100']])).some((m) => /at least two grid units/.test(m)));
+    for (const grid_num of [1, 0.6]) {
+        assert.equal(gridMsgs(T([[0, '0'], [100, '100']]), { grid_num }).filter((m) => /at least two/.test(m)).length, 0);
+    }
+});
+test('grid: an empty label is skipped, not reported', () =>
+    assert.equal(gridMsgs(T([[0, '0'], [50, ''], [100, '100']]), { grid_num: 2 }).length, 0));
 
-// #877 B1. readme settings table: prefix/postfix/min_prefix/max_prefix/max_postfix
-// are all documented "for values"; the grid rows say nothing about decoration, and the
-// plugin draws its ticks through the prettify chain alone (with prefix "$" and postfix
-// "k" the min/max labels read "$0k"/"$100k" while the grid reads 0, 25, 50, 75, 100).
-// Characterization: the readme does not say whether grid labels are decorated; the
-// plugin never has.
-// Bug caught: running a grid label through decorate(), which reds every decorated
-// entry of the matrix against labels the plugin never draws that way.
+// Pins behaviour (passes on the old rule too). #877 B1, rewritten for ticks. Characterization: the readme does not
+// say whether grid labels are decorated; the plugin never has. Bug caught: running a grid label through decorate().
 test('grid: the tick labels are prettified but not decorated', () => {
-    const cfg = { min: 0, max: 100, step: 1, grid: true, prefix: '$', postfix: 'k', max_postfix: '+', min_prefix: 'From: ', max_prefix: 'Up to: ' };
-    const plain = ['0', '25', '50', '75', '100'];
-    const state = base({
-        grid: { present: true, texts: plain, visibleTexts: plain, pols: 21 },
-        labels: { single: { text: '$30k' }, min: { text: 'From: $0k' }, max: { text: 'Up to: $100+ k' } }
-    });
-    assert.ok(!ids(ctxOf(state, cfg, 'S0')).includes('grid'));
-
-    const decorated = ['$0k', '$25k', '$50k', '$75k', '$100k'];
-    const wrong = base({
-        grid: { present: true, texts: decorated, visibleTexts: decorated, pols: 21 },
-        labels: { single: { text: '$30k' }, min: { text: 'From: $0k' }, max: { text: 'Up to: $100+ k' } }
-    });
-    assert.ok(ids(ctxOf(wrong, cfg, 'S0')).includes('grid'));
+    const cfg = { min: 0, max: 100, step: 1, prefix: '$', postfix: 'k', max_postfix: '+', min_prefix: 'From: ', max_prefix: 'Up to: ' };
+    const at = [0, 25, 50, 75, 100];
+    assert.equal(gridMsgs(T(at.map((v) => [v, String(v)])), cfg).length, 0);
+    assert.ok(gridMsgs(T(at.map((v) => [v, '$' + v + 'k'])), cfg).length > 0);
 });
 
-// readme note "values": "The grid gets one labelled tick per entry".
-// Bug caught: labelling the grid with indexes instead of entries.
+// Pins behaviour (passes on the old rule too). readme note "values": "The grid gets one labelled tick per entry".
+// Bug caught: labelling the grid with indexes.
 test('grid: values mode gets one label per entry, showing the entries', () => {
-    const cfg = { values: [10, 1000, 100000], grid: true };
-    const texts = ['10', '1 000', '100 000'];
-    assert.ok(!ids(ctxOf(base({ grid: { present: true, texts, visibleTexts: texts, pols: 3 } }), cfg, 'S0')).includes('grid'));
-
-    const indexed = base({ grid: { present: true, texts: ['0', '1', '2'], visibleTexts: [], pols: 3 } });
-    assert.ok(ids(ctxOf(indexed, cfg, 'S0')).includes('grid'));
+    const cfg = { values: [10, 1000, 100000] };
+    assert.equal(gridMsgs(T([[0, '10'], [50, '1 000'], [100, '100 000']]), cfg).length, 0);
+    assert.ok(gridMsgs(T([[0, '0'], [50, '1'], [100, '2']]), cfg).length > 0);
 });
 
-// #877 B2. readme note "step": "Every value is min plus a whole number of steps,
-// rounded to the decimals of step ... min: 0.5, step: 1 gives 0.5, 2, 3, 4". A grid
-// unit boundary is a value like any other, so the boundary at 50 % of a 0.5..10.5
-// range -- 5.5, which the slider cannot hold -- is labelled 6, and the last boundary
-// is max itself.
-// Bug caught: labelling the boundaries with the raw evenly-spaced arithmetic
-// (0.5, 1.5, 2.5 ...), which no slider on this scale can reach.
-test('grid: the unit boundaries sit on the step scale, and the last one is max', () => {
-    const cfg = { min: 0.5, max: 10.5, step: 1, grid: true, grid_num: 10 };
-    const onScaleTexts = ['0.5', '2', '3', '4', '5', '6', '7', '8', '9', '10', '10.5'];
-    assert.ok(!ids(ctxOf(base({ grid: { present: true, texts: onScaleTexts, visibleTexts: onScaleTexts, pols: 11 } }), cfg, 'S0')).includes('grid'));
-
-    const rawSpacing = ['0.5', '1.5', '2.5', '3.5', '4.5', '5.5', '6.5', '7.5', '8.5', '9.5', '10.5'];
-    assert.ok(ids(ctxOf(base({ grid: { present: true, texts: rawSpacing, visibleTexts: [], pols: 11 } }), cfg, 'S0')).includes('grid'));
+// #877 B2, rewritten. readme note "step": "min: 0.5, step: 1 gives 0.5, 2, 3, 4". The ticks name those values and
+// sit where the handle stops on them (15%, 25% ...), which is what the plugin draws for grid_num 10 there.
+// Bugs caught: raw evenly spaced labels (1.5, 2.5 ...), and the right labels left at the even split (10%, 20% ...).
+test('grid: an uneven scale (min 0.5, step 1) is labelled on the scale, each tick where the handle rests', () => {
+    const cfg = { min: 0.5, max: 10.5, step: 1, grid_num: 10 };
+    const texts = ['0.5', '2', '3', '4', '5', '6', '7', '8', '9', '10', '10.5'];
+    const rest = [0, 15, 25, 35, 45, 55, 65, 75, 85, 95, 100];
+    assert.equal(gridMsgs(T(rest.map((left, i) => [left, texts[i]])), cfg).length, 0);
+    const raw = ['0.5', '1.5', '2.5', '3.5', '4.5', '5.5', '6.5', '7.5', '8.5', '9.5', '10.5'];
+    assert.ok(gridMsgs(T(rest.map((left, i) => [left, raw[i]])), cfg).some((m) => /grid label at tick/.test(m)));
+    assert.ok(gridMsgs(T(texts.map((text, i) => [i * 10, text])), cfg).some((m) => /sits where the handle rests/.test(m)));
 });
 
-// Same readme sentence, second example: "min: 1.2, step: 4 gives 1.2, 5, 9, 13".
-// Bug caught: rounding the boundary to the decimals of the boundary itself instead of
-// snapping it to the scale (6.2 and 11.2 would pass, though the slider holds 5 and 13).
-test('grid: a min 1.2 step 4 scale labels its boundaries 1.2, 5, 13, 17 and max', () => {
-    const cfg = { min: 1.2, max: 21.2, step: 4, grid: true, grid_num: 4 };
-    const snapped = ['1.2', '5', '13', '17', '21.2'];
-    assert.ok(!ids(ctxOf(base({ grid: { present: true, texts: snapped, visibleTexts: snapped, pols: 9 } }), cfg, 'S0')).includes('grid'));
-
-    const unsnapped = ['1.2', '6.2', '11.2', '16.2', '21.2'];
-    assert.ok(ids(ctxOf(base({ grid: { present: true, texts: unsnapped, visibleTexts: [], pols: 9 } }), cfg, 'S0')).includes('grid'));
+// Same readme sentence, second example: "min: 1.2, step: 4 gives 1.2, 5, 9, 13". Bug caught: labelling the
+// boundaries 6.2, 11.2, 16.2 (the raw arithmetic) instead of scale points.
+test('grid: a min 1.2 step 4 scale labels its ticks 1.2, 5, 9, 13, 17 and max', () => {
+    const cfg = { min: 1.2, max: 21.2, step: 4, grid_num: 4 };
+    assert.equal(gridMsgs(T([[0, '1.2'], [19, '5'], [39, '9'], [59, '13'], [79, '17'], [100, '21.2']]), cfg).length, 0);
+    assert.ok(gridMsgs(T([[0, '1.2'], [25, '6.2'], [50, '11.2'], [75, '16.2'], [100, '21.2']]), cfg).length > 0);
 });
 
-// A range that does not divide into whole units is no longer a characterization gap:
-// every boundary is a value on the step scale, so every label has an expected text.
-// Bug caught: checking only the first and last label, which would let the three
-// middle ticks of a 0..100 grid_num 3 slider read anything at all.
+// Bug caught: checking only the first and last label, which would let the middle ticks of a 0..100 grid_num 3
+// slider read anything at all.
 test('grid: every label of a non-dividing range is checked, not just the ends', () => {
-    const cfg = { min: 0, max: 100, step: 1, grid: true, grid_num: 3 };
-    const snapped = ['0', '33', '67', '100'];
-    assert.ok(!ids(ctxOf(base({ grid: { present: true, texts: snapped, visibleTexts: snapped, pols: 16 } }), cfg, 'S0')).includes('grid'));
-
-    const middleOff = base({ grid: { present: true, texts: ['0', '33.3', '66.7', '100'], visibleTexts: [], pols: 16 } });
-    assert.ok(ids(ctxOf(middleOff, cfg, 'S0')).includes('grid'));
-
-    const wrongEnd = base({ grid: { present: true, texts: ['0', '33', '67', '99'], visibleTexts: [], pols: 16 } });
-    assert.ok(ids(ctxOf(wrongEnd, cfg, 'S0')).includes('grid'));
+    const cfg = { min: 0, max: 100, step: 1, grid_num: 3 };
+    const lefts = [0, 100 / 3, 200 / 3, 100];
+    assert.equal(gridMsgs(T(lefts.map((l, i) => [l, ['0', '33', '67', '100'][i]])), cfg).length, 0);
+    assert.ok(gridMsgs(T(lefts.map((l, i) => [l, ['0', '33.3', '66.7', '100'][i]])), cfg).some((m) => /grid label at tick 1/.test(m)));
+    assert.ok(gridMsgs(T(lefts.map((l, i) => [l, ['0', '33', '67', '99'][i]])), cfg).some((m) => /last grid tick is max/.test(m)));
 });
 
 // ---------------------------------------------------------------- grid-layout

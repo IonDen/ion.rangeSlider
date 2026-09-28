@@ -156,15 +156,18 @@ test('step_from_min is a no-op for configs whose scale already starts on a step 
   }
 });
 
-// T8. One-line bug this catches: reading the option only on the handle path,
-// so grid ticks keep the from-zero rounding -- the labels would read 2.6 and
-// 7.4 where this config's scale has 2.75 and 7.25.
+// T8. One-line bug this catches: `if (this.options.step_from_min)` in
+// convertToValue() made `if (false)` -- the grid labels leave this config's
+// scale (the second one reads 2.8 where the scale has 2.75). Flipped by the
+// grid guardrails (#906 rule 5): the even split's ticks sat 1.3% and 2.6% of
+// the track from their values, so the grid now uses units of five steps and
+// the fourth label is 7.75 (before #906: 7.25).
 test('step_from_min moves the grid labels onto the same scale, {0.25, 9.75, 0.5} (#869)', (t) => {
   const { slider } = createSlider(t, '<input>', {
     min: 0.25, max: 9.75, step: 0.5, step_from_min: true, grid: true
   });
 
-  assert.deepEqual(gridTexts(slider), ['0.25', '2.75', '5.25', '7.25', '9.75']);
+  assert.deepEqual(gridTexts(slider), ['0.25', '2.75', '5.25', '7.75', '9.75']);
 });
 
 // T8b, grid_snap: every tick is one step apart, so the whole scale is visible

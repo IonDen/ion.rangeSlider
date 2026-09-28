@@ -25,14 +25,14 @@
  *   container { exists, classes[] }
  *   labels { single, from, to, min, max } each { text, visible }
  *   handles { single?, from?, to? }
- *   grid { present, texts[], boxes[] ({ text, left, right, visible }, px), width (px),
- *     container ({ left, right }, px, or null) }
+ *   grid { present, texts[], ticks[] ({ left (percent), text }), boxes[] ({ text, left, right, visible }, px),
+ *     width (px), container ({ left, right }, px, or null) }
  *   mask
  *   events[]   the recorded callbacks, in the fixture's entry shape
  *   values { from, to }
  */
 
-import { isValuesMode, nearestOnScale, onScale, rangeOf } from './scale.mjs';
+import { isValuesMode, nearestOnScale, onScale, rangeOf, restingPercent, scaleNear } from './scale.mjs';
 import { expectedGridLabel, expectedLabel, expectedMerged, expectedPretty, valuesEntry } from './format.mjs';
 
 /** Values sit on a step grid, so only float representation noise is tolerated. */
@@ -48,10 +48,7 @@ const INTERACTION_STAGE_PATTERN = /^S[1-5]/;
 /** readme settings table default for input_values_separator. */
 const DEFAULT_INPUT_SEPARATOR = ';';
 
-/** readme settings table default for grid_num. */
-const DEFAULT_GRID_NUM = 4;
-
-/** readme settings table: grid_num is "at most 50", and grid_snap is "capped at 50 units". */
+/** readme settings table: grid_num is "at most 50", and grid_snap "Past 50 steps the grid still has at most 50 units". */
 const GRID_UNIT_CAP = 50;
 
 const isDouble = (cfg) => cfg.type === 'double';
@@ -115,54 +112,6 @@ function moved(ctx) {
     const now = valuesOf(ctx.state);
     const before = valuesOf(ctx.prev);
     return !sameValue(now.from, before.from) || !sameValue(now.to, before.to);
-}
-
-/**
- * Number of grid units, per readme grid_num / grid_snap / values.
- *
- * Exported for the known-bug register, whose grid entry has to walk the same unit
- * boundaries this rule checks (a second copy of the rule there could drift from it).
- *
- * @param {object} cfg
- * @returns {number}
- */
-export function gridUnits(cfg) {
-    const { min, max, step } = rangeOf(cfg);
-    // readme note "values": "The grid gets one labelled tick per entry, up to the
-    // 50-unit cap, because grid_num and grid_snap are set for you."
-    if (isValuesMode(cfg)) return Math.min(cfg.values.length - 1, GRID_UNIT_CAP);
-    // readme settings table: grid_snap "Use one grid unit per step instead of
-    // grid_num. Still capped at 50 units".
-    if (cfg.grid_snap) return Math.min(Math.round((max - min) / step), GRID_UNIT_CAP);
-    // readme settings table: grid_num "Number of grid units the value range is cut
-    // into, at most 50", default 4.
-    const num = Number(cfg.grid_num);
-    return Math.min(Number.isFinite(num) && num > 0 ? num : DEFAULT_GRID_NUM, GRID_UNIT_CAP);
-}
-
-/**
- * The values the grid's unit boundaries carry.
- *
- * readme settings table, grid_num: "A labelled tick mark sits at each unit boundary",
- * and note "step": "Every value is min plus a whole number of steps, rounded to the
- * decimals of step". A boundary is a value like any other, so an evenly spaced
- * position that falls between two scale points is labelled with the point it sits on:
- * on min 0.5 / step 1 the boundary at 50 % of the range is 5.5, which the slider
- * cannot hold, and the tick there reads 6. The last boundary is max itself, which the
- * scale only reaches when the range divides into whole steps.
- *
- * @param {object} cfg
- * @param {number} units
- * @returns {number[]}   one value per boundary, units + 1 of them
- */
-function gridUnitValues(cfg, units) {
-    const { min, max } = rangeOf(cfg);
-    const values = [];
-    for (let i = 0; i < units; i++) {
-        values.push(nearestOnScale(min + (i * (max - min)) / units, cfg));
-    }
-    values.push(max);
-    return values;
 }
 
 /**
@@ -527,7 +476,7 @@ export const INVARIANTS = [
 
     {
         id: 'grid',
-        readme: 'settings table: grid "Show the value grid below the slider", grid_num "Number of grid units the value range is cut into, at most 50. A labelled tick mark sits at each unit boundary", grid_snap "Use one grid unit per step instead of grid_num"; note "values": one labelled tick per entry',
+        readme: 'settings table: grid "Show the value grid below the slider", grid_num "Number of grid units the value range is cut into, at most 50 ... The grid may use fewer or more units than this so that every labelled tick names a value the handle can reach"; note "grid": "Every labelled tick names a value the handle can reach and sits where the handle stops on that value"; note "values": one labelled tick per entry',
         check(ctx) {
             if (!alive(ctx)) return [];
             const { cfg, stage, state } = ctx;
@@ -540,26 +489,40 @@ export const INVARIANTS = [
             if (!wantGrid) return [];
 
             const msgs = [];
-            const units = gridUnits(cfg);
-            const texts = grid.texts || [];
-            if (texts.length !== units + 1) {
-                msgs.push(report('grid', 'one label per unit boundary', units + 1, texts.length, stage));
-                return msgs;
+            const ticks = grid.ticks || [];
+            const units = ticks.length - 1;
+            if (units > GRID_UNIT_CAP) msgs.push(report('grid', 'at most 50 grid units', GRID_UNIT_CAP, units, stage));
+            const { min, max, step } = rangeOf(cfg);
+            if (!isValuesMode(cfg) && Math.round(Number(cfg.grid_num)) !== 1 && (max - min) / step >= 2 && units < 2) {
+                msgs.push(report('grid', 'at least two grid units when the value range holds two steps', 2, units, stage));
             }
-
-            if (isValuesMode(cfg)) {
-                texts.forEach((text, i) => {
-                    const wanted = expectedGridLabel(i, cfg);
-                    if (text !== wanted) msgs.push(report('grid', `the grid label at index ${i}`, wanted, text, stage));
-                });
-                return msgs;
-            }
-
-            const values = gridUnitValues(cfg, units);
-            texts.forEach((text, i) => {
-                const wanted = expectedGridLabel(values[i], cfg);
-                if (text !== wanted) msgs.push(report('grid', `the grid label at unit ${i}`, wanted, text, stage));
+            const values = [];
+            ticks.forEach((tick, i) => {
+                const cands = scaleNear(tick.left, cfg);
+                // Among the candidates whose expected label is this text, the one nearest the tick (two values can
+                // share a text: duplicate values entries, a merging prettify).
+                const hit = cands.filter((v) => expectedGridLabel(v, cfg) === tick.text)
+                    .sort((a, b) => Math.abs(restingPercent(a, cfg) - tick.left) - Math.abs(restingPercent(b, cfg) - tick.left))[0];
+                if (tick.text !== '' && hit === undefined) {
+                    msgs.push(report('grid', `grid label at tick ${i}`, cands.map((v) => expectedGridLabel(v, cfg)).join(' | '), tick.text, stage));
+                    return;
+                }
+                values[i] = hit;
+                // Both sides are percent numbers (the tick's inline left), so there is no pixel slack to allow for
+                // and grid_margin makes no difference: 1% of the track, as the plugin keeps a grid by.
+                if (hit !== undefined && Math.abs(tick.left - restingPercent(hit, cfg)) > 1 + 1e-6) {
+                    msgs.push(report('grid', `grid tick ${tick.text} sits where the handle rests on it`, restingPercent(hit, cfg), tick.left, stage));
+                }
+                if (i && hit !== undefined && hit === values[i - 1]) {
+                    msgs.push(report('grid', 'no two grid ticks name the same value', 'distinct', tick.text, stage));
+                }
             });
+            if (values.length && values[0] !== undefined && values[0] !== min) {
+                msgs.push(report('grid', 'the first grid tick is min', min, ticks[0].text, stage));
+            }
+            if (values.length && values[values.length - 1] !== undefined && values[values.length - 1] !== max) {
+                msgs.push(report('grid', 'the last grid tick is max', max, ticks[ticks.length - 1].text, stage));
+            }
             return msgs;
         }
     },
