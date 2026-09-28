@@ -1653,6 +1653,19 @@
                 this.result.from_percent = this.coords.p_single_real;
                 this.result.from = this.convertToValue(this.coords.p_single_real);
 
+                // #909: a single slider's "to" never moves (only "from"
+                // does), but updateTo() (update()/reset()) still writes
+                // to_percent, to_pretty and to_value from it for every type;
+                // this branch wrote none of the three, so a single slider's
+                // callback data started at the constructor's to_percent (0),
+                // had no to_pretty key, and to_value stayed the constructor's
+                // null, until the first update() or reset() wrote them --
+                // and then kept whatever updateTo() last wrote even through
+                // later drags and key presses, since result is one object
+                // mutated in place. Mirrors updateTo() exactly so the shape
+                // and values are the same from the first callback on.
+                this.result.to_percent = this.convertToPercent(this.result.to);
+
                 if (this.options.values.length) {
                     // #661: values mode reads the entry's prettified text from
                     // options.p_values (validate() ran prettify once per entry
@@ -1661,8 +1674,15 @@
                     // instead of the value.
                     this.result.from_pretty = this.options.p_values[this.result.from];
                     this.result.from_value = this.options.values[this.result.from];
+                    this.result.to_pretty = this.options.p_values[this.result.to];
+                    this.result.to_value = this.options.values[this.result.to];
                 } else {
                     this.result.from_pretty = this._prettify(this.result.from);
+
+                    // #909: see the comment above; to_value has no fill here
+                    // because it is already null from the constructor and
+                    // this branch never runs in values mode.
+                    this.result.to_pretty = this._prettify(this.result.to);
                 }
             } else {
                 this.coords.p_bar_x = this.toFixed(this.coords.p_from_fake + (this.coords.p_handle / 2));

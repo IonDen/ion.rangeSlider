@@ -152,16 +152,18 @@ test.describe(`callbacks (${LABEL})`, () => {
         expect(await page.evaluate(() => window.__keys)).toEqual(DOCUMENTED_KEYS);
     });
 
-    // The same list on a single slider. What is certain is that the object changes shape
-    // during the slider's life: onStart, onChange and onFinish hand out seventeen keys, and
-    // the first update() or reset() adds to_pretty, which every later callback carries. A
-    // single slider already sends every other to field (to, to_percent, to_value, to_min and
-    // to_max). The readme does not settle whether a single slider should carry to fields at
-    // all (its Callback data example is a double slider, and the settings table marks `to`
-    // as double type only), so this row asks for the shape the object takes after update()
-    // from the first callback on.
+    // The same list on a single slider. A single slider already sent every other to field
+    // (to, to_percent, to_value, to_min and to_max); calc()'s single branch did not write
+    // to_pretty (or, in values mode, to_value), so the object changed shape during the
+    // slider's life -- onStart, onChange and onFinish carried seventeen keys, and the first
+    // update() or reset() added to_pretty for good (#909). calc()'s single branch now writes
+    // both fields the same way updateTo() does, so the shape is the same from onStart on. The
+    // readme does not settle whether a single slider should carry to fields at all (its
+    // Callback data example is a double slider, and the settings table marks `to` as double
+    // type only), so this row asks for the shape the object has always had after update().
+    // Mutation caught: calc()'s single branch -> the new to_pretty line removed, and onStart
+    // arrives with seventeen keys again (#909).
     test('the onStart payload of a single slider already carries the keys it has after update() (Callback data list)', async ({ page }) => {
-        test.fail(true, "#909: a single slider's callback data gains to_pretty only after the first update() or reset()");
         await open(page, "{ min: 0, max: 100, from: 20, "
             + "onStart: function (d) { window.__keys = Object.keys(d).sort(); } }");
         expect(await page.evaluate(() => window.__keys)).toEqual(DOCUMENTED_KEYS);

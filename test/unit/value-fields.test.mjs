@@ -160,10 +160,14 @@ for (const type of TYPES) {
     slider.update({ from: 1 });
     assert.equal(rec.events.at(-1).from_value, 'b', 'setup: values mode must report the entry first');
     // The entry at `to`: 3 on the double slider, and max (4) on a single one, which
-    // validate() gives the `to` it was never set. The single half relies on updateTo()
-    // filling a single slider's to_value after an update: until then it is null (the
-    // values-mode twin of #909). If that ever changes, this guard fires first, and the
-    // double row still covers updateTo()'s null branch.
+    // validate() gives the `to` it was never set. jsdom has no layout (file header), so
+    // calc() bails here too -- w_rs is still 0, this update() included -- single or
+    // double alike; the to_value this guard reads comes from updateTo() (update()'s own
+    // call to it), never from calc()'s branches. #909 later made calc()'s single branch
+    // write to_value too, but that only shows up once geometry is real (the browser
+    // suite's callbacks spec, and this file's #909 section below, cover it). If that
+    // ever changes, this guard fires first, and the double row still covers updateTo()'s
+    // null branch.
     assert.equal(rec.events.at(-1).to_value, LAST_TO[type], 'setup: to_value must hold its entry first');
     const n = rec.events.length;
 
@@ -264,4 +268,172 @@ test('double, values mode: reset() after a drag hands onUpdate the entries it go
   slider.reset();
 
   assert.deepEqual(valueFields(rec, n), [{ type: 'onUpdate', from_value: 'b', to_value: 'd' }]);
+});
+
+// ------------------------------------------------------------------------------- #909
+//
+// calc()'s single branch wrote from_pretty (and from_value, in values mode) but never
+// touched to_pretty or to_value -- updateTo() (run by update()/reset()) writes both for
+// every type. So a single slider's callback data had no to_pretty, and in values mode
+// to_value stayed the constructor's null, until the first update() or reset() wrote
+// them -- and then kept whatever updateTo() last wrote even through later drags and key
+// presses, because result is one object mutated in place.
+//
+// jsdom never completes calc() at construction (see helpers.mjs: $cache.rs.outerWidth()
+// is 0 until a test stubs it, same as prime()/dragFromTo() above do), so onStart itself
+// is not geometry-complete here even after the fix -- that half of the contract (onStart's
+// keys matching the readme's list) is the browser suite's callbacks spec
+// (test/browser/contract/callbacks.spec.mjs). These rows instead read the state right
+// after prime()'s settle draw -- the first calc() to actually complete, before any
+// update() or reset() -- which runs the exact code calc() would run at a real onStart
+// with real geometry, and a key press for the onChange/onFinish comparison, matching the
+// file's other "before any update()" rows above.
+
+test('single, no values: to_pretty before any update() matches what update() computes (#909)', (t) => {
+  const { slider } = createSlider(t, '<input>', { ...PLAIN.single });
+  prime(slider);
+
+  const beforeUpdate = slider.result.to_pretty;
+  // Guard: calc() must have actually written the field, or the row below would
+  // trivially pass by comparing two undefineds.
+  assert.notEqual(beforeUpdate, undefined, 'setup: to_pretty must be set before any update()');
+
+  slider.update({});
+
+  assert.equal(beforeUpdate, slider.result.to_pretty);
+});
+
+test('single, values mode: to_value before any update() matches what update() computes (#909)', (t) => {
+  const { slider } = createSlider(t, '<input>', { ...VALUES.single });
+  prime(slider);
+
+  const beforeUpdate = slider.result.to_value;
+  // Guard: anchor to the real entry, not just "equal to itself" -- a slider stuck
+  // at null both before and after update() would otherwise pass this row for the
+  // wrong reason.
+  assert.equal(beforeUpdate, LAST_TO.single, 'setup: to_value must already hold the entry before any update()');
+  // Independent of the to_value guard above: calc()'s values-mode branch has its own
+  // to_pretty line (this.result.to_pretty = this.options.p_values[this.result.to]),
+  // never exercised by another assertion in this file. ENTRIES' last entry is 'e',
+  // non-numeric, so validate()'s prettify pass (see the p_values loop) leaves it as
+  // the plain string 'e' -- the literal here, not a value read back from the slider.
+  assert.equal(slider.result.to_pretty, 'e', "setup: to_pretty must already hold the entry's formatted text before any update()");
+
+  slider.update({});
+
+  assert.equal(beforeUpdate, slider.result.to_value);
+});
+
+// calc()'s single branch wrote no to_percent either (same cause as to_pretty/to_value
+// above): it stayed at the constructor's 0 until the first update() or reset(), when
+// updateTo() wrote convertToPercent(to). Three configs: the default to (max, 100), an
+// explicit to that is not max (40), and values mode (last index, 100 again) -- each
+// guard is the number itself, not a value read back from the slider.
+// Mutation caught: the new to_percent line removed from calc()'s single branch -- all
+// three rows below read the constructor's stale 0 before update() and 100/40/100 after,
+// so beforeUpdate no longer equals the post-update value.
+test('single, no values: to_percent before any update() matches what update() computes (#909)', (t) => {
+  const { slider } = createSlider(t, '<input>', { ...PLAIN.single });
+  prime(slider);
+
+  const beforeUpdate = slider.result.to_percent;
+  assert.equal(beforeUpdate, 100, 'setup: to_percent must already be 100 (the default to, at max) before any update()');
+
+  slider.update({});
+
+  assert.equal(beforeUpdate, slider.result.to_percent);
+});
+
+test('single, no values, to: 40: to_percent before any update() matches what update() computes (#909)', (t) => {
+  const { slider } = createSlider(t, '<input>', { ...PLAIN.single, to: 40 });
+  prime(slider);
+
+  const beforeUpdate = slider.result.to_percent;
+  assert.equal(beforeUpdate, 40, 'setup: to_percent must already be 40 before any update()');
+
+  slider.update({});
+
+  assert.equal(beforeUpdate, slider.result.to_percent);
+});
+
+test('single, values mode: to_percent before any update() matches what update() computes (#909)', (t) => {
+  const { slider } = createSlider(t, '<input>', { ...VALUES.single });
+  prime(slider);
+
+  const beforeUpdate = slider.result.to_percent;
+  assert.equal(beforeUpdate, 100, 'setup: to_percent must already be 100 (the last index) before any update()');
+
+  slider.update({});
+
+  assert.equal(beforeUpdate, slider.result.to_percent);
+});
+
+// This test's slider is PLAIN.single -- no values -- so only calc()'s no-values twin
+// (`this.result.to_pretty = this._prettify(this.result.to);`) runs for it; the
+// values-mode to_pretty line sits behind `if (this.options.values.length)`, which is
+// false here and never executes. Proven below (see the report): removing the no-values
+// twin reds this test; removing the values-mode line leaves it green.
+// Mutation caught: the no-values twin's to_pretty line removed from calc()'s single
+// branch -- onChange and onFinish, which run through calc(), lose the key onUpdate
+// (which runs through updateTo()) keeps, and the deepEqual below reds on the differing
+// key set.
+test('single, no values: onChange, onFinish and onUpdate carry the same keys after a key press (#909)', (t) => {
+  const keysOf = (data) => Object.keys(data).sort();
+  const seen = [];
+  const { slider } = createSlider(t, '<input>', {
+    ...PLAIN.single,
+    onChange: (data) => seen.push(['onChange', keysOf(data)]),
+    onFinish: (data) => seen.push(['onFinish', keysOf(data)]),
+    onUpdate: (data) => seen.push(['onUpdate', keysOf(data)])
+  });
+  prime(slider);
+
+  // Arms keyboard control exactly like a real focus does (#742), then moves the
+  // handle one step right -- a real calc() through the single branch, same code
+  // path a drag or a click on the line would take.
+  slider.pointerFocus({});
+  assert.equal(slider.target, 'single', 'setup: a fresh focus must arm the single handle');
+  slider.key('keyboard', { which: 39, preventDefault: function () {} }); // ArrowRight
+  slider.drawHandles();
+
+  slider.update({});
+
+  assert.deepEqual(seen.map((e) => e[0]), ['onChange', 'onFinish', 'onUpdate'], 'setup: exactly these three callbacks must fire, in this order');
+  const onChangeKeys = seen[0][1];
+  const onFinishKeys = seen[1][1];
+  const onUpdateKeys = seen[2][1];
+  assert.deepEqual(onChangeKeys, onUpdateKeys);
+  assert.deepEqual(onFinishKeys, onUpdateKeys);
+});
+
+// double is untouched by #909 -- calc()'s double branch already wrote to_pretty/to_value
+// (that's how #883 found double already carried to_pretty from the start). Green before
+// and after the fix; pinned by a mutation, since nothing else in this file checks
+// from_pretty/to_pretty together against literal values for a slider that has not yet
+// been updated.
+// Mutation caught (proven, not just asserted -- see the report): calc()'s double branch
+// -- `this.result.to_pretty = this._prettify(this.result.to);` commented out -- reds
+// to_pretty: undefined against the pinned '70'.
+test('double, no values: from_pretty/to_pretty/from_value/to_value are pinned after the first draw, before any update() (#909)', (t) => {
+  const { slider } = createSlider(t, '<input>', { ...PLAIN.double });
+  prime(slider);
+
+  assert.deepEqual(
+    {
+      from: slider.result.from,
+      to: slider.result.to,
+      from_pretty: slider.result.from_pretty,
+      to_pretty: slider.result.to_pretty,
+      from_value: slider.result.from_value,
+      to_value: slider.result.to_value
+    },
+    {
+      from: 30,
+      to: 70,
+      from_pretty: '30',
+      to_pretty: '70',
+      from_value: null,
+      to_value: null
+    }
+  );
 });
