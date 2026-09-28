@@ -97,7 +97,7 @@ const allHits = (cfg, over) => {
 // Bug caught: an entry filed without its issue number or its one-line title, which would
 // annotate a matrix cell with nothing a reader could look up.
 test('every register entry carries an issue number, a title, a predicate and a message pattern', () => {
-    assert.equal(KNOWN_BUGS.length, 12);
+    assert.equal(KNOWN_BUGS.length, 11);
     const issues = KNOWN_BUGS.map((bug) => bug.issue);
     assert.deepEqual(issues, [...new Set(issues)], 'an issue must have one entry');
     for (const bug of KNOWN_BUGS) {
@@ -276,32 +276,6 @@ test('#882 judges the second build after destroy() by the pair it is handed', ()
     assert.equal(hit(viaValue, 'S9', 'limits', { prev: prevOf(6) }), null);
 });
 
-// -------------------------------------------------------- #889 pretty fields as numbers
-
-// readme "Callback data" shows every *_pretty field as a string; with prettify_enabled
-// off the plugin hands back the raw number instead.
-test('#889 matches a payload stage of a slider with prettify_enabled off', () => {
-    const off = { min: 0, max: 100, from: 30, step: 1, prettify_enabled: false };
-    assert.equal(hit(off, 'S0', 'callbacks'), 889);
-    assert.equal(hit(off, 'S3', 'callbacks'), 889);
-    assert.equal(hit(off, 'S8', 'callbacks'), null, 'destroy() records no payload at all');
-
-    const on = { min: 0, max: 100, from: 30, step: 1 };
-    assert.equal(hit(on, 'S0', 'callbacks'), null);
-
-    // A disabled slider reports nothing during an interaction, so there is no payload
-    // to be wrong -- but it still fires onStart, onInit and onUpdate.
-    const disabled = { min: 0, max: 100, from: 30, step: 1, prettify_enabled: false, disable: true };
-    assert.equal(hit(disabled, 'S1', 'callbacks'), null);
-    assert.equal(hit(disabled, 'S0', 'callbacks'), 889);
-
-    // Values mode with text entries formats to text even with prettify off.
-    const textValues = { values: ['low', 'mid', 'high'], from: 1, prettify_enabled: false };
-    assert.equal(hit(textValues, 'S0', 'callbacks'), null);
-    const numberValues = { values: [10, 20, 30], from: 1, prettify_enabled: false };
-    assert.equal(hit(numberValues, 'S0', 'callbacks'), 889);
-});
-
 // ------------------------------------------- #897 the init payload of a hidden slider
 
 // readme "Callback data": from_pretty is "FROM formatted" and to_pretty the same for the to
@@ -339,13 +313,11 @@ test('#897 matches the missing payload text of a slider built hidden, not of a v
     assert.equal(answers(m002, 'S0', 'callbacks', 'callbacks: onStart fires once (expected 1, got 2) after S0'), null);
 });
 
-// m018, m019, m065, m067 and m068 are built hidden AND with prettify_enabled off, so their
-// init payloads carry the two bugs at once: the handle fields come back undefined (#897)
-// while min_pretty and max_pretty come back as the raw numbers (#889). The message is the
-// only thing that tells them apart.
-// Bug caught: #889 keeping a `what` wide enough to claim "got undefined" as well, which files
-// the missing text under the prettify bug and leaves #897 looking as if it never reproduced.
-test("the init payload of m018 is split between #897 and #889 by the message", () => {
+// m018, m019, m065, m067 and m068 are built hidden AND with prettify_enabled off. Their init
+// payloads carry #897 (the two handle fields come back undefined); min_pretty and max_pretty
+// are correctly formatted strings regardless of prettify_enabled (#889, fixed), so nothing
+// claims those two fields any more.
+test("the init payload of m018 is answered by #897 for its missing handle text", () => {
     // m018's configuration (formatting=no-prettify, container=hidden, route=data).
     const m018 = {
         type: 'double', min: 0, max: 100, step: 1, from: 30, to: 70,
@@ -356,12 +328,12 @@ test("the init payload of m018 is split between #897 and #889 by the message", (
     };
     const missingFrom = prettyFailure('onStart', 'from_pretty', '30', 'undefined');
     const missingTo = prettyFailure('onStart', 'to_pretty', '70', 'undefined');
-    const numericMin = prettyFailure('onStart', 'min_pretty', '0', '0');
-    const numericMax = prettyFailure('onStart', 'max_pretty', '100', '100');
     assert.equal(answers(m018, 'S0', 'callbacks', missingFrom), 897);
     assert.equal(answers(m018, 'S0', 'callbacks', missingTo), 897);
-    assert.equal(answers(m018, 'S0', 'callbacks', numericMin), 889);
-    assert.equal(answers(m018, 'S0', 'callbacks', numericMax), 889);
+    // min_pretty/max_pretty are formatted correctly even with prettify off (#889, fixed), so
+    // a numeric-looking failure message for either one no longer matches any entry.
+    assert.equal(answers(m018, 'S0', 'callbacks', prettyFailure('onStart', 'min_pretty', '0', '0')), null);
+    assert.equal(answers(m018, 'S0', 'callbacks', prettyFailure('onStart', 'max_pretty', '100', '100')), null);
 
     // Judged together, as the matrix judges them: to_fixed holds 70 and from_max 60 keeps the
     // from handle 10 away, past the max_interval of 4, which validate() cannot settle (#894),
@@ -370,49 +342,15 @@ test("the init payload of m018 is split between #897 and #889 by the message", (
         id: 'intervals',
         message: 'intervals: the handles opened past max_interval (expected "<= 4", got 10) after S0'
     };
-    const failures = [missingFrom, missingTo, numericMin, numericMax]
-        .map((message) => ({ id: 'callbacks', message }))
-        .concat(interval);
+    const failures = [missingFrom, missingTo].map((message) => ({ id: 'callbacks', message })).concat(interval);
     const { real, annotations } = judgeStage(failures, ctxOf(m018, 'S0'), []);
     assert.deepEqual(real, []);
-    assert.deepEqual(annotations.map((a) => a.issue).sort(), [889, 889, 894, 897, 897]);
+    assert.deepEqual(annotations.map((a) => a.issue).sort(), [894, 897, 897]);
 
-    // The same slider in a visible container: every field comes back a number, and all four
-    // are #889's -- the narrowing must not cost that entry the cells it was filed for.
+    // The same slider in a visible container: nothing is missing, so #897 has nothing to
+    // claim there either (builtBlind).
     const shown = { ...m018, __hidden_at_init: undefined };
-    assert.equal(answers(shown, 'S0', 'callbacks', prettyFailure('onStart', 'from_pretty', '30', '30')), 889);
-    assert.equal(answers(shown, 'S0', 'callbacks', numericMin), 889);
-    // A negative value is a number too (m065 runs from -50 to 50).
-    assert.equal(answers(shown, 'S0', 'callbacks', prettyFailure('onStart', 'min_pretty', '-50', '-50')), 889);
-});
-
-// ------------------------------------------------ a blocked slider and the keys (#890)
-
-// Since #890 block drops every key press, as disable always has (a disabled slider binds
-// no key handler), so a blocked slider records nothing at a key stage and the matrix finds
-// nothing wrong there. The register has to say the same: an entry that still claimed such a
-// stage would be reported as "no longer reproduces" and red the cell. m019 is that case in
-// the matrix: blocked with prettify off, so #889 claims every stage that records a payload,
-// and before the fix the four key stages were among them.
-// Bug caught: payloadStage() still counting a blocked slider's key stage as one that records
-// a payload (its old last line, `return !!ctx.cfg.block && isKeyStage(ctx);`), which lets
-// #889 claim the silent key stages and reds m019 from S4a to S4d.
-test('a blocked slider is silent to the keyboard, so no entry claims its key stages (#890)', () => {
-    const blocked = { min: 0, max: 100, from: 30, step: 1, block: true, prettify_enabled: false };
-    assert.deepEqual(allHits(blocked), ['S0/callbacks=#889', 'S6/callbacks=#889', 'S7/callbacks=#889']);
-    // A disabled slider is claimed at the same stages and no others: destroy() hands its
-    // input back enabled (#886).
-    const disabled = { min: 0, max: 100, from: 30, step: 1, disable: true, prettify_enabled: false };
-    assert.deepEqual(allHits(disabled), ['S0/callbacks=#889', 'S6/callbacks=#889', 'S7/callbacks=#889']);
-
-    // Judged as the matrix judges a key stage the slider did not answer: no failure, and no
-    // entry left over to be retired.
-    const silent = { prev: prevOf(30), expectations: { key: '+', changed: false } };
-    assert.deepEqual(judgeStage([], ctxOf(blocked, 'S4a', silent), []), { real: [], annotations: [] });
-
-    // Control: without block the same slider records its payload at the press, and #889
-    // claims it there, so the empty key stages above are block's doing.
-    assert.equal(hit({ ...blocked, block: false }, 'S4a', 'callbacks'), 889);
+    assert.equal(answers(shown, 'S0', 'callbacks', missingFrom), null);
 });
 
 // -------------------------------------------------- #888 hidden container in values mode
@@ -681,6 +619,32 @@ test('#887 judges the second build after destroy() by the pair it is handed', ()
     assert.equal(hit(n041, 'S9', 'labels', { prev: prevOf(0.0005) }), 887);
     assert.equal(hit(n041, 'S9', 'labels', { prev: prevOf(0) }), null);
     assert.equal(hit({ ...split, __value_attr: '0' }, 'S9', 'labels', { prev: prevOf(0) }), null, 'the value attribute route reads the input too');
+});
+
+// payloadStage() (known-bugs.mjs) is #887's own gate on the callbacks rule, and #887 is its
+// only caller: nothing else in the register would notice payloadStage() answering every
+// stage true. Its own S8/S0/S7/S9 handling above (stage === 'S8' before ever reaching this
+// rule) already redundantly excuses S8, so that half alone would not catch payloadStage()
+// losing its body; what would is an inert slider and a keyboard #891 has already silenced,
+// since #887 has no check of its own for either.
+// Bug caught: payloadStage() answering every stage true (its body reduced to `return true;`,
+// its isInert(ctx.cfg) line dropped, or its #891 dead-keyboard line dropped) claims a
+// payload none of those four stages ever records.
+test('payloadStage keeps #887 off S8, S9, an inert slider and a dead keyboard', () => {
+    const tiny = { min: 0, max: 0.001, step: 0.0001, from: 0 };
+    assert.equal(hit(tiny, 'S8', 'callbacks'), null, 'destroy() records no payload');
+    assert.equal(hit(tiny, 'S9', 'callbacks'), null, 'the second build carries no recorder either');
+
+    const blocked = { ...tiny, block: true };
+    assert.equal(hit(blocked, 'S1', 'callbacks'), null, 'the mask swallows every interaction of a blocked slider');
+    const disabled = { ...tiny, disable: true };
+    assert.equal(hit(disabled, 'S4a', 'callbacks'), null, 'a disabled slider binds no key handler either');
+
+    // Double, drag_interval, one fixed handle: the track click leaves the interval path in
+    // charge of the keyboard and its fixed-handle guard drops the whole press (#891), so
+    // there is no payload for #887's four fields to be wrong in.
+    const deadKeyboard = { type: 'double', min: 0, max: 0.001, step: 0.0001, from: 0, to: 0.0005, drag_interval: true, from_fixed: true };
+    assert.equal(hit(deadKeyboard, 'S4a', 'callbacks'), null, 'the interval path already dropped this press whole (#891)');
 });
 
 // ------------------------------------- #879 a whole-interval move against a handle limit
@@ -1113,12 +1077,17 @@ test('judgeStage keeps a failure whose message the entry was not filed for', () 
     assert.deepEqual(judged.annotations, []);
 });
 
-// m065 carries both bugs: prettify_enabled is off (#889) and drag_interval with a fixed handle
-// kills the keyboard after the track click (#891). The missing onFinish is #891's, and #889 is
-// listed first -- an id-only lookup hands the failure to the wrong issue.
-// Bug caught: annotating by invariant id alone, which files m065's dead keyboard under the
-// prettify bug and would leave #891 looking as if it no longer reproduced.
-test('the missing onFinish of m065 is answered by #891, not by #889', () => {
+// m065 carries #891: drag_interval with a fixed handle kills the keyboard after the track
+// click, so the press owes an onFinish the plugin never fires. m065 also has
+// prettify_enabled off, which used to be #889's territory (fixed and retired from the
+// register); with no payload recorded for this stage (payloadStage() drops a key press the
+// interval-drag bug killed), there is nothing left for a numeric-fields entry to claim here
+// anyway, so #891 is the only candidate either way. Unlike the generic #891 test above (whose
+// `dead` config fixes the FROM handle), m065 fixes the TO handle -- the other half of
+// intervalKeyboardIsDead()'s `cfg.from_fixed || cfg.to_fixed`.
+// Bug caught: dropping `|| cfg.to_fixed` from intervalKeyboardIsDead(), which stops treating
+// m065's own fixed handle as dead and leaves this stage unclaimed (matchKnownBug returns null).
+test('the missing onFinish of m065 is answered by #891', () => {
     const m065 = {
         min: -50, max: 50, step: 5, type: 'double', from: -20, to: 20,
         from_min: -25, from_max: 10, to_min: -10, to_max: 40, max_interval: 30,
@@ -1135,6 +1104,6 @@ test('the missing onFinish of m065 is answered by #891, not by #889', () => {
 
     assert.equal(matchKnownBug(ctx, 'callbacks', failure.message).issue, 891);
     const { real, annotations } = judgeStage([failure], ctx, []);
-    assert.deepEqual(real, [], 'the dead keyboard records no payload, so #889 has nothing to retire on');
+    assert.deepEqual(real, []);
     assert.deepEqual(annotations.map((a) => a.issue), [891]);
 });

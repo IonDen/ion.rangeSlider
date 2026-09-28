@@ -81,13 +81,23 @@ test.describe(`prettify (${LABEL})`, () => {
 
     // readme "Callback data" shows every *_pretty field as a string ("from_pretty":
     // "10 000"), which is what pairs it with its raw sibling.
-    test('the *_pretty payload fields stay strings with prettify_enabled off (Callback data: from_pretty, min_pretty, max_pretty)', async ({ page }) => {
-        test.fail(true, '#889: with prettify_enabled off the *_pretty callback fields are numbers instead of strings');
+    // Mutation caught (#889): _prettify() and _prettifySurface() -> the disabled branch's
+    // `return String(num);` reverted to `return num;` -- from_pretty/min_pretty/max_pretty
+    // come back numbers, and typeof reads 'number' instead of 'string'.
+    test('the *_pretty payload fields stay strings with prettify_enabled off (Callback data: from_pretty, min_pretty, max_pretty) (#889)', async ({ page }) => {
         await open(page, { min: 0, max: 100, from: 30, prettify_enabled: false });
         const started = (await events(page)).find((entry) => entry.type === 'onStart');
         expect(typeof started.from_pretty).toBe('string');
         expect(typeof started.min_pretty).toBe('string');
         expect(typeof started.max_pretty).toBe('string');
+    });
+
+    // Double type: calc()'s double branch prettifies to the same way the single branch
+    // prettifies from (#889).
+    test('a double slider also carries to_pretty as a string with prettify_enabled off (Callback data: to_pretty) (#889)', async ({ page }) => {
+        await open(page, { type: 'double', min: 0, max: 100, from: 30, to: 70, prettify_enabled: false });
+        const started = (await events(page)).find((entry) => entry.type === 'onStart');
+        expect(typeof started.to_pretty).toBe('string');
     });
 
     // readme note "prettify": "A function that receives a number and returns the string to

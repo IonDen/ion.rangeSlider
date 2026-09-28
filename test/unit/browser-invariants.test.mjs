@@ -1166,20 +1166,19 @@ test('matchKnownBug answers per invariant id and per config', () => {
     }
 });
 
-// Two register entries speak for the payload text of a slider built hidden with
+// One register entry speaks for the payload text of a slider built hidden with
 // prettify_enabled off (m018, m019, m065, m067, m068) on a jQuery build that measures a hidden
-// track as zero (3.3 and later, the env below): the handle fields come back undefined
-// (#897) and the min/max fields come back as raw numbers (#889). They are told apart by the
-// MESSAGE, so their patterns are written against the wording this rule produces -- which the
-// other register tests can only assume, because they hand the lookup a hand-typed string.
+// track as zero (3.3 and later, the env below): the handle fields come back undefined (#897).
+// min_pretty and max_pretty are formatted correctly here (String(0)/String(100), #889 fixed),
+// so the rule reports no failure for either and the register has nothing to claim there.
 // Bug caught: a change to the failure wording here, or a register pattern that drifts from
 // it, which would hand a stage's failures to the wrong issue without anything going red.
-test('the payload-text failures this rule reports are the ones the register tells apart', () => {
+test('the missing from_pretty and to_pretty of a hidden-built double slider are answered by #897', () => {
     const cfg = { type: 'double', min: 0, max: 100, step: 1, prettify_enabled: false, __hidden_at_init: true };
     const hiddenInit = doubleState({
         events: [cb('onStart', {
             from: 20, to: 40, from_percent: 20, to_percent: 40,
-            from_pretty: undefined, to_pretty: undefined, min_pretty: 0, max_pretty: 100
+            from_pretty: undefined, to_pretty: undefined, min_pretty: '0', max_pretty: '100'
         })]
     });
 
@@ -1191,5 +1190,5 @@ test('the payload-text failures this rule reports are the ones the register tell
         const known = matchKnownBug(ctx, failure.id, failure.message);
         issues[field[0]] = known && known.issue;
     }
-    assert.deepEqual(issues, { from_pretty: 897, to_pretty: 897, min_pretty: 889, max_pretty: 889 });
+    assert.deepEqual(issues, { from_pretty: 897, to_pretty: 897 });
 });

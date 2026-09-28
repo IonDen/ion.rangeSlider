@@ -2646,7 +2646,10 @@
 
         _prettify: function (num) {
             if (!this.options.prettify_enabled) {
-                return num;
+                // #889: the readme documents every *_pretty callback field as a string; with
+                // prettify disabled this used to hand back the number itself, so code that
+                // concatenates or compares from_pretty/to_pretty as text got a number instead.
+                return String(num);
             }
 
             if (this.options.prettify && typeof this.options.prettify === "function") {
@@ -2666,14 +2669,17 @@
          * the surface's own option function if set, else the shared
          * `prettify` option (and, through it, the built-in thousands-
          * separator formatting) via _prettify(). prettify_enabled: false
-         * disables this surface too, same as the default prettify.
+         * disables this surface too, same as the default prettify -- and, like _prettify()
+         * (#889), returns the number as a string, so result.min_pretty/max_pretty stay
+         * strings whether or not prettify is on.
          * @param {string} option_name "prettify_min_max" (the grid has its own chain, _prettifyGrid())
          * @param {number} num
-         * @returns {string|number}
+         * @returns {string|*} a string when prettify is disabled or the built-in formatting runs;
+         *   whatever a custom option_name/prettify function returns otherwise, uncoerced
          */
         _prettifySurface: function (option_name, num) {
             if (!this.options.prettify_enabled) {
-                return num;
+                return String(num);
             }
 
             if (this.options[option_name] && typeof this.options[option_name] === "function") {
@@ -2687,8 +2693,11 @@
          * Format a number for the grid tick labels (#306): prettify_grid, then the shared prettify, then the
          * built-in formatting. #906: a formatter that returns undefined or null, or throws, hands the label on
          * to the next one in that chain, and a throw warns once per grid build; "" is an answer and blanks the
-         * label. prettify_enabled: false returns the number, as on every other surface. The min and max labels
-         * keep _prettifySurface(), without this guard.
+         * label. prettify_enabled: false returns the number itself, not a string: unlike from_pretty/to_pretty/
+         * min_pretty/max_pretty (#889), no callback field carries a grid tick's text, and appendGrid() always
+         * coerces this return with String() before it reaches the DOM, so the type here is never observable.
+         * The min and max labels keep _prettifySurface(), without this guard, and return a string when disabled
+         * too (#889).
          * @param {number} num
          * @returns {string|number}
          */
@@ -2750,7 +2759,8 @@
          * Format a number for the min/max labels, falling back to the
          * shared `prettify` option when prettify_min_max is unset (#306).
          * @param {number} num
-         * @returns {string|number}
+         * @returns {string|*} a string when prettify is disabled or the built-in formatting runs;
+         *   whatever a custom prettify_min_max/prettify function returns otherwise, uncoerced
          */
         _prettifyMinMax: function (num) {
             return this._prettifySurface("prettify_min_max", num);
