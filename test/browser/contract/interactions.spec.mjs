@@ -11,7 +11,9 @@
  * shipped behaviour and say so. What the key handler ignores (a press with Shift held) comes
  * from the plugin's own key(), which the readme's keyboard row does not qualify. One
  * track-click row takes chooseHandle()'s own JSDoc, "Find closest handle to pointer click",
- * as its oracle and is an expected failure: a click can move the farther handle.
+ * as its oracle and is an expected failure: a click can move the farther handle. A second
+ * expected failure (#898) takes the readme's hide_from_to row as its oracle: a track click
+ * under drag_interval on a pair on one value hides every value label.
  *
  * Assertions stay on page-observable surfaces: the input's value, the rendered labels and
  * the recorded callbacks. Rows the older specs already hold are not repeated here; each
@@ -24,6 +26,7 @@
 import { test, expect } from '@playwright/test';
 import { open, events, touchDrag, LABEL } from '../helpers.mjs';
 import { dragHandleTo, clickTrackAt, focusTrack, touchDragTo } from '../lib/interact.mjs';
+import { readState } from '../lib/state.mjs';
 
 /** The double slider most rows start from: 0..100, step 1, from 20, to 80. */
 const DOUBLE = { type: 'double', min: 0, max: 100, from: 20, to: 80, step: 1 };
@@ -215,8 +218,8 @@ test.describe(`interactions (${LABEL})`, () => {
     // it on, a click on the track moves the whole interval rather than one handle; the readme
     // does not say where it lands. Characterization: the interval keeps its width and is
     // centred on the clicked value, and at either end of the range it stops against that end
-    // with its width intact. No row puts the two handles on one value (that is #898's case,
-    // a coincident pair) or near a per-handle limit (#879).
+    // with its width intact. These rows keep the two handles apart; the #898 row after them
+    // puts them on one value first, and no row puts them near a per-handle limit (#879).
     // Mutation caught: calc() -> `case "both_one"`, `half = full / 2` becomes `half = full`,
     // and the 20-wide interval comes out 40 wide, "60;100" (the redraw that follows the
     // click runs the same centring once more on the widened pair, which then meets max).
@@ -243,6 +246,35 @@ test.describe(`interactions (${LABEL})`, () => {
         await open(page, { type: 'double', min: 0, max: 100, from: 60, to: 80, step: 1, drag_interval: true });
         await clickTrackAt(page, 0.05);
         await expect(page.locator('#slider')).toHaveValue('0;20');
+    });
+
+    // readme Settings, hide_from_to: "Hide the from and to value labels", off by default, so a
+    // double slider shows its values; with both handles on one value it shows one value label
+    // for the pair (rendering.spec.mjs pins that for a slider built that way). A user puts the
+    // handles on one value by dragging one onto the other, which the slider allows when no
+    // min_interval is set. A click on the track then moves the pair (drag_interval), and every
+    // value label comes out hidden, the merged one and both single ones.
+    // Expected failure until #898 is fixed; the fix keeps one value label on show after that
+    // click, and Playwright then reports this row "expected to fail, but passed". The labels
+    // are read once after a render tick (400 ms) instead of polled, so the expected failure
+    // does not wait out the assertion timeout.
+    test('a track click with drag_interval on a pair dragged onto one value keeps a value label on show (#898)', async ({ page }) => {
+        test.fail(true, '#898: a track click hides every value label while drag_interval holds both handles on the same value');
+        await open(page, { type: 'double', min: 0, max: 100, from: 40, to: 60, step: 1, drag_interval: true });
+        /** The text of every value label on show. */
+        const shownLabels = async () => {
+            const { labels } = await readState(page);
+            return ['single', 'from', 'to'].filter((k) => labels[k].visible).map((k) => labels[k].text);
+        };
+        await dragHandleTo(page, 'from', 0.8);   // past the to handle: the from handle stops on it
+        await expect(page.locator('#slider')).toHaveValue('60;60');
+        await expect.poll(shownLabels).toEqual(['60']);   // before the click: one label, 60
+        await clickTrackAt(page, 0.3);
+        await expect(page.locator('#slider')).toHaveValue('30;30');
+        await page.waitForTimeout(400);          // outlast the idle render tick, then read once
+        const shown = await shownLabels();
+        expect(shown).toHaveLength(1);
+        expect(shown[0]).toContain('30');
     });
 
     // ---- The keyboard --------------------------------------------------------------------

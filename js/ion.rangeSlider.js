@@ -3028,6 +3028,235 @@
             if (o.max_interval && o.max_interval > o.max - o.min) {
                 o.max_interval = o.max - o.min;
             }
+
+            this.applyIntervals();
+        },
+
+        /**
+         * #885: apply min_interval and max_interval to the pair validate() has
+         * just clamped, as the per-handle limits are applied, so the starting
+         * from/to and the pair update() leaves behind hold them the same way a
+         * moved handle does. Double type only; in values mode the interval
+         * counts entries, as it does in calc().
+         *
+         * One handle is preferred: at build time the to handle; on update() the
+         * one the call changed, read from update_check (the pair update()
+         * started from): from alone prefers from, and to alone, both or neither
+         * prefer to. A handle fixed by from_fixed/to_fixed never moves, so the
+         * other one is preferred; with both fixed nothing moves.
+         *
+         * fitIntervals() moves the preferred handle first and, when its own
+         * limits stop it short, the other handle the rest of the way, each
+         * inside min..max and its own from_min/from_max (to_min/to_max). When
+         * neither handle can make room there, a per-handle limit (or a fixed
+         * handle) and the interval cannot both hold (#894), and fitIntervals()
+         * settles the pair again as if every free handle could use the whole
+         * of min..max.
+         *
+         * The per-handle limits are then applied once more. calc()'s "base"
+         * branch, which draws the pair a slider is built or updated with,
+         * clamps each handle to its own limits after validate(), so in such a
+         * conflict the limit wins there and the interval stays broken (a drag
+         * applies them the other way round). Clamping here too keeps the
+         * options and the input on the pair the slider draws, also for a
+         * slider built hidden, where that branch does not run. Outside a
+         * conflict this clamp changes nothing, except where the step rounding
+         * carries a handle across a per-handle limit that is off the scale.
+         *
+         * The moved value is rounded as a drag rounds it (convertToValue(): to
+         * the step's decimals, or to scale points with step_from_min), so an
+         * off-scale interval, an off-scale pair or step_from_min can leave the
+         * interval off by less than a step, as a drag does. A min_interval
+         * larger than max_interval is a self-contradictory setting; the two
+         * checks run in turn and the later one wins, as they do on a drag.
+         */
+        applyIntervals: function () {
+            var o = this.options,
+                move_from = false,
+                pair;
+
+            if (o.type === "single" || (!o.min_interval && !o.max_interval)) {
+                return;
+            }
+
+            if (o.from_fixed && o.to_fixed) {
+                return;
+            }
+
+            // update_check is empty at build time; update() fills it with the
+            // pair it started from (a from of 0 included, hence typeof).
+            if (typeof this.update_check.from === "number" &&
+                this.update_check.from !== o.from && this.update_check.to === o.to) {
+                move_from = true;
+            }
+
+            if (move_from ? o.from_fixed : o.to_fixed) {
+                move_from = !move_from;
+            }
+
+            pair = this.fitIntervals(move_from, true) || this.fitIntervals(move_from, false);
+
+            if (typeof o.from_min === "number" && pair.from < o.from_min) {
+                pair.from = o.from_min;
+            }
+
+            if (typeof o.from_max === "number" && pair.from > o.from_max) {
+                pair.from = o.from_max;
+            }
+
+            if (typeof o.to_min === "number" && pair.to < o.to_min) {
+                pair.to = o.to_min;
+            }
+
+            if (typeof o.to_max === "number" && pair.to > o.to_max) {
+                pair.to = o.to_max;
+            }
+
+            o.from = pair.from;
+            o.to = pair.to;
+        },
+
+        /**
+         * #885: settle options.from/to on min_interval, then max_interval, for
+         * applyIntervals(), without writing them back.
+         *
+         * Each handle may move only inside its window: min..max, narrowed by
+         * its own from_min/from_max (to_min/to_max) when own_limits is set; a
+         * fixed handle's window is its own value. For each interval the pair
+         * breaks, the preferred handle goes where calc() would put it for that
+         * gap (checkMinInterval()/checkMaxInterval()): the other handle's value
+         * plus or minus the interval, rounded onto the scale by
+         * convertToPercent()/convertToValue(). It only ever moves toward the
+         * interval, so a pair that holds it up to float noise, or an off-scale
+         * starting value already past that point, is left exactly as given.
+         * When that value lies outside the preferred handle's window, the
+         * handle stops on the window's edge and the other handle goes the
+         * interval away from that edge, rounded the same way, if its own
+         * window reaches that far. If it does not, no handle can make room.
+         * With own_limits the call then gives up and returns null, as it does
+         * when a handle's own limits leave it no window at all; only a
+         * min_interval above max_interval (min_yields) is left as it is
+         * instead, because the max_interval check overrides it anyway --
+         * unless that would leave the handles crossed (a from_min/from_max/
+         * to_min/to_max clamp in validate() can cross them before this runs),
+         * when the call gives up here too so the whole-range pass can uncross
+         * them. Without own_limits every free handle has min..max, which
+         * always holds the interval (validate() has lowered a wider one to
+         * max - min): only a fixed other handle can stop a min_interval, and
+         * that interval is then left as it is, and max_interval always moves
+         * the preferred handle.
+         *
+         * @param move_from {Boolean} the from handle is the preferred one
+         * @param own_limits {Boolean} narrow each window by the handle's own limits
+         * @returns {Object|null} {from, to}; null only with own_limits, when no handle can make room
+         */
+        fitIntervals: function (move_from, own_limits) {
+            var o = this.options,
+                from = o.from,
+                to = o.to,
+                from_lo = o.min,
+                from_hi = o.max,
+                to_lo = o.min,
+                to_hi = o.max,
+                slack = 0,
+                min_yields = !!o.max_interval && o.min_interval > o.max_interval,
+                value;
+
+            if (own_limits) {
+                // Binary float noise (0.3 - 0.2 is 0.09999999999999998) must
+                // not turn a window that reaches exactly far enough into one
+                // that does not.
+                slack = (o.max - o.min) * 1e-9;
+
+                if (typeof o.from_min === "number" && o.from_min > from_lo) {
+                    from_lo = o.from_min;
+                }
+                if (typeof o.from_max === "number" && o.from_max < from_hi) {
+                    from_hi = o.from_max;
+                }
+                if (typeof o.to_min === "number" && o.to_min > to_lo) {
+                    to_lo = o.to_min;
+                }
+                if (typeof o.to_max === "number" && o.to_max < to_hi) {
+                    to_hi = o.to_max;
+                }
+            }
+
+            if (o.from_fixed) {
+                from_lo = from_hi = from;
+            }
+
+            if (o.to_fixed) {
+                to_lo = to_hi = to;
+            }
+
+            // Limits that leave a handle no window at all (a from_min above
+            // its from_max, or limits outside min..max) leave it no room to
+            // offer either; validate()'s own clamps have placed it already.
+            if (own_limits && (from_lo > from_hi || to_lo > to_hi)) {
+                return null;
+            }
+
+            if (o.min_interval && to - from < o.min_interval) {
+                if (move_from) {
+                    if (to - o.min_interval >= from_lo - slack) {
+                        value = this.convertToValue(this.convertToPercent(to - o.min_interval));
+                        if (value < from) {
+                            from = value;
+                        }
+                    } else if (from_lo + o.min_interval <= to_hi + slack) {
+                        from = from_lo;
+                        to = this.convertToValue(this.convertToPercent(from_lo + o.min_interval));
+                    } else if (own_limits && (!min_yields || to < from)) {
+                        return null;
+                    }
+                } else {
+                    if (from + o.min_interval <= to_hi + slack) {
+                        value = this.convertToValue(this.convertToPercent(from + o.min_interval));
+                        if (value > to) {
+                            to = value;
+                        }
+                    } else if (to_hi - o.min_interval >= from_lo - slack) {
+                        to = to_hi;
+                        from = this.convertToValue(this.convertToPercent(to_hi - o.min_interval));
+                    } else if (own_limits && (!min_yields || to < from)) {
+                        return null;
+                    }
+                }
+            }
+
+            if (o.max_interval && to - from > o.max_interval) {
+                if (move_from) {
+                    if (!own_limits || to - o.max_interval <= from_hi + slack) {
+                        value = this.convertToValue(this.convertToPercent(to - o.max_interval));
+                        if (value > from) {
+                            from = value;
+                        }
+                    } else if (from_hi + o.max_interval >= to_lo - slack) {
+                        from = from_hi;
+                        to = this.convertToValue(this.convertToPercent(from_hi + o.max_interval));
+                    } else {
+                        return null;
+                    }
+                } else {
+                    if (!own_limits || from + o.max_interval >= to_lo - slack) {
+                        value = this.convertToValue(this.convertToPercent(from + o.max_interval));
+                        if (value < to) {
+                            to = value;
+                        }
+                    } else if (to_lo - o.max_interval <= from_hi + slack) {
+                        to = to_lo;
+                        from = this.convertToValue(this.convertToPercent(to_lo - o.max_interval));
+                    } else {
+                        return null;
+                    }
+                }
+            }
+
+            return {
+                from: from,
+                to: to
+            };
         },
 
         decorate: function (num, original) {

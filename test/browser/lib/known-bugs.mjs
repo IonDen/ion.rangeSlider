@@ -183,7 +183,7 @@ function builtBlind(ctx) {
  * as zero (3.3 and later) reports nothing at all -- its input is empty and its from/to are
  * null (#888) -- so every rule that judges a VALUE passes there and must not be excused by
  * another entry. On an older build the same slider reports at init the pair a visible one
- * does, and the entries written for that pair (#882, #885) apply to it unchanged.
+ * does, and the entries written for that pair (#882, #894) apply to it unchanged.
  *
  * @param {object} ctx
  * @returns {boolean}
@@ -239,26 +239,175 @@ function pushedIntoAnOffScaleLimit(values, cfg) {
 }
 
 /**
- * The pair the slider is built with, as validate() leaves it.
+ * One handle's value clamped to the range and to its own per-handle limits, the way
+ * validate() clamps it, and then rounded onto the scale when a limit left it off (that
+ * rounding is issue #882; the render does it).
+ *
+ * @param {number|null} value
+ * @param {'from'|'to'} handle
+ * @param {object} cfg
+ * @returns {number|null}
+ */
+function clampedToLimits(value, handle, cfg) {
+    if (!isNum(value)) return null;
+    const { min, max } = rangeOf(cfg);
+    const lo = Math.max(min, isNum(cfg[handle + '_min']) ? cfg[handle + '_min'] : min);
+    const hi = Math.min(max, isNum(cfg[handle + '_max']) ? cfg[handle + '_max'] : max);
+    const held = Math.min(Math.max(value, lo), Math.min(Math.max(hi, lo), max));
+    return onScale(held, cfg) ? held : nearestOnScale(held, cfg);
+}
+
+/**
+ * The pair the slider is built with, clamped as validate() clamps it BEFORE it applies the
+ * interval limits.
  *
  * validate() clamps the configured from/to to the range and to the per-handle limits,
  * and a limit off the documented scale then takes the handle to the nearest scale point
- * (that rounding is issue #882). It never applies the interval limits -- that is exactly
- * what issue #885 is about, so this helper stops where validate() stops.
+ * (that rounding is issue #882). Since #885 it then applies min_interval and max_interval
+ * as well, which settledPair() models; this helper stops before that step. pinnedOther()
+ * reads a fixed handle from it, and the interval step never moves a fixed handle.
  *
  * @param {object} cfg
  * @returns {{from: number|null, to: number|null}}
  */
 function startingPair(cfg) {
+    return { from: clampedToLimits(cfg.from, 'from', cfg), to: clampedToLimits(cfg.to, 'to', cfg) };
+}
+
+/**
+ * The pair validate() settles on for a double slider with an interval limit (#885).
+ *
+ * The handed pair is clamped as startingPair() says. Then, for min_interval and then for
+ * max_interval, the handles move so the interval holds. The preferred handle (the to handle
+ * at build time and on reset(); the from handle when update() changed from alone; the other
+ * one when the preferred handle is fixed; nothing when both are) moves first, inside its
+ * window: the range narrowed by its own per-handle limits, or its own value for a fixed
+ * handle (limitWindow()). When the window stops it short, it stays on the window's edge and
+ * the other handle moves the rest of the way inside its own window. When neither can make
+ * room, a limit and the interval cannot both hold (#894): the pair is then settled as if
+ * every free handle could use the whole range, and the per-handle limits applied last put
+ * the limit back and leave the interval broken. An
+ * interval wider than the range is first lowered to the range, as validate() does, and a
+ * min_interval above max_interval gives way to it. The mirror of applyIntervals() and
+ * fitIntervals() in js/ion.rangeSlider.js, except that a moved handle stands exactly the
+ * interval away instead of being rounded onto the scale.
+ *
+ * @param {object} cfg
+ * @param {{from: number|null, to: number|null}} handed   the pair the build or update() is handed
+ * @param {'from'|'to'} preferred                          the handle the plugin moves first
+ * @returns {{from: number|null, to: number|null}}
+ */
+function settledPair(cfg, handed, preferred) {
+    const start = startingPair({ ...cfg, ...handed });
+    if (!isDouble(cfg) || !hasInterval(cfg) || !isNum(start.from) || !isNum(start.to)) return start;
+    if (cfg.from_fixed && cfg.to_fixed) return start;
     const { min, max } = rangeOf(cfg);
-    const clamp = (value, handle) => {
-        if (!isNum(value)) return null;
-        const lo = Math.max(min, isNum(cfg[handle + '_min']) ? cfg[handle + '_min'] : min);
-        const hi = Math.min(max, isNum(cfg[handle + '_max']) ? cfg[handle + '_max'] : max);
-        const held = Math.min(Math.max(value, lo), Math.min(Math.max(hi, lo), max));
-        return onScale(held, cfg) ? held : nearestOnScale(held, cfg);
+    const lowered = (interval) => (isNum(interval) && interval > 0 ? Math.min(interval, max - min) : 0);
+    const minInterval = lowered(cfg.min_interval);
+    const maxInterval = lowered(cfg.max_interval);
+    const minYields = maxInterval > 0 && minInterval > maxInterval;
+    let moveFrom = preferred === 'from';
+    if (moveFrom ? cfg.from_fixed : cfg.to_fixed) moveFrom = !moveFrom;
+    const windowOf = (handle, ownLimits) => {
+        if (cfg[handle + '_fixed']) return { lo: start[handle], hi: start[handle] };
+        return ownLimits ? limitWindow(handle, cfg) : { lo: min, hi: max };
     };
-    return { from: clamp(cfg.from, 'from'), to: clamp(cfg.to, 'to') };
+    // One pass over both intervals; null when ownLimits is set and no handle can make room.
+    const fit = (ownLimits) => {
+        const f = windowOf('from', ownLimits);
+        const t = windowOf('to', ownLimits);
+        if (ownLimits && (f.lo > f.hi + EPS || t.lo > t.hi + EPS)) return null;
+        let { from, to } = start;
+        if (minInterval && to - from < minInterval - EPS) {
+            if (moveFrom) {
+                if (to - minInterval >= f.lo - EPS) from = Math.min(from, to - minInterval);
+                else if (f.lo + minInterval <= t.hi + EPS) { from = f.lo; to = f.lo + minInterval; }
+                else if (ownLimits && !minYields) return null;
+            } else if (from + minInterval <= t.hi + EPS) {
+                to = Math.max(to, from + minInterval);
+            } else if (t.hi - minInterval >= f.lo - EPS) {
+                to = t.hi;
+                from = t.hi - minInterval;
+            } else if (ownLimits && !minYields) {
+                return null;
+            }
+        }
+        if (maxInterval && to - from > maxInterval + EPS) {
+            if (moveFrom) {
+                if (!ownLimits || to - maxInterval <= f.hi + EPS) from = Math.max(from, to - maxInterval);
+                else if (f.hi + maxInterval >= t.lo - EPS) { from = f.hi; to = f.hi + maxInterval; }
+                else return null;
+            } else if (!ownLimits || from + maxInterval >= t.lo - EPS) {
+                to = Math.min(to, from + maxInterval);
+            } else if (t.lo - maxInterval <= f.hi + EPS) {
+                to = t.lo;
+                from = t.lo - maxInterval;
+            } else {
+                return null;
+            }
+        }
+        return { from, to };
+    };
+    const { from, to } = fit(true) || fit(false);
+    return { from: clampedToLimits(from, 'from', cfg), to: clampedToLimits(to, 'to', cfg) };
+}
+
+/**
+ * The pair update({from: mid}) at S6 leaves: validate() sets from to the middle of the
+ * range, pulls it back onto a to handle it crossed, clamps it, and the call changed from
+ * alone, so the from handle is the one the interval step moves first (when the clamp leaves
+ * from where it stood, the call changed nothing and the to handle is preferred).
+ *
+ * @param {object} ctx
+ * @returns {{from: number|null, to: number|null}}
+ */
+function updatedPair(ctx) {
+    const cfg = ctx.cfg;
+    const before = valuesOf(ctx.prev);
+    const { min, max } = rangeOf(cfg);
+    let from = Math.min(Math.max(midValue(cfg), min), max);
+    if (isNum(before.to) && from > before.to) from = before.to;
+    const heldFrom = (() => {
+        const lo = isNum(cfg.from_min) ? cfg.from_min : -Infinity;
+        const hi = isNum(cfg.from_max) ? cfg.from_max : Infinity;
+        return Math.min(Math.max(from, lo), hi);
+    })();
+    const changed = !isNum(before.from) || Math.abs(heldFrom - before.from) > EPS;
+    return settledPair(cfg, { from: from, to: before.to }, changed ? 'from' : 'to');
+}
+
+/**
+ * Does the pair validate() settled on at this build or update stage, or the one a stage that
+ * moved nothing carried on from there, still break an interval limit?
+ *
+ * That happens only where the per-handle limits (a fixed handle's value included) leave no
+ * pair that holds the interval, whichever handle moves: the limit wins at build time and on
+ * update(), and the interval is left broken (#894). Which handle moves first, and where a
+ * pair that cannot settle ends up, change the pair settledPair() returns but never this
+ * answer: once the limits are applied, no pair inside them holds such an interval. S0 and
+ * S9 are builds handed the configured pair and the pair rebuiltPair() says; S6 is
+ * update({from: mid}); S7 is reset(), which re-runs validate() on the pair S6 left with the
+ * to handle preferred. An interaction stage that moved nothing
+ * (a disabled, blocked or fixed slider) carries the broken pair on; one that moved a handle
+ * re-applies the interval through calc(), which the interaction half of the entry covers.
+ *
+ * @param {object} ctx
+ * @returns {boolean}
+ */
+function intervalLeftBroken(ctx) {
+    const cfg = ctx.cfg;
+    if (!isDouble(cfg) || !hasInterval(cfg) || valuesUnreadableAtInit(ctx)) return false;
+    const stage = stageOf(ctx);
+    const gapOf = (pair) => gapBetween(pair.from, pair.to);
+    if (stage === 'S0') return breaksInterval(gapOf(settledPair(cfg, { from: cfg.from, to: cfg.to }, 'to')), cfg);
+    if (stage === 'S9') return breaksInterval(gapOf(settledPair(cfg, rebuiltPair(ctx), 'to')), cfg);
+    if (stage === 'S6') return breaksInterval(gapOf(updatedPair(ctx)), cfg);
+    const before = valuesOf(ctx.prev);
+    if (stage === 'S7') return breaksInterval(gapOf(settledPair(cfg, before, 'to')), cfg);
+    if (!isInteractionStage(ctx) || promised(ctx).changed) return false;
+    // Only a pair validate() left broken: one broken by an interaction is another entry's.
+    const built = settledPair(cfg, { from: cfg.from, to: cfg.to }, 'to');
+    return breaksInterval(gapOf(built), cfg) && breaksInterval(gapBetween(before.from, before.to), cfg);
 }
 
 /**
@@ -278,7 +427,8 @@ function startingPair(cfg) {
  * included, so the handle is handed the index the S8 state read off the input.
  *
  * Like S0's configured pair, this is what the build is GIVEN; startingPair() says where
- * validate() leaves it.
+ * validate()'s clamps leave it, and settledPair() where validate() leaves it once the
+ * interval limits are applied too.
  *
  * @param {object} ctx
  * @returns {{from: number|null, to: number|null}}
@@ -617,48 +767,6 @@ export const KNOWN_BUGS = [
     },
 
     {
-        issue: 885,
-        title: 'min_interval and max_interval are not applied at init or by update()',
-        what: /closed past min_interval|opened past max_interval/,
-        // validate() clamps from/to against the per-handle limits but never against the
-        // interval limits, so the starting pair (S0), the pair update() leaves behind
-        // (S6, and S7, where reset() rebuilds from the very same options) and the pair the
-        // second build after destroy() is handed (S9, see rebuiltPair) can break them.
-        // The violation then SURVIVES every stage that does not move a handle -- a
-        // disabled, blocked or fixed slider carries it to the end of the run -- which is
-        // why the pair the stage started from is read here. A stage that does move a
-        // handle re-applies the interval, so the rule passes there and the entry must not
-        // match.
-        //
-        // A values-mode slider built hidden on a jQuery build that measures a hidden track
-        // as zero (3.3 and later) reports no pair at S0, so there is no interval to judge
-        // there (valuesUnreadableAtInit). On an older build it reports the pair it was
-        // built with, and m025 breaks its locked interval at S0 exactly as it would built
-        // visible.
-        matches(ctx, id) {
-            if (id !== 'intervals') return false;
-            const cfg = ctx.cfg;
-            if (!isDouble(cfg) || !hasInterval(cfg) || valuesUnreadableAtInit(ctx)) return false;
-            const stage = stageOf(ctx);
-            if (stage === 'S8') return false;
-            if (stage === 'S0') {
-                const start = startingPair(cfg);
-                return breaksInterval(gapBetween(start.from, start.to), cfg);
-            }
-            // A second build, not a stage the violation survives into: validate() runs on the
-            // pair it is handed exactly as it ran on the configured pair at S0.
-            if (stage === 'S9') {
-                const rebuilt = startingPair({ ...cfg, ...rebuiltPair(ctx) });
-                return breaksInterval(gapBetween(rebuilt.from, rebuilt.to), cfg);
-            }
-            if (stage === 'S6') return breaksInterval(gapBetween(midValue(cfg), valuesOf(ctx.prev).to), cfg);
-            const before = valuesOf(ctx.prev);
-            if (!breaksInterval(gapBetween(before.from, before.to), cfg)) return false;
-            return stage === 'S7' || !promised(ctx).changed;
-        }
-    },
-
-    {
         issue: 889,
         title: 'the *_pretty callback fields come back as numbers with prettify_enabled off',
         // The number is what this entry speaks for: `got 0`, `got -50`, never `got undefined`.
@@ -880,7 +988,7 @@ export const KNOWN_BUGS = [
 
     {
         issue: 894,
-        title: 'a handle limit and an interval limit that cannot both hold push the handle past its own limit',
+        title: 'a handle limit and an interval that cannot both hold: a drag breaks the limit, a build or update() breaks the interval',
         what: /passed (below|above) (from|to)_(min|max)|closed past min_interval|opened past max_interval|key press must move/,
         // m006, m010, m011, m018, m019, m025, m076 and m083: each pins one handle
         // (to_fixed, or from_fixed in m025) and then asks for an interval the other
@@ -888,10 +996,17 @@ export const KNOWN_BUGS = [
         // leaves its limit -- and where even the range is not wide enough for it, the
         // interval is left broken as well.
         //
-        // Only the interaction stages: validate() re-applies the per-handle limits at
-        // init, at update() and at reset(), so the pair S0, S6 and S7 leave behind is
-        // #885's half of the story, not this one.
+        // At a build and on update() or reset() it is the other way round (#885 made
+        // validate() apply the intervals): when neither handle can make room inside its
+        // own limits, the per-handle limits are applied last there, so the limit holds and
+        // the interval is left broken. That half reaches further than a pinned handle: m001
+        // (a from_min of 2.4 on a track only min_interval wide) and m060 (from_fixed
+        // against to_min) break it too, and m077 is m025's twin. A pair that one handle's
+        // limit stops short but the other handle can complete is settled, and is not this
+        // bug. A slider that moves nothing afterwards (disabled, blocked, fixed) carries a
+        // broken pair on. intervalLeftBroken() says where.
         matches(ctx, id) {
+            if (id === 'intervals' && intervalLeftBroken(ctx)) return true;
             if (!isInteractionStage(ctx)) return false;
             const cfg = ctx.cfg;
             const conflict = unsatisfiableInterval(cfg);
@@ -966,8 +1081,12 @@ export const KNOWN_BUGS = [
         issue: 898,
         title: 'a track click hides every value label while drag_interval holds both handles on the same value',
         what: /neither the merged label nor both value labels/,
-        // m080, from S3 on. What puts its two handles on one value is a drag: 6000 of a
-        // range of a million is under four pixels of track, so the pair overlaps and the
+        // Written against m080, from S3 on. Since #885 m080 opens inside its max_interval,
+        // the fixed script no longer puts its two handles on one value, and no matrix entry
+        // reaches this entry; contract/interactions.spec.mjs reproduces the bug directly (a
+        // handle dragged onto the other, then a track click). The rest of this comment
+        // describes how m080 reached it. What put its two handles on one value was a drag:
+        // 6000 of a range of a million is under four pixels of track, so the pair overlaps and the
         // press of a handle drag lands on whichever handle is on TOP (`to` at init, the
         // last touched one after that) rather than the one the stage aimed at -- then the
         // crossing guard parks the pressed handle on the other one. A user reaches the same

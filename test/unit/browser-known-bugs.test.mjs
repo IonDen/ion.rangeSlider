@@ -97,7 +97,7 @@ const allHits = (cfg, over) => {
 // Bug caught: an entry filed without its issue number or its one-line title, which would
 // annotate a matrix cell with nothing a reader could look up.
 test('every register entry carries an issue number, a title, a predicate and a message pattern', () => {
-    assert.equal(KNOWN_BUGS.length, 13);
+    assert.equal(KNOWN_BUGS.length, 12);
     const issues = KNOWN_BUGS.map((bug) => bug.issue);
     assert.deepEqual(issues, [...new Set(issues)], 'an issue must have one entry');
     for (const bug of KNOWN_BUGS) {
@@ -276,78 +276,6 @@ test('#882 judges the second build after destroy() by the pair it is handed', ()
     assert.equal(hit(viaValue, 'S9', 'limits', { prev: prevOf(6) }), null);
 });
 
-// ------------------------------------------------------------ #885 intervals at init
-
-// min_interval / max_interval are applied by the interaction paths only: the starting
-// from/to and the pair update() leaves behind are never checked against them.
-test('#885 matches a starting pair that breaks its own interval, not one that respects it', () => {
-    const tooWide = { type: 'double', min: 0, max: 100, step: 1, from: 30, to: 70, max_interval: 6 };
-    assert.equal(hit(tooWide, 'S0', 'intervals'), 885);
-    // reset() rebuilds from the options update() left, so the pair it restores is the
-    // one the previous stage ended on, not the configured one.
-    assert.equal(hit(tooWide, 'S7', 'intervals', { prev: prevOf(30, 70) }), 885);
-    assert.equal(hit(tooWide, 'S7', 'intervals', { prev: prevOf(30, 34) }), null, 'a pair update() left inside the interval is restored intact');
-
-    const tooClose = { type: 'double', min: 0, max: 100, step: 1, from: 48, to: 52, min_interval: 20 };
-    assert.equal(hit(tooClose, 'S0', 'intervals'), 885);
-
-    // The violation survives every stage that moves nothing (a disabled, blocked or
-    // fixed slider carries it to the end of the run); a stage that does move a handle
-    // re-applies the interval, and the rule passes there.
-    assert.equal(hit(tooClose, 'S3', 'intervals', { prev: prevOf(48, 52), expectations: { click: true, changed: false } }), 885);
-    assert.equal(hit(tooClose, 'S3', 'intervals', { prev: prevOf(48, 52), expectations: { click: true, changed: true } }), null);
-
-    // A starting pair that already honours both limits has nothing to excuse.
-    const healthy = { type: 'double', min: 0, max: 100, step: 1, from: 20, to: 50, min_interval: 20, max_interval: 40 };
-    assert.equal(hit(healthy, 'S0', 'intervals'), null);
-
-    // No interval option at all: never.
-    const noIntervals = { type: 'double', min: 0, max: 100, step: 1, from: 30, to: 70 };
-    assert.equal(hit(noIntervals, 'S0', 'intervals'), null);
-
-    // The starting pair is the one validate() built, limits included: a from lifted to an
-    // off-scale from_min lands on the scale point below it (that rounding is #882) and can
-    // close the gap past the interval, which is still this bug.
-    const liftedByALimit = { type: 'double', values: ['10', '20', '30', '40', '50'], from: 1, to: 3, from_min: 2.4, min_interval: 2 };
-    assert.equal(hit(liftedByALimit, 'S0', 'intervals'), 885);
-    const sameWithoutTheLimit = { type: 'double', values: ['10', '20', '30', '40', '50'], from: 1, to: 3, min_interval: 2 };
-    assert.equal(hit(sameWithoutTheLimit, 'S0', 'intervals'), null, 'the configured pair honours the interval');
-
-    // update({from: mid}) is judged against the pair the stage started from.
-    const updated = { type: 'double', min: 0, max: 100, step: 1, from: 10, to: 90, min_interval: 30 };
-    assert.equal(hit(updated, 'S6', 'intervals', { prev: prevOf(10, 60) }), 885, 'mid 50 against a to of 60 leaves 10');
-    assert.equal(hit(updated, 'S6', 'intervals', { prev: prevOf(10, 90) }), null, 'mid 50 against a to of 90 leaves 40');
-});
-
-// S9 is a second build, so validate() runs on the pair it is handed and skips the intervals
-// exactly as it did at S0. With nothing left behind by destroy() (#911) that pair is the
-// configured one for an entry that sets its from/to through the JS config or data-* attributes,
-// and the input's value -- the pair reset() left at S7 -- for one that sets them through the
-// value attribute.
-// Bug caught: judging S9 by the pair the stage started from, which leaves m028 red (its
-// configured pair is 40 wide on a locked 20, the pair reset() left is 20) and retires #885 on
-// m007-like cells (the configured pair holds, the pair reset() left does not).
-test('#885 judges the second build after destroy() by the pair it opens on', () => {
-    const m028 = { type: 'double', min: -50, max: 50, step: 5, from: -20, to: 20, from_min: -38, min_interval: 20, max_interval: 20 };
-    const opened = 'intervals: the handles opened past max_interval (expected "<= 20", got 40) after S9';
-    assert.equal(answers(m028, 'S9', 'intervals', opened, { prev: prevOf(0, 20) }), 885);
-
-    const holds = { type: 'double', min: 0, max: 100, step: 1, from: 20, to: 60, min_interval: 20 };
-    assert.equal(hit(holds, 'S9', 'intervals', { prev: prevOf(50, 60) }), null, 'reopens on 20 and 60, not on the 50 and 60 reset() left');
-
-    // Through the value attribute the rebuild reopens on the input's value.
-    const viaValue = { ...holds, __value_attr: '20;60' };
-    assert.equal(hit(viaValue, 'S9', 'intervals', { prev: prevOf(50, 60) }), 885);
-    assert.equal(hit(viaValue, 'S9', 'intervals', { prev: prevOf(20, 60) }), null);
-
-    // The pair is judged where validate() leaves it, not as handed: from_min lifts the handed
-    // from of 10 to 30, which leaves a gap of 10 against a min_interval of 20. The handed pair,
-    // 10 and 40, holds the interval.
-    // Bug caught: the S9 branch judging the bare rebuiltPair(ctx) instead of
-    // startingPair({ ...cfg, ...rebuiltPair(ctx) }), which misses the clamp.
-    assert.equal(hit({ type: 'double', min: 0, max: 100, step: 1, from: 10, to: 40, from_min: 30, min_interval: 20 }, 'S9', 'intervals', { prev: prevOf(50, 90) }), 885);
-});
-
 // -------------------------------------------------------- #889 pretty fields as numbers
 
 // readme "Callback data" shows every *_pretty field as a string; with prettify_enabled
@@ -435,18 +363,19 @@ test("the init payload of m018 is split between #897 and #889 by the message", (
     assert.equal(answers(m018, 'S0', 'callbacks', numericMin), 889);
     assert.equal(answers(m018, 'S0', 'callbacks', numericMax), 889);
 
-    // Judged together, as the matrix judges them: the starting pair also breaks the interval
-    // it was built with (#885), and nothing of the stage is left real.
+    // Judged together, as the matrix judges them: to_fixed holds 70 and from_max 60 keeps the
+    // from handle 10 away, past the max_interval of 4, which validate() cannot settle (#894),
+    // and nothing of the stage is left real.
     const interval = {
         id: 'intervals',
-        message: 'intervals: the handles opened past max_interval (expected "<= 4", got 40) after S0'
+        message: 'intervals: the handles opened past max_interval (expected "<= 4", got 10) after S0'
     };
     const failures = [missingFrom, missingTo, numericMin, numericMax]
         .map((message) => ({ id: 'callbacks', message }))
         .concat(interval);
     const { real, annotations } = judgeStage(failures, ctxOf(m018, 'S0'), []);
     assert.deepEqual(real, []);
-    assert.deepEqual(annotations.map((a) => a.issue).sort(), [885, 889, 889, 897, 897]);
+    assert.deepEqual(annotations.map((a) => a.issue).sort(), [889, 889, 894, 897, 897]);
 
     // The same slider in a visible container: every field comes back a number, and all four
     // are #889's -- the narrowing must not cost that entry the cells it was filed for.
@@ -565,20 +494,21 @@ test('#888 matches a hidden values-mode S0 input failure only on a build that me
 });
 
 // m025's configuration: a locked interval of 4 entries with the pair built on entries 1 and 3.
-// On a build that renders the slider at init, that pair is there at S0 and breaks the interval
-// exactly as it does for a visible slider, which is #885.
-// Bug caught: valuesUnreadableAtInit() keying on __hidden_at_init alone, which keeps #885 away
+// from_fixed holds entry 1 and the to handle cannot reach entry 5, so validate() leaves the
+// pair as it is (#894). On a build that renders the slider at init, that pair is there at S0
+// and breaks the interval exactly as it does for a visible slider.
+// Bug caught: valuesUnreadableAtInit() keying on __hidden_at_init alone, which keeps #894 away
 // from the S0 intervals failure m025 reports on jQuery 1.8.3 and leaves it red as a finding.
-test('#885 matches the S0 interval of an m025-like hidden slider only on a build that measures a hidden track as non-zero', () => {
+test('#894 matches the S0 interval of an m025-like hidden slider only on a build that measures a hidden track as non-zero', () => {
     const m025 = {
         type: 'double', values: ['10', '20', '30', '40', '50'], values_raw: true, from: 1, to: 3,
         min_interval: 4, max_interval: 4, from_fixed: true, drag_interval: true, __hidden_at_init: true
     };
     const closed = 'intervals: the handles closed past min_interval (expected ">= 4", got 2) after S0';
-    assert.equal(answers(m025, 'S0', 'intervals', closed, { env: SIGHTED }), 885);
+    assert.equal(answers(m025, 'S0', 'intervals', closed, { env: SIGHTED }), 894);
 
     // Where the hidden track measures zero the slider reports no pair at init, the intervals
-    // rule has nothing to judge, and #885 must not claim the cell.
+    // rule has nothing to judge, and #894 must not claim the cell.
     assert.equal(hit(m025, 'S0', 'intervals', { env: BLIND }), null);
 });
 
@@ -829,7 +759,7 @@ test('#881 matches an interval slider whose to handle rests on an unreachable ma
     const noInterval = { type: 'double', min: 0.5, max: 10.5, step: 1, from: 8, to: 10.5, drag_over_limit: true };
     assert.equal(hit(noInterval, 'S1', 'intervals', s1), null);
 
-    assert.equal(hit(offScaleTop, 'S0', 'intervals'), null, 'the starting pair is a matter for #885');
+    assert.equal(hit(offScaleTop, 'S0', 'intervals'), null, 'the starting pair holds the interval');
 });
 
 // ------------------------- #894 a handle limit and an interval that cannot both hold
@@ -910,6 +840,90 @@ test('#894 matches the interval and the key press when the conflict runs out of 
     // both handles free the pair can open up and honour the interval.
     const bothFree = { type: 'double', values: [10, 20, 30, 40, 50], from: 1, to: 3, from_min: 1, min_interval: 4 };
     assert.equal(hit(bothFree, 'S4a', 'intervals', firstPress), null);
+});
+
+// Since #885, validate() applies the interval limits at a build, on update() and on reset(). The
+// handle it moves stays inside its own per-handle limits, and when they stop it short the other
+// handle moves the rest of the way inside its own; only where no pair inside the per-handle
+// limits (a fixed handle's value included) holds the interval does the limit win and the
+// interval stay broken. Those stages are judged by the pair validate() settles on.
+// Bug caught: judging them by the configured pair, which breaks the interval on every entry
+// the #885 fix repaired (m028, m049, ...) and claims cells that are healthy now; dropping the
+// last clamp from the model, which settles m018 on 66 and 70 and misses the cell; or a model
+// that stops the moved handle on its own limit without moving the other one, or moves it
+// without reading its limits at all, either of which leaves m009 on 30 and 40 and claims a
+// cell the plugin settles on 34 and 40.
+test('#894 matches the interval validate() leaves broken at a build, not one it can settle', () => {
+    // m018: to_fixed holds 70, max_interval 4 wants the from handle at 66, from_max stops it at 60.
+    const pinned = { type: 'double', min: 0, max: 100, step: 1, from: 30, to: 70, from_max: 60, max_interval: 4, to_fixed: true };
+    const opened = 'intervals: the handles opened past max_interval (expected "<= 4", got 10) after S0';
+    assert.equal(answers(pinned, 'S0', 'intervals', opened), 894);
+    // Without from_max the from handle settles on 66, and without to_fixed the to handle
+    // comes in to 34: nothing to excuse either way.
+    const { from_max: _limit, ...noLimit } = pinned;
+    assert.equal(hit(noLimit, 'S0', 'intervals'), null);
+    assert.equal(hit({ ...pinned, to_fixed: false }, 'S0', 'intervals'), null);
+
+    // m009: to_min stops the to handle, which validate() moves at build time, on 40, 10 from a
+    // from of 30 against a max_interval of 6; the from handle then comes up to 34.
+    const toMin = { type: 'double', min: 0, max: 100, step: 1, from: 30, to: 70, to_min: 40, max_interval: 6, block: true };
+    assert.equal(hit(toMin, 'S0', 'intervals'), null, 'the from handle comes up to 34 and the pair settles');
+    // A from_max of 30 as well holds the from handle where it is: no pair inside the two
+    // limits is closer than 10, so the interval stays broken.
+    const penned = { ...toMin, from_max: 30 };
+    assert.equal(hit(penned, 'S0', 'intervals'), 894);
+
+    // m001: a track exactly min_interval wide leaves the from handle one place, min, and an
+    // off-scale from_min of 2.4 holds it above that.
+    const narrow = { type: 'double', values: ['10', '20', '30', '40', '50'], from: 1, to: 3, from_min: 2.4, min_interval: 4, max_interval: 4, disable: true };
+    assert.equal(hit(narrow, 'S0', 'intervals'), 894);
+    assert.equal(hit({ ...narrow, from_min: undefined }, 'S0', 'intervals'), null, 'without from_min the pair opens on the first and last entries');
+
+    // The pair is carried on by a stage that moves nothing, and only then.
+    assert.equal(hit(penned, 'S1', 'intervals', { prev: prevOf(30, 40), expectations: { changed: false, handle: 'from' } }), 894);
+    assert.equal(hit(penned, 'S1', 'intervals', { prev: prevOf(30, 40), expectations: { changed: true, handle: 'from' } }), null);
+    // A build that settled carries nothing on.
+    assert.equal(hit(toMin, 'S1', 'intervals', { prev: prevOf(34, 40), expectations: { changed: false, handle: 'from' } }), null);
+    // A pair an interaction broke is not validate()'s: a healthy build carries nothing.
+    const healthy = { type: 'double', min: 0, max: 100, step: 1, from: 30, to: 70, max_interval: 6 };
+    assert.equal(hit(healthy, 'S3', 'intervals', { prev: prevOf(30, 50), expectations: { click: true, changed: false } }), null);
+});
+
+// update({from: mid}) at S6 moves the from handle, which the call set, first; reset() at S7
+// re-runs validate() on the pair update() left, moving the to handle first; S9 builds again on
+// the pair rebuiltPair() says. Which handle moves first changes where the pair settles, never
+// whether it can: the other handle takes up the rest inside its own limits either way.
+// Bug caught: an S6 model that stops the from handle on its from_min without moving the to
+// handle, which claims the from_min pair below although the plugin settles it on 45 and 65;
+// or an S9 branch that judges the pair the stage started from instead of the one the build
+// is handed, or the configured pair even when the value attribute placed the handles.
+test('#894 judges update(), reset() and the second build by the pair each leaves', () => {
+    const pinned = { type: 'double', min: 0, max: 100, step: 1, from: 30, to: 70, from_max: 60, max_interval: 4, to_fixed: true };
+    // mid 50 is 20 below the fixed 70; from_max holds the from handle at 60, 10 away.
+    assert.equal(hit(pinned, 'S6', 'intervals', { prev: prevOf(60, 70), expectations: { update: true } }), 894);
+    assert.equal(hit(pinned, 'S7', 'intervals', { prev: prevOf(60, 70), expectations: { update: true } }), 894);
+
+    // m009 at S6: mid 50 crosses the to handle at 40 and is pulled back onto it; the from
+    // handle the call set then stands 0 away, inside max_interval, and reset() keeps that.
+    const toMin = { type: 'double', min: 0, max: 100, step: 1, from: 30, to: 70, to_min: 40, max_interval: 6, block: true };
+    assert.equal(hit(toMin, 'S6', 'intervals', { prev: prevOf(34, 40), expectations: { update: true } }), null);
+    assert.equal(hit(toMin, 'S7', 'intervals', { prev: prevOf(40, 40), expectations: { update: true } }), null);
+
+    // mid 50 is 10 below a to of 60 with min_interval 20: the from handle, which the call set,
+    // would have to go back to 40, and from_min 45 stops it there; the to handle then goes out
+    // to 65. A to_max of 60 as well stops that too: no pair inside the two limits is 20 wide.
+    const fromMin = { type: 'double', min: 0, max: 100, step: 1, from: 45, to: 60, from_min: 45, min_interval: 20 };
+    assert.equal(hit(fromMin, 'S6', 'intervals', { prev: prevOf(45, 60), expectations: { update: true } }), null, 'the to handle goes out to 65');
+    assert.equal(hit({ ...fromMin, to_max: 60 }, 'S6', 'intervals', { prev: prevOf(45, 60), expectations: { update: true } }), 894);
+    const toMax = { type: 'double', min: 0, max: 100, step: 1, from: 20, to: 60, to_max: 60, min_interval: 20 };
+    assert.equal(hit(toMax, 'S6', 'intervals', { prev: prevOf(20, 60), expectations: { update: true } }), null);
+
+    // The second build is handed the configured pair again, whatever reset() left: 30 and a
+    // fixed 70, which from_max cannot bring within 4.
+    assert.equal(hit(pinned, 'S9', 'intervals', { prev: prevOf(60, 62) }), 894);
+    // Through the value attribute it is handed the input's value: the to handle is fixed on 62,
+    // and the from handle can stand on 60, inside from_max and 2 away.
+    assert.equal(hit({ ...pinned, __value_attr: '60;62' }, 'S9', 'intervals', { prev: prevOf(60, 62) }), null);
 });
 
 // A pair that closes under a whole-interval move was filed as #895 and is no bug: on the
@@ -1115,16 +1129,12 @@ test('the missing onFinish of m065 is answered by #891, not by #889', () => {
         id: 'callbacks',
         message: 'callbacks: an interaction ends with exactly one onFinish (expected 1, got 0) after S4a'
     };
-    // The same stage also carries the interval the starting pair breaks (#885), which is what
-    // m065 really reports at S4a; judging the two together is what the matrix does.
-    const interval = {
-        id: 'intervals',
-        message: 'intervals: the handles opened past max_interval (expected "<= 30", got 40) after S4a'
-    };
-    const ctx = ctxOf(m065, 'S4a', { prev: prevOf(-20, 20), expectations: { key: '+', changed: false } });
+    // validate() builds m065 on -10 and 20, inside its max_interval of 30 (#885), so the stage
+    // carries no interval failure; judging the stage as the matrix does leaves nothing real.
+    const ctx = ctxOf(m065, 'S4a', { prev: prevOf(-10, 20), expectations: { key: '+', changed: false } });
 
     assert.equal(matchKnownBug(ctx, 'callbacks', failure.message).issue, 891);
-    const { real, annotations } = judgeStage([failure, interval], ctx, []);
+    const { real, annotations } = judgeStage([failure], ctx, []);
     assert.deepEqual(real, [], 'the dead keyboard records no payload, so #889 has nothing to retire on');
-    assert.deepEqual(annotations.map((a) => a.issue).sort(), [885, 891]);
+    assert.deepEqual(annotations.map((a) => a.issue), [891]);
 });
