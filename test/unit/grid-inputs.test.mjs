@@ -121,10 +121,15 @@ test('grid_snap counts 2.7 / 0.3 as exactly 9 units', (t) => {
 // two edge ticks (0% and 100%, labelled min and max) instead of dividing by a zero unit count. Before this fix
 // both configs collapsed to one tick labelled "NaN". Mutation this catches: the "Math.round(big_num) >= 1 &&"
 // guard dropped from the tolerance check in _gridTicksEven().
+// #887: the second tick's label was originally pinned to '0.30 000 000 000 000 004' -- the built-in
+// formatting's own bug, grouping the seventeen-digit fraction of 0.1 + 0.2's float error as if it were an
+// integer. #887 fixes prettify() to group the integer part only, so this golden's own label changes on
+// purpose to '0.30000000000000004', the fraction carried through untouched; the tick count and rule this
+// test actually covers are unaffected.
 test('grid_snap tolerance only snaps to a whole unit count of at least 1, matching master', (t) => {
   assert.deepEqual(
     texts(createSlider(t, '<input>', { min: 0.3, max: 0.1 + 0.2, step: 0.01, grid: true, grid_snap: true }).slider),
-    ['0.3', '0.30 000 000 000 000 004']
+    ['0.3', '0.30000000000000004']
   );
   assert.deepEqual(
     texts(createSlider(t, '<input>', { min: 0, max: 1e-10, step: 1, grid: true, grid_snap: true }).slider),
