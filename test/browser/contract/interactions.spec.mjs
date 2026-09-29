@@ -10,10 +10,10 @@
  * for what a key press on a fixed handle reports, so those rows are characterization of
  * shipped behaviour and say so. What the key handler ignores (a press with Shift held) comes
  * from the plugin's own key(), which the readme's keyboard row does not qualify. One
- * track-click row takes chooseHandle()'s own JSDoc, "Find closest handle to pointer click",
- * as its oracle and is an expected failure: a click can move the farther handle. A second
- * expected failure (#898) takes the readme's hide_from_to row as its oracle: a track click
- * under drag_interval on a pair on one value hides every value label.
+ * track-click rows take chooseHandle()'s own JSDoc, "Find closest handle to pointer click",
+ * as their oracle: a click moves the handle nearer to it, and one exactly halfway moves the
+ * to handle (#910). An expected failure (#898) takes the readme's hide_from_to row as its
+ * oracle: a track click under drag_interval on a pair on one value hides every value label.
  *
  * Assertions stay on page-observable surfaces: the input's value, the rendered labels and
  * the recorded callbacks. Rows the older specs already hold are not repeated here; each
@@ -160,12 +160,14 @@ test.describe(`interactions (${LABEL})`, () => {
     // ---- A click on the track ------------------------------------------------------------
     // readme Settings, onFinish, counts a click on the track as an interaction, and
     // smoke.spec.mjs holds a click on a single slider moving the handle to the clicked value.
-    // In double type the readme does not say which handle moves; the plugin compares the
-    // click with the point halfway between the two, on two scales that disagree (see the tie
-    // row and the expected failure after it). The two rows below are clear of that point.
-    // Mutation caught (these two rows and the tie row): chooseHandle() -> `if (real_x >= m_point) {` becomes
-    // `if (real_x < m_point) {`, and each click moves the other handle, which then stops on
-    // the first: "20;20", "80;80" and "20;50".
+    // In double type the readme does not say which handle moves; chooseHandle()'s own JSDoc
+    // does ("Find closest handle to pointer click"), and the plugin compares the click with the
+    // point halfway between the two handles: at or beyond it the to handle moves, before it the
+    // from handle. The two rows below are clear of that point; the rows after them sit on it.
+    // Mutation caught (these two rows, and the rows on the halfway point after them):
+    // chooseHandle() -> `if (real_x >= m_point) {` becomes `if (real_x < m_point) {`, and each
+    // click moves the other handle, which then stops on the first: "20;20" and "80;80" here,
+    // "50;80" on the tie.
     const CLICKS = [
         { at: 0.1, value: '10;80', title: 'a track click left of the midpoint moves the from handle (characterization)' },
         { at: 0.9, value: '20;90', title: 'a track click right of the midpoint moves the to handle (characterization)' }
@@ -178,40 +180,45 @@ test.describe(`interactions (${LABEL})`, () => {
         });
     }
 
-    // Characterization of the tie: a click exactly halfway between 20 and 80 moves the from
-    // handle. calc() hands chooseHandle() the click as the position of a handle's left edge,
-    // on the scale that edge travels: 0 to 97.33 on this 600 px track with a 16 px handle,
-    // where the value 50 sits at 48.67. chooseHandle() compares it with the midpoint of the
-    // two handles on the full 0 to 100 scale, 50. The two scales disagree, so the choice
-    // leans towards from past the exact middle: a click up to about 1.4 values beyond it
-    // still moves from. This row pins that behaviour as it is today; the fix for the finding
-    // in the next row flips it to "20;50".
-    // Mutation caught: calc() -> `this.target = this.chooseHandle(handle_x);` becomes
-    // `this.target = this.chooseHandle(this.convertToRealPercent(handle_x));` (that fix), and
-    // the input reads "20;50". The flipped comparison above reds this row too.
-    test('a track click exactly between the handles moves the from handle (characterization)', async ({ page }) => {
+    // A click exactly halfway between 20 and 80 moves the to handle: the comparison is `>=`,
+    // so the halfway point itself belongs to to. calc() hands chooseHandle() the click as the
+    // position of a handle's left edge, on the scale that edge travels (0 to 97.33 on this
+    // 600 px track with a 16 px handle, where the value 50 sits at 48.67), and chooseHandle()
+    // converts it to the full 0 to 100 scale of the midpoint before it compares (#910). Until
+    // that fix the two scales disagreed and this click moved the from handle ("50;80"), as did
+    // a click up to about 1.4 values beyond the middle.
+    // Mutation caught: chooseHandle() -> `if (real_x >= m_point) {` becomes `if (real_x >
+    // m_point) {`, and the click on exactly 50 moves the from handle: "50;80". The dropped
+    // conversion (`var real_x = handle_x;`) reds this row and the two after it.
+    test('a track click exactly between the handles moves the to handle (chooseHandle(): closest handle)', async ({ page }) => {
         await open(page, DOUBLE);
         await clickTrackAt(page, 0.5);
-        await expect(page.locator('#slider')).toHaveValue('50;80');
+        await expect(page.locator('#slider')).toHaveValue('20;50');
     });
 
-    // The same scale mix away from the tie, where it grows with the handle's share of the
-    // track and with the distance of the midpoint from min. The readme names no rule for which handle a click moves; chooseHandle()'s own
-    // JSDoc does: "Find closest handle to pointer click". On a 300 px track the 16 px handle
-    // takes 5.33 of 100, so a click on 93 reaches chooseHandle() as about 88 (93 x 0.9467),
-    // below the midpoint of 80 and 100, 90. The click is 7 from to and 13 from from, and
-    // from moves: the input reads "93;100". This row states the closest-handle rule.
-    // The row reads the value once after a render tick (400 ms) instead of polling, so the
-    // expected failure does not wait out the assertion timeout.
-    // Mutation caught (the fix): calc() -> `this.target = this.chooseHandle(handle_x);`
-    // becomes `this.target = this.chooseHandle(this.convertToRealPercent(handle_x));`, the
-    // input reads "80;93", and Playwright reports the row "expected to fail, but passed".
+    // The issue's first example: on this 600 px track a click on 51 is 29 from the to handle
+    // and 31 from the from handle, and the to handle moves. Before the fix the click reached
+    // the comparison as 49.6 against a midpoint of 50, and the from handle moved: "51;80".
+    // The readme names no rule for which handle a click moves; chooseHandle()'s own JSDoc does:
+    // "Find closest handle to pointer click".
+    // Mutation caught: chooseHandle() -> `var real_x = handle_x;` (the conversion dropped),
+    // and the input reads "51;80".
+    test('a track click just past the midpoint moves the to handle, the nearer one (chooseHandle(): closest handle, #910)', async ({ page }) => {
+        await open(page, DOUBLE);
+        await clickTrackAt(page, 0.51);
+        await expect(page.locator('#slider')).toHaveValue('20;51');
+    });
+
+    // The same scale mix where it grows with the handle's share of the track and with the
+    // distance of the midpoint from min. On a 300 px track the 16 px handle takes 5.33 of 100,
+    // so a click on 93 used to reach the comparison as about 88 (93 x 0.9467), below the
+    // midpoint of 80 and 100, 90. The click is 7 from to and 13 from from, and to moves: the
+    // input reads "80;93" (it read "93;100" until #910 was fixed).
+    // Mutation caught: chooseHandle() -> `var real_x = handle_x;` and the input reads "93;100".
     test('a track click nearer the to handle moves the to handle (chooseHandle(): closest handle)', async ({ page }) => {
-        test.fail(true, '#910: a click on the track of a double slider can move the handle that is farther from the click');
         await open(page, { type: 'double', min: 0, max: 100, from: 80, to: 100, step: 1 }, { width: '300' });
         await clickTrackAt(page, 0.93);
-        await page.waitForTimeout(400);   // outlast the idle render tick, then read once
-        expect(await page.locator('#slider').inputValue()).toBe('80;93');
+        await expect(page.locator('#slider')).toHaveValue('80;93');
     });
 
     // readme Settings, drag_interval: "Let the user drag the whole interval by its bar." With
