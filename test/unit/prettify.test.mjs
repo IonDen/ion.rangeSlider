@@ -439,3 +439,171 @@ test('a custom prettify function returning a number is not coerced -- the fix on
   assert.equal(result, 42);
   assert.equal(typeof result, 'number');
 });
+
+// ------------------------------------------------- #887 the separator inside the fraction
+//
+// The built-in formatting ran its thousands-grouping regex over the whole formatted
+// number, decimals included, so a value with four or more decimals came out with the
+// separator inserted into its fraction (1.2345 -> "1.2 345", the issue's own example).
+// The fix groups only the integer part of each number in the text; a "." counts as a
+// decimal point only when a digit sits on both sides of it, and the digits after a real
+// decimal point are appended untouched -- a value with no fraction, or one of three
+// digits or fewer either side of a decimal point, was never touched by the grouping
+// regex either way and renders exactly as it did before.
+
+test("prettify() keeps the thousands separator out of the decimal part -- the issue's four values (#887)", (t) => {
+  const { slider } = createSlider(t, '<input>', { min: 0, max: 2000, step: 0.0001 });
+  // One-line bug (the shipped defect): prettify() ran its grouping regex over
+  // num.toString() directly, decimals included, instead of splitting on the decimal
+  // point first. RED on master: '1.2 345', '0.0 003', '1 234.5 678', '-1 234.5'.
+  // Mutation caught: return `run.replace(groupRegex, ...)` instead of
+  // `int_part.replace(groupRegex, ...) + fraction` so the whole matched run is grouped,
+  // fraction included -- reds 3 of these 4 assertions with '1.2 345', '0.0 003' and
+  // '1 234.5 678' (the sign case is untouched either way: its fraction, '.5', is one
+  // digit short of the grouping threshold with or without the split).
+  assert.equal(slider.prettify(1.2345), '1.2345');
+  assert.equal(slider.prettify(0.0003), '0.0003');
+  assert.equal(slider.prettify(1234.5678), '1 234.5678');
+  assert.equal(slider.prettify(-1234.5), '-1 234.5');
+});
+
+test('prettify() with prettify_separator "," keeps the same split (#887)', (t) => {
+  const { slider } = createSlider(t, '<input>', { min: 0, max: 2000, step: 0.0001, prettify_separator: ',' });
+  // Mutation caught: same whole-run grouping as above -- both the first and second
+  // assertions red, with '1.2,345' and '1,234.5,678'.
+  assert.equal(slider.prettify(1.2345), '1.2345');
+  assert.equal(slider.prettify(1234.5678), '1,234.5678');
+  assert.equal(slider.prettify(-1234.5), '-1,234.5');
+});
+
+// A third separator spelling, "." -- readme.md's prettify_separator row names only a
+// space and a comma as examples, so this test picks a third separator spelling (#887).
+// The output is genuinely ambiguous with this separator (a reader cannot tell the
+// grouping dot from the decimal point on sight), but that is the user's own setting, not
+// a defect the fraction fix introduces or could remove: the fraction itself is still
+// carried through untouched, one decimal point among possibly several dots.
+test('prettify() with prettify_separator "." still keeps the fraction intact, ambiguous reading and all (#887)', (t) => {
+  const { slider } = createSlider(t, '<input>', { min: 0, max: 2000, step: 0.0001, prettify_separator: '.' });
+  assert.equal(slider.prettify(1234.5), '1.234.5');
+  // Mutation caught: same whole-run grouping -- this second assertion reds with
+  // '1.2.345' (the ".5" fraction above is too short to change either way, so the
+  // mutation is only visible here, not on the first assertion).
+  assert.equal(slider.prettify(1.2345), '1.2345');
+});
+
+// Pins behaviour: the current implementation never handles the sign explicitly -- "-"
+// matches neither the digit-run split nor the grouping regex, so it is simply left
+// where it started, in front of the grouped digits. Tried and confirmed NOT to red this
+// test: widening the split regex to sweep the sign into the run (/-?\d+(?:\.\d+)?/g),
+// and widening the grouping regex's capture to a character class that includes "-"
+// ([\d-]{1,3}...) -- in both cases "-" still never satisfies \d, so it is skipped by
+// the grouping regex exactly as before and the output is unchanged. No mutation of the
+// split/group logic was found that moves the sign without also breaking the four-value
+// grouping test above it, so this stays a characterization of the new code rather than
+// a mutation-caught test.
+test('prettify() keeps the sign in front of the grouped integer part (#887 characterization)', (t) => {
+  const { slider } = createSlider(t, '<input>', { min: -2000000, max: 0 });
+  assert.equal(slider.prettify(-1234567), '-1 234 567');
+});
+
+// A number JavaScript itself writes in exponent form keeps today's text: the "e" breaks
+// the digit run just as a "." always did. For 1e-7 and 1e+21 neither side of the "e" ever
+// reaches the grouping threshold: JavaScript's own exponential notation always
+// normalizes the mantissa to exactly one digit before the "." (scientific form requires
+// 1 <= mantissa < 10) and the exponent itself never exceeds 3 digits (the largest
+// magnitude a double supports is around 308/-324).
+// Pins behaviour (first two assertions): no mutation of the split/group logic can red
+// either. Confirmed live: merging the mantissa and exponent into one matched run
+// (changing the split regex to /\d+(?:\.\d+)?(?:e[+-]?\d+)?/g) still leaves both passing,
+// because "1" and "7" (or "1" and "21") are each too short to group even combined.
+// The mantissa's own fraction can still run long, e.g. 1.2345e-7 -- the fix never groups
+// the digits after a decimal point regardless of how many there are, so that stays
+// untouched too, not because it is too short.
+// Mutation caught (third assertion): revert prettify() to the pre-#887 whole-text single
+// grouping pass (group num.toString() directly with the thousands regex, no digit-run
+// split, no decimal-point guard at all) -- this value's own mantissa fraction has enough
+// digits to cross the grouping threshold, so it reds with '1.2 345e-7' instead of
+// '1.2345e-7'.
+test('prettify() leaves a number in exponent form untouched, same as before the fix (#887 characterization)', (t) => {
+  const { slider } = createSlider(t, '<input>', { min: 0, max: 100 });
+  assert.equal(slider.prettify(1e-7), '1e-7');
+  assert.equal(slider.prettify(1e21), '1e+21');
+  assert.equal(slider.prettify(1.2345e-7), '1.2345e-7');
+});
+
+// Pins: a value with no fraction, or a fraction of three digits or fewer, renders
+// exactly as it did before the fix.
+// Mutation caught: drop `+ fraction` from the return (group the integer part and stop,
+// discarding whatever came after the ".") -- '1234.5' reds with '1 234' instead of
+// '1 234.5'.
+test('prettify() renders a value with 0-3 decimals exactly as before the fix (pin) (#887)', (t) => {
+  const { slider } = createSlider(t, '<input>', { min: 0, max: 2000, step: 0.001 });
+  assert.equal(slider.prettify(1234), '1 234');
+  assert.equal(slider.prettify(1234.5), '1 234.5');
+  assert.equal(slider.prettify(1234.56), '1 234.56');
+  assert.equal(slider.prettify(1234.567), '1 234.567');
+
+  const { slider: commaSlider } = createSlider(t, '<input>', { min: 0, max: 2000, step: 0.001, prettify_separator: ',' });
+  assert.equal(commaSlider.prettify(1234.567), '1,234.567');
+});
+
+// The value label and its result.from_pretty payload field: see prime() above (#889) --
+// calc() needs real geometry to reach the branch that writes from_pretty, so this stubs a
+// 600 px track and settles one draw, the same way the #889 tests above do.
+test('a four-decimal slider carries the fixed text on its value label and from_pretty (#887)', (t) => {
+  const { slider } = createSlider(t, '<input>', { min: 0, max: 2, step: 0.0001, from: 1.2345 });
+  prime(slider);
+  // One-line bug: same as above, reached through calc()'s single branch this time.
+  // RED on master: '1.2 345'.
+  assert.equal(slider.result.from_pretty, '1.2345');
+  assert.equal(slider.$cache.single.text(), '1.2345');
+});
+
+// The min and max labels: setMinMax() writes result.min_pretty/max_pretty and the label
+// DOM text at construction, with no geometry needed (#889's comment above), so this needs
+// no prime().
+test('a four-decimal slider carries the fixed text on its min and max labels (#887)', (t) => {
+  const { slider } = createSlider(t, '<input>', { min: 0, max: 0.0025, step: 0.0001, from: 0 });
+  assert.equal(slider.result.min_pretty, '0');
+  assert.equal(slider.result.max_pretty, '0.0025');
+  assert.equal(slider.$cache.min.text(), '0');
+  assert.equal(slider.$cache.max.text(), '0.0025');
+});
+
+// #887: prettify() runs over more than JS numbers -- values mode with
+// prettify_all_values: true and no custom prettify function sends every raw, non-numeric
+// values entry through this same built-in formatter (see the values-mode loop in
+// validate()). Splitting the whole text on its first "." (an earlier version of this fix)
+// treats any unrelated "." earlier in the text -- an abbreviation, a decimal-looking
+// substring -- as the number's decimal point, so the digits after it land in the
+// untouched "fraction" and never get grouped: 'Jan. 10000' rendered unchanged instead of
+// 'Jan. 10 000'.
+// Mutation caught: revert prettify() to 450ddeb's whole-text single split (sign, one
+// indexOf('.') split, group the integer part, append the fraction untouched) -- the
+// digit run after the stray "." in 'Jan. 10000' and '1.5k - 25000' never reaches the
+// grouping regex, and this reds with 'Jan. 10000' and '1.5k - 25000' (both unchanged)
+// instead of grouped. RED on 450ddeb.
+test('prettify_all_values with no custom prettify keeps a text entry\'s digit runs grouped, not just a JS number\'s (#887)', (t) => {
+  const { slider } = createSlider(t, '<input>', {
+    values: ['Jan. 10000', '1.5k - 25000', 'x'],
+    prettify_all_values: true,
+  });
+  assert.deepEqual(plain(slider.options.p_values), ['Jan. 10 000', '1.5k - 25 000', 'x']);
+});
+
+// #887: a "." is a decimal point only when a digit sits on both sides of it. A dot-led
+// digit run used to be treated as a fraction outright, with no check for a digit before
+// the dot, so a "." that closes an abbreviation right before a number -- 'Jan.10000',
+// 'No.12345', no space either side -- left the digits after it ungrouped, same as a real
+// decimal point would.
+// Mutation caught: revert prettify() to 3b8c228's leading-dot check (split digit runs
+// with /\.?\d+/g, leave a run untouched whenever it starts with ".") -- neither digit run
+// has a digit before its "." once the "." is swallowed into the run, so both assertions
+// red with 'Jan.10000' and 'No.12345' (both unchanged) instead of grouped. RED on 3b8c228.
+test('prettify_all_values treats a "." as a decimal point only between two digits (#887)', (t) => {
+  const { slider } = createSlider(t, '<input>', {
+    values: ['Jan.10000', 'No.12345'],
+    prettify_all_values: true,
+  });
+  assert.deepEqual(plain(slider.options.p_values), ['Jan.10 000', 'No.12 345']);
+});

@@ -19,7 +19,11 @@ test('values mode prettifies numeric entries into result.min_pretty/max_pretty t
   // p_values is built by validate() and already correct on master; pinning it
   // here shows the two assertions below aren't accidentally testing p_values
   // itself but result.min_pretty/max_pretty mirroring it.
-  assert.deepEqual(plain(slider.options.p_values), ['1.5', '3.141 592', '42']);
+  // #887: this entry's six-decimal text was originally pinned to '3.141 592' -- the
+  // built-in formatting's own bug, grouping the fraction as if it were part of the
+  // integer. #887 fixes prettify() to group the integer part only, so this pin
+  // changes on purpose to '3.141592', the fraction carried through untouched.
+  assert.deepEqual(plain(slider.options.p_values), ['1.5', '3.141592', '42']);
   assert.equal(slider.result.min_pretty, '1.5');
   assert.equal(slider.result.max_pretty, '42');
 });

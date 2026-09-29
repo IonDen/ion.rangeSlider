@@ -2659,9 +2659,35 @@
             }
         },
 
+        /**
+         * The built-in thousands-separator formatting.
+         *
+         * #887: the separator groups digits only, never a fraction. Grouping the text as
+         * one whole string (as this used to do) put a separator inside a longer
+         * fraction, e.g. 1.2345 -> "1.2 345", the issue's own example. A "." counts as a
+         * decimal point only when a digit sits on both sides of it: /\d+(?:\.\d+)?/g
+         * matches a plain digit run or a true decimal number, and the callback groups
+         * only the part before the "." and appends the "." and the digits after it
+         * untouched. This also covers a raw string entry from values mode with
+         * prettify_all_values (#276), e.g. "Jan.10000": its "." has no digit before it,
+         * so the "." is not part of any match and the digit run after it groups like any
+         * other, "Jan.10 000". A value with no fraction, or one of three digits or fewer
+         * either side of a real decimal point, renders exactly as it always has. The sign
+         * needs no explicit handling either way: "-" matches neither regex below, so it
+         * is left exactly where it started.
+         * @param {number|string} num
+         * @returns {string}
+         */
         prettify: function (num) {
-            var n = num.toString();
-            return n.replace(/(\d{1,3}(?=(?:\d\d\d)+(?!\d)))/g, "$1" + this.options.prettify_separator);
+            var separator = this.options.prettify_separator;
+
+            return num.toString().replace(/\d+(?:\.\d+)?/g, function (run) {
+                var dot_index = run.indexOf(".");
+                var int_part = dot_index === -1 ? run : run.slice(0, dot_index);
+                var fraction = dot_index === -1 ? "" : run.slice(dot_index);
+
+                return int_part.replace(/(\d{1,3}(?=(?:\d\d\d)+(?!\d)))/g, "$1" + separator) + fraction;
+            });
         },
 
         /**

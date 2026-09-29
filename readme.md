@@ -169,7 +169,7 @@ Or use `data-*` attributes on the input:
 | `to_max` | `data-to-max` | `max` | number | Maximum limit for the to handle |
 | `to_shadow` | `data-to-shadow` | `false` | boolean | Highlight the limits of the to handle |
 | `prettify_enabled` | `data-prettify-enabled` | `true` | boolean | Format long numbers: 10000000 → 10 000 000 |
-| `prettify_separator` | `data-prettify-separator` | `" "` | string | Thousands separator for the built-in formatting. A space by default (10 000 000); set it to "," for 10,000,000, or to an empty string to turn the separator off |
+| `prettify_separator` | `data-prettify-separator` | `" "` | string | Thousands separator for the built-in formatting. A space by default (10 000 000); set it to "," for 10,000,000, or to an empty string to turn the separator off. It groups only the digits before the decimal point; the decimals are never split |
 | `prettify` | `data-prettify` | `null` | function, string | Custom formatting function, or the name of a global one. [See notes](#prettify) |
 | `prettify_grid` | `data-prettify-grid` | `null` | function, string | Formatting function for the grid labels only. [See notes](#prettify_grid) |
 | `prettify_min_max` | `data-prettify-min-max` | `null` | function, string | Formatting function for the min and max labels only. [See notes](#prettify_min_max) |

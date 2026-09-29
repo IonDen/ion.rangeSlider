@@ -7,10 +7,10 @@
  *
  * An entry is:
  *   {
- *     issue: 887,                                   // the filed GitHub issue number
- *     title: 'the built-in thousands separator is inserted into the fractional part',   // one line, in the glossary's words
- *     what: /label text|grid label at|_pretty must be/,   // the failure MESSAGES this bug produces
- *     matches(ctx, id) { return id === 'labels' && builtinFormattingActive(ctx.cfg) && scaleDecimals(ctx.cfg) >= 4; }
+ *     issue: 896,                                   // the filed GitHub issue number
+ *     title: 'a slider whose min equals max fires no onFinish when a handle is released',   // one line, in the glossary's words
+ *     what: /exactly one onFinish/,                  // the failure MESSAGES this bug produces
+ *     matches(ctx, id) { return id === 'callbacks' && isInteractionStage(ctx) && !isInert(ctx.cfg) && rangeOf(ctx.cfg).min === rangeOf(ctx.cfg).max; }
  *   }
  *
  * `what` is the second half of the entry and is not optional: `matches` says which
@@ -55,8 +55,7 @@
  * fixed there, and the entry has to be retired.
  */
 
-import { isValuesMode, nearestOnScale, onScale, rangeOf, scaleDecimals, scalePoint } from './scale.mjs';
-import { builtinPrettify } from './format.mjs';
+import { isValuesMode, nearestOnScale, onScale, rangeOf, scalePoint } from './scale.mjs';
 import { keyStops, INVARIANTS } from './invariants.mjs';
 // Where the fixed interaction script aims: the same numbers matrix.spec.mjs drives the
 // slider with. A predicate that has to say "this stage pushes the handle into its own
@@ -640,49 +639,6 @@ function reportedValuesOffGrid(cfg) {
     return Math.abs(scalePoint(1, cfg) - (min + step)) >= step / 2 - EPS;
 }
 
-/** Is the built-in number formatting the one drawing this config's labels? */
-function builtinFormattingActive(cfg) {
-    if (cfg.prettify_enabled === false) return false;
-    if (typeof cfg.__prettify === 'function' || typeof cfg.__prettify_grid === 'function' || typeof cfg.__prettify_min_max === 'function') return false;
-    return (typeof cfg.prettify_separator === 'string' ? cfg.prettify_separator : ' ') !== '';
-}
-
-/**
- * Would the built-in formatting put its separator inside this value's fraction?
- *
- * The plugin runs the grouping over the whole formatted number instead of its integer
- * part, so a value carrying four or more decimals is rendered with a separator in the
- * middle of its fraction ("0.0 003").
- *
- * @param {number} value
- * @param {object} cfg
- * @returns {boolean}
- */
-function separatorSplitsFraction(value, cfg) {
-    if (!isNum(value)) return false;
-    const separator = typeof cfg.prettify_separator === 'string' ? cfg.prettify_separator : ' ';
-    const wholeString = String(value).replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1' + separator);
-    return wholeString !== builtinPrettify(value, separator);
-}
-
-/** Does this stage record a callback payload at all? */
-function payloadStage(ctx) {
-    const stage = stageOf(ctx);
-    if (stage === 'S8') return false;                               // destroy() records nothing
-    // S9 builds the slider a second time straight from the entry's config literal, which
-    // carries no recorder, so nothing of that slider's own callbacks is recorded either.
-    if (stage === 'S9') return false;
-    if (stage === 'S0' || stage === 'S6' || stage === 'S7') return true;  // onStart/onInit, onUpdate
-    // A disabled or blocked slider is silent to every interaction: the mask swallows the
-    // mouse, and neither answers the keyboard (a disabled slider binds no key handler, and
-    // block drops every press since #890).
-    if (isInert(ctx.cfg)) return false;
-    // A key press on a slider whose keyboard the interval-drag bug killed (#891) is dropped
-    // whole, callbacks included, so there is no payload for any field of it to be wrong in.
-    if (isKeyStage(ctx) && intervalKeyboardIsDead(ctx.cfg)) return false;
-    return true;                                                    // a live slider reports every interaction
-}
-
 /**
  * Is the keyboard dead after the track click (#891)?
  *
@@ -873,43 +829,6 @@ export const KNOWN_BUGS = [
                 const overshoot = start + 2 * direction * step;
                 return overshoot >= stops.lo - EPS && overshoot <= stops.hi + EPS;
             });
-        }
-    },
-
-    {
-        issue: 887,
-        title: 'the built-in thousands separator is inserted into the fractional part',
-        what: /label text|grid label at|_pretty must be/,
-        // n041 (edge:tiny, step 0.0001). Whether a label shows it depends on the value the
-        // label carries: at init that is the configured from/to (0 formats cleanly), and
-        // after reset() it is the pair the last update() left, which reset() rebuilds from
-        // the same options. Every stage in between moves the handle onto the
-        // four-decimal grid, where the separator always lands inside the fraction.
-        matches(ctx, id) {
-            const cfg = ctx.cfg;
-            if (id !== 'labels' && id !== 'grid' && id !== 'callbacks') return false;
-            if (id === 'grid' && !cfg.grid) return false;
-            // The payload's from_pretty/to_pretty carry the same text the value label does,
-            // so a stage that records a payload reports the same split fraction (n041 at S1).
-            if (id === 'callbacks' && !payloadStage(ctx)) return false;
-            if (!builtinFormattingActive(cfg) || isValuesMode(cfg)) return false;
-            if (scaleDecimals(cfg) < 4) return false;
-            const stage = stageOf(ctx);
-            if (stage === 'S8') return false;
-            // S0, S7 and S9 all show a pair the slider was BUILT with rather than one a
-            // handle was dragged to: the configured from/to at init, the pair reset()
-            // restored at S7, and at S9 the pair the second build after destroy() is handed
-            // (rebuiltPair) -- the configured one again for an entry that sets from/to, the
-            // one reset() left, read off the input's value, for an entry that sets none
-            // (n041). The grid is the exception -- it is drawn across the whole range
-            // whatever the handles do.
-            if (id !== 'grid' && (stage === 'S0' || stage === 'S7' || stage === 'S9')) {
-                const shown = stage === 'S0' ? { from: cfg.from, to: cfg.to }
-                    : stage === 'S9' ? rebuiltPair(ctx)
-                        : valuesOf(ctx.prev);
-                return [shown.from, shown.to].some((value) => separatorSplitsFraction(value, cfg));
-            }
-            return true;
         }
     },
 

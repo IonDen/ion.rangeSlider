@@ -32,13 +32,12 @@ const BUILTIN_ROWS = [
     { value: 1234.5, config: { min: 0, max: 2000, step: 0.5 } },
     { value: -1234, config: { min: -2000, max: 0, step: 1 } },
     { value: 0.001, config: { min: 0, max: 1, step: 0.001 } },
-    {
-        value: 1.2345,
-        config: { min: 0, max: 2, step: 0.0001 },
-        // With the separator turned off there is nothing to insert, so only the two
-        // separator spellings reproduce the defect.
-        bug: (separator) => (separator === '' ? null : '#887: the built-in thousands separator is inserted into the fractional part')
-    }
+    // #887: a fraction of four or more digits used to have the separator grouped into it
+    // too (1.2345 -> "1.2 345"). Fixed: the separator now groups the integer part only.
+    { value: 1.2345, config: { min: 0, max: 2, step: 0.0001 } },
+    // #887: an integer part above 1000 alongside a four-decimal fraction -- the separator
+    // must still group "1234" while leaving ".5678" untouched.
+    { value: 1234.5678, config: { min: 0, max: 2000, step: 0.0001 } }
 ];
 
 const SEPARATORS = [' ', ',', ''];
@@ -47,7 +46,6 @@ test.describe(`prettify (${LABEL})`, () => {
     for (const row of BUILTIN_ROWS) {
         for (const separator of SEPARATORS) {
             const config = { ...row.config, from: row.value, grid: true, grid_num: 2, prettify_separator: separator };
-            const bug = row.bug ? row.bug(separator) : null;
 
             // readme Settings, prettify_separator: "A space by default (10 000 000); set
             // it to "," for 10,000,000, or to an empty string to turn the separator off".
@@ -56,7 +54,6 @@ test.describe(`prettify (${LABEL})`, () => {
             // `var n = num.toString()` becomes `num.toFixed(2)`, which also reds the row
             // that carries no grouping at all (0.001).
             test(`the built-in formatting of ${row.value} with separator "${separator}" on the value, min, max and grid labels (Settings: prettify_enabled, prettify_separator)`, async ({ page }) => {
-                if (bug) test.fail(true, bug);
                 await open(page, config);
                 await labelText(page, '.irs-single').toBe(expectedLabel(row.value, config, 'handle'));
                 await labelText(page, '.irs-min').toBe(expectedLabel(config.min, config, 'min'));

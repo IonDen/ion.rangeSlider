@@ -97,7 +97,7 @@ const allHits = (cfg, over) => {
 // Bug caught: an entry filed without its issue number or its one-line title, which would
 // annotate a matrix cell with nothing a reader could look up.
 test('every register entry carries an issue number, a title, a predicate and a message pattern', () => {
-    assert.equal(KNOWN_BUGS.length, 11);
+    assert.equal(KNOWN_BUGS.length, 10);
     const issues = KNOWN_BUGS.map((bug) => bug.issue);
     assert.deepEqual(issues, [...new Set(issues)], 'an issue must have one entry');
     for (const bug of KNOWN_BUGS) {
@@ -570,83 +570,6 @@ test('#893 matches a key press on a scale whose reported values are off the grid
     assert.equal(hit(rounded, 'S1', 'keys', { prev: prevOf(7) }), null, 'a drag is not a key press');
 });
 
-// ------------------------------------------- #887 the separator inside the fraction
-
-// The built-in formatting runs its grouping over the whole number, so a value with more
-// than three decimals is rendered with a separator inside its fraction.
-test('#887 matches a scale fine enough to put four decimals in a label', () => {
-    const tiny = { min: 0, max: 0.001, step: 0.0001, from: 0 };
-    assert.equal(hit(tiny, 'S1', 'labels'), 887);
-    assert.equal(hit(tiny, 'S1', 'grid'), null, 'this slider draws no grid');
-    assert.equal(hit({ ...tiny, grid: true }, 'S1', 'grid'), 887);
-    assert.equal(hit(tiny, 'S0', 'labels'), null, 'the handle starts on 0, which formats correctly');
-
-    // Three decimals never reach a grouping boundary.
-    const coarse = { min: 0, max: 1, step: 0.001, from: 0 };
-    assert.equal(hit(coarse, 'S1', 'labels'), null);
-
-    // No separator, nothing to insert.
-    const noSeparator = { min: 0, max: 0.001, step: 0.0001, from: 0, prettify_separator: '' };
-    assert.equal(hit(noSeparator, 'S1', 'labels'), null);
-
-    // A custom prettify replaces the built-in formatting altogether.
-    const custom = { min: 0, max: 0.001, step: 0.0001, from: 0, __prettify: (n) => String(n) };
-    assert.equal(hit(custom, 'S1', 'labels'), null);
-
-    // The callback payload carries the same text the label does, so it breaks on the same
-    // stages (n041 reports both at S1).
-    assert.equal(hit(tiny, 'S1', 'callbacks'), 887);
-    assert.equal(hit(tiny, 'S0', 'callbacks'), null, 'the payload starts on 0, which formats correctly');
-    assert.equal(hit(tiny, 'S8', 'callbacks'), null, 'destroy() records no payload');
-    assert.equal(hit(coarse, 'S1', 'callbacks'), null);
-});
-
-// S9 shows the pair the second build is handed: with nothing left behind by destroy() (#911),
-// the configured from for an entry that sets one, and the input's value -- the pair reset()
-// left at S7 -- for one that sets none (n041) or sets it through the value attribute.
-// Bug caught: reading S9 off the pair reset() left whatever the entry configures, which claims
-// a rebuild that reopens on a cleanly formatted configured value and misses one that reopens on
-// a split fraction.
-test('#887 judges the second build after destroy() by the pair it is handed', () => {
-    const tiny = { min: 0, max: 0.001, step: 0.0001, from: 0 };
-    assert.equal(hit(tiny, 'S9', 'labels', { prev: prevOf(0.0005) }), null, 'reopens on the configured 0');
-    const split = { ...tiny, from: 0.0005 };
-    const text = 'labels: the single value label text (expected "0.0005", got "0.0 005") after S9';
-    assert.equal(answers(split, 'S9', 'labels', text, { prev: prevOf(0) }), 887, 'reopens on the configured 0.0005');
-
-    // n041 sets no from at all, so the rebuild reads the input's value.
-    const n041 = { min: 0, max: 0.001, step: 0.0001 };
-    assert.equal(hit(n041, 'S9', 'labels', { prev: prevOf(0.0005) }), 887);
-    assert.equal(hit(n041, 'S9', 'labels', { prev: prevOf(0) }), null);
-    assert.equal(hit({ ...split, __value_attr: '0' }, 'S9', 'labels', { prev: prevOf(0) }), null, 'the value attribute route reads the input too');
-});
-
-// payloadStage() (known-bugs.mjs) is #887's own gate on the callbacks rule, and #887 is its
-// only caller: nothing else in the register would notice payloadStage() answering every
-// stage true. Its own S8/S0/S7/S9 handling above (stage === 'S8' before ever reaching this
-// rule) already redundantly excuses S8, so that half alone would not catch payloadStage()
-// losing its body; what would is an inert slider and a keyboard #891 has already silenced,
-// since #887 has no check of its own for either.
-// Bug caught: payloadStage() answering every stage true (its body reduced to `return true;`,
-// its isInert(ctx.cfg) line dropped, or its #891 dead-keyboard line dropped) claims a
-// payload none of those four stages ever records.
-test('payloadStage keeps #887 off S8, S9, an inert slider and a dead keyboard', () => {
-    const tiny = { min: 0, max: 0.001, step: 0.0001, from: 0 };
-    assert.equal(hit(tiny, 'S8', 'callbacks'), null, 'destroy() records no payload');
-    assert.equal(hit(tiny, 'S9', 'callbacks'), null, 'the second build carries no recorder either');
-
-    const blocked = { ...tiny, block: true };
-    assert.equal(hit(blocked, 'S1', 'callbacks'), null, 'the mask swallows every interaction of a blocked slider');
-    const disabled = { ...tiny, disable: true };
-    assert.equal(hit(disabled, 'S4a', 'callbacks'), null, 'a disabled slider binds no key handler either');
-
-    // Double, drag_interval, one fixed handle: the track click leaves the interval path in
-    // charge of the keyboard and its fixed-handle guard drops the whole press (#891), so
-    // there is no payload for #887's four fields to be wrong in.
-    const deadKeyboard = { type: 'double', min: 0, max: 0.001, step: 0.0001, from: 0, to: 0.0005, drag_interval: true, from_fixed: true };
-    assert.equal(hit(deadKeyboard, 'S4a', 'callbacks'), null, 'the interval path already dropped this press whole (#891)');
-});
-
 // ------------------------------------- #879 a whole-interval move against a handle limit
 
 // The interval-drag path clamps each handle on its own, so a bar drag that runs the
@@ -1080,11 +1003,11 @@ test('judgeStage keeps a failure whose message the entry was not filed for', () 
 // m065 carries #891: drag_interval with a fixed handle kills the keyboard after the track
 // click, so the press owes an onFinish the plugin never fires. m065 also has
 // prettify_enabled off, which used to be #889's territory (fixed and retired from the
-// register); with no payload recorded for this stage (payloadStage() drops a key press the
-// interval-drag bug killed), there is nothing left for a numeric-fields entry to claim here
-// anyway, so #891 is the only candidate either way. Unlike the generic #891 test above (whose
-// `dead` config fixes the FROM handle), m065 fixes the TO handle -- the other half of
-// intervalKeyboardIsDead()'s `cfg.from_fixed || cfg.to_fixed`.
+// register); with no payload recorded for this stage (the interval-drag bug drops the key
+// press whole, callbacks included), there is nothing left for a numeric-fields entry to
+// claim here anyway, so #891 is the only candidate either way. Unlike the generic #891 test
+// above (whose `dead` config fixes the FROM handle), m065 fixes the TO handle -- the other
+// half of intervalKeyboardIsDead()'s `cfg.from_fixed || cfg.to_fixed`.
 // Bug caught: dropping `|| cfg.to_fixed` from intervalKeyboardIsDead(), which stops treating
 // m065's own fixed handle as dead and leaves this stage unclaimed (matchKnownBug returns null).
 test('the missing onFinish of m065 is answered by #891', () => {
