@@ -1764,14 +1764,22 @@
         /**
          * Find closest handle to pointer click
          *
-         * @param real_x {Number}
+         * #910: the click comes in as getHandleX() gives it, the position of a handle's
+         * left edge on the scale that edge travels (0 to 100 - p_handle, the fake percent
+         * space), while the point halfway between the handles is on the full track (0 to 100,
+         * the real percent space). Compared as they came, the click read lower than it is and
+         * a click just past the halfway point moved the handle farther from it, so the click
+         * is converted to the real space first. A click exactly halfway moves "to".
+         *
+         * @param handle_x {Number} the click, in fake percent
          * @returns {String}
          */
-        chooseHandle: function (real_x) {
+        chooseHandle: function (handle_x) {
             if (this.options.type === "single") {
                 return "single";
             } else {
-                var m_point = this.coords.p_from_real + ((this.coords.p_to_real - this.coords.p_from_real) / 2);
+                var real_x = this.convertToRealPercent(handle_x),
+                    m_point = this.coords.p_from_real + ((this.coords.p_to_real - this.coords.p_from_real) / 2);
                 if (real_x >= m_point) {
                     return this.options.to_fixed ? "from" : "to";
                 } else {
