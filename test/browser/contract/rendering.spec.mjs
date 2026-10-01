@@ -142,8 +142,8 @@ test.describe(`rendering (${LABEL})`, () => {
     // branch of its own for it -- with no interaction yet, the from label is shown alone
     // and the merged label, which is built and reads "50 <separator> 50", stays hidden.
     // Mutation caught: drawLabels() -> in the `this.result.from === this.result.to`
-    // branch, drop the `else if (!this.target)` arm that reveals the from label, and no
-    // value label is visible at all.
+    // branch, drop the final `else` arm that reveals the from label, and no value label is
+    // visible at all.
     test('coincident handles show the from label alone (characterization)', async ({ page }) => {
         await open(page, { type: 'double', min: 0, max: 100, from: 50, to: 50 });
 

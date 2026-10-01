@@ -2077,7 +2077,13 @@
                             this.$cache.from[0].style.visibility = "visible";
                         } else if (this.target === "to") {
                             this.$cache.to[0].style.visibility = "visible";
-                        } else if (!this.target) {
+                        } else {
+                            // #898: no target, or one that is not a single handle
+                            // ("both_one" after a drag_interval track click and the
+                            // key presses that follow it, "both" for a bar drag),
+                            // shows the from label. With the handles on one value
+                            // its text and place are the to label's; before this,
+                            // those targets left every value label hidden.
                             this.$cache.from[0].style.visibility = "visible";
                         }
                         this.$cache.single[0].style.visibility = "hidden";
