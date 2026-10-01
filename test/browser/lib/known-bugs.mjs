@@ -639,22 +639,6 @@ function reportedValuesOffGrid(cfg) {
     return Math.abs(scalePoint(1, cfg) - (min + step)) >= step / 2 - EPS;
 }
 
-/**
- * Is the keyboard dead after the track click (#891)?
- *
- * It takes a click that reaches the plugin: the click is what leaves the interval path
- * in charge. On an inert slider the mask swallows the click, and the keyboard is silent
- * there anyway (a disabled slider binds no key handler, and block drops every press since
- * #890), so this only describes the configuration the bug needs; the callers rule an
- * inert slider out on their own (isInert), before they ask.
- *
- * @param {object} cfg
- * @returns {boolean}
- */
-function intervalKeyboardIsDead(cfg) {
-    return isDouble(cfg) && !!cfg.drag_interval && !!(cfg.from_fixed || cfg.to_fixed);
-}
-
 /** @type {Array<{issue: number, title: string, matches: (ctx: object, id: string) => boolean}>} */
 export const KNOWN_BUGS = [
     {
@@ -753,34 +737,6 @@ export const KNOWN_BUGS = [
             if (id === 'fixed') return !!(cfg.from_fixed || cfg.to_fixed);
             if (id === 'inert') return isInert(cfg);
             return id === 'callbacks' && !isInert(cfg);
-        }
-    },
-
-    {
-        issue: 891,
-        title: 'after a track click drag_interval with a fixed handle makes every key press a no-op',
-        // The one callbacks line this speaks for: the press owes the onFinish the readme
-        // promises every key press. The rule's other onFinish sentences (the one an inert
-        // slider must not fire, the one update() must not) belong to other entries.
-        what: /exactly one onFinish/,
-        // The click leaves the interval path in charge of the keyboard, and its
-        // fixed-handle guard drops the whole press, callbacks included -- so the press
-        // owes an onFinish it never fires. An inert slider is silent anyway, which is why
-        // disable/block are left out (the callbacks rule passes there).
-        matches(ctx, id) {
-            const cfg = ctx.cfg;
-            if (id !== 'callbacks' || !isKeyStage(ctx) || !intervalKeyboardIsDead(cfg) || isInert(cfg)) return false;
-            // What the keyboard inherits is the BAR: the click has to land between the two
-            // handles for the interval path to take the press over. A pair too narrow to
-            // reach the click (m085, held two units wide by a locked interval while the click
-            // sits at 55 % of the range) leaves the press on the ordinary key path, where it
-            // reports the onFinish it owes. The pair is read from the state the press started
-            // from -- a press this bug drops moves nothing, so that pair is still the one the
-            // click saw.
-            const before = valuesOf(ctx.prev);
-            const clicked = clickedValue(cfg);
-            return isNum(before.from) && isNum(before.to)
-                && clicked >= before.from - EPS && clicked <= before.to + EPS;
         }
     },
 

@@ -97,7 +97,7 @@ const allHits = (cfg, over) => {
 // Bug caught: an entry filed without its issue number or its one-line title, which would
 // annotate a matrix cell with nothing a reader could look up.
 test('every register entry carries an issue number, a title, a predicate and a message pattern', () => {
-    assert.equal(KNOWN_BUGS.length, 9);
+    assert.equal(KNOWN_BUGS.length, 8);
     const issues = KNOWN_BUGS.map((bug) => bug.issue);
     assert.deepEqual(issues, [...new Set(issues)], 'an issue must have one entry');
     for (const bug of KNOWN_BUGS) {
@@ -126,12 +126,12 @@ test('a plain healthy slider matches no entry at any stage', () => {
 // ------------------------------------------------------------------ the script
 
 // Half of what a predicate knows comes from the script matrix.spec.mjs drives the slider
-// with: #882 asks whether a drag stage drove a handle INTO its own limit, #891 whether the
-// track click landed between the two handles, #879 how far the bar drag carries them. Those
-// numbers live in test/browser/matrix/script.mjs, which the spec and the register both read,
-// and the fractions below are taken from there rather than typed out -- so this test moves
-// with the script and fails when the register stops moving with it.
-// Bug caught: the register keeping drag targets of its own (the STAGE_DRAG_TARGETS /
+// with: #882 asks whether a drag stage drove a handle INTO its own limit, #879 where the
+// track click lands and how far the bar drag carries the handles. Those numbers live in
+// test/browser/matrix/script.mjs, which the spec and the known-bug list both read, and the
+// fractions below are taken from there rather than typed out -- so this test moves with the
+// script and fails when the list stops moving with it.
+// Bug caught: the list keeping drag targets of its own (the STAGE_DRAG_TARGETS /
 // S3_CLICK_FRACTION pair it used to carry), which goes on excusing cells at the old target
 // the day the script aims somewhere else.
 test('the register predicates aim where the script aims', () => {
@@ -151,16 +151,12 @@ test('the register predicates aim where the script aims', () => {
     assert.equal(hit({ ...track, to_max: at(S2_TARGET) - 4 }, 'S2', 'limits', s2), 882);
     assert.equal(hit({ ...track, to_max: at(S2_TARGET) + 6 }, 'S2', 'limits', s2), null);
 
-    // S3 clicks the track, and #891 takes a click that landed on the bar between the two
-    // handles: the pair that brackets it carries the bug, the pair left of it does not.
-    const clicked = at(S3_CLICK);
-    const deadKeyboard = { ...track, drag_interval: true, from_fixed: true };
-    const press = (from, to) => ({ prev: prevOf(from, to), expectations: { key: '+', changed: false } });
-    // The two pairs are bracketed twenty units either side of the click on a thousand-wide
-    // track, so a register aiming at a click fraction of its own misses the first pair and
-    // claims the second.
-    assert.equal(hit(deadKeyboard, 'S4a', 'callbacks', press(clicked - 20, clicked + 20)), 891);
-    assert.equal(hit(deadKeyboard, 'S4a', 'callbacks', press(clicked - 200, clicked - 20)), null);
+    // S3 clicks the track and, with drag_interval, the pair of 500 to 700 centres on the
+    // click, so its from handle is asked for the click less one hundred. A from_max ten below
+    // that is crossed (#879); one ten above it is not.
+    const click = { prev: prevOf(500, 700), expectations: { click: true, changed: true } };
+    assert.equal(hit({ ...track, drag_interval: true, from_max: at(S3_CLICK) - 110 }, 'S3', 'intervals', click), 879);
+    assert.equal(hit({ ...track, drag_interval: true, from_max: at(S3_CLICK) - 90 }, 'S3', 'intervals', click), null);
 
     // S5 carries the pair one bar drag to the right, so a from_max inside that travel is
     // reached (#879) and one beyond it is not.
@@ -484,45 +480,6 @@ test('a hidden configuration judged without env makes the register throw, naming
     // A slider built visible does not depend on the measurement, so it needs no env.
     const visible = { values: [10, 20, 30, 40, 50], from: 1 };
     assert.deepEqual(judgeStage([], ctxOf(visible, 'S0', { env: undefined }), []), { real: [], annotations: [] });
-});
-
-// ------------------------------------------- #891 drag_interval plus a fixed handle
-
-// After the track click the interval path owns the keyboard, and its fixed-handle guard
-// drops the whole press -- callbacks included -- so the slider owes an onFinish it never
-// fires.
-test('#891 matches the key stages of a drag_interval slider whose bar the click landed on', () => {
-    const dead = { type: 'double', min: 0, max: 100, from: 30, to: 70, step: 1, drag_interval: true, from_fixed: true };
-    const onBar = { prev: prevOf(30, 70), expectations: { key: '+', changed: false } };
-    assert.equal(hit(dead, 'S4a', 'callbacks', onBar), 891);
-    assert.equal(hit(dead, 'S4d', 'callbacks', onBar), 891);
-    assert.equal(hit(dead, 'S3', 'callbacks', onBar), null, 'the click itself still reports');
-
-    // The bar is what the keyboard inherits: a pair too narrow to reach the click leaves the
-    // press on the ordinary key path, where it reports its onFinish (m085, whose locked
-    // interval keeps the pair well left of the click).
-    assert.equal(hit(dead, 'S4a', 'callbacks', { prev: prevOf(10, 40), expectations: { key: '+', changed: false } }), null);
-
-    const noDrag = { type: 'double', min: 0, max: 100, from: 30, to: 70, step: 1, from_fixed: true };
-    assert.equal(hit(noDrag, 'S4a', 'callbacks', onBar), null);
-
-    const noFixed = { type: 'double', min: 0, max: 100, from: 30, to: 70, step: 1, drag_interval: true };
-    assert.equal(hit(noFixed, 'S4a', 'callbacks', onBar), null);
-
-    // The onFinish line it answers is the one a key press owes, spelled the way the rule
-    // reports it.
-    // Bug caught: a message pattern that drifts from the rule's wording, which leaves the
-    // dropped press unexplained and the cell red.
-    assert.equal(answers(dead, 'S4a', 'callbacks', 'callbacks: an interaction ends with exactly one onFinish (expected 1, got 0) after S4a', onBar), 891);
-
-    // An inert slider never gets the click that arms the interval path, and it is silent to
-    // the keyboard anyway (block drops every press since #890): its press owes no onFinish,
-    // so there is nothing for this entry to answer.
-    // Bug caught: dropping `|| isInert(cfg)` from this entry's predicate, which claims the
-    // key stages of a blocked drag_interval slider with a fixed handle whose pair spans the
-    // click, and reds them as "no longer reproduces".
-    const blocked = { type: 'double', min: 0, max: 100, from: 30, to: 70, step: 1, drag_interval: true, to_fixed: true, block: true };
-    assert.equal(hit(blocked, 'S4a', 'callbacks', onBar), null);
 });
 
 // ------------------------------------------------ #893 a key press on a rounded scale
@@ -918,35 +875,4 @@ test('judgeStage keeps a failure whose message the entry was not filed for', () 
     const judged = judgeStage([bounds], ctxOf(plain, 'S1'), []);
     assert.deepEqual(judged.real, [bounds]);
     assert.deepEqual(judged.annotations, []);
-});
-
-// m065 carries #891: drag_interval with a fixed handle kills the keyboard after the track
-// click, so the press owes an onFinish the plugin never fires. m065 also has
-// prettify_enabled off, which used to be #889's territory (fixed and retired from the
-// register); with no payload recorded for this stage (the interval-drag bug drops the key
-// press whole, callbacks included), there is nothing left for a numeric-fields entry to
-// claim here anyway, so #891 is the only candidate either way. Unlike the generic #891 test
-// above (whose `dead` config fixes the FROM handle), m065 fixes the TO handle -- the other
-// half of intervalKeyboardIsDead()'s `cfg.from_fixed || cfg.to_fixed`.
-// Bug caught: dropping `|| cfg.to_fixed` from intervalKeyboardIsDead(), which stops treating
-// m065's own fixed handle as dead and leaves this stage unclaimed (matchKnownBug returns null).
-test('the missing onFinish of m065 is answered by #891', () => {
-    const m065 = {
-        min: -50, max: 50, step: 5, type: 'double', from: -20, to: 20,
-        from_min: -25, from_max: 10, to_min: -10, to_max: 40, max_interval: 30,
-        to_fixed: true, drag_interval: true, prettify_enabled: false,
-        prefix: '$', postfix: 'k', hide_from_to: true, skin: 'flat'
-    };
-    const failure = {
-        id: 'callbacks',
-        message: 'callbacks: an interaction ends with exactly one onFinish (expected 1, got 0) after S4a'
-    };
-    // validate() builds m065 on -10 and 20, inside its max_interval of 30 (#885), so the stage
-    // carries no interval failure; judging the stage as the matrix does leaves nothing real.
-    const ctx = ctxOf(m065, 'S4a', { prev: prevOf(-10, 20), expectations: { key: '+', changed: false } });
-
-    assert.equal(matchKnownBug(ctx, 'callbacks', failure.message).issue, 891);
-    const { real, annotations } = judgeStage([failure], ctx, []);
-    assert.deepEqual(real, []);
-    assert.deepEqual(annotations.map((a) => a.issue), [891]);
 });
