@@ -82,13 +82,25 @@ export async function dragBarBy(page, f, n = 1) {
   await page.mouse.up();
 }
 
-/** Clicks the track at the absolute fraction `f` (the same handle-centred targeting as a drag). */
-export async function clickTrackAt(page, f, n = 1) {
+/** The page point clickTrackAt() presses for the absolute fraction `f`: the track's vertical middle. */
+export async function trackPointAt(page, f, n = 1) {
   const line = await lineLocator(page, n).boundingBox();
   const handle = await anyHandleLocator(page, n).boundingBox();
-  const x = xForFraction(line, handle.width, f);
-  const y = line.y + line.height / 2;
-  await page.mouse.click(x, y);
+  return { x: xForFraction(line, handle.width, f), y: line.y + line.height / 2 };
+}
+
+/** The class names of the element on top at a page point, or null when nothing is there. */
+export async function classesAt(page, point) {
+  return page.evaluate(({ x, y }) => {
+    const el = document.elementFromPoint(x, y);
+    return el ? Array.prototype.slice.call(el.classList) : null;
+  }, point);
+}
+
+/** Clicks the track at the absolute fraction `f` (the same handle-centred targeting as a drag). */
+export async function clickTrackAt(page, f, n = 1) {
+  const point = await trackPointAt(page, f, n);
+  await page.mouse.click(point.x, point.y);
 }
 
 /**

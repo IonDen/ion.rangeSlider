@@ -14,7 +14,10 @@
  * as their oracle: a click moves the handle nearer to it, and one exactly halfway moves the
  * to handle (#910). The #898 rows take the readme's hide_from_to row as their oracle: with
  * it off a double slider shows its values, so a track click under drag_interval on a pair on
- * one value keeps one value label on show, and so does a key press after it.
+ * one value keeps one value label on show, and so does a key press after it. The #891 row
+ * takes the readme's onFinish row as its oracle: a key press fires onFinish, so with
+ * drag_interval and a fixed handle a press after a click on the bar fires one and moves
+ * nothing.
  *
  * Assertions stay on page-observable surfaces: the input's value, the rendered labels and
  * the recorded callbacks. Rows the older specs already hold are not repeated here; each
@@ -26,7 +29,7 @@
  */
 import { test, expect } from '@playwright/test';
 import { open, events, touchDrag, LABEL } from '../helpers.mjs';
-import { dragHandleTo, clickTrackAt, focusTrack, touchDragTo } from '../lib/interact.mjs';
+import { dragHandleTo, clickTrackAt, trackPointAt, classesAt, focusTrack, touchDragTo } from '../lib/interact.mjs';
 import { readState } from '../lib/state.mjs';
 
 /** The double slider most rows start from: 0..100, step 1, from 20, to 80. */
@@ -378,6 +381,34 @@ test.describe(`interactions (${LABEL})`, () => {
 
         await expect(page.locator('#slider')).toHaveValue('20;80');
         expect(await typesAfter(page, 0)).toEqual(['onStart', 'onFinish', 'onFinish', 'onFinish']);
+    });
+
+    // The example of #891. readme Settings, onFinish: "Fires when an interaction ends: [...] or
+    // a key is pressed"; from_fixed: "Fix the position of the from handle." With drag_interval
+    // a click at the middle of 30..70 lands on the bar, and the key press after it is handed to
+    // the whole interval, which a fixed handle keeps where it is. The press still ends as an
+    // interaction: one onFinish, no onChange, the input unchanged. Until #891 was fixed the
+    // press fired nothing, and neither did any press after it.
+    // The click has to land on the bar: a click on the bare track leaves the keyboard on a
+    // handle, where the press always fired its onFinish, so the row would pass with the bug back.
+    // The element under the click point is checked before the click.
+    // Mutations caught: moveIntervalByKey() -> its fixed-handle guard back to a bare `return;`,
+    // and the press adds nothing to the log; the pair set off the middle of the track (`from:
+    // 10, to: 30` in the open() call), so the click lands on the bare track and the check on the
+    // element under it fails.
+    test('a key press after a click on the bar with drag_interval and a fixed from handle fires one onFinish and moves nothing (#891)', async ({ page }) => {
+        await open(page, { type: 'double', min: 0, max: 100, from: 30, to: 70, step: 1, from_fixed: true, drag_interval: true });
+        expect(await classesAt(page, await trackPointAt(page, 0.5)), 'the click lands on the bar').toContain('irs-bar');
+        await clickTrackAt(page, 0.5);
+        await expect.poll(() => typesAfter(page, 0)).toEqual(['onStart', 'onFinish']);   // the click's own onFinish
+        await focusTrack(page);
+
+        await page.keyboard.press('ArrowRight');
+        await expect.poll(() => typesAfter(page, 0)).toEqual(['onStart', 'onFinish', 'onFinish']);
+        await page.waitForTimeout(400);   // outlast the idle render tick before reading an unchanged value
+
+        await expect(page.locator('#slider')).toHaveValue('30;70');
+        expect(await typesAfter(page, 0)).toEqual(['onStart', 'onFinish', 'onFinish']);
     });
 
     // readme Settings, from_min and to_max: a handle already on its limit stays there when a

@@ -1267,6 +1267,13 @@
          */
         moveIntervalByKey: function (step) {
             if (this.options.from_fixed || this.options.to_fixed) {
+                // #891: a fixed handle keeps the whole interval where it is,
+                // as calc()'s "both" case does for a bar drag, but the press
+                // is still an interaction that ends: flag it so the next
+                // drawHandles() fires onFinish for it. Nothing moved, so
+                // calc() is not needed, and drawHandles() fires no onChange
+                // and no change/input event for an unchanged value.
+                this.is_key = true;
                 return;
             }
 
