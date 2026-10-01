@@ -962,52 +962,6 @@ export const KNOWN_BUGS = [
             const { min, max } = rangeOf(ctx.cfg);
             return min === max;
         }
-    },
-
-    {
-        issue: 898,
-        title: 'a track click hides every value label while drag_interval holds both handles on the same value',
-        what: /neither the merged label nor both value labels/,
-        // Written against m080, from S3 on. Since #885 m080 opens inside its max_interval,
-        // the fixed script no longer puts its two handles on one value, and no matrix entry
-        // reaches this entry; contract/interactions.spec.mjs reproduces the bug directly (a
-        // handle dragged onto the other, then a track click). The rest of this comment
-        // describes how m080 reached it. What put its two handles on one value was a drag:
-        // 6000 of a range of a million is under four pixels of track, so the pair overlaps and the
-        // press of a handle drag lands on whichever handle is on TOP (`to` at init, the
-        // last touched one after that) rather than the one the stage aimed at -- then the
-        // crossing guard parks the pressed handle on the other one. A user reaches the same
-        // state by dragging one handle onto the other; the click that follows is what hides
-        // the labels, and it takes both. With the handles on one value the plugin shows the
-        // label of the handle last touched and hides the rest, and a track click under
-        // drag_interval leaves neither handle in charge: the merged label AND both value
-        // labels come out hidden. Every later key press travels the same whole-interval
-        // path and redraws the same nothing, so the click stage and the four key stages all
-        // report it.
-        //
-        // Where it stops: S5 drags the bar, which pulls the two handles apart again and
-        // brings a label back (m080 shows the merged label from S5 on), and S6/S7 rebuild
-        // the whole DOM through update() and reset(). Matching those would claim a healthy
-        // cell and red the entry as "no longer reproduces", so the stage half stops at S4.
-        //
-        // The pair is read from the state the stage STARTED from, which is the click's own
-        // reading at S3 and stays the click's reading afterwards: on this path a press
-        // carries both handles by one step, so a pair coincident when the click landed is
-        // still coincident at every press that follows, and the "started coincident" and
-        // "was coincident at the click" readings are the same pair. A press that did pull
-        // the handles apart would leave this entry silent at the next stage, which is the
-        // honest answer -- the labels come back with the interval.
-        matches(ctx, id) {
-            if (id !== 'labels') return false;
-            const cfg = ctx.cfg;
-            if (stageOf(ctx) !== 'S3' && !isKeyStage(ctx)) return false;
-            if (!isDouble(cfg) || !cfg.drag_interval || isInert(cfg)) return false;
-            // With hide_from_to on, the rule judges that every value label is hidden and
-            // never reports this message at all, so there would be nothing to excuse.
-            if (cfg.hide_from_to) return false;
-            const before = valuesOf(ctx.prev);
-            return isNum(before.from) && isNum(before.to) && Math.abs(before.to - before.from) <= EPS;
-        }
     }
 ];
 

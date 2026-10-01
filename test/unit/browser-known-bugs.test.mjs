@@ -97,7 +97,7 @@ const allHits = (cfg, over) => {
 // Bug caught: an entry filed without its issue number or its one-line title, which would
 // annotate a matrix cell with nothing a reader could look up.
 test('every register entry carries an issue number, a title, a predicate and a message pattern', () => {
-    assert.equal(KNOWN_BUGS.length, 10);
+    assert.equal(KNOWN_BUGS.length, 9);
     const issues = KNOWN_BUGS.map((bug) => bug.issue);
     assert.deepEqual(issues, [...new Set(issues)], 'an issue must have one entry');
     for (const bug of KNOWN_BUGS) {
@@ -858,86 +858,6 @@ test('#896 matches the interaction stages of a slider with no range, not one wit
     // reproduces" on a slider that never had the bug.
     assert.equal(hit({ ...degenerate, disable: true }, 'S1', 'callbacks'), null);
     assert.equal(hit({ ...degenerate, block: true }, 'S3', 'callbacks'), null);
-});
-
-// --------------------------------------- #898 the vanishing value labels of a click
-
-// readme settings table, hide_from_to "Hide the from and to value labels": with it off a
-// double slider shows the two value labels or the merged one in their place. With the two
-// handles on one value the plugin shows the label of the handle last pressed instead, and a
-// track click under drag_interval presses neither -- so all three come out hidden, and every
-// key press after it redraws the same nothing.
-test('#898 matches the track click of a coincident drag_interval pair, not a pair with an interval left', () => {
-    // m080's option set, the entry the bug was found on. What puts its handles on one value
-    // is a drag: 6000 of a million-wide range is a few pixels of track, so the pair overlaps,
-    // the press of a handle drag lands on whichever handle is on top and the crossing guard
-    // parks it on the other -- the state a user reaches by dragging one handle onto the
-    // other. The click that follows is what hides the labels.
-    const m080 = {
-        min: 0, max: 1000000, step: 1000, type: 'double', from: 300000, to: 700000,
-        from_min: 2400, max_interval: 6000, drag_interval: true, grid: true, grid_margin: false,
-        prettify_separator: ',', decorate_both: false, values_separator: ' to ', skin: 'square',
-        __hidden_at_init: true, __value_attr: '300000;700000'
-    };
-    const coincident = { prev: prevOf(700000, 700000), expectations: { click: true, changed: true } };
-    assert.equal(hit(m080, 'S3', 'labels', coincident), 898);
-
-    // The keyboard inherits the same whole-interval path, so the four key stages report it too.
-    const held = { prev: prevOf(548000, 548000), expectations: { key: '+', changed: true } };
-    assert.equal(hit(m080, 'S4a', 'labels', held), 898);
-    assert.equal(hit(m080, 'S4d', 'labels', { prev: prevOf(551000, 551000), expectations: { key: '-', changed: true } }), 898);
-
-    // The bar drag pulls the handles apart again and a label comes back, and update()/reset()
-    // rebuild the DOM: claiming those stages would annotate a healthy cell and hide the day
-    // the bug is fixed.
-    assert.equal(hit(m080, 'S5', 'labels', { prev: prevOf(550000, 550000), expectations: { bar: true, changed: true } }), null);
-    assert.equal(hit(m080, 'S6', 'labels', { prev: prevOf(550000, 550000), expectations: { update: true } }), null);
-
-    // Before the click there is nothing to excuse: S1 drags one handle and the labels hold.
-    assert.equal(hit(m080, 'S1', 'labels', { prev: prevOf(700000, 700000), expectations: { changed: true, handle: 'from' } }), null);
-
-    // A pair with an interval still open between the handles draws its two labels as usual.
-    assert.equal(hit(m080, 'S3', 'labels', { prev: prevOf(694000, 700000), expectations: { click: true, changed: true } }), null);
-
-    // Every option the state needs, removed one at a time.
-    const noBarDrag = { ...m080, drag_interval: undefined };
-    assert.equal(hit(noBarDrag, 'S3', 'labels', coincident), null, 'without drag_interval the click moves one handle and the labels stay');
-    const single = { ...m080, type: 'single', to: undefined };
-    assert.equal(hit(single, 'S3', 'labels', coincident), null, 'a single slider has no interval to click');
-    // The mask swallows the click, so the whole-interval path never runs.
-    assert.equal(hit({ ...m080, block: true }, 'S3', 'labels', coincident), null);
-    assert.equal(hit({ ...m080, disable: true }, 'S3', 'labels', coincident), null);
-    // With hide_from_to on, the rule judges that every value label is hidden and never
-    // reports this message, so an entry claiming that cell could never be retired.
-    assert.equal(hit({ ...m080, hide_from_to: true }, 'S3', 'labels', coincident), null);
-
-    // The same click is no excuse for a different rule.
-    assert.equal(hit(m080, 'S3', 'intervals', coincident), null);
-    assert.equal(hit(m080, 'S3', 'grid', coincident), null);
-});
-
-// The labels rule speaks for the text of every label as well as for which of them is drawn.
-// Bug caught: a `what` wide enough to cover "label text", which would annotate away a label
-// reading the wrong value on the very configurations this bug already makes hard to read.
-test('#898 answers for the hidden labels, never for the text of one that is drawn', () => {
-    const m080 = {
-        min: 0, max: 1000000, step: 1000, type: 'double', from: 300000, to: 700000,
-        from_min: 2400, max_interval: 6000, drag_interval: true, grid: true, grid_margin: false,
-        prettify_separator: ',', decorate_both: false, values_separator: ' to ', skin: 'square'
-    };
-    const coincident = { prev: prevOf(700000, 700000), expectations: { click: true, changed: true } };
-    const hidden = 'labels: neither the merged label nor both value labels are visible (expected "one of them", got "neither") after S3';
-    assert.equal(answers(m080, 'S3', 'labels', hidden, coincident), 898);
-
-    for (const message of [
-        'labels: the from label text (expected "548,000", got "700,000") after S3',
-        'labels: the to label text (expected "548,000", got "700,000") after S3',
-        'labels: the merged label text (expected "548,000 to 548,000", got "700,000 to 700,000") after S3',
-        'labels: the max label text (expected "1,000,000", got "1000000") after S3',
-        'labels: the merged label and the from/to labels are visible together (expected "one of them", got "both") after S3'
-    ]) {
-        assert.equal(answers(m080, 'S3', 'labels', message, coincident), null, message);
-    }
 });
 
 // ------------------------------------------------------------------------ judgeStage

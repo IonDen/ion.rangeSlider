@@ -12,8 +12,9 @@
  * from the plugin's own key(), which the readme's keyboard row does not qualify. One
  * track-click rows take chooseHandle()'s own JSDoc, "Find closest handle to pointer click",
  * as their oracle: a click moves the handle nearer to it, and one exactly halfway moves the
- * to handle (#910). An expected failure (#898) takes the readme's hide_from_to row as its
- * oracle: a track click under drag_interval on a pair on one value hides every value label.
+ * to handle (#910). The #898 rows take the readme's hide_from_to row as their oracle: with
+ * it off a double slider shows its values, so a track click under drag_interval on a pair on
+ * one value keeps one value label on show, and so does a key press after it.
  *
  * Assertions stay on page-observable surfaces: the input's value, the rendered labels and
  * the recorded callbacks. Rows the older specs already hold are not repeated here; each
@@ -51,6 +52,12 @@ async function dragLabelBy(page, selector, f) {
     await page.mouse.down();
     await page.mouse.move(x + f * (line.width - handle.width), y, { steps: 12 });
     await page.mouse.up();
+}
+
+/** The text of every value label on show: the merged label, then the from and to labels. */
+async function shownLabels(page) {
+    const { labels } = await readState(page);
+    return ['single', 'from', 'to'].filter((k) => labels[k].visible).map((k) => labels[k].text);
 }
 
 /** Callback types recorded after the first `n` events. */
@@ -225,8 +232,8 @@ test.describe(`interactions (${LABEL})`, () => {
     // it on, a click on the track moves the whole interval rather than one handle; the readme
     // does not say where it lands. Characterization: the interval keeps its width and is
     // centred on the clicked value, and at either end of the range it stops against that end
-    // with its width intact. These rows keep the two handles apart; the #898 row after them
-    // puts them on one value first, and no row puts them near a per-handle limit (#879).
+    // with its width intact. These rows keep the two handles apart; the #898 rows after them
+    // put them on one value first, and no row puts them near a per-handle limit (#879).
     // Mutation caught: calc() -> `case "both_one"`, `half = full / 2` becomes `half = full`,
     // and the 20-wide interval comes out 40 wide, "60;100" (the redraw that follows the
     // click runs the same centring once more on the widened pair, which then meets max).
@@ -259,29 +266,38 @@ test.describe(`interactions (${LABEL})`, () => {
     // double slider shows its values; with both handles on one value it shows one value label
     // for the pair (rendering.spec.mjs pins that for a slider built that way). A user puts the
     // handles on one value by dragging one onto the other, which the slider allows when no
-    // min_interval is set. A click on the track then moves the pair (drag_interval), and every
-    // value label comes out hidden, the merged one and both single ones.
-    // Expected failure until #898 is fixed; the fix keeps one value label on show after that
-    // click, and Playwright then reports this row "expected to fail, but passed". The labels
-    // are read once after a render tick (400 ms) instead of polled, so the expected failure
-    // does not wait out the assertion timeout.
+    // min_interval is set. A click on the track then moves the pair (drag_interval), and one
+    // value label stays on show, reading the value the pair moved to; the click focused the
+    // track, and a right-arrow press that follows carries the pair one step with the label
+    // following it. Until #898 was fixed every value label came out hidden after that click,
+    // the merged one and both single ones, and stayed hidden through every press after it.
+    // Mutations caught: drawLabels() -> in the branch for a pair on one value, the final
+    // `else` back to `else if (!this.target)`, and no value label shows after the click; or
+    // the line there that hides the merged label dropped, and the merged label shows next to
+    // the from label.
     test('a track click with drag_interval on a pair dragged onto one value keeps a value label on show (#898)', async ({ page }) => {
-        test.fail(true, '#898: a track click hides every value label while drag_interval holds both handles on the same value');
         await open(page, { type: 'double', min: 0, max: 100, from: 40, to: 60, step: 1, drag_interval: true });
-        /** The text of every value label on show. */
-        const shownLabels = async () => {
-            const { labels } = await readState(page);
-            return ['single', 'from', 'to'].filter((k) => labels[k].visible).map((k) => labels[k].text);
-        };
         await dragHandleTo(page, 'from', 0.8);   // past the to handle: the from handle stops on it
         await expect(page.locator('#slider')).toHaveValue('60;60');
-        await expect.poll(shownLabels).toEqual(['60']);   // before the click: one label, 60
+        await expect.poll(() => shownLabels(page)).toEqual(['60']);   // before the click: one label, 60
         await clickTrackAt(page, 0.3);
         await expect(page.locator('#slider')).toHaveValue('30;30');
-        await page.waitForTimeout(400);          // outlast the idle render tick, then read once
-        const shown = await shownLabels();
-        expect(shown).toHaveLength(1);
-        expect(shown[0]).toContain('30');
+        await expect.poll(() => shownLabels(page)).toEqual(['30']);
+        await page.keyboard.press('ArrowRight');
+        await expect(page.locator('#slider')).toHaveValue('31;31');
+        await expect.poll(() => shownLabels(page)).toEqual(['31']);
+    });
+
+    // The example of #898 itself: a slider built with both handles on 50 shows one value
+    // label, 50 (rendering.spec.mjs pins that), and a click on the track with drag_interval
+    // carries the pair to the clicked value with one value label on show, reading it.
+    // Mutations caught: the same two as the row above.
+    test('a track click with drag_interval on a pair built on one value keeps a value label on show (#898)', async ({ page }) => {
+        await open(page, { type: 'double', min: 0, max: 100, from: 50, to: 50, step: 1, drag_interval: true });
+        await expect.poll(() => shownLabels(page)).toEqual(['50']);   // before the click: one label, 50
+        await clickTrackAt(page, 0.3);
+        await expect(page.locator('#slider')).toHaveValue('30;30');
+        await expect.poll(() => shownLabels(page)).toEqual(['30']);
     });
 
     // ---- The keyboard --------------------------------------------------------------------

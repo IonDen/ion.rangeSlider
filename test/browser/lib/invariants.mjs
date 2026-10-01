@@ -388,8 +388,10 @@ export const INVARIANTS = [
         // Coincident handles (from === to) are the one case where a double slider shows
         // neither both value labels nor their merged pair: the plugin draws ONE of the two
         // value labels -- the from label while nothing has been touched, the label of the
-        // handle the press went to after that -- hides the other behind it and leaves the
-        // merged label hidden with its "50 - 50" text unused. Which handle the press went
+        // handle the press went to after that, and the from label again after a move of
+        // the whole interval (a track click or a bar drag with drag_interval, #898) --
+        // hides the other behind it and leaves the merged label hidden with its
+        // "50 - 50" text unused. Which handle the press went
         // to is not always the one a drag aimed at: on a coincident pair it lands on the
         // handle lying on top, `to` at init and the last touched one afterwards. That is
         // edge:from-above-to, whose from: 80 with to: 20 validate() parks on one value
