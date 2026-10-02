@@ -97,7 +97,7 @@ const allHits = (cfg, over) => {
 // Bug caught: an entry filed without its issue number or its one-line title, which would
 // annotate a matrix cell with nothing a reader could look up.
 test('every register entry carries an issue number, a title, a predicate and a message pattern', () => {
-    assert.equal(KNOWN_BUGS.length, 8);
+    assert.equal(KNOWN_BUGS.length, 7);
     const issues = KNOWN_BUGS.map((bug) => bug.issue);
     assert.deepEqual(issues, [...new Set(issues)], 'an issue must have one entry');
     for (const bug of KNOWN_BUGS) {
@@ -480,51 +480,6 @@ test('a hidden configuration judged without env makes the register throw, naming
     // A slider built visible does not depend on the measurement, so it needs no env.
     const visible = { values: [10, 20, 30, 40, 50], from: 1 };
     assert.deepEqual(judgeStage([], ctxOf(visible, 'S0', { env: undefined }), []), { real: [], annotations: [] });
-});
-
-// ------------------------------------------------ #893 a key press on a rounded scale
-
-// With min 0.5 and step 1 the reported values (0.5, 2, 3 ...) sit half a step off the
-// percent grid the slider moves on, so a press spends part of its travel on the re-snap.
-test('#893 matches a key press on a scale whose reported values are off the grid', () => {
-    const rounded = { min: 0.5, max: 10.5, step: 1, from: 5 };
-    assert.equal(hit(rounded, 'S4b', 'keys', { prev: prevOf(7), expectations: { key: '+', changed: true } }), 893);
-
-    // A press whose own step runs into max is clamped there, and so is the overshoot:
-    // the two agree and the rule passes (m017's third press, from 10 on a 10.5 max).
-    assert.equal(hit(rounded, 'S4c', 'keys', { prev: prevOf(10), expectations: { key: '+', changed: true } }), null);
-    // Only the presses that move the handle UP skip a value. A decrease press that moves at
-    // all lands on the scale point one step down (m017 goes 10.5 -> 10), which is exactly what
-    // the keys rule predicts once it snaps its one-step target onto the scale, so there is
-    // nothing to excuse; a decrease press that moves nothing is the callbacks rule's business.
-    assert.equal(hit(rounded, 'S4d', 'keys', { prev: prevOf(10.5), expectations: { key: '-', changed: true } }), null);
-    const limited = { min: 0.5, max: 10.5, step: 1, from: 5, from_min: 4 };
-    assert.equal(hit(limited, 'S4d', 'keys', { prev: prevOf(5), expectations: { key: '-', changed: true } }), null);
-
-    // In double type the question is asked of every handle the press could move. With
-    // min_interval holding the from handle at the stop the readme predicts, a press might
-    // land there and show nothing, so the entry stays out (n043, on this very scale).
-    const paired = { type: 'double', min: 0.5, max: 10.5, step: 1, from: 6, to: 8, min_interval: 1 };
-    assert.equal(hit(paired, 'S4a', 'keys', { prev: prevOf(6, 8), expectations: { key: '+', changed: true } }), null);
-
-    // With the from handle fixed there is only one handle left to move, and its press has
-    // room to overshoot: the skip is on show (m036, the to handle of a max_interval pair).
-    const oneFree = { type: 'double', min: 0.5, max: 10.5, step: 1, from: 4, to: 6, max_interval: 6, from_fixed: true };
-    assert.equal(hit(oneFree, 'S4a', 'keys', { prev: prevOf(4, 6), expectations: { key: '+', changed: true } }), 893);
-
-    // step_from_min keeps every reported value on the grid, which is the readme's own fix.
-    const onGrid = { min: 0.5, max: 10.5, step: 1, from: 5, step_from_min: true };
-    assert.equal(hit(onGrid, 'S4b', 'keys', { prev: prevOf(7.5), expectations: { key: '+', changed: true } }), null);
-
-    // A whole min with a whole step rounds nothing away.
-    const plain = { min: 0, max: 100, step: 1, from: 30 };
-    assert.equal(hit(plain, 'S4b', 'keys', { prev: prevOf(30), expectations: { key: '+', changed: true } }), null);
-
-    // min 1.2 with step 4 rounds by 0.2, far less than half a step: no press skips.
-    const mild = { min: 1.2, max: 21.2, step: 4, from: 5 };
-    assert.equal(hit(mild, 'S4b', 'keys', { prev: prevOf(5), expectations: { key: '+', changed: true } }), null);
-
-    assert.equal(hit(rounded, 'S1', 'keys', { prev: prevOf(7) }), null, 'a drag is not a key press');
 });
 
 // ------------------------------------- #879 a whole-interval move against a handle limit
