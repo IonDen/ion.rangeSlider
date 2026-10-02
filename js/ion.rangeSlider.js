@@ -1143,6 +1143,11 @@
          * This keeps every press an exact one-step move regardless of
          * p_handle or any p_gap left over from a previous mouse drag.
          *
+         * #893: each press starts from gridPercentOf(), the point on the
+         * step grid that reports the handle's current value, not from the
+         * handle's own position, which can sit half a step away from that
+         * point when min is not a whole number of steps (see there).
+         *
          * The drag_interval target "both_one" (line click) moves the whole
          * interval by one step the same way: the target real position is
          * the interval's midpoint shifted by one step, converted back
@@ -1153,7 +1158,7 @@
          * @param right {boolean} direction to move
          */
         moveByKey: function (right) {
-            var p_real, p_fake,
+            var p_real, p_fake, p_from, p_to,
                 step = right ? this.coords.p_step : -this.coords.p_step;
 
             if (this.target === "both") {
@@ -1197,17 +1202,17 @@
 
             switch (this.target) {
                 case "single":
-                    p_real = this.coords.p_single_real + step;
+                    p_real = this.gridPercentOf(this.result.from, this.coords.p_single_real, right) + step;
                     p_fake = this.convertToFakePercent(p_real) + this.coords.p_gap;
                     break;
 
                 case "to":
-                    p_real = this.coords.p_to_real + step;
+                    p_real = this.gridPercentOf(this.result.to, this.coords.p_to_real, right) + step;
                     p_fake = this.convertToFakePercent(p_real) + this.coords.p_gap;
                     break;
 
                 case "from":
-                    p_real = this.coords.p_from_real + step;
+                    p_real = this.gridPercentOf(this.result.from, this.coords.p_from_real, right) + step;
                     p_fake = this.convertToFakePercent(p_real) + this.coords.p_gap;
                     break;
 
@@ -1215,8 +1220,12 @@
                     // calc()'s "both_one" case centers the interval on the
                     // pointer's real percent. Move that midpoint by one
                     // step and keep the click-time coords.p_gap (p_handle /
-                    // 2) so the interval width is unaffected.
-                    p_real = this.result.from_percent + ((this.result.to_percent - this.result.from_percent) / 2) + step;
+                    // 2) so the interval width is unaffected. #893: the
+                    // midpoint is taken between the grid points that report
+                    // from and to, for the same reason as the cases above.
+                    p_from = this.gridPercentOf(this.result.from, this.result.from_percent, right);
+                    p_to = this.gridPercentOf(this.result.to, this.result.to_percent, right);
+                    p_real = p_from + ((p_to - p_from) / 2) + step;
                     p_fake = this.convertToFakePercent(p_real) + this.coords.p_gap;
                     break;
             }
@@ -1238,6 +1247,94 @@
                     this.coincident_key_pending = false;
                 }
             }
+        },
+
+        /**
+         * #893: the point on the step grid (a multiple of coords.p_step, at
+         * most 100) that reports `value`, which is where a key press starts
+         * from.
+         *
+         * convertToValue() rounds to the step's decimals, so when min is not
+         * a whole number of steps (min 0.5, step 1) a value can sit half a
+         * step away from the grid point that reports it: the point at 60 %
+         * stands for 6.5 and reports 7, while 7 itself sits at 65 %. A press
+         * that added its step to 65 % had calcWithStep() snap 75 % up to
+         * 80 %, which reports 9, so 8 was skipped; from 9 (85 %) a left
+         * press snapped 75 % back to 80 % and moved nothing. From 60 % the
+         * press lands on 70 %, which reports 8.
+         *
+         * Only the point p_real rounds to and its two neighbours are tried:
+         * a value is never more than half a step from a point that reports
+         * it. Two neighbouring points can report the same value (float noise
+         * decides which way an exact half rounds), and then the one further
+         * in the direction of the press is taken, so that one step from it
+         * reaches the next different value.
+         *
+         * p_real comes back unchanged in three cases, where a press goes
+         * exactly where it went before:
+         * - the handle does not stand at its value's own position
+         *   (convertToPercent(value)): a limit or an interval clamped it
+         *   there, or the value does not survive the trip to its position
+         *   and back (a negative min with a fractional step), and there is
+         *   no point to start from;
+         * - no point reports `value`: a start value off the scale, or a
+         *   max that no point up to 100 reports (max off the step scale,
+         *   or float noise moving the last point off 100);
+         * - p_real is within a quarter step of the only point that reports
+         *   `value`, so one step from it rounds to the same next point.
+         *   That is every press on a scale whose values sit on the grid
+         *   (min a whole number of steps, step_from_min, values mode). A
+         *   value half a step from its point (the case above) is not
+         *   covered: float noise there decides which way the next half-way
+         *   point rounds, so the press starts from the point itself.
+         *
+         * @param value {Number} the value the handle reports
+         * @param p_real {Number} the handle's position in real percent
+         * @param right {boolean} the direction of the press
+         * @returns {Number} the real percent the press starts from
+         */
+        gridPercentOf: function (value, p_real, right) {
+            var p_step = this.coords.p_step,
+                m0, j, m, p,
+                found = null,
+                count = 0;
+
+            // A zero range has no grid (its press adds a zero step anyway),
+            // and a handle away from its value's position keeps its own.
+            if (!(p_step > 0) || this.convertToPercent(value) !== p_real) {
+                return p_real;
+            }
+
+            m0 = Math.round(p_real / p_step);
+
+            // Tried in the direction of the press, so the last match is the
+            // one furthest along it. A point past 100 is skipped: it reaches
+            // 100 only through calcWithStep()'s clamp. With max off the step
+            // scale and float noise putting it a hair past 100 (min 0, max
+            // 28.5, step 1: 100.00000000000001 %), two such points would
+            // both report max, and the left arrow from max would start from
+            // exactly 100 instead of max's own position and land on 27, not
+            // 28. A max that no point up to 100 reports keeps its old path.
+            for (j = -1; j <= 1; j++) {
+                m = right ? m0 + j : m0 - j;
+
+                if (m < 0 || m * p_step > 100) {
+                    continue;
+                }
+
+                p = this.calcWithStep(m * p_step);
+
+                if (this.convertToValue(p) === value) {
+                    found = p;
+                    count++;
+                }
+            }
+
+            if (found === null || (count === 1 && Math.abs(p_real - found) < p_step / 4)) {
+                return p_real;
+            }
+
+            return found;
         },
 
         /**

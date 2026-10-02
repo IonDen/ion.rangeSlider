@@ -122,16 +122,12 @@ function moved(ctx) {
  * ... handle"), min_interval/max_interval ("interval between the handles"), and from
  * being "the left one" with to "the right one".
  *
- * Exported for the known-bug register, whose keyboard entry has to ask where a press
- * would be stopped -- a press that lands on a stop hides the bug it carries, and a
- * second copy of this arithmetic there could drift from this one.
- *
  * @param {'from'|'to'} target
  * @param {object} cfg
  * @param {number|null} other   the value of the handle that did not move
  * @returns {{lo: number, hi: number}}
  */
-export function keyStops(target, cfg, other) {
+function keyStops(target, cfg, other) {
     const { min, max } = rangeOf(cfg);
     const minInterval = isNumber(cfg.min_interval) && cfg.min_interval > 0 ? cfg.min_interval : 0;
     const maxInterval = isNumber(cfg.max_interval) && cfg.max_interval > 0 ? cfg.max_interval : 0;

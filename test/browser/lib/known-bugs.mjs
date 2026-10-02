@@ -56,7 +56,7 @@
  */
 
 import { isValuesMode, nearestOnScale, onScale, rangeOf, scalePoint } from './scale.mjs';
-import { keyStops, INVARIANTS } from './invariants.mjs';
+import { INVARIANTS } from './invariants.mjs';
 // Where the fixed interaction script aims: the same numbers matrix.spec.mjs drives the
 // slider with. A predicate that has to say "this stage pushes the handle into its own
 // limit" can only say it from those, and reading them from the script is what keeps the
@@ -619,26 +619,6 @@ function maxOffScale(cfg) {
     return scalePoint(Math.round((max - min) / step), cfg) !== max;
 }
 
-/**
- * Do the values this slider REPORTS sit off the percent grid it moves on?
- *
- * The scale's first point after min is min + step rounded to the decimals of step. When
- * that rounding shifts the point by half a step or more, every reported value is at
- * least half a step away from the grid position it came from (min 0.5 with step 1
- * reports 2 for the grid point 1.5), and a key press spends part of its travel on the
- * re-snap. A gentler rounding (min 1.2 with step 4 reports 5 for 5.2) never crosses a
- * grid point, and step_from_min removes the rounding altogether.
- *
- * @param {object} cfg
- * @returns {boolean}
- */
-function reportedValuesOffGrid(cfg) {
-    if (isValuesMode(cfg) || cfg.step_from_min) return false;
-    const { min, step } = rangeOf(cfg);
-    if (!(step > 0)) return false;
-    return Math.abs(scalePoint(1, cfg) - (min + step)) >= step / 2 - EPS;
-}
-
 /** @type {Array<{issue: number, title: string, matches: (ctx: object, id: string) => boolean}>} */
 export const KNOWN_BUGS = [
     {
@@ -737,54 +717,6 @@ export const KNOWN_BUGS = [
             if (id === 'fixed') return !!(cfg.from_fixed || cfg.to_fixed);
             if (id === 'inert') return isInert(cfg);
             return id === 'callbacks' && !isInert(cfg);
-        }
-    },
-
-    {
-        issue: 893,
-        title: 'a key press skips a value on a scale whose reported values are rounded',
-        what: /key press must move/,
-        // m017 (single type) and m036 (double, the to handle), both on min 0.5, max 10.5,
-        // step 1. A press re-snaps the reported value onto the percent grid before adding
-        // its step, so it can advance two reported values -- and a press the other way can
-        // land back where it started.
-        //
-        // A stop hides it: a press whose own step already runs into a bound, a per-handle
-        // limit or the interval is clamped there, and the plugin's overshoot is clamped to
-        // the very same value, so the rule passes. Which handle a press moves is not
-        // knowable from the configuration (in double type it is the last touched one), so
-        // the question is asked of EVERY handle the press could move: a press that might
-        // have landed on a stop is not excused. That is what keeps n043 -- the same scale,
-        // with min_interval holding its from handle at the predicted stop -- out.
-        //
-        // A press that moved nothing is left to the callbacks rule, which is why the
-        // stage's promise is read here; it stays true once the bug is fixed, so the entry
-        // still retires.
-        matches(ctx, id) {
-            if (id !== 'keys' || !isKeyStage(ctx)) return false;
-            const cfg = ctx.cfg;
-            if (!reportedValuesOffGrid(cfg) || !promised(ctx).changed) return false;
-            // Only the presses that move the handle UP skip a value. A decrease press that
-            // moves at all lands on the scale point one step below (m017 goes 10.5 -> 10),
-            // which is what the keys rule predicts once it snaps its one-step target onto the
-            // scale, so the rule passes there and there is nothing to excuse; a decrease press
-            // that moves nothing never reaches this rule at all.
-            if (promised(ctx).key !== '+') return false;
-            const direction = 1;
-            const before = valuesOf(ctx.prev);
-            const { step } = rangeOf(cfg);
-            const movable = isDouble(cfg)
-                ? [cfg.from_fixed ? null : 'from', cfg.to_fixed ? null : 'to'].filter(Boolean)
-                : ['from'];
-            if (!movable.length) return false;
-            return movable.every((handle) => {
-                const start = before[handle];
-                if (!isNum(start)) return false;
-                const other = handle === 'from' ? before.to : before.from;
-                const stops = keyStops(handle, cfg, isNum(other) ? other : null);
-                const overshoot = start + 2 * direction * step;
-                return overshoot >= stops.lo - EPS && overshoot <= stops.hi + EPS;
-            });
         }
     },
 
