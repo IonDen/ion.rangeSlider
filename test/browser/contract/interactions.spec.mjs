@@ -17,7 +17,8 @@
  * one value keeps one value label on show, and so does a key press after it. The #891 row
  * takes the readme's onFinish row as its oracle: a key press fires onFinish, so with
  * drag_interval and a fixed handle a press after a click on the bar fires one and moves
- * nothing.
+ * nothing. The #893 rows take the readme's step note as their oracle: min 0.5 with step 1 gives
+ * 0.5, 2, 3, 4, and a key press moves to the next or the previous of those values.
  *
  * Assertions stay on page-observable surfaces: the input's value, the rendered labels and
  * the recorded callbacks. Rows the older specs already hold are not repeated here; each
@@ -432,6 +433,62 @@ test.describe(`interactions (${LABEL})`, () => {
         await page.keyboard.press('ArrowRight');
         await page.waitForTimeout(400);   // outlast the idle render tick before reading an unchanged value
         await expect(page.locator('#slider')).toHaveValue('10;90');
+    });
+
+    // The example of #893. readme note "step": "min: 0.5, step: 1 gives 0.5, 2, 3, 4", and a key
+    // press moves to the next or the previous of those values. In 2.5.0 the press started from
+    // the value's own position, half a step away from the point the slider moves on, so the
+    // snap back onto that point used up part of the press: from 7 the right arrow reached 9, and
+    // from 9 the left arrow moved nothing.
+    // Mutation caught: moveByKey() -> the "single" case back to `p_real =
+    // this.coords.p_single_real + step;`, and the first row reads 9, the second stays on 9.
+    test('on min 0.5, step 1 the right arrow moves from 7 to 8 (Settings: step, keyboard, #893)', async ({ page }) => {
+        await open(page, { min: 0.5, max: 10.5, step: 1, from: 7 });
+        await focusTrack(page);
+        await expect(page.locator('#slider')).toHaveValue('7');
+        await page.keyboard.press('ArrowRight');
+        await expect(page.locator('#slider')).toHaveValue('8');
+    });
+
+    test('on min 0.5, step 1 the left arrow moves from 9 to 8 (Settings: step, keyboard, #893)', async ({ page }) => {
+        await open(page, { min: 0.5, max: 10.5, step: 1, from: 9 });
+        await focusTrack(page);
+        await expect(page.locator('#slider')).toHaveValue('9');
+        await page.keyboard.press('ArrowLeft');
+        await expect(page.locator('#slider')).toHaveValue('8');
+    });
+
+    // The same press on the to handle of a double slider, which a press on it hands the
+    // keyboard. On this scale a press on a handle can itself move it one value on (a press on
+    // the to handle at 5 moves it to 6), and float noise in the handle's position decides at
+    // which values, so the press is made at max, where the handle cannot move. Two left arrows
+    // bring it to 9, read before the press under test.
+    // Mutation caught: moveByKey() -> the "to" case back to `p_real = this.coords.p_to_real +
+    // step;`, and the press from 9 stays on 9.
+    test('on min 0.5, step 1 the left arrow moves the to handle from 9 to 8 (Settings: step, keyboard, #893)', async ({ page }) => {
+        await open(page, { type: 'double', min: 0.5, max: 10.5, step: 1, from: 3, to: 10.5 });
+        await pressHandle(page, 'to');
+        await expect(page.locator('#slider')).toHaveValue('3;10.5');
+        await page.keyboard.press('ArrowLeft');
+        await expect(page.locator('#slider')).toHaveValue('3;10');
+        await page.keyboard.press('ArrowLeft');
+        await expect(page.locator('#slider')).toHaveValue('3;9');
+        await page.keyboard.press('ArrowLeft');
+        await expect(page.locator('#slider')).toHaveValue('3;8');
+    });
+
+    // drag_interval: a click on the bare track left of the pair centres the pair on the click and
+    // hands the keyboard to the whole interval, and the right arrow moves it one value on. The
+    // element under the click point is checked first: a click on the bar takes another key path.
+    // Mutation caught: moveByKey() -> the "both_one" case takes the middle of the pair from
+    // `this.result.from_percent` and `this.result.to_percent` again, and the press lands on 5;7.
+    test('on min 0.5, step 1 with drag_interval the right arrow after a track click moves the interval from 3;5 to 4;6 (Settings: step, drag_interval, keyboard, #893)', async ({ page }) => {
+        await open(page, { type: 'double', min: 0.5, max: 10.5, step: 1, from: 7, to: 9, drag_interval: true });
+        expect(await classesAt(page, await trackPointAt(page, 0.3)), 'the click lands on the bare track').toContain('irs-line');
+        await clickTrackAt(page, 0.3);
+        await expect(page.locator('#slider')).toHaveValue('3;5');
+        await page.keyboard.press('ArrowRight');
+        await expect(page.locator('#slider')).toHaveValue('4;6');
     });
 
     // ---- Touch drags ---------------------------------------------------------------------
