@@ -97,7 +97,7 @@ const allHits = (cfg, over) => {
 // Bug caught: an entry filed without its issue number or its one-line title, which would
 // annotate a matrix cell with nothing a reader could look up.
 test('every register entry carries an issue number, a title, a predicate and a message pattern', () => {
-    assert.equal(KNOWN_BUGS.length, 7);
+    assert.equal(KNOWN_BUGS.length, 6);
     const issues = KNOWN_BUGS.map((bug) => bug.issue);
     assert.deepEqual(issues, [...new Set(issues)], 'an issue must have one entry');
     for (const bug of KNOWN_BUGS) {
@@ -532,35 +532,6 @@ test('#879 answers the track click that stretches the pair, and leaves an untouc
     assert.equal(answers({ ...n042, min_interval: 100 }, 'S5', 'intervals', 'intervals: the handles closed past min_interval (expected ">= 100", got 40) after S5', { prev: prevOf(310, 710) }), null);
 });
 
-// ---------------------------------------- #881 min_interval at a top edge off the scale
-
-// With max half a step above the last reachable value, a from handle driven to the top
-// closes to within half the min_interval of a to handle resting on max.
-test('#881 matches an interval slider whose to handle rests on an unreachable max', () => {
-    const offScaleTop = { type: 'double', min: 0.5, max: 10.5, step: 1, from: 8, to: 10.5, min_interval: 1, drag_over_limit: true };
-    const s1 = { prev: prevOf(8, 10.5), expectations: { changed: true, handle: 'from' } };
-    assert.equal(hit(offScaleTop, 'S1', 'intervals', s1), 881);
-
-    // The gap stands while nothing moves a handle, and goes once a stage does: the to
-    // drag at S2 closes it, and the rule passes there.
-    assert.equal(hit(offScaleTop, 'S3', 'intervals', { prev: prevOf(10, 10.5), expectations: { click: true, changed: false } }), 881);
-    assert.equal(hit(offScaleTop, 'S2', 'intervals', { prev: prevOf(10, 10.5), expectations: { changed: true, handle: 'to' } }), null);
-
-    // The same scale with the to handle inside the range honours the interval: four
-    // matrix entries sit there and must not be excused.
-    const insideRange = { type: 'double', min: 0.5, max: 10.5, step: 1, from: 4, to: 8, min_interval: 2 };
-    assert.equal(hit(insideRange, 'S1', 'intervals', { prev: prevOf(4, 8), expectations: { changed: true, handle: 'from' } }), null);
-
-    // max on the scale: the top reachable value is max itself and the clamp holds.
-    const onScaleTop = { type: 'double', min: 0, max: 10, step: 1, from: 8, to: 10, min_interval: 1, drag_over_limit: true };
-    assert.equal(hit(onScaleTop, 'S1', 'intervals', { prev: prevOf(8, 10), expectations: { changed: true, handle: 'from' } }), null);
-
-    const noInterval = { type: 'double', min: 0.5, max: 10.5, step: 1, from: 8, to: 10.5, drag_over_limit: true };
-    assert.equal(hit(noInterval, 'S1', 'intervals', s1), null);
-
-    assert.equal(hit(offScaleTop, 'S0', 'intervals'), null, 'the starting pair holds the interval');
-});
-
 // ------------------------- #894 a handle limit and an interval that cannot both hold
 
 // readme settings table: from_max "Maximum limit for the from handle", max_interval
@@ -723,6 +694,35 @@ test('#894 judges update(), reset() and the second build by the pair each leaves
     // Through the value attribute it is handed the input's value: the to handle is fixed on 62,
     // and the from handle can stand on 60, inside from_max and 2 away.
     assert.equal(hit({ ...pinned, __value_attr: '60;62' }, 'S9', 'intervals', { prev: prevOf(60, 62) }), null);
+});
+
+// #881: readme note "step": "min: 0.5, step: 1 gives 0.5, 2, 3, 4", and min_interval: "Smallest
+// interval between the handles". On n043's scale (0.5, 2, 3 ... 10, 10.5) a from handle 1 below a
+// to handle on max lands between 9 and 10; validate() now puts it on 9, the nearest value that
+// keeps the interval, so reset() on 10;10.5 leaves 9;10.5 and a closed interval there is a
+// regression, not #894. The mirror at min (0.4, 1, 2 ... 10, 10.4): update({from: mid}) on 0.4;1
+// and reset() on 0.4;1 both leave 0.4;2. Bug caught: settledPair() rounding the moved handle onto
+// the nearest scale point only (10 and 1), which predicts a broken interval and lets #894 excuse
+// a build-path regression of #881.
+test('#894 does not excuse a closed interval that validate() settles against a handle on min or max', () => {
+    const n043 = { type: 'double', min: 0.5, max: 10.5, step: 1, from: 8, to: 10.5, min_interval: 1, drag_over_limit: true };
+    const top = 'intervals: the handles closed past min_interval (expected ">= 1", got 0.5) after S7';
+    assert.equal(answers(n043, 'S7', 'intervals', top, { prev: prevOf(10, 10.5), expectations: { update: true } }), null);
+
+    const mirror = { type: 'double', min: 0.4, max: 10.4, step: 1, from: 0.4, to: 5, min_interval: 1 };
+    const bottom = (stage) => `intervals: the handles closed past min_interval (expected ">= 1", got 0.6) after ${stage}`;
+    assert.equal(answers(mirror, 'S6', 'intervals', bottom('S6'), { prev: prevOf(0.4, 1), expectations: { update: true } }), null);
+    assert.equal(answers(mirror, 'S7', 'intervals', bottom('S7'), { prev: prevOf(0.4, 1), expectations: { update: true } }), null);
+
+    // update({from: 5.5}) changes from alone, so validate() moves the from handle first:
+    // min_interval 6 pushes it to 4.5, which rounds onto 5, 0.5 short of the interval from
+    // the to handle on max; the final clamp then moves it to 4. The pair holds the interval,
+    // so a closed one is not a #894 case.
+    // Bug caught: settledPair() recording the to handle as the one min_interval moved on the
+    // preferred-from branch, which skips the move to 4 and excuses 5;10.5.
+    const wide = { type: 'double', min: 0.5, max: 10.5, step: 1, from: 0.5, to: 10.5, min_interval: 6 };
+    const wideTop = 'intervals: the handles closed past min_interval (expected ">= 6", got 5.5) after S6';
+    assert.equal(answers(wide, 'S6', 'intervals', wideTop, { prev: prevOf(0.5, 10.5), expectations: { update: true } }), null);
 });
 
 // A pair that closes under a whole-interval move was filed as #895 and is no bug: on the

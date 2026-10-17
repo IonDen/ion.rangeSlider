@@ -6795,7 +6795,7 @@
     "attrs": null,
     "extra": {},
     "notes": [
-      "Reaches issue #881: min_interval is violated at the top edge when max sits off the step scale."
+      "Covers the #881 edge: from driven to the top stops on 9, 1.5 below a to on max 10.5 (min_interval 1), because max sits off the step scale."
     ],
     "stages": {
       "s1": 1

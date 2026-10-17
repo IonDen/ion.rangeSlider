@@ -2505,7 +2505,9 @@
             // zero an integer step lands on whole numbers and the min's
             // fraction is dropped (a negative min is shifted first, see #760
             // below); it stays byte-identical while step_from_min is off,
-            // which is the default.
+            // which is the default. #881: with the other handle on min or
+            // max, the min_interval clamp is settled by fitEndInterval()
+            // instead.
             if (this.options.step_from_min) {
                 var step_offset = (this.options.max - this.options.min) / 100 * percent,
                     step_count = Math.round(step_offset / this.options.step),
@@ -2646,6 +2648,7 @@
             var min_gap = this.options.min_interval || 0,
                 current = this.convertToValue(p_current),
                 next = this.convertToValue(p_next),
+                back = false,
                 required;
 
             if (type === "from") {
@@ -2657,6 +2660,7 @@
 
                 if (next - current < min_gap) {
                     current = next - min_gap;
+                    back = true;
                 }
             } else {
                 required = current - min_gap;
@@ -2667,13 +2671,83 @@
 
                 if (current - next < min_gap) {
                     current = next + min_gap;
+                    back = true;
                 }
             }
 
+            // #881: with the other handle on min or max, the clamp back goes
+            // through fitEndInterval().
             return {
-                current: this.convertToPercent(current),
+                current: back ? this.fitEndInterval(this.convertToPercent(current), next, type) : this.convertToPercent(current),
                 next: this.convertToPercent(next)
             };
+        },
+
+        /**
+         * #881: a min_interval clamp against a handle resting on min or max.
+         * The clamp puts the handle on the other value minus (or plus)
+         * min_interval, and convertToValue() rounds that position to the
+         * step's decimals: on min 0.5, max 10.5, step 1 the from handle 1
+         * below a to on 10.5 sits at 9.5 (90 %), which shows 10.
+         *
+         * When the other handle is exactly on min or max and the value
+         * shown at p_clamped breaks min_interval, the handle goes to the
+         * nearest point a drag can reach (a whole number of step percents, as
+         * calcWithStep() places them) whose shown value holds it, but
+         * only if the handles stay uncrossed and the handle stays inside its
+         * own limits and inside min to max. Otherwise the function returns
+         * p_clamped unchanged. It also returns it unchanged with
+         * step_from_min (nearest-point rounding is documented there), in
+         * values mode, on a drag_interval move of the
+         * whole interval, with max_interval set, and when the other handle
+         * is outside its own limits. With max_interval set the
+         * point that holds min_interval can break max_interval instead, and
+         * that would only swap one broken interval for the other. The other
+         * handle ends up outside its own limits only when the limits leave
+         * no valid pair (#894); the handles then stay crossed, as they were
+         * before.
+         *
+         * Two points are enough: a reported value is within half a step of
+         * its point, and the clamp falls short by at most half a step, so the
+         * point nearest p_clamped or the next one away holds.
+         *
+         * @param p_clamped {Number} real percent the clamp put the handle on
+         * @param next {Number} the other handle's value
+         * @param type {String} "from" or "to", the handle being clamped
+         * @returns {Number} real percent
+         */
+        fitEndInterval: function (p_clamped, next, type) {
+            var o = this.options,
+                p_step = this.convertToPercent(o.step, true),
+                noise = (o.max - o.min) * 1e-9,
+                down = type === "from",
+                lo = down ? o.from_min : o.to_min,
+                hi = down ? o.from_max : o.to_max,
+                m = Math.round(p_clamped / p_step),
+                i, p, value;
+
+            if (!o.min_interval || o.max_interval || o.step_from_min || o.values.length || this.old_min_interval !== null ||
+                    !(p_step > 0) || (next !== o.min && next !== o.max) ||
+                    (typeof (down ? o.to_min : o.from_min) === "number" && next < (down ? o.to_min : o.from_min)) ||
+                    (typeof (down ? o.to_max : o.from_max) === "number" && next > (down ? o.to_max : o.from_max)) ||
+                    (down ? next - this.convertToValue(p_clamped) : this.convertToValue(p_clamped) - next) >= o.min_interval - noise) {
+                return p_clamped;
+            }
+
+            for (i = 0; i < 2; i++, m += down ? -1 : 1) {
+                p = this.toFixed(Math.min(100, m * p_step));
+                value = this.convertToValue(p);
+
+                if ((down ? next - value : value - next) >= o.min_interval - noise) {
+                    if ((down ? value <= next : value >= next) && value >= o.min && value <= o.max &&
+                            (typeof lo !== "number" || value >= lo) && (typeof hi !== "number" || value <= hi)) {
+                        return p;
+                    }
+                    break;
+                }
+            }
+
+            return p_clamped;
         },
 
         checkMinInterval: function (p_current, p_next, type) {
@@ -2691,13 +2765,13 @@
             if (type === "from") {
 
                 if (next - current < o.min_interval) {
-                    current = next - o.min_interval;
+                    return this.fitEndInterval(this.convertToPercent(next - o.min_interval), next, type);
                 }
 
             } else {
 
                 if (current - next < o.min_interval) {
-                    current = next + o.min_interval;
+                    return this.fitEndInterval(this.convertToPercent(next + o.min_interval), next, type);
                 }
 
             }
@@ -3223,6 +3297,9 @@
          * interval off by less than a step, as a drag does. A min_interval
          * larger than max_interval is a self-contradictory setting; the two
          * checks run in turn and the later one wins, as they do on a drag.
+         * #881: with the other handle on min or max, the min_interval moves
+         * here are settled by fitEndInterval(), which steps aside in the
+         * cases its JSDoc lists.
          */
         applyIntervals: function () {
             var o = this.options,
@@ -3280,9 +3357,10 @@
          * breaks, the preferred handle goes where calc() would put it for that
          * gap (checkMinInterval()/checkMaxInterval()): the other handle's value
          * plus or minus the interval, rounded onto the scale by
-         * convertToPercent()/convertToValue(). It only ever moves toward the
-         * interval, so a pair that holds it up to float noise, or an off-scale
-         * starting value already past that point, is left exactly as given.
+         * convertToPercent()/convertToValue() (and fitEndInterval(), #881). It
+         * only ever moves toward the interval, so a pair that holds it up to
+         * float noise, or an off-scale starting value already past that point,
+         * is left exactly as given.
          * When that value lies outside the preferred handle's window, the
          * handle stops on the window's edge and the other handle goes the
          * interval away from that edge, rounded the same way, if its own
@@ -3354,25 +3432,25 @@
             if (o.min_interval && to - from < o.min_interval) {
                 if (move_from) {
                     if (to - o.min_interval >= from_lo - slack) {
-                        value = this.convertToValue(this.convertToPercent(to - o.min_interval));
+                        value = this.convertToValue(this.fitEndInterval(this.convertToPercent(to - o.min_interval), to, "from"));
                         if (value < from) {
                             from = value;
                         }
                     } else if (from_lo + o.min_interval <= to_hi + slack) {
                         from = from_lo;
-                        to = this.convertToValue(this.convertToPercent(from_lo + o.min_interval));
+                        to = this.convertToValue(this.fitEndInterval(this.convertToPercent(from_lo + o.min_interval), from, "to"));
                     } else if (own_limits && (!min_yields || to < from)) {
                         return null;
                     }
                 } else {
                     if (from + o.min_interval <= to_hi + slack) {
-                        value = this.convertToValue(this.convertToPercent(from + o.min_interval));
+                        value = this.convertToValue(this.fitEndInterval(this.convertToPercent(from + o.min_interval), from, "to"));
                         if (value > to) {
                             to = value;
                         }
                     } else if (to_hi - o.min_interval >= from_lo - slack) {
                         to = to_hi;
-                        from = this.convertToValue(this.convertToPercent(to_hi - o.min_interval));
+                        from = this.convertToValue(this.fitEndInterval(this.convertToPercent(to_hi - o.min_interval), to, "from"));
                     } else if (own_limits && (!min_yields || to < from)) {
                         return null;
                     }

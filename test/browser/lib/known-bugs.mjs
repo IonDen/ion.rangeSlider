@@ -55,7 +55,7 @@
  * fixed there, and the entry has to be retired.
  */
 
-import { isValuesMode, nearestOnScale, onScale, rangeOf, scalePoint } from './scale.mjs';
+import { isValuesMode, nearestOnScale, onScale, rangeOf, restingPercent, scaleNear } from './scale.mjs';
 import { INVARIANTS } from './invariants.mjs';
 // Where the fixed interaction script aims: the same numbers matrix.spec.mjs drives the
 // slider with. A predicate that has to say "this stage pushes the handle into its own
@@ -289,7 +289,9 @@ function startingPair(cfg) {
  * interval wider than the range is first lowered to the range, as validate() does, and a
  * min_interval above max_interval gives way to it. The mirror of applyIntervals() and
  * fitIntervals() in js/ion.rangeSlider.js, except that a moved handle stands exactly the
- * interval away instead of being rounded onto the scale.
+ * interval away instead of being rounded onto the scale; the final clamp then puts it on the
+ * nearest scale point, and heldAtAnEnd() moves it one point further where the plugin does
+ * (#881).
  *
  * @param {object} cfg
  * @param {{from: number|null, to: number|null}} handed   the pair the build or update() is handed
@@ -317,16 +319,20 @@ function settledPair(cfg, handed, preferred) {
         const t = windowOf('to', ownLimits);
         if (ownLimits && (f.lo > f.hi + EPS || t.lo > t.hi + EPS)) return null;
         let { from, to } = start;
+        // The handle min_interval placed the interval away from the other one, for #881.
+        let moved = null;
         if (minInterval && to - from < minInterval - EPS) {
             if (moveFrom) {
-                if (to - minInterval >= f.lo - EPS) from = Math.min(from, to - minInterval);
-                else if (f.lo + minInterval <= t.hi + EPS) { from = f.lo; to = f.lo + minInterval; }
+                if (to - minInterval >= f.lo - EPS) { from = Math.min(from, to - minInterval); moved = 'from'; }
+                else if (f.lo + minInterval <= t.hi + EPS) { from = f.lo; to = f.lo + minInterval; moved = 'to'; }
                 else if (ownLimits && !minYields) return null;
             } else if (from + minInterval <= t.hi + EPS) {
                 to = Math.max(to, from + minInterval);
+                moved = 'to';
             } else if (t.hi - minInterval >= f.lo - EPS) {
                 to = t.hi;
                 from = t.hi - minInterval;
+                moved = 'from';
             } else if (ownLimits && !minYields) {
                 return null;
             }
@@ -345,10 +351,47 @@ function settledPair(cfg, handed, preferred) {
                 return null;
             }
         }
-        return { from, to };
+        return { from, to, moved };
     };
-    const { from, to } = fit(true) || fit(false);
-    return { from: clampedToLimits(from, 'from', cfg), to: clampedToLimits(to, 'to', cfg) };
+    const { from, to, moved } = fit(true) || fit(false);
+    const settled = { from: clampedToLimits(from, 'from', cfg), to: clampedToLimits(to, 'to', cfg) };
+    if (!moved || maxInterval) return settled;
+    return heldAtAnEnd(settled, moved, minInterval, windowOf(moved, true), cfg);
+}
+
+/**
+ * #881: the pair validate() leaves when min_interval moved a handle against one resting on
+ * min or max.
+ *
+ * readme note "step": "min: 0.5, step: 1 gives 0.5, 2, 3, 4", and min_interval "Smallest
+ * interval between the handles". On that scale a from handle 1 below a to handle on 10.5 lies
+ * between 9 and 10; rounded onto the nearest point it reports 10, half the interval away, so
+ * the plugin moves it on to 9, the next point away from the other handle. It does that only
+ * when the other handle is exactly on min or max, no max_interval is set (settledPair() checks
+ * that), step_from_min is off (its readme note documents nearest-point rounding), the slider
+ * is not in values mode, the nearest point breaks min_interval, and the next point lies inside
+ * the moved handle's window; otherwise the pair stays as the clamp left it.
+ *
+ * @param {{from: number, to: number}} pair      the pair after the final clamp
+ * @param {'from'|'to'} moved                      the handle min_interval moved
+ * @param {number} minInterval                     min_interval, lowered to the range
+ * @param {{lo: number, hi: number}} room          the moved handle's window (limitWindow(), or a fixed handle's own value)
+ * @param {object} cfg
+ * @returns {{from: number, to: number}}
+ */
+function heldAtAnEnd(pair, moved, minInterval, room, cfg) {
+    if (cfg.step_from_min || isValuesMode(cfg)) return pair;
+    const { min, max } = rangeOf(cfg);
+    const other = pair[moved === 'from' ? 'to' : 'from'];
+    if (other !== min && other !== max) return pair;
+    if (!(pair.to - pair.from < minInterval - EPS)) return pair;
+    const value = pair[moved];
+    const points = scaleNear(restingPercent(value, cfg), cfg);
+    const away = moved === 'from'
+        ? points.filter((point) => point < value - EPS).pop()
+        : points.filter((point) => point > value + EPS)[0];
+    if (!isNum(away) || away < room.lo - EPS || away > room.hi + EPS) return pair;
+    return { ...pair, [moved]: away };
 }
 
 /**
@@ -602,23 +645,6 @@ function unsatisfiableInterval(cfg) {
     return null;
 }
 
-/**
- * Does max sit off the slider's own step scale?
- *
- * readme note "step": the reachable values are min plus whole steps ROUNDED to the
- * decimals of step, so min 0.5 with step 1 reports 0.5, 2, 3 ... 10 while max is 10.5 --
- * half a step above the highest value a handle can rest on.
- *
- * @param {object} cfg
- * @returns {boolean}
- */
-function maxOffScale(cfg) {
-    if (isValuesMode(cfg)) return false;
-    const { min, max, step } = rangeOf(cfg);
-    if (!(step > 0)) return false;
-    return scalePoint(Math.round((max - min) / step), cfg) !== max;
-}
-
 /** @type {Array<{issue: number, title: string, matches: (ctx: object, id: string) => boolean}>} */
 export const KNOWN_BUGS = [
     {
@@ -645,34 +671,6 @@ export const KNOWN_BUGS = [
             // is the pair the second build is handed, which for most entries is the
             // configured one again.
             return pushedIntoAnOffScaleLimit(valuesUnderStage(ctx), cfg);
-        }
-    },
-
-    // The two interval entries overlap once a gap is open: this one names the cause
-    // (the top edge the scale cannot reach), so it is asked first.
-    {
-        issue: 881,
-        title: 'min_interval is violated at the top edge when max sits off the step scale',
-        what: /closed past min_interval/,
-        // n043 (edge:min-interval-top). The top reachable value is half a step below max,
-        // so a `to` resting on max is closer to a `from` driven to the top than
-        // min_interval allows, and the clamp lets it stand. It takes that resting `to`:
-        // the four other matrix entries on the same scale keep their `to` well inside the
-        // range and honour the interval throughout. Once the gap has been opened it
-        // stands for the rest of the run, which is the second half of the predicate.
-        matches(ctx, id) {
-            if (id !== 'intervals' || !isInteractionStage(ctx)) return false;
-            const cfg = ctx.cfg;
-            if (!isDouble(cfg) || !isNum(cfg.min_interval) || !(cfg.min_interval > 0) || !maxOffScale(cfg)) return false;
-            const before = valuesOf(ctx.prev);
-            const restingOnMax = isNum(before.to) && Math.abs(before.to - rangeOf(cfg).max) <= EPS;
-            // S1 is the stage that drives the from handle, and on this entry it drives it
-            // to the very top of the track (its own s1 target), into the `to` resting on
-            // the max the scale cannot reach.
-            if (restingOnMax && promised(ctx).handle === 'from') return true;
-            // From there the gap stands while nothing moves a handle; a stage that does
-            // move one re-applies the clamp and the rule passes again.
-            return breaksInterval(gapBetween(before.from, before.to), cfg) && !promised(ctx).changed;
         }
     },
 
