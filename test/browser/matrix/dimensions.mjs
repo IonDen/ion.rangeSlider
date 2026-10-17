@@ -605,14 +605,15 @@ export const NAMED_CASES = [
         notes: ['Reaches issue #879: a bar drag against from_max stretches the interval instead of moving it as a unit.']
     },
     // #881: max is half a step above the last reachable value (min 0.5, step 1 gives
-    // 0.5, 2, 3 ... 10, while max is 10.5), so a `to` resting on max is only 0.5 above a
-    // `from` the interval clamp lets reach 10 -- half the min_interval of 1. S1 drives
-    // from to the top of the track (the shared 30 % target would stop far short of the
-    // edge), hence the stages override below.
+    // 0.5, 2, 3 ... 10, while max is 10.5). Until #881 was fixed the interval clamp let a
+    // `from` driven to the top reach 10, only 0.5 below a `to` resting on max, half the
+    // min_interval of 1; it now stops on 9, and this entry keeps that edge covered. S1
+    // drives from to the top of the track (the shared 30 % target would stop far short of
+    // the edge), hence the stages override below.
     {
         name: 'edge:min-interval-top',
         config: { type: 'double', min: 0.5, max: 10.5, step: 1, from: 8, to: 10.5, min_interval: 1, drag_over_limit: true },
         stages: { s1: 1 },
-        notes: ['Reaches issue #881: min_interval is violated at the top edge when max sits off the step scale.']
+        notes: ['Covers the #881 edge: from driven to the top stops on 9, 1.5 below a to on max 10.5 (min_interval 1), because max sits off the step scale.']
     }
 ];

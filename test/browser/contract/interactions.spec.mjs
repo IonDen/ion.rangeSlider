@@ -18,7 +18,9 @@
  * takes the readme's onFinish row as its oracle: a key press fires onFinish, so with
  * drag_interval and a fixed handle a press after a click on the bar fires one and moves
  * nothing. The #893 rows take the readme's step note as their oracle: min 0.5 with step 1 gives
- * 0.5, 2, 3, 4, and a key press moves to the next or the previous of those values.
+ * 0.5, 2, 3, 4, and a key press moves to the next or the previous of those values. The #881
+ * rows take the same note with the min_interval row ("Smallest interval between the
+ * handles"): a dragged handle stops on one of those values, at least min_interval away.
  *
  * Assertions stay on page-observable surfaces: the input's value, the rendered labels and
  * the recorded callbacks. Rows the older specs already hold are not repeated here; each
@@ -66,6 +68,29 @@ async function shownLabels(page) {
 
 /** Callback types recorded after the first `n` events. */
 const typesAfter = async (page, n) => (await events(page)).slice(n).map((e) => e.type);
+
+/** The from and to of every recorded onFinish, in order. */
+const finishedPairs = async (page) => (await events(page)).filter((e) => e.type === 'onFinish').map((e) => [e.from, e.to]);
+
+/**
+ * Resolves after the slider's idle render loop has run twice since the call. updateScene()
+ * re-arms through `this.updateScene.bind(this)`, so a counter on the instance's updateScene
+ * sees each later tick. The tick already armed at the call runs the original and re-arms
+ * through the counter, so the second counted tick finishes a full idle pass. The counter
+ * only counts and calls through. A poll timeout here means that re-arm path changed.
+ */
+async function afterTwoIdleTicks(page) {
+    await page.evaluate(() => {
+        const slider = jQuery.data(document.getElementById('slider'), 'ionRangeSlider');
+        const tick = slider.updateScene;
+        window.__idle_ticks = 0;
+        slider.updateScene = function () {
+            window.__idle_ticks += 1;
+            return tick.apply(this, arguments);
+        };
+    });
+    await expect.poll(() => page.evaluate(() => window.__idle_ticks)).toBeGreaterThanOrEqual(2);
+}
 
 test.describe(`interactions (${LABEL})`, () => {
     // ---- Mouse drags of a handle ---------------------------------------------------------
@@ -489,6 +514,60 @@ test.describe(`interactions (${LABEL})`, () => {
         await expect(page.locator('#slider')).toHaveValue('3;5');
         await page.keyboard.press('ArrowRight');
         await expect(page.locator('#slider')).toHaveValue('4;6');
+    });
+
+    // The slider of #881. readme Settings, min_interval: "Smallest interval between the
+    // handles"; drag_over_limit: "Let a dragged handle push the other handle instead of
+    // stopping at it. [...] it still respects `min_interval`"; note "step": "min: 0.5, step: 1
+    // gives 0.5, 2, 3, 4". The to handle rests on max, 10.5, where it cannot be pushed any
+    // further, and the from handle dragged to the right end stops on 9, the largest of those
+    // values at least 1 below 10.5. Before the fix it stopped on 10, half the interval away.
+    // Each row reads the starting pair first, so a row whose drag never took hold cannot pass,
+    // and reads the onFinish the drag fires (readme Settings, onFinish), which reports 9;10.5,
+    // and it reads the list again once two idle render ticks have run (afterTwoIdleTicks()), so a
+    // second, late onFinish fails the row too (mutation: `this.is_key = true;` added at the end
+    // of pointerUp(), which makes the next idle tick fire another onFinish).
+    // Mutation caught: pushHandle() -> the clamped-back handle returned as
+    // `current: this.convertToPercent(current),` without fitEndInterval(), and the drag ends
+    // on 10;10.5.
+    test('on min 0.5, step 1 with min_interval 1 and drag_over_limit, from dragged to the end stops on 9 below a to on 10.5 (Settings: min_interval, drag_over_limit, #881)', async ({ page }) => {
+        await open(page, { type: 'double', min: 0.5, max: 10.5, step: 1, from: 8, to: 10.5, min_interval: 1, drag_over_limit: true });
+        await expect(page.locator('#slider')).toHaveValue('8;10.5');
+        await dragHandleTo(page, 'from', 1);
+        await expect(page.locator('#slider')).toHaveValue('9;10.5');
+        await expect.poll(() => finishedPairs(page)).toEqual([[9, 10.5]]);
+        await afterTwoIdleTicks(page);
+        expect(await finishedPairs(page)).toEqual([[9, 10.5]]);
+    });
+
+    // The same drag without drag_over_limit, where the from handle stops at the to handle's
+    // interval instead of pushing it. Mutation caught: checkMinInterval() -> the from case
+    // returning `this.convertToPercent(next - o.min_interval)` without fitEndInterval(), and
+    // the drag ends on 10;10.5.
+    test('on min 0.5, step 1 with min_interval 1, from dragged to the end stops on 9 below a to on 10.5 (Settings: min_interval, #881)', async ({ page }) => {
+        await open(page, { type: 'double', min: 0.5, max: 10.5, step: 1, from: 8, to: 10.5, min_interval: 1 });
+        await expect(page.locator('#slider')).toHaveValue('8;10.5');
+        await dragHandleTo(page, 'from', 1);
+        await expect(page.locator('#slider')).toHaveValue('9;10.5');
+        await expect.poll(() => finishedPairs(page)).toEqual([[9, 10.5]]);
+        await afterTwoIdleTicks(page);
+        expect(await finishedPairs(page)).toEqual([[9, 10.5]]);
+    });
+
+    // The mirror at min: on min 0.4, max 10.4, step 1 the values are 0.4, 1, 2 ... 10, 10.4
+    // (readme note "step"). The from handle rests on min, 0.4, and the to handle dragged to the
+    // left end stops on 2, the smallest of those values at least 1 above 0.4. Before the fix it
+    // stopped on 1, 0.6 away. Mutation caught: checkMinInterval() -> the to case returning
+    // `this.convertToPercent(next + o.min_interval)` without fitEndInterval(), and the drag
+    // ends on 0.4;1.
+    test('on min 0.4, step 1 with min_interval 1, to dragged to the start stops on 2 above a from on 0.4 (Settings: min_interval, #881)', async ({ page }) => {
+        await open(page, { type: 'double', min: 0.4, max: 10.4, step: 1, min_interval: 1, from: 0.4, to: 5 });
+        await expect(page.locator('#slider')).toHaveValue('0.4;5');
+        await dragHandleTo(page, 'to', 0);
+        await expect(page.locator('#slider')).toHaveValue('0.4;2');
+        await expect.poll(() => finishedPairs(page)).toEqual([[0.4, 2]]);
+        await afterTwoIdleTicks(page);
+        expect(await finishedPairs(page)).toEqual([[0.4, 2]]);
     });
 
     // ---- Touch drags ---------------------------------------------------------------------
