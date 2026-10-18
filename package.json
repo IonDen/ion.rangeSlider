@@ -1,6 +1,6 @@
 {
     "name": "ion-rangeslider",
-    "version": "2.5.0",
+    "version": "2.6.0",
     "description": "jQuery range slider with one or two handles, six skins, touch and keyboard support, custom values and a value grid",
     "homepage": "http://ionden.com/a/plugins/ion.rangeSlider/",
     "author": {
@@ -37,8 +37,8 @@
         "jquery": ">=1.8"
     },
     "config": {
-        "build": 387,
-        "buildDate": "2026-09-09 16:12:28"
+        "build": 388,
+        "buildDate": "2026-10-18 07:08:29"
     },
     "scripts": {
         "build": "node scripts/build.mjs",

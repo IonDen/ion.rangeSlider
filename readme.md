@@ -4,9 +4,9 @@ Ion.RangeSlider is a jQuery range slider with one or two handles, six skins, tou
 
 ***
 
-* Version: 2.5.0
+* Version: 2.6.0
 * [Project page and demos](http://ionden.com/a/plugins/ion.rangeSlider/)
-* [Download ZIP](https://github.com/IonDen/ion.rangeSlider/archive/2.5.0.zip)
+* [Download ZIP](https://github.com/IonDen/ion.rangeSlider/archive/2.6.0.zip)
 * [Support on GitHub Sponsors](https://github.com/sponsors/IonDen)
 
 ## Features
@@ -78,20 +78,20 @@ Use [jsDelivr](https://www.jsdelivr.com/package/npm/ion-rangeslider) or [cdnjs](
 
 ```html
 <!-- CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ion-rangeslider@2.5.0/css/ion.rangeSlider.min.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ion-rangeslider@2.6.0/css/ion.rangeSlider.min.css"/>
 
 <!-- jQuery -->
 <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
 
 <!-- Plugin -->
-<script src="https://cdn.jsdelivr.net/npm/ion-rangeslider@2.5.0/js/ion.rangeSlider.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/ion-rangeslider@2.6.0/js/ion.rangeSlider.min.js"></script>
 ```
 
 The same two files on cdnjs:
 
 ```html
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.5.0/css/ion.rangeSlider.min.css"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.5.0/js/ion.rangeSlider.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.6.0/css/ion.rangeSlider.min.css"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ion-rangeslider/2.6.0/js/ion.rangeSlider.min.js"></script>
 ```
 
 

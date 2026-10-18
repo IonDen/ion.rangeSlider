@@ -4,6 +4,34 @@
 
 # Update History
 
+### Version 2.6.0. October 18, 2026
+* Grid: a `grid_num` below 1 after rounding (such as 0 or a negative number), or one that is not a number, draws the default 4 units and logs one console warning; a fractional `grid_num` is rounded
+* Grid: a value range whose `min` equals `max`, or a `values` array with one entry, draws a single grid tick instead of five ticks on the same value, a lone "NaN" tick (with `grid_snap`) or a lone "undefined" tick
+* Grid: a `prettify_grid` that returns `undefined` or `null` falls back to `prettify` and then to the built-in formatting; one that throws no longer stops the slider from being created
+* Grid: the first grid label is always visible, and so is the last unless it would overlap the first on a very narrow slider; no two visible grid labels overlap
+* Grid: every labelled grid tick names a value the handle can reach and sits where the handle stops on it. `grid_num` is a target, so the grid can use more or fewer units than it names: from 0 to 100 with `step: 10` and the default `grid_num` of 4, the grid shows 0, 20, 40, 60, 80 and 100
+* Grid: with `grid_margin` on (the default) every grid label is centred on its tick, a shift of a few pixels at most. Shown grid labels no longer carry an inline `visibility: visible`, so a stylesheet rule that hides `.irs-grid-text` now applies to them
+* Grid: with `grid_snap`, a value range such as 0 to 2.7 with `step: 0.3` no longer draws a blank extra tick
+* `destroy()` hands the input back as it was: no `from` or `to` left in its data, and its disabled state restored
+* A slider with `block` no longer responds to the keyboard; the arrow keys used to move it. On a focused blocked slider the arrow keys now reach the page, as with `keyboard: false`
+* The input's value is matched against the text of each `values` entry, so `data-values` lists and number-like entries find the right one. With `data-values="1,2,3,4"` and `value="2"` the slider now starts on the entry 2; it used to start on the entry at index 2, which is 3
+* On a slider without `values`, `from_value` and `to_value` are `null` after `update()` too; they used to be `undefined` there
+* The max label has one space between `max_postfix` and a `postfix` that starts with a space; it used to have two
+* On the single type the callback data has `to_pretty`, `to_percent` and `to_value` from the first callback; until the first `update()` or `reset()`, `to_pretty` used to be missing and `to_percent` was 0
+* `min_interval` and `max_interval` now also apply when the slider is created and when `update()` runs: a starting pair that breaks either one is moved to keep it, so such a slider can start on different values than before
+* With `prettify_enabled: false` the `*_pretty` callback fields are strings, the same as the labels
+* The built-in formatting no longer puts the thousands separator inside the decimals: 1.2345 reads "1.2345", not "1.2 345". Values with three decimals or fewer read as before; with `prettify_all_values`, a decimal number inside a text entry is no longer split either
+* On the double type a click on the track moves the nearer handle; just past the middle between the handles it used to move the farther one. A click exactly halfway between the handles moves the to handle
+* With `drag_interval` and both handles on one value, a click on the track, the key presses after it and a drag of the bar keep the value label visible; they used to hide every value label
+* With `drag_interval` and a fixed handle, a key press after a click on the bar now fires `onFinish` and still moves nothing. Since 2.4.0 that press fired nothing, so code that counts `onFinish` calls sees one more
+* When `min` is not a whole number of steps (such as `min: 0.5, step: 1`), each arrow key press moves to the next or previous value a drag can reach; a press used to skip a value or do nothing
+* `min_interval` now holds when rounding would leave it short with the other handle on `min` or `max`. With `min: 0.5, max: 10.5, step: 1` and `min_interval: 1`, the from handle stops at 9 while the to handle sits on 10.5; it used to stop at 10. The same holds for a `min_interval` that is not a whole number of steps
+* That `min_interval` change leaves sliders with `max_interval`, with `step_from_min` or in values mode, and whole-interval drags, as they were before
+* README: a note on jQuery 3.0.x and 3.1.x, which measure the `square` skin's handle too wide, so values picked by mouse or touch land slightly off; jQuery 3.2.1 or newer measures it correctly
+* README rewritten for first-time readers, with the contributing and releasing guides and the package description revised; the CDN examples list jsDelivr first
+* The browser test suite now covers every option, every interaction and a combination matrix of 128 configurations; on every change it runs against jQuery 1.8.3, 3.7.1 and 4.0.0 slim and the minified build (the matrix on 1.8.3 and 3.7.1), and weekly against 19 jQuery builds
+* Issues: #875, #877, #880, #881, #883, #884, #885, #886, #887, #889, #890, #891, #892, #893, #898, #903, #906, #909, #910, #911, #918
+
 ### Version 2.5.0. September 09, 2026
 * New `step_from_min` option makes every value `min` plus a whole number of steps: with `min: 0.5, step: 1` the values are 0.5, 1.5, 2.5 instead of 0.5, 2, 3, and the grid labels follow the same scale. Off by default. An initial `from`/`to`, the handle limits and `min_interval`/`max_interval` should sit on that scale too; a value off it is moved to the nearest point
 * New `values_raw` option keeps `values` entries exactly as given, so "20.0" stays "20.0" in `from_value`/`to_value`, in the input and on the label instead of becoming the number 20. Off by default. Spaces around the commas in `data-values` are ignored when it is on
