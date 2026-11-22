@@ -63,12 +63,13 @@ jobs:
           # hidden container is measured. From 3.3 a slider built inside a display:none
           # container measures its track as zero and has nothing to render on until it is
           # shown; before 3.3 it measures 100 px and renders at init, so the matrix's
-          # hidden-container configurations report different things on the two sides. The
-          # other two cells stay --project=chromium only.
+          # hidden-container configurations report different things on the two sides.
+          # Every cell runs all three engines (#946), so a pull request sees Firefox and
+          # WebKit with the plugin's minified files, the oldest jQuery and jQuery 4 too.
           - { id: '3.7.1', jquery: 'jquery-3.7.1', slim: '0', projects: '--project=chromium --project=firefox --project=webkit --project=matrix' }
-          - { id: '3.7.1-min', jquery: 'jquery-3.7.1', slim: '0', projects: '--project=chromium', min: '1' }
-          - { id: '1.8.3', jquery: 'vendor/jquery-1.8.3.js', slim: '0', projects: '--project=chromium --project=matrix' }
-          - { id: '4.0.0-slim', jquery: 'jquery-4.0.0', slim: '1', projects: '--project=chromium' }
+          - { id: '3.7.1-min', jquery: 'jquery-3.7.1', slim: '0', projects: '--project=chromium --project=firefox --project=webkit', min: '1' }
+          - { id: '1.8.3', jquery: 'vendor/jquery-1.8.3.js', slim: '0', projects: '--project=chromium --project=firefox --project=webkit --project=matrix' }
+          - { id: '4.0.0-slim', jquery: 'jquery-4.0.0', slim: '1', projects: '--project=chromium --project=firefox --project=webkit' }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
