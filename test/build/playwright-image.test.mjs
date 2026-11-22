@@ -31,16 +31,36 @@ async function withLock(lock, fn) {
   }
 }
 
-/** A workflow file with its comment lines removed, so prose about a step never counts as one. */
+/** A workflow file with comment lines and trailing comments removed, so prose about a step never counts as one. */
 function workflow(name) {
   const text = readFileSync(new URL(`../../.github/workflows/${name}`, import.meta.url), 'utf8');
-  return text.split('\n').filter((l) => !/^\s*#/.test(l)).join('\n');
+  return text.split('\n').filter((l) => !/^\s*#/.test(l)).map((l) => l.replace(/\s+#.*$/, '')).join('\n');
 }
 
-/** { id: projects } for the one-line `- { id: '...', ..., projects: '...' }` cells of a file. */
+// The one form a browser cell may take. Fixed key order and single quotes keep the test simple and exact:
+// a cell written any other way (block YAML, keys reordered, unquoted values, an extra key) fails loudly
+// instead of slipping past the parser.
+const CELL_ROW = /^ {10}- \{ id: '([^']+)', jquery: '([^']+)', slim: '([01])', projects: '([^']+)'(?:, min: '([01])')? \}$/;
+const PROJECT = /^--project=(chromium|firefox|webkit|matrix)$/;
+
+/**
+ * The cells of the browser job's matrix as { id: { jquery, slim, min, projects } }, projects sorted (their order
+ * does not matter to Playwright). Every line under `include:` must be a CELL_ROW whose projects are only
+ * `--project=` flags, and ids must be unique; anything else throws.
+ */
 function cells(yml) {
+  const job = jobBlock(yml, 'browser');
+  const section = /^ {8}include:\n((?: {9,}.*\n|\s*\n)*)/m.exec(job);
+  if (!section) throw new Error('no include: list in the browser job');
   const out = {};
-  for (const m of yml.matchAll(/^\s*-\s*\{\s*id:\s*'([^']+)'.*?projects:\s*'([^']+)'/gm)) out[m[1]] = m[2];
+  for (const line of section[1].split('\n').filter((l) => l.trim())) {
+    const m = CELL_ROW.exec(line);
+    if (!m) throw new Error(`not a one-line cell in the expected form: ${line.trim()}`);
+    if (m[1] in out) throw new Error(`cell ${m[1]} appears twice`);
+    const projects = m[4].split(' ').sort();
+    for (const p of projects) if (!PROJECT.test(p)) throw new Error(`cell ${m[1]}: unexpected flag ${p}`);
+    out[m[1]] = { jquery: m[2], slim: m[3], min: m[5], projects };
+  }
   return out;
 }
 
@@ -120,6 +140,10 @@ for (const name of WORKFLOWS) {
     assert.doesNotMatch(browser, /continue-on-error/, `${name}: the browser job must not tolerate failures`);
     const step = /^      - run: npx playwright test .*\n((?:        .*\n?)*)/m.exec(browser);
     assert.doesNotMatch(step[1], /^        if:/m, `${name}: the test step must always run`);
+    // The cell's jQuery build, slim flag and minified flag reach the tests only through these lines.
+    assert.match(step[1], /^          IRS_JQUERY: \$\{\{ matrix\.jquery \}\}\s*$/m, `${name}: IRS_JQUERY`);
+    assert.match(step[1], /^          IRS_SLIM: \$\{\{ matrix\.slim \}\}\s*$/m, `${name}: IRS_SLIM`);
+    assert.match(step[1], /^          IRS_MIN: \$\{\{ matrix\.min \|\| '0' \}\}\s*$/m, `${name}: IRS_MIN`);
   });
 
   // Bug caught: the version job's output is wired to the wrong step, the step is skipped, or the
@@ -157,21 +181,22 @@ test('jquery-matrix.yml runs every engine and the combination matrix in every ce
   const yml = workflow('jquery-matrix.yml');
   const all = cells(yml);
   assert.ok(Object.keys(all).length >= 19, `only ${Object.keys(all).length} cells`);
-  assert.equal((yml.match(/\bid:\s*'/g) || []).length, Object.keys(all).length, 'every cell must be a one-line { id: ... } row');
-  for (const [id, projects] of Object.entries(all)) {
-    for (const project of [...ENGINES, 'matrix']) {
-      assert.ok(projects.split(' ').includes(`--project=${project}`), `${id}: missing ${project}`);
-    }
-  }
+  const expected = [...ENGINES, 'matrix'].map((p) => `--project=${p}`).sort();
+  for (const [id, cell] of Object.entries(all)) assert.deepEqual(cell.projects, expected, `${id}: projects`);
 });
 
-// Bug caught: a pull-request cell loses an engine, the combination matrix or the whole cell. These
-// four cells are the only browser runs a pull request gets; Firefox and WebKit run in 3.7.1.
-test('ci.yml keeps its four browser cells and their projects', () => {
-  assert.deepEqual(cells(workflow('ci.yml')), {
-    '3.7.1': '--project=chromium --project=firefox --project=webkit --project=matrix',
-    '3.7.1-min': '--project=chromium',
-    '1.8.3': '--project=chromium --project=matrix',
-    '4.0.0-slim': '--project=chromium',
+// Bug caught: a pull-request cell loses an engine, the combination matrix or the whole cell, or quietly
+// changes what it tests (another jQuery build, the minified or slim flag dropped). These four cells are the
+// only browser runs a pull request gets, and each runs all three engines (#946); the combination matrix
+// runs in 3.7.1 and 1.8.3, one build on each side of the jQuery 3.3 split.
+test('ci.yml keeps its four browser cells, each with every engine', () => {
+  const yml = workflow('ci.yml');
+  const engines = ['--project=chromium', '--project=firefox', '--project=webkit'];
+  const all = cells(yml);
+  assert.deepEqual(all, {
+    '3.7.1': { jquery: 'jquery-3.7.1', slim: '0', min: undefined, projects: [...engines, '--project=matrix'].sort() },
+    '3.7.1-min': { jquery: 'jquery-3.7.1', slim: '0', min: '1', projects: [...engines].sort() },
+    '1.8.3': { jquery: 'vendor/jquery-1.8.3.js', slim: '0', min: undefined, projects: [...engines, '--project=matrix'].sort() },
+    '4.0.0-slim': { jquery: 'jquery-4.0.0', slim: '1', min: undefined, projects: [...engines].sort() },
   });
 });
