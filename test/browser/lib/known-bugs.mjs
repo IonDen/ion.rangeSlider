@@ -7,10 +7,10 @@
  *
  * An entry is:
  *   {
- *     issue: 896,                                   // the filed GitHub issue number
- *     title: 'a slider whose min equals max fires no onFinish when a handle is released',   // one line, in the glossary's words
- *     what: /exactly one onFinish/,                  // the failure MESSAGES this bug produces
- *     matches(ctx, id) { return id === 'callbacks' && isInteractionStage(ctx) && !isInert(ctx.cfg) && rangeOf(ctx.cfg).min === rangeOf(ctx.cfg).max; }
+ *     issue: 897,                                   // the filed GitHub issue number
+ *     title: 'a slider built inside a hidden container reports no from_pretty or to_pretty in onStart and onInit',   // one line, in the glossary's words
+ *     what: /(from|to)_pretty must be the formatted [a-z]+ value \(expected .*, got undefined\)/,   // the failure MESSAGES this bug produces
+ *     matches(ctx, id) { return id === 'callbacks' && stageOf(ctx) === 'S0' && builtBlind(ctx); }
  *   }
  *
  * `what` is the second half of the entry and is not optional: `matches` says which
@@ -823,30 +823,6 @@ export const KNOWN_BUGS = [
             // here; that half stays true once the bug is fixed, so the entry still
             // retires.
             return id === 'keys' && isKeyStage(ctx) && !!promised(ctx).changed;
-        }
-    },
-
-    {
-        issue: 896,
-        // The one callbacks line this speaks for: the interaction that owes an onFinish and
-        // fires none. An inert slider owes none in the first place, which the guard below
-        // keeps out and this pattern could not.
-        what: /exactly one onFinish/,
-        title: 'a slider whose min equals max fires no onFinish when a handle is released',
-        // n038 (edge:min-eq-max), and any slider with one reachable value -- a one-entry
-        // values array is the same thing. Every interaction stage: the press and release, the
-        // track click and each key press all end without the onFinish the readme promises
-        // "even without moving". Only the callbacks rule, and only its onFinish line: the
-        // handle really does stay where it is, so every other rule holds and stays armed.
-        //
-        // A disabled or blocked slider is silent by the readme's own account, and the rule
-        // judges it by the other half of its callbacks branch ("must not fire on a disabled
-        // or blocked slider"), which passes: there is no failure for this entry to answer,
-        // and claiming the cell would red it as "no longer reproduces".
-        matches(ctx, id) {
-            if (id !== 'callbacks' || !isInteractionStage(ctx) || isInert(ctx.cfg)) return false;
-            const { min, max } = rangeOf(ctx.cfg);
-            return min === max;
         }
     }
 ];
