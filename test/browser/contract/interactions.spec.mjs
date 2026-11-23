@@ -20,7 +20,9 @@
  * nothing. The #893 rows take the readme's step note as their oracle: min 0.5 with step 1 gives
  * 0.5, 2, 3, 4, and a key press moves to the next or the previous of those values. The #881
  * rows take the same note with the min_interval row ("Smallest interval between the
- * handles"): a dragged handle stops on one of those values, at least min_interval away.
+ * handles"): a dragged handle stops on one of those values, at least min_interval away. The
+ * #896 rows take the readme's onFinish row as their oracle: a slider whose min equals max has
+ * nowhere to move, and a press, a track click or a key press on it still fires one onFinish.
  *
  * Assertions stay on page-observable surfaces: the input's value, the rendered labels and
  * the recorded callbacks. Rows the older specs already hold are not repeated here; each
@@ -615,5 +617,137 @@ test.describe(`interactions (${LABEL})`, () => {
         // touchDrag() moves by a fraction of the whole line; a tenth of the travel is this.
         await touchDrag(page, '#wrap .irs-bar', 0.1 * (line.width - handle.width) / line.width);
         await expect(page.locator('#slider')).toHaveValue('30;50');
+    });
+
+    // ---- A slider whose min equals max (#896) --------------------------------------------
+    // readme Settings, onFinish: "Fires when an interaction ends: a handle is released (even
+    // without moving), the track (the line the handles move on) is clicked, or a key is
+    // pressed." A slider with a zero value range (min equal to max) has one value and nowhere
+    // to move, and each of those is still an interaction that ends: one onFinish, no onChange,
+    // no change or input event, the value where it was. Up to 2.6.0 such a slider bound no
+    // handler at all and fired nothing. The unit file test/unit/zero-range-interactions.test.mjs holds every
+    // gesture of both types; these rows are the real mouse and keyboard on a rendered slider.
+    // Mutation caught (each row below that expects an onFinish): bindEvents() -> the 2.6.0
+    // early return `if (this.no_diapason) { return; }` put back, and nothing fires.
+
+    /** Callback and field events recorded after the first `n`. */
+    const recordedAfter = async (page, n) => (await events(page)).slice(n);
+
+    /** The onFinish payload fields that must equal the onStart payload of the same slider. */
+    const PAYLOAD = ['from', 'to', 'min', 'max', 'from_percent', 'to_percent', 'from_value', 'to_value', 'from_pretty', 'to_pretty'];
+    const payloadOf = (e) => Object.fromEntries(PAYLOAD.map((k) => [k, e[k]]));
+
+    test('min equals max: a drag of the handle fires one onFinish carrying the onStart payload (Settings: onFinish, #896)', async ({ page }) => {
+        await open(page, { min: 5, max: 5 }, { dom_events: '1' });
+        const start = (await events(page)).find((e) => e.type === 'onStart');
+        // The literal values first, so the comparison below cannot pass on two equally wrong payloads.
+        expect(payloadOf(start)).toEqual({
+            from: 5, to: 5, min: 5, max: 5, from_percent: 0, to_percent: 0,
+            from_value: null, to_value: null, from_pretty: '5', to_pretty: '5'
+        });
+        const n = (await events(page)).length;
+
+        await dragHandleTo(page, 'single', 0.6);
+        await expect.poll(async () => (await recordedAfter(page, n)).map((e) => e.type)).toEqual(['onFinish']);
+        await afterTwoIdleTicks(page);
+
+        const after = await recordedAfter(page, n);
+        expect(after.map((e) => e.type)).toEqual(['onFinish']);
+        expect(payloadOf(after[0])).toEqual(payloadOf(start));
+        await expect(page.locator('#slider')).toHaveValue('5');
+        await expect(page.locator('#wrap .irs-single')).toHaveText('5');
+    });
+
+    test('min equals max: each arrow key on the focused track fires one onFinish (Settings: onFinish, keyboard, #896)', async ({ page }) => {
+        await open(page, { min: 5, max: 5 }, { dom_events: '1' });
+        const n = (await events(page)).length;
+
+        await focusTrack(page);
+        await page.keyboard.press('ArrowRight');
+        await expect.poll(async () => (await recordedAfter(page, n)).map((e) => e.type)).toEqual(['onFinish']);
+        await afterTwoIdleTicks(page);
+        await page.keyboard.press('ArrowLeft');
+        await expect.poll(async () => (await recordedAfter(page, n)).map((e) => e.type)).toEqual(['onFinish', 'onFinish']);
+        await afterTwoIdleTicks(page);
+
+        expect((await recordedAfter(page, n)).map((e) => e.type)).toEqual(['onFinish', 'onFinish']);
+        await expect(page.locator('#slider')).toHaveValue('5');
+    });
+
+    test('min equals max, double type: a click on the track fires one onFinish (Settings: onFinish, #896)', async ({ page }) => {
+        await open(page, { type: 'double', min: 5, max: 5 }, { dom_events: '1' });
+        const n = (await events(page)).length;
+
+        await clickTrackAt(page, 0.7);
+        await expect.poll(async () => (await recordedAfter(page, n)).map((e) => e.type)).toEqual(['onFinish']);
+        await afterTwoIdleTicks(page);
+
+        expect((await recordedAfter(page, n)).map((e) => e.type)).toEqual(['onFinish']);
+        await expect(page.locator('#slider')).toHaveValue('5;5');
+    });
+
+    // readme Settings, values: a list of entries the slider moves over; one entry is the same
+    // slider as min equal to max, reached the other way.
+    test('a values array with one entry: a press and release on the handle fires one onFinish (Settings: onFinish, values, #896)', async ({ page }) => {
+        await open(page, { values: ['only'] }, { dom_events: '1' });
+        const n = (await events(page)).length;
+
+        await pressHandle(page, 'single');
+        await expect.poll(async () => (await recordedAfter(page, n)).map((e) => e.type)).toEqual(['onFinish']);
+        await afterTwoIdleTicks(page);
+
+        const after = await recordedAfter(page, n);
+        expect(after.map((e) => e.type)).toEqual(['onFinish']);
+        expect(after[0]).toMatchObject({ from: 0, from_value: 'only', from_pretty: 'only' });
+        await expect(page.locator('#slider')).toHaveValue('only');
+    });
+
+    // Characterization (green before and after the fix: 2.6.0 binds nothing on a zero value
+    // range). readme Settings, block: "Block the slider but keep the input enabled". The mask
+    // block lays over the slider spans the track from -1% to 101%, but a value label wider than
+    // the handle is not kept inside the container without force_edges, and on a zero value range
+    // the handle sits at the left end, so a long label sticks out past the mask's left edge. A
+    // press there lands on the label itself, not on the mask, and a blocked slider must still
+    // answer nothing; so must a press on the handle and an arrow key on the focused track.
+    // Mutation caught: `this.options.block ||` dropped from the gate in bindEvents(), and the
+    // press on the label fires an onFinish.
+    test('a blocked one-entry values slider: a press on a long value label outside the mask, a press on the handle and a key fire nothing (Settings: block, #896)', async ({ page }) => {
+        await open(page, { values: ['Not available'], block: true }, { dom_events: '1' });
+        const label = await page.locator('#wrap .irs-single').boundingBox();
+        const mask = await page.locator('#wrap .irs-disable-mask').boundingBox();
+        const point = { x: label.x + 3, y: label.y + label.height / 2 };
+        // Setup: the point is left of the mask and on the label, so the press reaches the label.
+        expect(point.x).toBeLessThan(mask.x);
+        expect(await classesAt(page, point)).toContain('irs-single');
+        const n = (await events(page)).length;
+
+        await page.mouse.click(point.x, point.y);
+        await pressHandle(page, 'single');
+        await focusTrack(page);
+        await page.keyboard.press('ArrowRight');
+        await afterTwoIdleTicks(page);
+
+        expect(await recordedAfter(page, n)).toEqual([]);
+        await expect(page.locator('#slider')).toHaveValue('Not available');
+    });
+
+    // Characterization (green before and after the fix). A slider with a value range is
+    // unchanged: the still press on its handle fires one onFinish and nothing else (the row "a
+    // press and release on a handle fires one onFinish and no onChange" above), and a drag
+    // moves it and reports the move.
+    // Mutation caught: calcWithStep() -> the zero-range test `if (this.options.min ===
+    // this.options.max) {` becomes `if (this.options.min <= this.options.max) {`: every snap
+    // answers 0, the drag takes the handle to min, the input reads "0" instead of "60" (onChange
+    // and change still fire for that move).
+    test('a slider with a value range still moves and reports the move next to the zero-range fix (#896 pin)', async ({ page }) => {
+        await open(page, { min: 0, max: 100, from: 20, step: 1 }, { dom_events: '1' });
+        const n = (await events(page)).length;
+
+        await dragHandleTo(page, 'single', 0.6);
+        await expect(page.locator('#slider')).toHaveValue('60');
+        await expect.poll(async () => (await recordedAfter(page, n)).map((e) => e.type).filter((t) => t === 'onFinish')).toEqual(['onFinish']);
+        const types = (await recordedAfter(page, n)).map((e) => e.type);
+        expect(types).toContain('onChange');
+        expect(types).toContain('dom:change');
     });
 });

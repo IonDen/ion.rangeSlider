@@ -809,9 +809,35 @@
 
         /**
          * bind all slider events
+         *
+         * #896: a slider whose min and max are the same finite number (a
+         * zero value range, or a values array with one entry) gets the same
+         * handlers as any other. It has nowhere to move, but a press, a
+         * click or a key press on it is an interaction that ends, and each
+         * fires onFinish.
+         *
+         * Three kinds of slider bind no handler at all:
+         * - a value range that is not a number: validate() turns a min or
+         *   max such as "abc" or "1,000" into NaN, and a min and max both
+         *   Infinity span Infinity - Infinity, NaN as well. Such a slider
+         *   has no scale to move on. With a NaN min it would also report
+         *   NaN, and since NaN never equals itself, drawHandles() would
+         *   take every press for a value change;
+         * - a zero value range whose min and max are not the same number,
+         *   such as false and 0 (validate() converts only strings);
+         * - a blocked slider with a zero value range: its handle sits at the
+         *   left end, where a long value label can stick out past the mask,
+         *   which covers the slider's own width only (#921).
+         * All three stay inert as in 2.6.0.
+         *
+         * A disabled slider never reaches this method (see append()), and on
+         * a blocked slider key() drops every key press.
          */
         bindEvents: function () {
-            if (this.no_diapason) {
+            var range = this.options.max - this.options.min;
+
+            if (isNaN(range) || (range === 0 && (this.options.block ||
+                    typeof this.options.min !== "number" || this.options.min !== this.options.max))) {
                 return;
             }
 
@@ -1535,8 +1561,16 @@
             switch (this.target) {
                 case "base":
                     var w = (this.options.max - this.options.min) / 100,
-                        f = (this.result.from - this.options.min) / w,
+                        f = 0,
+                        t = 0;
+
+                    // #896: a zero value range has one position, 0 %, and w is
+                    // 0 there, so the division is skipped (the same check as
+                    // calcWithStep()).
+                    if (this.options.min !== this.options.max) {
+                        f = (this.result.from - this.options.min) / w;
                         t = (this.result.to - this.options.min) / w;
+                    }
 
                     this.coords.p_single_real = this.toFixed(f);
                     this.coords.p_from_real = this.toFixed(f);
@@ -2613,6 +2647,14 @@
          * @returns percent {Number} rounded
          */
         calcWithStep: function (percent) {
+            // #896: a zero value range (min equal to max) has one position,
+            // 0 %, and a step of 0 %, so it answers 0 without dividing. The
+            // check compares min and max, so it does not depend on how p_step
+            // rounds.
+            if (this.options.min === this.options.max) {
+                return 0;
+            }
+
             var rounded = Math.round(percent / this.coords.p_step) * this.coords.p_step;
 
             if (rounded > 100) {

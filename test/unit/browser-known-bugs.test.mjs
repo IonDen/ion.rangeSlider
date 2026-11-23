@@ -97,7 +97,7 @@ const allHits = (cfg, over) => {
 // Bug caught: an entry filed without its issue number or its one-line title, which would
 // annotate a matrix cell with nothing a reader could look up.
 test('every register entry carries an issue number, a title, a predicate and a message pattern', () => {
-    assert.equal(KNOWN_BUGS.length, 6);
+    assert.equal(KNOWN_BUGS.length, 5);
     const issues = KNOWN_BUGS.map((bug) => bug.issue);
     assert.deepEqual(issues, [...new Set(issues)], 'an issue must have one entry');
     for (const bug of KNOWN_BUGS) {
@@ -734,83 +734,45 @@ test('#894 does not excuse a closed interval that validate() settles against a h
 // entry to answer for -- which is what the register-size assertion at the top of this file
 // and the width tests in browser-invariants.test.mjs pin between them.
 
-// --------------------------------------------------------------- min equals max (#896)
-
-// readme settings table, onFinish: "Fires when an interaction ends: a handle is released
-// (even without moving), the track ... is clicked, or a key is pressed". A slider whose min
-// equals max swallows the whole press and fires nothing.
-test('#896 matches the interaction stages of a slider with no range, not one with a range', () => {
-    const degenerate = { min: 5, max: 5 };
-    assert.equal(hit(degenerate, 'S1', 'callbacks'), 896);
-    assert.equal(hit(degenerate, 'S3', 'callbacks'), 896);
-    assert.equal(hit(degenerate, 'S0', 'callbacks'), null, 'init is not an interaction');
-    // S6 is update(), which is not an interaction, and no entry answers there.
-    assert.equal(hit(degenerate, 'S6', 'callbacks'), null, 'update() is not an interaction');
-    assert.equal(hit(degenerate, 'S1', 'bounds'), null, 'every other rule stays armed');
-
-    const withRange = { min: 5, max: 6 };
-    assert.equal(hit(withRange, 'S1', 'callbacks'), null);
-
-    // A one-entry values array is the same slider, reached the other way.
-    const oneEntry = { values: ['only'] };
-    assert.equal(hit(oneEntry, 'S1', 'callbacks'), 896);
-    const twoEntries = { values: ['a', 'b'] };
-    assert.equal(hit(twoEntries, 'S1', 'callbacks'), null);
-
-    // The onFinish line it answers is the one an interaction owes, spelled the way the rule
-    // reports it.
-    // Bug caught: a message pattern that drifts from the rule's wording, which leaves the
-    // failure unexplained and the cell red.
-    assert.equal(answers(degenerate, 'S1', 'callbacks', 'callbacks: an interaction ends with exactly one onFinish (expected 1, got 0) after S1'), 896);
-
-    // A disabled or blocked slider owes no onFinish in the first place: the rule judges it
-    // by "onFinish must not fire on a disabled or blocked slider", which passes, so there is
-    // no failure here for the entry to answer.
-    // Bug caught: claiming the inert cells, where the entry would red as "no longer
-    // reproduces" on a slider that never had the bug.
-    assert.equal(hit({ ...degenerate, disable: true }, 'S1', 'callbacks'), null);
-    assert.equal(hit({ ...degenerate, block: true }, 'S3', 'callbacks'), null);
-});
-
 // ------------------------------------------------------------------------ judgeStage
 
 // judgeStage is what matrix.spec.mjs calls per stage: it turns a stage's failures into the
 // ones that are still real and the annotations for the ones a filed bug covers, and it fails
 // when a registered entry stops reproducing.
 
-// The worked example is #896 on n038's shape: a slider whose min equals max ends the S1 drag
-// without the onFinish the readme promises. The entry claims that one callbacks line at the
-// interaction stages and nothing else, so at S1 it is the only entry this configuration
-// carries.
-const ONE_VALUE = { min: 50, max: 50, from: 50, step: 1 };
-const ONFINISH_FAILURE = {
+// The worked example is #897 on m002's shape, cut down: a slider built inside a hidden container
+// on a jQuery build that measures a hidden track as zero (these contexts' default env) reports
+// no from_pretty in its onStart payload. The entry claims that callbacks text at S0 and nothing
+// else, so at S0 it is the only entry this configuration carries.
+const HIDDEN = { min: 0, max: 100, from: 30, step: 1, __hidden_at_init: true };
+const MISSING_TEXT = {
     id: 'callbacks',
-    message: 'callbacks: an interaction ends with exactly one onFinish (expected 1, got 0) after S1'
+    message: prettyFailure('onStart', 'from_pretty', '30', 'undefined')
 };
 
 // Bug caught: judgeStage reporting a failure a filed bug already covers, which would leave the
 // matrix red on every known bug and make the suite unrunnable.
 test('judgeStage annotates a failure its register entry was filed for', () => {
-    const { real, annotations } = judgeStage([ONFINISH_FAILURE], ctxOf(ONE_VALUE, 'S1'), []);
+    const { real, annotations } = judgeStage([MISSING_TEXT], ctxOf(HIDDEN, 'S0'), []);
     assert.deepEqual(real, []);
     assert.equal(annotations.length, 1);
-    assert.equal(annotations[0].issue, 896);
+    assert.equal(annotations[0].issue, 897);
     assert.equal(annotations[0].id, 'callbacks');
-    assert.equal(annotations[0].stage, 'S1');
-    assert.equal(annotations[0].message, ONFINISH_FAILURE.message);
+    assert.equal(annotations[0].stage, 'S0');
+    assert.equal(annotations[0].message, MISSING_TEXT.message);
 });
 
 // Bug caught: judgeStage staying silent when a bug is fixed, so the register would keep
 // excusing a cell that is healthy again and nobody would retire the entry.
 test('judgeStage reports a register entry that no longer reproduces', () => {
-    const { real, annotations } = judgeStage([], ctxOf(ONE_VALUE, 'S1'), []);
+    const { real, annotations } = judgeStage([], ctxOf(HIDDEN, 'S0'), []);
     assert.deepEqual(annotations, []);
     assert.equal(real.length, 1);
     assert.equal(real[0].id, 'callbacks');
-    assert.match(real[0].message, /#896 no longer reproduces/);
+    assert.match(real[0].message, /#897 no longer reproduces/);
 
     // A rule the stage did not check at all (no oracle for it) cannot be retired on.
-    assert.deepEqual(judgeStage([], ctxOf(ONE_VALUE, 'S1'), ['callbacks']), { real: [], annotations: [] });
+    assert.deepEqual(judgeStage([], ctxOf(HIDDEN, 'S0'), ['callbacks']), { real: [], annotations: [] });
 });
 
 // Bug caught: judgeStage matching on the invariant id alone -- a second, unrelated failure of
@@ -818,9 +780,9 @@ test('judgeStage reports a register entry that no longer reproduces', () => {
 test('judgeStage keeps a failure whose message the entry was not filed for', () => {
     const other = {
         id: 'callbacks',
-        message: 'callbacks: onChange fires only on a value change (expected 0, got 1) after S1'
+        message: 'callbacks: onChange must not fire while the slider is created (expected 0, got 1) after S0'
     };
-    const { real, annotations } = judgeStage([ONFINISH_FAILURE, other], ctxOf(ONE_VALUE, 'S1'), []);
+    const { real, annotations } = judgeStage([MISSING_TEXT, other], ctxOf(HIDDEN, 'S0'), []);
     assert.equal(annotations.length, 1);
     assert.deepEqual(real, [other]);
 
