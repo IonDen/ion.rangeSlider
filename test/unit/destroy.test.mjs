@@ -1,6 +1,40 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { JSDOM } from 'jsdom';
 import { createSlider } from './helpers.mjs';
+
+const PLUGIN = readFileSync(new URL('../../js/ion.rangeSlider.js', import.meta.url), 'utf8');
+const JQUERY_1_8_3 = readFileSync(new URL('../vendor/jquery-1.8.3.js', import.meta.url), 'utf8');
+
+/**
+ * Same as createSlider(), on the vendored jQuery 1.8.3 instead of the npm build. #919: on 1.x
+ * the old toggleInput() removeProp("tabindex") wrote tabIndex = undefined, which leaves
+ * tabindex="0" behind (from 2.0 it does nothing), so the restore has to be proved on that
+ * build as well.
+ */
+function createSlider183(t, html, options) {
+  const dom = new JSDOM(`<!doctype html><html><body>${html}</body></html>`, {
+    runScripts: 'outside-only',
+    pretendToBeVisual: true,
+  });
+  const { window } = dom;
+  window.eval(JQUERY_1_8_3);
+  const $ = window.jQuery;
+  window.eval(PLUGIN);
+  const $input = $('input').first();
+  let slider;
+  t.after(() => { if (slider && slider.input) slider.destroy(); window.close(); });
+  $input.ionRangeSlider(options);
+  slider = $.data($input[0], 'ionRangeSlider');
+  return { window, $, $input, slider };
+}
+
+/** The tabindex attribute as the DOM holds it: its string, or null when there is none. */
+function tabindexAttr(input) {
+  const node = input.getAttributeNode('tabindex');
+  return node && node.specified ? node.value : null;
+}
 
 // readme, "Public methods": "After destroy() the input is back to normal and can be
 // initialized again." Two things used to stay behind on the input:
@@ -255,3 +289,187 @@ test('destroy() keeps a disabled state the page set while the slider was alive (
 
   assert.equal($input[0].disabled, true);
 });
+
+// ---------------------------------------------- #919 tab order and readonly state
+
+// readme: "After destroy() the input is back to normal". The slider sets the input's tabindex
+// to -1 (so the hidden input is skipped when tabbing) and makes it readonly while it is
+// built. destroy() has to give both back the way the input had them: tabindex as the
+// attribute it was (or no attribute at all), readonly as the property it was. It did neither:
+// the removeProp("tabindex") that was meant to undo the -1 does nothing from jQuery 2.0 on
+// (the input stayed at -1 and left the Tab order) and leaves tabindex="0" on 1.x, and
+// readonly was always set back to false.
+//
+// The rows run on the default jQuery and on 1.8.3, where the old removeProp() branch wrote
+// tabindex="0". The tabindex is read through the attribute node (tabindexAttr() here,
+// readTabindexAttr() in the plugin) because the tabIndex property answers 0 both for an input
+// with no tabindex attribute and for tabindex="0".
+const BUILDS = [
+  { label: 'jQuery 3.7.1', create: createSlider },
+  { label: 'jQuery 1.8.3', create: createSlider183 },
+];
+
+for (const { label, create } of BUILDS) {
+  // Mutation: destroy() -> drop the `this.$cache.input.removeAttr("tabindex");` line of the
+  // tabindex restore, and the input keeps tabindex="-1" on both builds. With only the old
+  // toggleInput() removeProp() branch put back, the 3.7.1 rows stay green and the 1.8.3
+  // tabindex rows go red (the attribute ends on "0").
+  test(`destroy() leaves an input that had no tabindex attribute without one, ${label} (#919)`, (t) => {
+    const { slider, $input } = create(t, '<input>', { min: 0, max: 100, from: 30 });
+    assert.equal(tabindexAttr($input[0]), '-1', 'setup: the slider takes the input out of the Tab order');
+    slider.destroy();
+
+    assert.equal(tabindexAttr($input[0]), null);
+  });
+
+  // Mutation: constructor -> drop the capture of the tabindex attribute (`this.input_tabindex
+  // = ...`), so input_tabindex is undefined, `.attr("tabindex", undefined)` writes nothing, and the
+  // input keeps the slider's "-1". The no-attribute row, the update/reset row, the
+  // update-over-a-page-change row and the exact-text rows below go red with it.
+  test(`destroy() gives an input its own tabindex back, ${label} (#919)`, (t) => {
+    const { slider, $input } = create(t, '<input tabindex="3">', { min: 0, max: 100, from: 30 });
+    assert.equal(tabindexAttr($input[0]), '-1', 'setup: the slider took the input out of the Tab order');
+    slider.destroy();
+
+    assert.equal(tabindexAttr($input[0]), '3');
+  });
+
+  // update() and reset() rebuild the input's state (init() sets -1 again each time); neither
+  // may replace what the input had before the first build. Both an input with a tabindex and
+  // one without go through them.
+  // Mutation: the capture moved into init() (read before toggleInput(), the constructor
+  // lines dropped), and every rebuild after the first captures the -1 the previous build
+  // left: the "3" input comes back with -1, the plain one with a tabindex="-1" it never had.
+  test(`update() and reset() do not change the tabindex destroy() restores, ${label} (#919)`, (t) => {
+    const withTab = create(t, '<input tabindex="3">', { min: 0, max: 100, from: 30 });
+    withTab.slider.update({ from: 40 });
+    withTab.slider.reset();
+    withTab.slider.destroy();
+    assert.equal(tabindexAttr(withTab.$input[0]), '3');
+
+    const plain = create(t, '<input>', { min: 0, max: 100, from: 30 });
+    plain.slider.update({ from: 40 });
+    plain.slider.reset();
+    plain.slider.destroy();
+    assert.equal(tabindexAttr(plain.$input[0]), null);
+  });
+
+  // A tabindex the page changed since the slider was last built is the page's (update() and
+  // reset() rebuild it, as in #886): destroy() puts the captured tabindex back only while
+  // the plugin's -1 is still in place.
+  // Mutation: destroy() -> the guard `if (readTabindexAttr(...) === "-1") {` becomes `if (true) {`,
+  // and the "5" the page set is replaced by the captured "3".
+  test(`destroy() keeps a tabindex the page set while the slider was alive, ${label} (#919)`, (t) => {
+    const { slider, $input } = create(t, '<input tabindex="3">', { min: 0, max: 100, from: 30 });
+    $input[0].setAttribute('tabindex', '5');
+    slider.destroy();
+
+    assert.equal(tabindexAttr($input[0]), '5');
+  });
+
+  // The page removed the attribute itself since the slider was last built. Same guard; on 1.8.3
+  // there is a second way to get this wrong: toggleInput()'s removeProp("tabindex") writes
+  // tabIndex = undefined, which would turn "no attribute" into tabindex="0" behind the page.
+  // Mutation: destroy() -> the guard dropped as above (the captured "3" comes back); on 1.8.3
+  // also toggleInput() -> restore its `else { this.$cache.input.removeProp("tabindex"); }`
+  // branch (the attribute becomes "0").
+  test(`destroy() keeps a tabindex the page removed while the slider was alive, ${label} (#919)`, (t) => {
+    const { slider, $input } = create(t, '<input tabindex="3">', { min: 0, max: 100, from: 30 });
+    $input[0].removeAttribute('tabindex');
+    slider.destroy();
+
+    assert.equal(tabindexAttr($input[0]), null);
+  });
+
+  // The page's change counts only since the slider was last built: update() rebuilds it, and
+  // the rebuild's own -1 replaces the "5" the page set, so destroy() hands back the "3" the
+  // input had before the first build.
+  // Mutation: toggleInput() -> `if (this.has_tab_index) {` becomes
+  // `if (this.has_tab_index && (readTabindexAttr(this.$cache.input[0]) === this.input_tabindex || readTabindexAttr(this.$cache.input[0]) === "-1")) {`
+  // (a rebuild that spares the page's change), and the input keeps "5" after update(): the
+  // setup assertion goes red.
+  test(`destroy() restores the tabindex after update() rebuilt over a change the page made, ${label} (#919)`, (t) => {
+    const { slider, $input } = create(t, '<input tabindex="3">', { min: 0, max: 100, from: 30 });
+    $input[0].setAttribute('tabindex', '5');
+    slider.update({ from: 40 });
+    assert.equal(tabindexAttr($input[0]), '-1', 'setup: the rebuild takes the input out of the Tab order again');
+    slider.destroy();
+
+    assert.equal(tabindexAttr($input[0]), '3');
+  });
+
+  // Mutation: destroy() -> drop the readonly restore (`this.$cache.input[0].readOnly =
+  // this.input_readonly;`), and the input stays readonly.
+  test(`destroy() makes an input the slider set readonly editable again, ${label} (#919)`, (t) => {
+    const { slider, $input } = create(t, '<input>', { min: 0, max: 100, from: 30 });
+    assert.equal($input[0].readOnly, true, 'setup: the slider makes the input readonly');
+    slider.destroy();
+
+    assert.equal($input[0].readOnly, false);
+  });
+
+  // Mutation: constructor -> `this.input_readonly = input.readOnly;` becomes
+  // `this.input_readonly = false;`, and the input comes back editable.
+  test(`destroy() hands back an input that was readonly before the slider was built still readonly, ${label} (#919)`, (t) => {
+    const { slider, $input } = create(t, '<input readonly>', { min: 0, max: 100, from: 30 });
+    slider.destroy();
+
+    assert.equal($input[0].readOnly, true);
+    assert.equal($input[0].hasAttribute('readonly'), true);
+  });
+
+  // Mutation: the capture moved into append() (`this.input_readonly = this.$cache.input[0].readOnly;`
+  // at its top, the constructor line dropped), and the reset() rebuild reads the readonly the
+  // previous build set: the input comes back readonly although it was a plain one.
+  test(`update() and reset() do not change what destroy() restores for readonly, ${label} (#919)`, (t) => {
+    const { slider, $input } = create(t, '<input>', { min: 0, max: 100, from: 30 });
+    slider.update({ from: 40 });
+    slider.reset();
+    slider.destroy();
+
+    assert.equal($input[0].readOnly, false);
+  });
+
+  // Same guard as #886: the readonly is put back only while the plugin's own write (true) is
+  // still in place. The page made a readonly input editable since the slider was last built.
+  // Mutation: destroy() -> the guard `if (this.$cache.input[0].readOnly === true) {` becomes
+  // `if (true) {`, and the captured readonly comes back over the page's change.
+  test(`destroy() keeps an editable state the page set while the slider was alive, ${label} (#919)`, (t) => {
+    const { slider, $input } = create(t, '<input readonly>', { min: 0, max: 100, from: 30 });
+    $input[0].readOnly = false;
+    slider.destroy();
+
+    assert.equal($input[0].readOnly, false);
+  });
+
+  // The page's change counts only since the slider was last built: update() and reset()
+  // rebuild it, and the rebuild's own write (readonly true) replaces the page's. The page
+  // made a readonly input editable, update() built the slider again, and destroy() hands the
+  // input back readonly, as it was before the first build.
+  // Mutation: append() -> `this.$cache.input.prop("readonly", true);` becomes
+  // `if (this.$cache.input.prop("readonly") === this.input_readonly) { this.$cache.input.prop("readonly", true); }`
+  // (a rebuild that spares the page's change), and the input ends editable.
+  test(`destroy() restores readonly after update() rebuilt over a change the page made, ${label} (#919)`, (t) => {
+    const { slider, $input } = create(t, '<input readonly>', { min: 0, max: 100, from: 30 });
+    $input[0].readOnly = false;
+    slider.update({ from: 40 });
+    assert.equal($input[0].readOnly, true, 'setup: the rebuild makes the input readonly again');
+    slider.destroy();
+
+    assert.equal($input[0].readOnly, true);
+  });
+
+  // Not every tabindex attribute is a plain number string: destroy() has to write back the
+  // text the input had. Mutation: destroy() -> `this.$cache.input.attr("tabindex",
+  // this.input_tabindex);` becomes `this.$cache.input.prop("tabindex", this.input_tabindex);`,
+  // and the property turns "03" into "3" and "" into "0".
+  for (const written of ['03', '']) {
+    test(`destroy() puts back a tabindex attribute written as "${written}", ${label} (#919)`, (t) => {
+      const { slider, $input } = create(t, `<input tabindex="${written}">`, { min: 0, max: 100, from: 30 });
+      assert.equal(tabindexAttr($input[0]), '-1', 'setup: the slider took the input out of the Tab order');
+      slider.destroy();
+
+      assert.equal(tabindexAttr($input[0]), written);
+    });
+  }
+}
