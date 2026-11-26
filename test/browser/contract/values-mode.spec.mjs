@@ -95,6 +95,47 @@ test.describe(`values mode (${LABEL})`, () => {
         await expect(page.locator('#slider')).toHaveValue('only');
     });
 
+    // #920: data-values="7" is read as the number 7 before the plugin sees it, and the
+    // constructor split the number as if it were text and threw, so no slider appeared. A
+    // one-entry data-values builds a slider on that entry. 7 is not a default of the number
+    // slider (min 10, max 100), so every assertion fails on a slider that ignored the
+    // attribute. Values mode converts a numeric-looking entry to a number (note "values"),
+    // so from_value is the number 7 and the input reads "7".
+    // Mutation caught: constructor -> the number and boolean conversion dropped (`vals =
+    // String(vals);` becomes `vals = vals;`) -- the constructor throws, the slider is never
+    // built and the page never reports ready (this row times out in open()).
+    test('data-values="7" builds a slider on the one entry 7 (#920)', async ({ page }) => {
+        await open(page, {}, { attrs: JSON.stringify({ 'data-values': '7' }) });
+        await expect(page.locator('.irs-single')).toHaveText('7');
+        await expect(page.locator('.irs-min')).toHaveText('7');
+        await expect(page.locator('#slider')).toHaveValue('7');
+        expect(await payload(page, 'onStart')).toMatchObject({ from: 0, from_value: 7, min: 0, max: 0 });
+    });
+
+    // A JSON array in data-values gives one entry per element, here 1 and 2 (readme note "values").
+    // Mutation caught: constructor -> the array branch removed (`if (data_kind ===
+    // "[object Array]") {` becomes `if (false) {`) -- the attribute is not used, the slider is
+    // a plain number slider and the min label reads 10.
+    test('data-values="[1,2]" gives the two entries 1 and 2 (#920)', async ({ page }) => {
+        await open(page, {}, { attrs: JSON.stringify({ 'data-values': '[1,2]' }) });
+        await expect(page.locator('.irs-min')).toHaveText('1');
+        await expect(page.locator('.irs-max')).toHaveText('2');
+        expect(await payload(page, 'onStart')).toMatchObject({ from: 0, from_value: 1, min: 0, max: 1 });
+    });
+
+    // An element of a JSON array may hold a comma: two elements are two entries, "1,000" and
+    // "2,000", where the comma form would cut them into four.
+    // Mutation caught: constructor -> each element split on the commas (`items.push(String(
+    // vals[j]));` becomes `items.push.apply(items, String(vals[j]).split(","));`) -- four
+    // entries, the min label reads 1 instead of 1,000.
+    test('data-values with a comma inside a JSON array element stays one entry (#920)', async ({ page }) => {
+        await open(page, {}, { attrs: JSON.stringify({ 'data-values': '["1,000","2,000"]' }) });
+        await expect(page.locator('.irs-min')).toHaveText('1,000');
+        await expect(page.locator('.irs-max')).toHaveText('2,000');
+        await expect(page.locator('#slider')).toHaveValue('1,000');
+        expect(await payload(page, 'onStart')).toMatchObject({ from: 0, from_value: '1,000', min: 0, max: 1 });
+    });
+
     // readme Settings, prettify_all_values: "In values mode, also run prettify on
     // non-numeric entries".
     // Mutation caught: validate(), values loop -> drop the `else if

@@ -331,7 +331,8 @@
         var $inp = this.$cache.input,
             val = $inp.prop("value"),
             config, config_from_data, prop, i,
-            js_values, raw_values, entries, trim_entries, from_index, to_index;
+            js_values, raw_values, entries, trim_entries, from_index, to_index,
+            vals, data_kind, items, j, values_from_array = false;
 
         // default config
         config = {
@@ -479,7 +480,42 @@
 
             extra_classes: $inp.data("extraClasses")
         };
-        config_from_data.values = config_from_data.values && config_from_data.values.split(",");
+        // #920: jQuery's .data() turns attribute text that looks like a number,
+        // a boolean or JSON into that type (data-values="10" is the number 10,
+        // "true" a boolean, '["a","b"]' an array), and none of those has
+        // .split(). A number or boolean goes back to the text it came from
+        // and is split on the commas. A JSON array is used element by element,
+        // each element one entry as text, so an entry can hold a comma
+        // ('["1,000","2,000"]' is two entries); an empty array is not set. A
+        // number element is already a number when jQuery hands it over, so
+        // [20.0] reads as "20"; a quoted element keeps its text ("20.0").
+        // The list is a fresh array, the page's own array is never changed,
+        // and values_from_array remembers that the list came from an array:
+        // under values_raw such entries are not trimmed (below and in the
+        // #880 lookup).
+        // Anything else that is not a string (null, a JSON object) is not set
+        // either: it becomes undefined and the strip below drops it, so the
+        // slider is built without a values list from the attribute and a
+        // `values` option passed in JavaScript still applies. Object.prototype
+        // .toString detects the array: Array.isArray is ES5 and $.isArray is
+        // gone in jQuery 4.
+        vals = config_from_data.values;
+        data_kind = Object.prototype.toString.call(vals);
+        if (data_kind === "[object Array]") {
+            values_from_array = true;
+            items = [];
+            for (j = 0; j < vals.length; j++) {
+                items.push(String(vals[j]));
+            }
+            config_from_data.values = items.length ? items : undefined;
+        } else {
+            if (data_kind === "[object Number]" || data_kind === "[object Boolean]") {
+                vals = String(vals);
+            } else if (data_kind !== "[object String]") {
+                vals = undefined;
+            }
+            config_from_data.values = vals && vals.split(",");
+        }
 
         for (prop in config_from_data) {
             if (config_from_data.hasOwnProperty(prop)) {
@@ -505,8 +541,10 @@
             // old lookup further down reads the JS array only when it is that
             // list. Each half is looked up as text before the numeric conversion
             // below, which turns "20" into a number that an array of strings
-            // never holds (#880). data-values entries are split on its commas
-            // and trimmed only when values_raw is on. With values_raw off a
+            // never holds (#880). data-values entries from the comma split are
+            // compared trimmed when values_raw is on; entries from a JSON array
+            // are compared untrimmed (a number element as the text of its
+            // number). With values_raw off a
             // number-like entry is also matched by the text of the number
             // validate() will hold it as. values_raw is resolved as after the
             // data-* merge: data-values-raw before the JS option. A half that
@@ -517,7 +555,7 @@
                 entries = options.values;
             } else if (config_from_data.values) {
                 entries = config_from_data.values;
-                trim_entries = raw_values;
+                trim_entries = raw_values && !values_from_array;
             }
             from_index = this.findValueIndex(val[0], entries, trim_entries, !raw_values);
             to_index = this.findValueIndex(val[1], entries, trim_entries, !raw_values);
@@ -560,10 +598,12 @@
         // the labels, so the split entries are trimmed here, once the option
         // has been resolved from the data attribute and the JS option in the
         // usual order (an empty data-values-raw attribute means "not set",
-        // like every other data-* option). A JS values array is never
-        // touched: only entries that came from the comma split are trimmed,
-        // and only when values_raw is on.
-        if (config_from_data.values && config.values_raw) {
+        // like every other data-* option). Only entries that came from the
+        // comma split are trimmed, and only when values_raw is on: a JS
+        // values array and the entries of a JSON array in data-values (#920)
+        // are not trimmed (a number element of that array has already lost
+        // its text to jQuery's parsing).
+        if (config_from_data.values && config.values_raw && !values_from_array) {
             for (i = 0; i < config.values.length; i++) {
                 config.values[i] = config.values[i].replace(/^\s+|\s+$/g, "");
             }
@@ -3085,8 +3125,8 @@
          * number-like entries.
          *
          * @param text {String|undefined} one half of the input value
-         * @param entries {Array|undefined} the JS values array, or the data-values list split on its commas
-         * @param trim {Boolean} compare each entry trimmed, as values_raw trims data-values
+         * @param entries {Array|undefined} the JS values array, or the data-values list (split on its commas, or the elements of a JSON array)
+         * @param trim {Boolean} compare each entry trimmed, as values_raw trims the entries of a comma-separated data-values
          * @param as_numbers {Boolean} values_raw is off: also compare the text of each number-like entry's number
          * @returns {Number} the entry's index, or -1 when there is no text, no entries, or no entry with that text
          */
