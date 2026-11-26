@@ -219,9 +219,11 @@ The slider works on array indexes instead of numbers: whatever you pass for `min
 
 A numeric-looking entry such as "20.0" is converted to the number 20 unless `values_raw` is on.
 
+`data-values` takes a comma-separated list, and a single entry works too (`data-values="7"`). A JSON array also works: each element becomes one entry, so `data-values='["1,000","2,000"]'` gives the two entries "1,000" and "2,000". An empty array, `null` or a JSON object in `data-values` counts as not set, so a `values` option set in JavaScript still applies.
+
 #### values_raw
 
-By default a numeric-looking entry in `values` is converted to a number, so "20.0" becomes 20 in `from_value` and `to_value`, in the value written to the input and on the label. Turn `values_raw` on to keep the entry exactly as written. Spaces around the commas in `data-values` are trimmed while it is on.
+By default a numeric-looking entry in `values` is converted to a number, so "20.0" becomes 20 in `from_value` and `to_value`, in the value written to the input and on the label. Turn `values_raw` on to keep the entry exactly as written. With `values_raw` on, spaces around the commas in `data-values` are trimmed, and the entries of a JSON array in `data-values` are never trimmed. jQuery turns a number element of that array into a number before the slider reads it, so `'[20.0]'` gives 20; write the element in quotes (`'["20.0"]'`) to keep "20.0".
 
 Set it when the slider is created, or pass `values` again in the same `update()` call. Entries that were already converted cannot be restored.
 
