@@ -128,6 +128,24 @@
         };
     }
 
+    /**
+     * #919: reads an element's tabindex attribute as the string it holds, or
+     * null when the element has no such attribute. Goes through the attribute
+     * node, the same read jQuery 1.8's own propHooks.tabIndex makes, because
+     * the tabIndex property answers 0 both for an input with no tabindex
+     * attribute and for tabindex="0", and old IE mixes attribute and property
+     * in getAttribute(); only the node's "specified" flag says whether the
+     * attribute exists.
+     *
+     * @param {Element} node
+     * @returns {string|null}
+     */
+    function readTabindexAttr(node) {
+        var attr = node.getAttributeNode("tabindex");
+
+        return attr && attr.specified ? String(attr.value) : null;
+    }
+
 
 
     // =================================================================================================================
@@ -209,6 +227,13 @@
         // included) and destroy() puts this value back, unless the page has
         // changed the property itself since the last build.
         this.input_disabled = input.disabled;
+        // #919: the same for the tab order and the readonly state. init() sets
+        // tabindex -1 and append() sets readonly on every build; destroy()
+        // puts these captures back (tabindex only while the plugin's -1 is
+        // still in place, readonly only while it is still true). input_tabindex
+        // is the attribute's string, or null when the input has none.
+        this.input_tabindex = readTabindexAttr(input);
+        this.input_readonly = input.readOnly;
         // #906: an invalid grid_num warns once per slider, although validate() runs again on every update().
         this.grid_num_warned = false;
         // #906: a grid formatter that throws warns once per grid build; appendGrid() resets this.
@@ -2427,10 +2452,17 @@
         toggleInput: function () {
             this.$cache.input.toggleClass("irs-hidden-input");
 
+            // #919: the second call of a pair (update(), destroy()) used to
+            // removeProp("tabindex") here. From jQuery 2.0 that does nothing
+            // to a built-in property (a tabindex the page set survived, and
+            // so did the plugin's -1); on 1.x it wrote tabindex="0" over
+            // whatever the input had, a tabindex the page might have changed
+            // included.
+            // init() sets -1 again right after update()'s call, so dropping
+            // it changes nothing while the slider is alive; destroy() puts
+            // the input's own tabindex back itself.
             if (this.has_tab_index) {
                 this.$cache.input.prop("tabindex", -1);
-            } else {
-                this.$cache.input.removeProp("tabindex");
             }
 
             this.has_tab_index = !this.has_tab_index;
@@ -4359,7 +4391,21 @@
             }
 
             this.toggleInput();
-            this.$cache.input.prop("readonly", false);
+            // #919: hand the input back its own tab order and readonly state,
+            // each only while the plugin's own last write is still in place:
+            // a tabindex or readonly the page changed since then is the
+            // page's. toggleInput() above no longer touches the tabindex on
+            // the way out (see there), so this reads what the page left.
+            if (readTabindexAttr(this.$cache.input[0]) === "-1") {
+                if (this.input_tabindex === null) {
+                    this.$cache.input.removeAttr("tabindex");
+                } else {
+                    this.$cache.input.attr("tabindex", this.input_tabindex);
+                }
+            }
+            if (this.$cache.input[0].readOnly === true) {
+                this.$cache.input[0].readOnly = this.input_readonly;
+            }
             // #886: hand the input back enabled or disabled as it was before
             // the slider was built, but only while the plugin's own last
             // write (disabled exactly when disable is on) is still in place:

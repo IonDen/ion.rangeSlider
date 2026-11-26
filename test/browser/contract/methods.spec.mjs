@@ -202,8 +202,8 @@ test.describe(`methods (${LABEL})`, () => {
     // readme: "After destroy() the input is back to normal and can be initialized again."
     // Back to normal: the slider markup is gone, the input no longer carries the class that
     // hides it or the readonly the plugin set, and the instance handle is gone.
-    // Mutation caught: destroy() -> drop `this.$cache.input.prop("readonly", false);`, and
-    // the input stays read-only.
+    // Mutation caught: destroy() -> drop `this.$cache.input[0].readOnly = this.input_readonly;`,
+    // and the input stays read-only.
     // Mutation caught: destroy() -> drop the `this.toggleInput();` before it, and the input
     // keeps irs-hidden-input.
     // Mutation caught: destroy() -> drop `$.data(this.input, "ionRangeSlider", null);`, and
@@ -279,8 +279,8 @@ test.describe(`methods (${LABEL})`, () => {
     // Mutation caught: updateScene() -> `if (!this.options) {` also runs
     // `this.$cache.input[0].disabled = true;` (a late tick disabling it again), and the input
     // is disabled by the time it is checked.
-    // Mutation caught: destroy() -> drop `this.$cache.input.prop("readonly", false);`, and the
-    // input is enabled but cannot be typed into.
+    // Mutation caught: destroy() -> drop `this.$cache.input[0].readOnly = this.input_readonly;`,
+    // and the input is enabled but cannot be typed into.
     test('destroy() re-enables an input the slider disabled (Public methods: destroy, Settings: disable)', async ({ page }) => {
         await open(page, { min: 0, max: 100, from: 30, step: 1, disable: true });
         await expect(page.locator('#slider')).toBeDisabled();
@@ -292,6 +292,51 @@ test.describe(`methods (${LABEL})`, () => {
         await expect(page.locator('#slider')).toBeEditable();
         await page.locator('#slider').fill('55');
         await expect(page.locator('#slider')).toHaveValue('55');
+    });
+
+    // #919: while the slider is built the input is out of the Tab order (tabindex -1) and
+    // readonly; destroy() is "back to normal" only when the Tab key reaches the input again
+    // and the tabindex attribute is gone, as it was before the build. Before the fix the
+    // input kept tabindex="-1" from jQuery 2.0 on (the Tab check reds) and got tabindex="0"
+    // on 1.x, where Tab does reach it and the attribute check reds.
+    // A button in front of the input gives Tab a place to start from.
+    // Mutation caught: destroy() -> drop the `this.$cache.input.removeAttr("tabindex");`
+    // line of the tabindex restore, and the input keeps tabindex="-1": Tab skips it.
+    // Mutation caught: the restore's guard `if (readTabindexAttr(...) === "-1") {` becomes
+    // `if (false) {`, same outcome.
+    test('destroy() puts the input back in the Tab order (Public methods: destroy)', async ({ page }) => {
+        await open(page, { min: 0, max: 100, from: 30, step: 1 });
+        await page.evaluate(() => {
+            const button = document.createElement('button');
+            button.id = 'before';
+            button.textContent = 'before';
+            document.body.insertBefore(button, document.getElementById('wrap'));
+        });
+        expect(await page.locator('#slider').getAttribute('tabindex')).toBe('-1');
+
+        await call(page, 'destroy');
+        await expect(page.locator(CONTAINER)).toHaveCount(0);
+        await page.waitForTimeout(400);   // outlast the idle tick the destroyed slider had pending
+        await page.locator('#before').focus();
+        await page.keyboard.press('Tab');
+        await expect(page.locator('#slider')).toBeFocused();
+        expect(await page.locator('#slider').getAttribute('tabindex')).toBeNull();
+    });
+
+    // #919: an input that was readonly before the slider was built is still readonly after
+    // destroy(); the slider only undoes the readonly it set itself.
+    // Mutation caught: destroy() -> `this.$cache.input[0].readOnly = this.input_readonly;`
+    // becomes `this.$cache.input[0].readOnly = false;`, and the input can be typed into.
+    test('destroy() hands back a readonly input still readonly (Public methods: destroy)', async ({ page }) => {
+        await open(page, { min: 0, max: 100, from: 30, step: 1 }, { attrs: "{readonly: 'readonly'}" });
+        expect(await page.locator('#slider').evaluate((el) => el.readOnly)).toBe(true);
+
+        await call(page, 'destroy');
+        await expect(page.locator(CONTAINER)).toHaveCount(0);
+        await page.waitForTimeout(400);   // outlast the idle tick the destroyed slider had pending
+        expect(await page.locator('#slider').evaluate((el) => el.readOnly)).toBe(true);
+        await expect(page.locator('#slider')).toHaveAttribute('readonly', /.*/);
+        await expect(page.locator('#slider')).not.toBeEditable();
     });
 
     // ---- A second ionRangeSlider() call ------------------------------------------------
