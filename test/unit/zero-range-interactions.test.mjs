@@ -13,9 +13,10 @@ import { createSlider } from './helpers.mjs';
 // binds the same handlers every other slider gets: each interaction fires exactly one
 // onFinish, never an onChange, never a change or input event on the field, and the value
 // stays where it is. disable keeps it silent and keyboard: false keeps its keys silent, as on
-// any slider. A blocked slider whose min equals max binds no handler at all: its value label
-// can stick out past the mask, which covers only the slider's own width (the same gap on a
-// blocked slider with a value range is #921).
+// any slider. A blocked slider whose min equals max binds no handler at all: it has nowhere to
+// move, and since #921 a blocked slider drops every pointer press itself (a value label can stick
+// out past the mask, which covers only the slider's own width), so the unbound handlers cost
+// nothing.
 //
 // jsdom has no layout (see helpers.mjs), so the geometry is stubbed the way the other drag and
 // key tests stub it: a 600 px track with 16 px handles, settled by one drawHandles() pass, and
@@ -378,18 +379,20 @@ test('min equals max with disable: presses, clicks and keys stay silent (#896)',
   assert.equal(fieldEvents(), 0);
 });
 
-// Characterization (green before and after the fix): a blocked slider's mask covers only the
+// Characterization (green before and after the #896 fix): a blocked slider whose min equals max
+// binds no handler, as in 2.6.0: no press on any part of it, no click and no key reports anything,
+// in single and double type, numeric or values mode. A blocked slider's mask covers only the
 // slider's own width, and a value label wider than the handle is not kept inside the container
-// without force_edges. On a zero value range the handle sits at the left end, so a long label
-// sticks out past the mask's left edge and a press there reaches the label (on a blocked slider
-// with a value range the same gap is #921). A blocked slider whose min equals max therefore binds
-// no handler, as in 2.6.0: no press on any part of it, no click and no key reports anything, in
-// single and double type, numeric or values mode.
-// Bugs caught: `this.options.block ||` dropped from the gate in bindEvents() (every press fires
-// an onFinish, all four rows red); the block test narrowed to values mode (`(this.options.block
-// && this.options.values.length) ||`), which reds the two numeric rows; the block test narrowed
-// to single type (`(this.options.block && this.options.type === "single") ||`), which reds the
-// two double rows.
+// without force_edges, so on a zero value range (the handle sits at the left end) a long label
+// sticks out past the mask's left edge and a press there reaches the label. Since #921
+// pointerDown(), pointerClick() and key() drop every press while block is on, so the silence
+// holds with or without the unbound handlers; the "nothing bound on the page" assertion is what
+// pins the gate itself.
+// Bugs caught: `this.options.block ||` dropped from the gate in bindEvents() (the body and window
+// handlers get bound, all four rows red on the "nothing bound" assertion); the block test narrowed
+// to values mode (`(this.options.block && this.options.values.length) ||`), which reds the two
+// numeric rows; the block test narrowed to single type (`(this.options.block &&
+// this.options.type === "single") ||`), which reds the two double rows.
 const BLOCKED_ZERO = [
   ['single, one values entry', { values: ['Not available'], block: true }],
   ['single, min 5 max 5', { min: 5, max: 5, block: true }],
