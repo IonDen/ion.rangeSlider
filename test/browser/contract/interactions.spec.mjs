@@ -40,6 +40,26 @@ import { readState } from '../lib/state.mjs';
 /** The double slider most rows start from: 0..100, step 1, from 20, to 80. */
 const DOUBLE = { type: 'double', min: 0, max: 100, from: 20, to: 80, step: 1 };
 
+/**
+ * Slider handlers on the window and the body, counted per event type: those in an `.irs_N`
+ * namespace, read through jQuery's event store, so any other jQuery listener on the page is
+ * left out.
+ */
+async function ownPageHandlers(page) {
+    return page.evaluate(() => {
+        const own = (el) => {
+            const all = window.jQuery._data(el, 'events') || {};
+            const counts = {};
+            Object.keys(all).forEach((type) => {
+                const n = all[type].filter((h) => /^irs_\d+$/.test(h.namespace)).length;
+                if (n) counts[type] = n;
+            });
+            return counts;
+        };
+        return { window: own(window), body: own(document.body) };
+    });
+}
+
 /** Presses and releases the mouse on the centre of a handle, with no movement in between. */
 async function pressHandle(page, which) {
     const h = await page.locator(`#wrap .irs-handle.${which}`).boundingBox();
@@ -709,8 +729,13 @@ test.describe(`interactions (${LABEL})`, () => {
     // the handle sits at the left end, so a long label sticks out past the mask's left edge. A
     // press there lands on the label itself, not on the mask, and a blocked slider must still
     // answer nothing; so must a press on the handle and an arrow key on the focused track.
-    // Mutation caught: `this.options.block ||` dropped from the gate in bindEvents(), and the
-    // press on the label fires an onFinish.
+    // Since #921 pointerDown() drops a press on any blocked slider, so the press checks below no
+    // longer depend on the gate in bindEvents() (the key check never did: key() has dropped it
+    // since #890). The row also asserts that the slider
+    // binds nothing on the body and the window (its own `.irs_N` handlers, read through jQuery's
+    // event store), which is what the gate pins. Mutation caught: `this.options.block ||` dropped
+    // from the gate in bindEvents(): the slider binds its move and release handlers on the body
+    // and the window, and that assertion goes red.
     test('a blocked one-entry values slider: a press on a long value label outside the mask, a press on the handle and a key fire nothing (Settings: block, #896)', async ({ page }) => {
         await open(page, { values: ['Not available'], block: true }, { dom_events: '1' });
         const label = await page.locator('#wrap .irs-single').boundingBox();
@@ -720,6 +745,8 @@ test.describe(`interactions (${LABEL})`, () => {
         expect(point.x).toBeLessThan(mask.x);
         expect(await classesAt(page, point)).toContain('irs-single');
         const n = (await events(page)).length;
+        // A slider on a zero value range that is blocked binds nothing on the page.
+        expect(await ownPageHandlers(page)).toEqual({ window: {}, body: {} });
 
         await page.mouse.click(point.x, point.y);
         await pressHandle(page, 'single');

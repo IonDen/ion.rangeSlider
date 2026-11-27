@@ -219,7 +219,7 @@ const ROWS = [
     },
     {
         title: 'block stops the drag but keeps the input enabled (Settings: block)',
-        mutation: 'append(): drop `this.appendDisableMask()` from the block branch -> the drag reaches the handle and the value becomes 90',
+        mutation: 'append(): drop `this.appendDisableMask()` from the block branch -> no mask is rendered (the handle still ignores the drag, since #921 pointerDown() drops it)',
         config: { min: 0, max: 100, from: 30, block: true },
         act: async (page) => {
             await dragHandleTo(page, 'single', 0.9);
@@ -231,8 +231,9 @@ const ROWS = [
             expect(state.input.value).toBe('30');
             // Characterization: the readme's block row promises an enabled input and a
             // slider the user cannot operate, and says nothing about the mask. The mask
-            // is how the mouse is kept off the handles, so its presence is recorded here
-            // rather than asserted as a documented promise.
+            // covers the slider and, since #921, the pointer handlers drop every press
+            // while block is on, so the mask's presence is recorded here rather than
+            // asserted as a documented promise.
             expect(state.mask).toBe(true);
         }
     },

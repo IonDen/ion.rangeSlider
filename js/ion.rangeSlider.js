@@ -890,13 +890,16 @@
          *   take every press for a value change;
          * - a zero value range whose min and max are not the same number,
          *   such as false and 0 (validate() converts only strings);
-         * - a blocked slider with a zero value range: its handle sits at the
-         *   left end, where a long value label can stick out past the mask,
-         *   which covers the slider's own width only (#921).
+         * - a blocked slider with a zero value range: it binds no handler. Since
+         *   #921 a blocked slider drops every pointer and key press itself, so
+         *   the handlers it does not bind would answer nothing anyway.
          * All three stay inert as in 2.6.0.
          *
-         * A disabled slider never reaches this method (see append()), and on
-         * a blocked slider key() drops every key press.
+         * A disabled slider never reaches this method (see append()). A
+         * blocked slider with a value range does bind them, and key(),
+         * pointerDown() and pointerClick() drop every press while block is
+         * on (#890, #921): the mask covers the slider's own width only, so a
+         * value label that sticks out past it still receives presses.
          */
         bindEvents: function () {
             var range = this.options.max - this.options.min;
@@ -1094,6 +1097,18 @@
          * @param e {Object} event object
          */
         pointerDown: function (target, e) {
+            // #921: block covers the slider with a mask of its own width, but a
+            // value label that sticks out past that mask (a long prefix or
+            // postfix near an end of the track, no force_edges) still carries
+            // this handler, so a blocked slider must drop the press here, as
+            // key() does (#890). Read on every press, so update({block: ...})
+            // takes effect at once. Returning before preventDefault() leaves
+            // the press to the page, as it does for a press on the mask (touch
+            // scrolling, text selection).
+            if (this.options.block) {
+                return;
+            }
+
             e.preventDefault();
             var x = e.pageX || e.originalEvent.touches && e.originalEvent.touches[0].pageX;
             if (e.button === 2) {
@@ -1160,6 +1175,13 @@
          * @param e {Object} event object
          */
         pointerClick: function (target, e) {
+            // #921: see pointerDown(). The track, the bar and the shadow
+            // handles sit under the mask, but a blocked slider drops the
+            // press here as well, so no part of it starts a click.
+            if (this.options.block) {
+                return;
+            }
+
             e.preventDefault();
             var x = e.pageX || e.originalEvent.touches && e.originalEvent.touches[0].pageX;
             if (e.button === 2) {
@@ -1193,9 +1215,11 @@
                 return;
             }
 
-            // #890: block keeps mouse and touch off the slider with its mask, but
-            // the track stays focusable and keeps this handler, so a blocked
-            // slider must drop the press here or the keyboard still moves it.
+            // #890: the mask covers the track and the handles and, since #921,
+            // pointerDown() and pointerClick() drop pointer presses while block
+            // is on, but the track stays focusable and keeps this handler, so
+            // a blocked slider must drop the key press here or the keyboard
+            // still moves it.
             // Read on every press, so update({block: ...}) takes effect at
             // once. Returning before preventDefault() leaves the key to the
             // page, as a slider with keyboard: false does.

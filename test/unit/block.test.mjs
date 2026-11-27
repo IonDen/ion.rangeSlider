@@ -1,6 +1,34 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { JSDOM } from 'jsdom';
 import { createSlider } from './helpers.mjs';
+
+const PLUGIN = readFileSync(new URL('../../js/ion.rangeSlider.js', import.meta.url), 'utf8');
+const JQUERY_1_8_3 = readFileSync(new URL('../vendor/jquery-1.8.3.js', import.meta.url), 'utf8');
+
+/** Same as createSlider(), on the vendored jQuery 1.8.3 instead of the npm build (see destroy.test.mjs). */
+function createSlider183(t, html, options) {
+  const dom = new JSDOM(`<!doctype html><html><body>${html}</body></html>`, {
+    runScripts: 'outside-only',
+    pretendToBeVisual: true,
+  });
+  const { window } = dom;
+  window.eval(JQUERY_1_8_3);
+  const $ = window.jQuery;
+  window.eval(PLUGIN);
+  const $input = $('input').first();
+  let slider;
+  t.after(() => { if (slider && slider.input) slider.destroy(); window.close(); });
+  $input.ionRangeSlider(options);
+  slider = $.data($input[0], 'ionRangeSlider');
+  return { window, $, $input, slider };
+}
+
+const BUILDS = [
+  { label: 'jQuery 3.7.1', create: createSlider },
+  { label: 'jQuery 1.8.3', create: createSlider183 },
+];
 
 // #890: readme settings table, block: "Block the slider but keep the input enabled.
 // Value is still submitted with the form". The mask block adds keeps the mouse and touch
@@ -227,3 +255,226 @@ test('update() still moves a blocked slider: block stops the user, not the page 
   assert.equal($input.val(), '60');
   assert.deepEqual(rec.events, [{ type: 'onUpdate', from: 60, to: 100 }]);
 });
+
+// #921: the mask block lays over the slider covers the slider's own width (-1% to 101%), but a
+// value label wider than the handle is not kept inside the slider without force_edges, so near the
+// ends of the track a long label sticks out past the mask and a press on that part reaches the
+// label's own mousedown/touchstart handler. Up to 2.6.0 that press moved the blocked slider with
+// the full onChange/onFinish stream. The fix makes pointerDown() and pointerClick() return at once
+// while block is on, before they call preventDefault() (the page treats the press as it treats a
+// press on the mask), reading block on every press so update({block: false}) gives the pointer back.
+//
+// jsdom has no layout, so the overhang itself is measured in the browser spec
+// (test/browser/block-label-overhang.spec.mjs); here every element that carries a pointer handler
+// gets the press through the handlers the plugin bound, the way the page delivers it, and the
+// geometry is stubbed as in the #890 tests above.
+
+/** One press, a move and the release for one gesture: mousedown on `$el`, mousemove on the body, mouseup on the window. */
+function gesture(slider, $, $el, type, x, moveTo) {
+  const down = $.Event(type, type === 'touchstart'
+    ? { originalEvent: { touches: [{ pageX: x }] } }
+    : { pageX: x });
+  $el.trigger(down);
+  slider.$cache.body.trigger($.Event(type === 'touchstart' ? 'touchmove' : 'mousemove',
+    type === 'touchstart' ? { originalEvent: { touches: [{ pageX: moveTo }] } } : { pageX: moveTo }));
+  slider.$cache.win.trigger($.Event(type === 'touchstart' ? 'touchend' : 'mouseup', { pageX: moveTo }));
+  slider.drawHandles();
+  slider.drawHandles();
+  return down;
+}
+
+/** The fields a pointer interaction writes, copied for a before/after comparison. */
+function interactionState(slider) {
+  return {
+    target: slider.target,
+    current_plugin: slider.current_plugin,
+    is_active: slider.is_active,
+    dragging: slider.dragging,
+    is_click: slider.is_click,
+    coincident_pending: slider.coincident_pending
+  };
+}
+
+// Elements that bind pointerDown() (a handle or a label) and elements that bind pointerClick()
+// (the track, the shadow handles, and the bar except on a double slider with drag_interval, where
+// the bar starts a whole-interval drag through pointerDown("both")).
+const DOWN_SINGLE = ['single', 's_single'];
+const CLICK_SINGLE = ['line', 'bar', 'shad_single'];
+const DOWN_DOUBLE = ['from', 's_from', 'to', 's_to', 'single'];
+const CLICK_DOUBLE = ['line', 'shad_from', 'shad_to'];
+
+for (const { label, create } of BUILDS) {
+  // Bug caught: pointerDown() not reading block (the behaviour up to 2.6.0): a press on the label
+  // starts a drag and the value goes 30 -> 60 with onChange and onFinish. A guard that covers only
+  // pointerClick() leaves every row of this test red; one placed after `e.preventDefault()` leaves
+  // the isDefaultPrevented() assertion red; one that only checks the mouse (`e.type === "mousedown"
+  // && this.options.block`) leaves the touchstart rows red.
+  test(`a blocked single slider ignores a press on a handle or a label, mouse and touch, and leaves it to the page, ${label} (#921)`, (t) => {
+    const rec = recorder();
+    const { $, $input, slider } = create(t, '<input>', {
+      type: 'single', min: 0, max: 100, from: 30, step: 1, block: true,
+      onChange: rec.onChange, onFinish: rec.onFinish
+    });
+    primeSingle(slider);
+    const start = interactionState(slider);
+    const handle_x = slider.coords.p_single_fake / 100 * 600;
+    const target_x = slider.convertToFakePercent(60) / 100 * 600;
+    let fieldEvents = 0;
+    $input.on('change input', () => { fieldEvents++; });
+
+    for (const name of DOWN_SINGLE) {
+      for (const type of ['mousedown', 'touchstart']) {
+        const down = gesture(slider, $, slider.$cache[name], type, handle_x, target_x);
+        assert.equal(down.isDefaultPrevented(), false, `${name} ${type}: the press reaches the page`);
+      }
+    }
+
+    assert.deepEqual(interactionState(slider), start);
+    assert.equal($input.val(), '30');
+    assert.equal(fieldEvents, 0, 'no change or input event on the field');
+    assert.deepEqual(rec.events, []);
+  });
+
+  // Bug caught: pointerClick() not reading block: a press on the track-side elements, the shadow
+  // handles or the bar sets is_click and calc() jumps the handle to the pointer (30 -> 60) with
+  // onChange and onFinish. A guard in pointerDown() alone leaves every row red.
+  test(`a blocked single slider ignores a press on the shadow handle, the bar or the track, ${label} (#921)`, (t) => {
+    const rec = recorder();
+    const { $, $input, slider } = create(t, '<input>', {
+      type: 'single', min: 0, max: 100, from: 30, step: 1, block: true,
+      onChange: rec.onChange, onFinish: rec.onFinish
+    });
+    primeSingle(slider);
+    const start = interactionState(slider);
+    const target_x = slider.convertToFakePercent(60) / 100 * 600;
+
+    for (const name of CLICK_SINGLE) {
+      for (const type of ['mousedown', 'touchstart']) {
+        const down = gesture(slider, $, slider.$cache[name], type, target_x, target_x);
+        assert.equal(down.isDefaultPrevented(), false, `${name} ${type}: the press reaches the page`);
+      }
+    }
+
+    assert.deepEqual(interactionState(slider), start);
+    assert.equal($input.val(), '30');
+    assert.deepEqual(rec.events, []);
+  });
+
+  // The double type binds a different set of elements (from, to and their handles; the bar as a
+  // whole-interval drag with drag_interval). Bug caught: a guard that covers only single type
+  // (`if (this.options.block && this.options.type === "single")`) leaves 20;80 moving. With
+  // drag_interval the bar goes through pointerDown("both"); the next test holds the bar as a click.
+  test(`a blocked double slider with drag_interval ignores a press on a label, a handle, the bar, a shadow handle or the track too, ${label} (#921)`, (t) => {
+    const rec = recorder();
+    const { $, $input, slider } = create(t, '<input>', {
+      type: 'double', min: 0, max: 100, from: 20, to: 80, step: 1, drag_interval: true, block: true,
+      onChange: rec.onChange, onFinish: rec.onFinish
+    });
+    primeDouble(slider);
+    const start = interactionState(slider);
+    const from_x = slider.coords.p_from_fake / 100 * 600;
+    const to_x = slider.coords.p_to_fake / 100 * 600;
+    const target_x = slider.convertToFakePercent(50) / 100 * 600;
+
+    for (const name of DOWN_DOUBLE.concat(['bar'])) {
+      for (const type of ['mousedown', 'touchstart']) {
+        const x = name === 'to' || name === 's_to' ? to_x : from_x;
+        const down = gesture(slider, $, slider.$cache[name], type, x, target_x);
+        assert.equal(down.isDefaultPrevented(), false, `${name} ${type}: the press reaches the page`);
+      }
+    }
+    for (const name of CLICK_DOUBLE) {
+      for (const type of ['mousedown', 'touchstart']) {
+        const down = gesture(slider, $, slider.$cache[name], type, target_x, target_x);
+        assert.equal(down.isDefaultPrevented(), false, `${name} ${type}: the press reaches the page`);
+      }
+    }
+
+    assert.deepEqual(interactionState(slider), start);
+    assert.equal($input.val(), '20;80');
+    assert.deepEqual(rec.events, []);
+  });
+
+  // Without drag_interval the bar of a double slider is a click target like the track, so it goes
+  // through pointerClick(). Bug caught: a pointerClick() guard that skips the bar on double type
+  // (`this.options.block && !(this.options.type === "double" && target === "click" && e.currentTarget
+  // === this.$cache.bar[0])`), or that guards mouse and single type only (`this.options.block &&
+  // (e.type === "mousedown" || this.options.type === "single")`): 20;80 jumps to the pointer.
+  test(`a blocked double slider without drag_interval ignores a press on the bar, a shadow handle or the track, mouse and touch, ${label} (#921)`, (t) => {
+    const rec = recorder();
+    const { $, $input, slider } = create(t, '<input>', {
+      type: 'double', min: 0, max: 100, from: 20, to: 80, step: 1, block: true,
+      onChange: rec.onChange, onFinish: rec.onFinish
+    });
+    primeDouble(slider);
+    const start = interactionState(slider);
+    const target_x = slider.convertToFakePercent(50) / 100 * 600;
+
+    for (const name of CLICK_DOUBLE.concat(['bar'])) {
+      for (const type of ['mousedown', 'touchstart']) {
+        const down = gesture(slider, $, slider.$cache[name], type, target_x, target_x);
+        assert.equal(down.isDefaultPrevented(), false, `${name} ${type}: the press reaches the page`);
+      }
+    }
+
+    assert.deepEqual(interactionState(slider), start);
+    assert.equal($input.val(), '20;80');
+    assert.deepEqual(rec.events, []);
+  });
+
+  // Control: the same gestures on a slider without block move it, so the blocked tests above cannot
+  // pass on an event that never arrived. A press the slider answers is also consumed: bug caught,
+  // a guard that returns for every slider (`if (this.options.block !== undefined)`; block is
+  // never undefined after init, its default is false) leaves the value on 30.
+  test(`the same gestures move a slider without block, and update({block: false}) gives the pointer back, ${label} (#921, control)`, (t) => {
+    const rec = recorder();
+    const { $, $input, slider } = create(t, '<input>', {
+      type: 'single', min: 0, max: 100, from: 30, step: 1, block: true,
+      onChange: rec.onChange, onFinish: rec.onFinish
+    });
+    primeSingle(slider);
+    const handle_x = slider.coords.p_single_fake / 100 * 600;
+    const target_x = slider.convertToFakePercent(60) / 100 * 600;
+    gesture(slider, $, slider.$cache.single, 'mousedown', handle_x, target_x);
+    assert.equal($input.val(), '30', 'setup: blocked, the gesture does nothing');
+
+    slider.update({ block: false });
+    primeSingle(slider);
+    const down = gesture(slider, $, slider.$cache.single, 'mousedown', slider.coords.p_single_fake / 100 * 600, target_x);
+
+    assert.equal($input.val(), '60');
+    assert.equal(down.isDefaultPrevented(), true, 'the press the slider answered is not passed on');
+    assert.deepEqual(rec.events.map((e) => e.type), ['onChange', 'onFinish']);
+    assert.equal(rec.events[0].from, 60);
+
+    // The click path has its own control: a press on the track of the unblocked slider jumps the
+    // handle to the pointer. Bug caught: a pointerClick() guard that returns for every slider.
+    // A click centres the handle on the pointer, so aim half a 16 px handle right of the 90 position.
+    const track_x = slider.convertToFakePercent(90) / 100 * 600 + 8;
+    const click = gesture(slider, $, slider.$cache.line, 'mousedown', track_x, track_x);
+
+    assert.equal($input.val(), '90');
+    assert.equal(click.isDefaultPrevented(), true, 'the click the slider answered is not passed on');
+  });
+
+  // Bug caught: pointerDown() not reading block, so a live slider that update({block: true}) blocks
+  // later still moves on a press (the value goes to 60). This row pins the toggle path on its own:
+  // the options the guard reads are the ones update() just wrote.
+  test(`update({block: true}) makes a live slider ignore the pointer, ${label} (#921)`, (t) => {
+    const rec = recorder();
+    const { $, $input, slider } = create(t, '<input>', {
+      type: 'single', min: 0, max: 100, from: 30, step: 1,
+      onChange: rec.onChange, onFinish: rec.onFinish
+    });
+    primeSingle(slider);
+    slider.update({ block: true });
+    primeSingle(slider);
+    rec.events.length = 0;
+
+    gesture(slider, $, slider.$cache.single, 'mousedown', slider.coords.p_single_fake / 100 * 600,
+      slider.convertToFakePercent(60) / 100 * 600);
+
+    assert.equal($input.val(), '30');
+    assert.deepEqual(rec.events, []);
+  });
+}
